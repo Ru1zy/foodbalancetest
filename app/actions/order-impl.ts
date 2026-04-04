@@ -252,7 +252,7 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
             data: {
               deliveryAddress:
                 parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
-              deliveryDate: getNearestMonday(),
+              deliveryDate: new Date(parsedFormData.deliveryDate),
               deliveryMethod: parsedFormData.deliveryMethod,
               cutlery: parsedFormData.cutlery,
               items: sanitizedCartData,
@@ -305,7 +305,7 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
         data: {
           deliveryAddress:
             parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
-          deliveryDate: getNearestMonday(),
+          deliveryDate: new Date(parsedFormData.deliveryDate),
           deliveryMethod: parsedFormData.deliveryMethod,
           cutlery: parsedFormData.cutlery,
           items: sanitizedCartData,

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/src/lib/auth-token";
 import prisma from "@/lib/prisma";
-import ProfilePageClient from "./ProfilePageClient";
+import ProfilePageClient, { type OrderItems } from "./ProfilePageClient";
 import { parseCutleryCount } from "@/src/lib/checkout";
 
 export default async function ProfilePage() {
@@ -37,13 +37,15 @@ export default async function ProfilePage() {
     defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),
   };
 
-  const orders = await prisma.order.findMany({
+  const rawOrders = await prisma.order.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    include: {
-      // Include any related data if needed
-    },
   });
 
-  return <ProfilePageClient user={user} orders={orders} />;
+  const formattedOrders = rawOrders.map(order => ({
+    ...order,
+    items: order.items as unknown as OrderItems
+  }));
+
+  return <ProfilePageClient user={user} orders={formattedOrders} />;
 }

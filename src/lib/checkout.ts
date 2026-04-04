@@ -13,6 +13,7 @@ export type CheckoutFormValues = {
   address: string;
   comment: string;
   cutlery: number;
+  deliveryDate: string;
   deliveryMethod: DeliveryMethod;
   name: string;
   phone: string;
@@ -59,13 +60,30 @@ export function hasValidPhoneNumber(phone: string) {
   return digitsCount >= MIN_PHONE_DIGITS && digitsCount <= MAX_PHONE_DIGITS;
 }
 
+export function getMinDeliveryDate(): string {
+  // Find next Monday
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const daysUntilMonday = dayOfWeek === 1 ? 0 : (dayOfWeek === 0 ? 1 : 8 - dayOfWeek);
+  const nextMonday = new Date(today);
+  nextMonday.setDate(today.getDate() + daysUntilMonday);
+  
+  // Format as YYYY-MM-DD
+  const year = nextMonday.getFullYear();
+  const month = String(nextMonday.getMonth() + 1).padStart(2, '0');
+  const day = String(nextMonday.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function parseCheckoutFormData(formData: FormData): CheckoutFormValues {
   const rawDeliveryMethod = String(formData.get("deliveryMethod") || "delivery").trim();
+  const rawDeliveryDate = String(formData.get("deliveryDate") || "").trim();
 
   return {
     address: String(formData.get("address") || "").trim(),
     comment: String(formData.get("comment") || "").trim(),
     cutlery: parseCutleryCount(formData.get("cutlery")),
+    deliveryDate: rawDeliveryDate || getMinDeliveryDate(),
     deliveryMethod: isDeliveryMethod(rawDeliveryMethod) ? rawDeliveryMethod : "delivery",
     name: String(formData.get("name") || "").trim(),
     phone: normalizePhone(String(formData.get("phone") || "")),

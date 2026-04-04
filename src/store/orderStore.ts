@@ -3,6 +3,16 @@ import { PackageType } from "@/lib/order-logic";
 import type { DeliveryMethod } from "@/src/lib/checkout";
 
 export type Selections = Record<string, Record<string, number>>;
+
+export type CartItem = {
+  id: string;
+  date: string;
+  planType: PackageType;
+  dishes: Array<{ dishId: string; quantity: number }>;
+  selections?: Record<string, number>;
+  price: number | null;
+};
+
 export type CustomerProfile = {
   address: string;
   chatId: string;
@@ -20,15 +30,20 @@ export interface OrderStore {
   customerProfile: CustomerProfile;
   selectedPackage: PackageType;
   selections: Selections;
+  cartItems: CartItem[];
   incrementDish: (dayId: string, dishId: string) => void;
   decrementDish: (dayId: string, dishId: string) => void;
   setCustomerProfile: (profile: Partial<CustomerProfile>) => void;
   setPackage: (packageType: PackageType) => void;
   setSelection: (dayId: string, category: string, dishIndex: number) => void;
   clearSelections: () => void;
+  addCartItem: (item: CartItem) => void;
+  removeCartItem: (itemId: string) => void;
+  clearCart: () => void;
+  getCartTotal: () => number;
 }
 
-export const useOrderStore = create<OrderStore>((set) => ({
+export const useOrderStore = create<OrderStore>((set, get) => ({
   customerProfile: {
     address: "",
     chatId: "",
@@ -43,6 +58,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
   },
   selectedPackage: "Slim",
   selections: {},
+  cartItems: [],
 
   setCustomerProfile: (profile) =>
     set((state) => ({
@@ -121,4 +137,24 @@ export const useOrderStore = create<OrderStore>((set) => ({
     set(() => ({
       selections: {},
     })),
+
+  addCartItem: (item) =>
+    set((state) => ({
+      cartItems: [...state.cartItems, item],
+    })),
+
+  removeCartItem: (itemId) =>
+    set((state) => ({
+      cartItems: state.cartItems.filter((item) => item.id !== itemId),
+    })),
+
+  clearCart: () =>
+    set(() => ({
+      cartItems: [],
+    })),
+
+  getCartTotal: () => {
+    const state = get();
+    return state.cartItems.reduce((total, item) => total + (item.price || 0), 0);
+  },
 }));

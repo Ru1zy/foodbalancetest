@@ -55,6 +55,20 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [minDeliveryDate] = useState(() => {
+    // Calculate next Monday
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const daysUntilMonday = dayOfWeek === 1 ? 0 : (dayOfWeek === 0 ? 1 : 8 - dayOfWeek);
+    const nextMonday = new Date(today);
+    nextMonday.setDate(today.getDate() + daysUntilMonday);
+    
+    // Format as YYYY-MM-DD
+    const year = nextMonday.getFullYear();
+    const month = String(nextMonday.getMonth() + 1).padStart(2, '0');
+    const day = String(nextMonday.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
 
   useEffect(() => {
     if (authenticatedUser && !customerProfile.isAuthenticated) {
@@ -376,6 +390,17 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
                 )}
               </label>
             )}
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 3. Дата доставки</span>
+              <input
+                type="date"
+                name="deliveryDate"
+                min={minDeliveryDate}
+                defaultValue={minDeliveryDate}
+                className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              />
+            </label>
 
             <section className="rounded-3xl border border-gray-200 p-5">
               <div className="text-sm font-semibold text-gray-900">Крок 4. Кількість приборів</div>

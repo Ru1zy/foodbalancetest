@@ -4,6 +4,25 @@ import { useState } from "react";
 import { updateUserProfile } from "../actions/profile";
 import { getOrderStatusLabel } from "@/src/lib/order-status";
 
+export type DishItem = {
+  dishId: string;
+  quantity: number;
+};
+
+export type OrderDay = {
+  dayId: string;
+  items?: DishItem[];
+  selections?: Record<string, number>;
+  selectedCount?: number;
+};
+
+export type OrderItems = {
+  days: OrderDay[];
+  packageLimit: number;
+  packageType: string;
+  totalDays: number;
+};
+
 type User = {
   id: string;
   name: string;
@@ -13,11 +32,11 @@ type User = {
   // other fields if needed
 };
 
-type Order = {
+export type Order = {
   id: string;
   createdAt: Date;
   status: string;
-  items: unknown; // JSON
+  items: OrderItems;
   price: number | null;
   deliveryDate: Date;
   packageType: string;
@@ -159,9 +178,29 @@ export default function ProfilePageClient({ user, orders }: Props) {
                   <div className="mt-2 text-sm text-gray-700">
                     Статус: <span className="font-medium text-black">{getOrderStatusLabel(order.status)}</span>
                   </div>
-                  <div className="mt-1 text-sm text-gray-700">
-                    {/* TODO: Format items properly */}
-                    Items summary here
+                  <div className="mt-2 text-sm text-gray-700">
+                    {order.items && Array.isArray(order.items?.days) && order.items.days.length > 0 ? (
+                      <div className="space-y-1">
+                        {order.items.days.map((day: OrderDay, index: number) => (
+                          <div key={index} className="text-xs">
+                            <span className="font-medium text-black">День {index + 1}:</span>
+                            {Array.isArray(day.items) && day.items.length > 0 ? (
+                              <span className="text-gray-700">
+                                {" "}{day.items.map((item: DishItem) => `${item.dishId} (x${item.quantity})`).join(", ")}
+                              </span>
+                            ) : day.selections && Object.keys(day.selections).length > 0 ? (
+                              <span className="text-gray-700">
+                                {" "}{Object.entries(day.selections).map(([cat, idx]: [string, number]) => `${cat}: позиція ${idx}`).join(", ")}
+                              </span>
+                            ) : (
+                              <span className="text-gray-500">без деталей</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-gray-500">Без деталей позицій</span>
+                    )}
                   </div>
                 </div>
               ))}
