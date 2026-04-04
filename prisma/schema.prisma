@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String  @id @default(uuid())
+  phone          String  @unique
+  name           String
+  chatId         String? @unique
+  address        String?
+  defaultPackage String?
+  defaultCutlery String?
+  notes          String?
+
+  orders Order[]
+}
+
+model Menu {
+  id         String  @id @default(uuid())
+  dayOfWeek  Int
+  packageType String
+  photoUrl   String?
+  dishes     Json
+}
+
+model Order {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  createdAt    DateTime @default(now())
+  deliveryDate DateTime
+  packageType  String
+  items        Json
+  status       String   @default("new")
+  isPaid       Boolean  @default(false)
+  cutlery      String?
+  notes        String?
+  price        Int?
+}
