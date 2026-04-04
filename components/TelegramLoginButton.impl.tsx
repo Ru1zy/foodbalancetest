@@ -1,9 +1,5 @@
 "use client";
 
-export { default } from "./TelegramLoginButton.impl";
-
-/*
-
 import { useEffect, useRef, useState } from "react";
 import { useOrderStore } from "@/src/store/orderStore";
 
@@ -117,9 +113,9 @@ export default function TelegramLoginButton() {
 
   return (
     <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
-      <h2 className="text-lg font-semibold text-gray-900">Увійдіть через Telegram</h2>
+      <h2 className="text-lg font-semibold text-gray-900">Увійти через Telegram за бажанням</h2>
       <p className="mt-2 text-sm text-gray-600">
-        Для оформлення замовлення у веб-версії потрібно підтвердити акаунт через Telegram Login Widget.
+        Це потрібно лише для швидкого автозаповнення профілю. Замовлення можна оформити і без Telegram.
       </p>
       {(configError || error) && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
@@ -130,4 +126,3 @@ export default function TelegramLoginButton() {
     </div>
   );
 }
-*/

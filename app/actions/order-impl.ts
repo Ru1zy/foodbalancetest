@@ -1,22 +1,15 @@
 "use server";
 
-export {
-  submitOrder,
-  type OrderCartData,
-  type OrderCartDay,
-  type StandardSelections,
-  type SubmitOrderResult,
-} from "./order-impl";
-
-/*
-
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { PackageType } from "@/lib/order-logic";
-import { parseCheckoutFormData, validateCheckoutFormValues } from "@/src/lib/checkout";
-import { isIndivPackage, type IndivDishQuantity } from "@/src/lib/order-selection";
+import {
+  parseCheckoutFormData,
+  validateCheckoutFormValues,
+} from "@/src/lib/checkout";
 import { verifyAuthToken } from "@/src/lib/auth-token";
+import { isIndivPackage, type IndivDishQuantity } from "@/src/lib/order-selection";
 import { sendOrderNotification } from "@/src/lib/telegram";
 
 export type StandardSelections = Record<string, number>;
@@ -90,6 +83,7 @@ function getNearestMonday() {
     ),
   );
 }
+
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   const indivPackage = isIndivPackage(cartData.packageType);
   const days = Array.isArray(cartData.days)
@@ -122,8 +116,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
         }
 
         const normalizedSelections = Object.entries(day.selections).filter(
-          ([category, index]) =>
-            category.trim().length > 0 && Number.isInteger(index) && index >= 0,
+          ([category, index]) => category.trim().length > 0 && Number.isInteger(index) && index >= 0,
         );
 
         return normalizedSelections.length === cartData.packageLimit && day.selectedCount === cartData.packageLimit;
@@ -166,23 +159,15 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
 export async function submitOrder(formData: FormData, cartData: OrderCartData): Promise<SubmitOrderResult> {
   const parsedFormData = parseCheckoutFormData(formData);
   const validationErrors = validateCheckoutFormValues(parsedFormData);
-  const name = parsedFormData.name;
-  const phone = parsedFormData.phone;
-  const address = parsedFormData.address;
-  const cutlery = String(formData.get("cutlery") || "Так").trim() || "Так";
-  const comment = parsedFormData.comment;
-  const validatedData = {
-    address,
-    comment,
-    cutlery,
-    name: name || "Клієнт",
-    phone,
-  };
 
   if (validationErrors.name || validationErrors.phone || validationErrors.address) {
     return {
       ok: false,
-      message: "Вкажіть номер телефону.",
+      message:
+        validationErrors.name ||
+        validationErrors.phone ||
+        validationErrors.address ||
+        "Перевірте дані замовлення.",
       status: 400,
     };
   }
@@ -221,7 +206,7 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
         if (currentUser) {
           const existingUser = await tx.user.findUnique({
             where: {
-              phone: validatedData.phone,
+              phone: parsedFormData.phone,
             },
           });
 
@@ -253,28 +238,28 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
             data: {
               address:
                 parsedFormData.deliveryMethod === "delivery"
-                  ? validatedData.address || null
+                  ? parsedFormData.address || null
                   : currentUser.address,
-              defaultCutlery: validatedData.cutlery,
+              defaultCutlery: String(parsedFormData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
-              name: validatedData.name,
-              notes: validatedData.comment || null,
-              phone: validatedData.phone,
+              name: parsedFormData.name,
+              notes: parsedFormData.comment || null,
+              phone: parsedFormData.phone,
             },
           });
 
           const order = await tx.order.create({
             data: {
               deliveryAddress:
-                parsedFormData.deliveryMethod === "delivery" ? validatedData.address || null : null,
-              deliveryMethod: parsedFormData.deliveryMethod,
-              userId,
-              packageType: sanitizedCartData.packageType,
-              items: sanitizedCartData,
-              status: "new",
+                parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
               deliveryDate: getNearestMonday(),
-              cutlery: Number(validatedData.cutlery),
-              notes: validatedData.comment || null,
+              deliveryMethod: parsedFormData.deliveryMethod,
+              cutlery: parsedFormData.cutlery,
+              items: sanitizedCartData,
+              notes: parsedFormData.comment || null,
+              packageType: sanitizedCartData.packageType,
+              status: "new",
+              userId,
             },
           });
 
@@ -284,7 +269,7 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
 
       const existingUser = await tx.user.findUnique({
         where: {
-          phone: validatedData.phone,
+          phone: parsedFormData.phone,
         },
       });
 
@@ -296,38 +281,38 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
             data: {
               address:
                 parsedFormData.deliveryMethod === "delivery"
-                  ? validatedData.address || null
+                  ? parsedFormData.address || null
                   : existingUser.address,
-              defaultCutlery: validatedData.cutlery,
+              defaultCutlery: String(parsedFormData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
-              name: validatedData.name,
-              notes: validatedData.comment || null,
+              name: parsedFormData.name,
+              notes: parsedFormData.comment || null,
             },
           })
         : await tx.user.create({
             data: {
               address:
-                parsedFormData.deliveryMethod === "delivery" ? validatedData.address || null : null,
-              defaultCutlery: validatedData.cutlery,
+                parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
+              defaultCutlery: String(parsedFormData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
-              name: validatedData.name,
-              notes: validatedData.comment || null,
-              phone: validatedData.phone,
+              name: parsedFormData.name,
+              notes: parsedFormData.comment || null,
+              phone: parsedFormData.phone,
             },
           });
 
       const order = await tx.order.create({
         data: {
           deliveryAddress:
-            parsedFormData.deliveryMethod === "delivery" ? validatedData.address || null : null,
-          deliveryMethod: parsedFormData.deliveryMethod,
-          userId: user.id,
-          packageType: sanitizedCartData.packageType,
-          items: sanitizedCartData,
-          status: "new",
+            parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
           deliveryDate: getNearestMonday(),
-          cutlery: Number(validatedData.cutlery),
-          notes: validatedData.comment || null,
+          deliveryMethod: parsedFormData.deliveryMethod,
+          cutlery: parsedFormData.cutlery,
+          items: sanitizedCartData,
+          notes: parsedFormData.comment || null,
+          packageType: sanitizedCartData.packageType,
+          status: "new",
+          userId: user.id,
         },
       });
 
@@ -352,7 +337,8 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
     if (error instanceof Error && error.message === "PHONE_IN_USE_BY_TELEGRAM_USER") {
       return {
         ok: false,
-        message: "Цей номер вже прив’язаний до іншого Telegram-акаунта. Авторизуйтеся саме в ньому або використайте інший номер.",
+        message:
+          "Цей номер вже прив’язаний до іншого Telegram-акаунта. Авторизуйтеся саме в ньому або використайте інший номер.",
         status: 409,
       };
     }
@@ -366,4 +352,3 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
     };
   }
 }
-*/

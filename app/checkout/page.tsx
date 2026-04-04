@@ -1,5 +1,9 @@
 "use client";
 
+export { default } from "./page-impl";
+
+/*
+
 import TelegramLoginButton from "@/components/TelegramLoginButton";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -313,3 +317,4 @@ export default function CheckoutPage() {
     </main>
   );
 }
+*/

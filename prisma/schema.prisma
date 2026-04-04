@@ -34,16 +34,18 @@ model Menu {
 }
 
 model Order {
-  id           String   @id @default(uuid())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id])
-  createdAt    DateTime @default(now())
-  deliveryDate DateTime
-  packageType  String
-  items        Json
-  status       String   @default("new")
-  isPaid       Boolean  @default(false)
-  cutlery      String?
-  notes        String?
-  price        Int?
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+  deliveryDate    DateTime
+  deliveryMethod  String   @default("delivery")
+  deliveryAddress String?
+  packageType     String
+  items           Json
+  status          String   @default("new")
+  isPaid          Boolean  @default(false)
+  cutlery         Int      @default(0)
+  notes           String?
+  price           Int?
 }

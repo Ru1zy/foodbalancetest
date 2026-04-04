@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import { PackageType } from "@/lib/order-logic";
+import type { DeliveryMethod } from "@/src/lib/checkout";
 
 export type Selections = Record<string, Record<string, number>>;
 export type CustomerProfile = {
   address: string;
   chatId: string;
-  cutlery: string;
+  cutlery: number;
+  deliveryMethod: DeliveryMethod;
   isAuthenticated: boolean;
   name: string;
   notes: string;
@@ -30,7 +32,8 @@ export const useOrderStore = create<OrderStore>((set) => ({
   customerProfile: {
     address: "",
     chatId: "",
-    cutlery: "",
+    cutlery: 0,
+    deliveryMethod: "delivery",
     isAuthenticated: false,
     name: "",
     notes: "",

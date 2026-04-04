@@ -8,6 +8,7 @@ import {
   createAuthToken,
   isTelegramPlaceholderPhone,
 } from "@/src/lib/auth-token";
+import { parseCutleryCount } from "@/src/lib/checkout";
 
 export const runtime = "nodejs";
 
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
       user: {
         address: user.address ?? "",
         chatId,
-        cutlery: user.defaultCutlery ?? "",
+        cutlery: parseCutleryCount(user.defaultCutlery),
         name: user.name,
         notes: user.notes ?? "",
         phone: isTelegramPlaceholderPhone(user.phone) ? "" : user.phone,

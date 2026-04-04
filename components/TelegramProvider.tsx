@@ -8,7 +8,7 @@ type TmaAuthResponse = {
   user?: {
     address?: string;
     chatId?: string;
-    cutlery?: string;
+    cutlery?: number;
     name?: string;
     notes?: string;
     phone?: string;
@@ -67,7 +67,7 @@ export default function TelegramProvider({ children }: PropsWithChildren) {
         setCustomerProfile({
           address: result.user.address ?? "",
           chatId: result.user.chatId ?? "",
-          cutlery: result.user.cutlery ?? "",
+          cutlery: result.user.cutlery ?? 0,
           isAuthenticated: true,
           name: result.user.name ?? "",
           notes: result.user.notes ?? "",

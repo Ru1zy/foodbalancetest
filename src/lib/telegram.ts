@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
+import { getDeliveryMethodLabel, type DeliveryMethod } from "@/src/lib/checkout";
 import {
   isIndivPackage,
   parseIndivDishId,
@@ -7,7 +8,9 @@ import {
 } from "@/src/lib/order-selection";
 
 type TelegramOrder = {
-  cutlery: string | null;
+  cutlery: number;
+  deliveryAddress: string | null;
+  deliveryMethod: string;
   items: unknown;
   notes: string | null;
   packageType: string;
@@ -67,8 +70,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORY_ORDER = ["breakfast", "lunch", "dinner", "snack", "extra"];
 
-function escapeHtml(value: string) {
-  return value
+function escapeHtml(value: string | number) {
+  return String(value)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
