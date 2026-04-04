@@ -46,31 +46,32 @@ export default function ProfilePageClient({ user, orders }: Props) {
   };
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6">
-      <h1 className="mb-8 text-3xl font-bold text-gray-900">Профіль</h1>
+    <div className="min-h-screen bg-gray-50 p-6 text-gray-900">
+      <div className="mx-auto max-w-4xl">
+        <h1 className="mb-8 text-3xl font-bold text-black">Профіль</h1>
 
-      {/* Settings Section */}
-      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Налаштування</h2>
-          <button
-            onClick={() => setIsEditing(!isEditing)}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            {isEditing ? "Скасувати" : "Редагувати"}
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-            {error}
+        {/* Settings Section */}
+        <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-black">Налаштування</h2>
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              {isEditing ? "Скасувати" : "Редагувати"}
+            </button>
           </div>
-        )}
+
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
         {isEditing ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Ім&apos;я</label>
+              <label className="block text-sm font-medium text-black">Ім&apos;я</label>
               <input
                 name="name"
                 defaultValue={user.name}
@@ -79,7 +80,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Телефон</label>
+              <label className="block text-sm font-medium text-black">Телефон</label>
               <input
                 name="phone"
                 defaultValue={user.phone || ""}
@@ -87,7 +88,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Адреса за замовчуванням</label>
+              <label className="block text-sm font-medium text-black">Адреса за замовчуванням</label>
               <input
                 name="address"
                 defaultValue={user.address || ""}
@@ -95,7 +96,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Прибори за замовчуванням</label>
+              <label className="block text-sm font-medium text-black">Прибори за замовчуванням</label>
               <select
                 name="cutlery"
                 defaultValue={user.defaultCutlery || 0}
@@ -118,54 +119,55 @@ export default function ProfilePageClient({ user, orders }: Props) {
         ) : (
           <div className="space-y-3">
             <div>
-              <span className="font-medium text-gray-700">Ім&apos;я:</span> {user.name}
+              <span className="font-medium text-black">Ім&apos;я:</span> <span className="text-gray-700">{user.name}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Телефон:</span> {user.phone || "Не вказано"}
+              <span className="font-medium text-black">Телефон:</span> <span className="text-gray-700">{user.phone || "Не вказано"}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Адреса:</span> {user.address || "Не вказано"}
+              <span className="font-medium text-black">Адреса:</span> <span className="text-gray-700">{user.address || "Не вказано"}</span>
             </div>
             <div>
-              <span className="font-medium text-gray-700">Прибори:</span> {user.defaultCutlery || 0}
+              <span className="font-medium text-black">Прибори:</span> <span className="text-gray-700">{user.defaultCutlery || 0}</span>
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Order History Section */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6">
-        <h2 className="mb-4 text-xl font-semibold text-gray-900">Історія замовлень</h2>
-        {orders.length === 0 ? (
-          <p className="text-gray-500">Немає замовлень</p>
-        ) : (
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <div key={order.id} className="rounded-lg border border-gray-200 p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">
-                      Замовлення від {new Date(order.createdAt).toLocaleDateString("uk-UA")}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Статус: {order.status} | Пакет: {order.packageType} | Дата доставки: {new Date(order.deliveryDate).toLocaleDateString("uk-UA")}
-                    </p>
+        {/* Order History Section */}
+        <div className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="mb-4 text-xl font-semibold text-black">Історія замовлень</h2>
+          {orders.length === 0 ? (
+            <p className="text-gray-700">Немає замовлень</p>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div key={order.id} className="rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-black">
+                        Замовлення від {new Date(order.createdAt).toLocaleDateString("uk-UA")}
+                      </p>
+                      <p className="text-sm text-gray-700">
+                        Статус: {order.status} | Пакет: {order.packageType} | Дата доставки: {new Date(order.deliveryDate).toLocaleDateString("uk-UA")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-black">{order.price ? `${order.price} грн` : "Ціна не вказана"}</p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">{order.price ? `${order.price} грн` : "Ціна не вказана"}</p>
+                  <div className="mt-2 text-sm text-gray-700">
+                    Статус: <span className="font-medium text-black">{getOrderStatusLabel(order.status)}</span>
+                  </div>
+                  <div className="mt-1 text-sm text-gray-700">
+                    {/* TODO: Format items properly */}
+                    Items summary here
                   </div>
                 </div>
-                <div className="mt-2 text-sm text-gray-600">
-                  Статус: <span className="font-medium">{getOrderStatusLabel(order.status)}</span>
-                </div>
-                <div className="mt-1 text-sm text-gray-600">
-                  {/* TODO: Format items properly */}
-                  Items summary here
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

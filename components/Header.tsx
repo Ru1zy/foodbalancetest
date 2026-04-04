@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import TelegramLoginButton from "./TelegramLoginButton.impl";
+import LogoutButton from "./LogoutButton";
 
 export default async function Header() {
   const cookieStore = await cookies();
@@ -24,14 +25,7 @@ export default async function Header() {
             >
               Профіль
             </Link>
-            <form action="/api/auth/logout" method="post">
-              <button
-                type="submit"
-                className="bg-red-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-red-700"
-              >
-                Вийти
-              </button>
-            </form>
+            <LogoutButton />
           </>
         ) : (
           <div className="flex flex-col items-end text-right gap-1">
