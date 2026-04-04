@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState, useTransition } from "react";
+import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import TelegramLoginButton from "@/components/TelegramLoginButton.impl";
 import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
@@ -33,7 +33,18 @@ type SubmittedState = {
   totalDays: number;
 };
 
-export default function CheckoutPage() {
+type AuthenticatedUser = {
+  name: string;
+  phone: string | null;
+  address: string | null;
+  defaultCutlery: number | null;
+} | null;
+
+type Props = {
+  authenticatedUser: AuthenticatedUser;
+};
+
+export default function CheckoutPage({ authenticatedUser }: Props) {
   const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
   const selectedPackage = useOrderStore((state) => state.selectedPackage);
@@ -44,6 +55,24 @@ export default function CheckoutPage() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    if (authenticatedUser && !customerProfile.isAuthenticated) {
+      setCustomerProfile({
+        name: authenticatedUser.name,
+        phone: authenticatedUser.phone || "",
+        address: authenticatedUser.address || "",
+        cutlery: authenticatedUser.defaultCutlery || 0,
+        isAuthenticated: true,
+        // Keep other fields default
+        userId: "",
+        chatId: "",
+        notes: "",
+        username: "",
+        deliveryMethod: customerProfile.deliveryMethod, // Preserve existing
+      });
+    }
+  }, [authenticatedUser, customerProfile.isAuthenticated, customerProfile.deliveryMethod, setCustomerProfile]);
 
   const packageLimit = getPackageLimit(selectedPackage);
   const cartData = useMemo<OrderCartData>(() => {

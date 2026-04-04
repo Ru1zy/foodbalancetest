@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useOrderStore } from "@/src/store/orderStore";
 
 type TelegramWidgetUser = {
@@ -42,6 +43,7 @@ export default function TelegramLoginButton() {
   const configError = !BOT_USERNAME
     ? "NEXT_PUBLIC_BOT_USERNAME не заданий. Telegram Login Widget не може бути показаний."
     : null;
+  const router = useRouter();
 
   useEffect(() => {
     if (!BOT_USERNAME) {
@@ -89,6 +91,8 @@ export default function TelegramLoginButton() {
           userId: result.user.userId ?? "",
           username: result.user.username ?? "",
         });
+
+        router.push("/profile");
       } catch (requestError) {
         console.error("Telegram widget auth request failed", requestError);
         setError("Сталася помилка під час авторизації через Telegram.");
@@ -109,12 +113,12 @@ export default function TelegramLoginButton() {
       container.innerHTML = "";
       delete window.onTelegramAuth;
     };
-  }, [setCustomerProfile]);
+  }, [setCustomerProfile, router]);
 
   return (
-    <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
+    <div>
       <h2 className="text-lg font-semibold text-gray-900">Увійти через Telegram за бажанням</h2>
-      <p className="mt-2 text-sm text-gray-600">
+      <p className="text-xs text-gray-500">
         Це потрібно лише для швидкого автозаповнення профілю. Замовлення можна оформити і без Telegram.
       </p>
       {(configError || error) && (
@@ -122,7 +126,7 @@ export default function TelegramLoginButton() {
           {configError || error}
         </div>
       )}
-      <div ref={containerRef} className="mt-4 min-h-12" />
+      <div ref={containerRef} className="min-h-12" />
     </div>
   );
 }
