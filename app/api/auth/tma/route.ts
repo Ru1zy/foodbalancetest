@@ -7,8 +7,8 @@ import {
   buildTelegramPlaceholderPhone,
   createAuthToken,
   isTelegramPlaceholderPhone,
-} from "@/src/lib/auth-token";
-import { parseCutleryCount } from "@/src/lib/checkout";
+} from "@/lib/auth-token";
+import { parseCutleryCount } from "@/lib/checkout";
 
 export const runtime = "nodejs";
 

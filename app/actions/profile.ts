@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { verifyAuthToken } from "@/src/lib/auth-token";
+import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 
 export async function updateUserProfile(formData: FormData) {

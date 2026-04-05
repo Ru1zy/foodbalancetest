@@ -1,9 +1,9 @@
 import Link from "next/link";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import prisma from "@/lib/prisma";
-import { getAuthenticatedAdminUser } from "@/src/lib/admin-auth";
-import { getDeliveryMethodLabel, type DeliveryMethod } from "@/src/lib/checkout";
-import { getOrderStatusClasses, getOrderStatusLabel } from "@/src/lib/order-status";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { getDeliveryMethodLabel, type DeliveryMethod } from "@/lib/checkout";
+import { getOrderStatusClasses, getOrderStatusLabel } from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
 

@@ -3,14 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
-import { PackageType } from "@/lib/order-logic";
-import {
-  parseCheckoutFormData,
-  validateCheckoutFormValues,
-} from "@/src/lib/checkout";
-import { verifyAuthToken } from "@/src/lib/auth-token";
-import { isIndivPackage, type IndivDishQuantity } from "@/src/lib/order-selection";
-import { sendOrderNotification } from "@/src/lib/telegram";
+import { earliestMenuDeliveryDateFromCartDays, PackageType } from "@/lib/order-logic";
+import { kyivCalendarDateKey, parseCheckoutFormData, validateCheckoutFormValues } from "@/lib/checkout";
+import { verifyAuthToken } from "@/lib/auth-token";
+import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
+import { sendOrderNotification } from "@/lib/telegram";
 
 export type StandardSelections = Record<string, number>;
 
@@ -39,50 +36,6 @@ export type SubmitOrderResult =
       ok: false;
       status: number;
     };
-
-function getNearestMonday() {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Kyiv",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    weekday: "long",
-  });
-
-  const parts = formatter.formatToParts(new Date());
-  const values: Record<string, string> = {};
-
-  for (const part of parts) {
-    if (part.type !== "literal") {
-      values[part.type] = part.value;
-    }
-  }
-
-  const weekdayMap: Record<string, number> = {
-    Monday: 1,
-    Tuesday: 2,
-    Wednesday: 3,
-    Thursday: 4,
-    Friday: 5,
-    Saturday: 6,
-    Sunday: 0,
-  };
-
-  const weekday = weekdayMap[values.weekday];
-  const daysUntilMonday = weekday === 1 ? 0 : weekday === 0 ? 1 : 8 - weekday;
-
-  return new Date(
-    Date.UTC(
-      Number(values.year),
-      Number(values.month) - 1,
-      Number(values.day) + daysUntilMonday,
-      0,
-      0,
-      0,
-      0,
-    ),
-  );
-}
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   const indivPackage = isIndivPackage(cartData.packageType);
@@ -156,7 +109,35 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   };
 }
 
-export async function submitOrder(formData: FormData, cartData: OrderCartData): Promise<SubmitOrderResult> {
+async function resolveServerDeliveryDate(sanitizedCartData: OrderCartData): Promise<Date | null> {
+  const uniqueIds = [...new Set(sanitizedCartData.days.map((d) => d.dayId))];
+  if (uniqueIds.length === 0) {
+    return null;
+  }
+
+  const rows = await prisma.menu.findMany({
+    where: { id: { in: uniqueIds } },
+    select: { id: true, dayOfWeek: true },
+  });
+
+  if (rows.length !== uniqueIds.length) {
+    return null;
+  }
+
+  const menuDayByItemId = Object.fromEntries(rows.map((r) => [r.id, r.dayOfWeek]));
+  return earliestMenuDeliveryDateFromCartDays(sanitizedCartData.days, menuDayByItemId, new Date());
+}
+
+function normalizeDeliveryDateInput(value: Date | string): Date | null {
+  const d = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+export async function submitOrder(
+  formData: FormData,
+  cartData: OrderCartData,
+  deliveryDate: Date | string,
+): Promise<SubmitOrderResult> {
   const parsedFormData = parseCheckoutFormData(formData);
   const validationErrors = validateCheckoutFormValues(parsedFormData);
 
@@ -181,6 +162,27 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
       status: 400,
     };
   }
+
+  const submittedDeliveryDate = normalizeDeliveryDateInput(deliveryDate);
+  const serverDeliveryDate = await resolveServerDeliveryDate(sanitizedCartData);
+
+  if (!submittedDeliveryDate || !serverDeliveryDate) {
+    return {
+      ok: false,
+      message: "Не вдалося визначити дату доставки.",
+      status: 400,
+    };
+  }
+
+  if (kyivCalendarDateKey(submittedDeliveryDate) !== kyivCalendarDateKey(serverDeliveryDate)) {
+    return {
+      ok: false,
+      message: "Дата доставки не збігається з вибраними днями. Оновіть сторінку та спробуйте ще раз.",
+      status: 400,
+    };
+  }
+
+  const resolvedDeliveryDate = submittedDeliveryDate;
 
   try {
     const cookieStore = await cookies();
@@ -252,7 +254,7 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
             data: {
               deliveryAddress:
                 parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
-              deliveryDate: new Date(parsedFormData.deliveryDate),
+              deliveryDate: resolvedDeliveryDate,
               deliveryMethod: parsedFormData.deliveryMethod,
               cutlery: parsedFormData.cutlery,
               items: sanitizedCartData,
@@ -305,7 +307,7 @@ export async function submitOrder(formData: FormData, cartData: OrderCartData): 
         data: {
           deliveryAddress:
             parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
-          deliveryDate: new Date(parsedFormData.deliveryDate),
+          deliveryDate: resolvedDeliveryDate,
           deliveryMethod: parsedFormData.deliveryMethod,
           cutlery: parsedFormData.cutlery,
           items: sanitizedCartData,

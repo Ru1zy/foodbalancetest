@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { PackageType } from "@/lib/order-logic";
-import type { DeliveryMethod } from "@/src/lib/checkout";
+import type { DeliveryMethod } from "@/lib/checkout";
 
 export type Selections = Record<string, Record<string, number>>;
 
@@ -37,6 +37,7 @@ export interface OrderStore {
   setPackage: (packageType: PackageType) => void;
   setSelection: (dayId: string, category: string, dishIndex: number) => void;
   clearSelections: () => void;
+  clearDaySelections: (dayId: string) => void;
   addCartItem: (item: CartItem) => void;
   removeCartItem: (itemId: string) => void;
   clearCart: () => void;
@@ -137,6 +138,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set(() => ({
       selections: {},
     })),
+
+  clearDaySelections: (dayId) =>
+    set((state) => {
+      if (!state.selections[dayId]) {
+        return state;
+      }
+      const next = { ...state.selections };
+      delete next[dayId];
+      return { selections: next };
+    }),
 
   addCartItem: (item) =>
     set((state) => ({

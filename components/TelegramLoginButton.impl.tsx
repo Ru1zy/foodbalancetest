@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useOrderStore } from "@/src/store/orderStore";
+import { useOrderStore } from "@/lib/orderStore";
 
 type TelegramWidgetUser = {
   auth_date?: number;

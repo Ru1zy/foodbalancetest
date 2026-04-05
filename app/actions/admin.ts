@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
-import { getAuthenticatedAdminUser } from "@/src/lib/admin-auth";
-import { isOrderStatus, type OrderStatus } from "@/src/lib/order-status";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 
 export type UpdateOrderStatusResult =
   | {

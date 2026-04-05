@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import type { User } from "@prisma/client";
 import prisma from "@/lib/prisma";
-import { verifyAuthToken } from "@/src/lib/auth-token";
+import { verifyAuthToken } from "@/lib/auth-token";
 
 function buildLocalDevAdmin(adminChatId: string | undefined): User {
   return {

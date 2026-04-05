@@ -7,8 +7,8 @@ import {
   buildIndivDishId,
   getDaySelectedCount,
   isIndivPackage,
-} from "@/src/lib/order-selection";
-import { useOrderStore } from "@/src/store/orderStore";
+} from "@/lib/order-selection";
+import { useOrderStore } from "@/lib/orderStore";
 
 // Типизация для конкретного варианта блюда
 export type DishOption = {

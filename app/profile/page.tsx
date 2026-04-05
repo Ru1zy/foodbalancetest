@@ -1,9 +1,9 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { verifyAuthToken } from "@/src/lib/auth-token";
+import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import ProfilePageClient, { type OrderItems } from "./ProfilePageClient";
-import { parseCutleryCount } from "@/src/lib/checkout";
+import { parseCutleryCount } from "@/lib/checkout";
 
 export default async function ProfilePage() {
   const cookieStore = await cookies();

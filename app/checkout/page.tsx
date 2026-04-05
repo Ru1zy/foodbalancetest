@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
-import { verifyAuthToken } from "@/src/lib/auth-token";
+import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import CheckoutPageImpl from "./page-impl";
-import { parseCutleryCount } from "@/src/lib/checkout";
+import { parseCutleryCount } from "@/lib/checkout";
 
 export default async function CheckoutPage() {
   const cookieStore = await cookies();
@@ -36,5 +36,12 @@ export default async function CheckoutPage() {
     }
   }
 
-  return <CheckoutPageImpl authenticatedUser={user} />;
+  const menuRows = await prisma.menu.findMany({
+    select: { id: true, dayOfWeek: true },
+  });
+  const menuDayByItemId: Record<string, number> = Object.fromEntries(
+    menuRows.map((m) => [m.id, m.dayOfWeek]),
+  );
+
+  return <CheckoutPageImpl authenticatedUser={user} menuDayByItemId={menuDayByItemId} />;
 }

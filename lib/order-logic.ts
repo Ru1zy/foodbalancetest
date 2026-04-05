@@ -92,6 +92,44 @@ function getTargetDate(dayOfWeek: number, targetMonday: Date) {
   return new Date(targetMonday.getTime() + (dayOfWeek - 1) * 24 * 60 * 60 * 1000);
 }
 
+/** Monday that starts the menu week (same rule as day selectability). */
+export function getMenuWeekMonday(reference: Date = new Date()): Date {
+  return getTargetMonday(getKyivParts(reference));
+}
+
+/** Calendar date for a menu day index 1–7 within the current menu week. */
+export function dateForMenuDayOfWeek(dayOfWeek: number, reference: Date = new Date()): Date {
+  return getTargetDate(dayOfWeek, getMenuWeekMonday(reference));
+}
+
+/** Earliest delivery day among the given weekday indices. */
+export function earliestDeliveryDateFromDayOfWeeks(
+  dayOfWeeks: number[],
+  reference: Date = new Date(),
+): Date | null {
+  const valid = dayOfWeeks.filter((d) => Number.isInteger(d) && d >= 1 && d <= 7);
+  if (valid.length === 0) {
+    return null;
+  }
+  const minDay = Math.min(...valid);
+  return dateForMenuDayOfWeek(minDay, reference);
+}
+
+/**
+ * Earliest menu delivery date for cart days keyed by Menu.id, using a map from menu row id → dayOfWeek (1–7).
+ */
+export function earliestMenuDeliveryDateFromCartDays(
+  days: Array<{ dayId: string }>,
+  menuDayByItemId: Record<string, number>,
+  reference: Date = new Date(),
+): Date | null {
+  const weeks = days.map((d) => menuDayByItemId[d.dayId]);
+  if (weeks.length === 0 || weeks.some((n) => !Number.isInteger(n) || n < 1 || n > 7)) {
+    return null;
+  }
+  return earliestDeliveryDateFromDayOfWeeks(weeks, reference);
+}
+
 export function getDeadlineForDay(target: Date): Date {
   const targetKyiv = getKyivParts(target);
   let deadlineDay = targetKyiv.day;

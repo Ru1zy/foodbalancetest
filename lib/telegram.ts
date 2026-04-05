@@ -1,11 +1,11 @@
 import prisma from "@/lib/prisma";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
-import { getDeliveryMethodLabel, type DeliveryMethod } from "@/src/lib/checkout";
+import { getDeliveryMethodLabel, type DeliveryMethod } from "@/lib/checkout";
 import {
   isIndivPackage,
   parseIndivDishId,
   type IndivDishQuantity,
-} from "@/src/lib/order-selection";
+} from "@/lib/order-selection";
 
 type TelegramOrder = {
   cutlery: number;

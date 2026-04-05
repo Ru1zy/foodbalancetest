@@ -5,20 +5,26 @@ import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import TelegramLoginButton from "@/components/TelegramLoginButton.impl";
 import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
-import { getPackageLimit } from "@/lib/order-logic";
+import {
+  dateForMenuDayOfWeek,
+  earliestMenuDeliveryDateFromCartDays,
+  getPackageLimit,
+} from "@/lib/order-logic";
 import {
   clampCutleryCount,
+  formatDisplayDate,
+  formatScheduleDayLabel,
   getDeliveryMethodLabel,
   parseCheckoutFormData,
   type DeliveryMethod,
   validateCheckoutFormValues,
-} from "@/src/lib/checkout";
+} from "@/lib/checkout";
 import {
   getDaySelectedCount,
   isIndivPackage,
   toIndivDishQuantities,
-} from "@/src/lib/order-selection";
-import { useOrderStore } from "@/src/store/orderStore";
+} from "@/lib/order-selection";
+import { useOrderStore } from "@/lib/orderStore";
 
 type FeedbackState = {
   message: string;
@@ -42,33 +48,21 @@ type AuthenticatedUser = {
 
 type Props = {
   authenticatedUser: AuthenticatedUser;
+  menuDayByItemId: Record<string, number>;
 };
 
-export default function CheckoutPage({ authenticatedUser }: Props) {
+export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Props) {
   const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
   const selectedPackage = useOrderStore((state) => state.selectedPackage);
   const selections = useOrderStore((state) => state.selections);
   const clearSelections = useOrderStore((state) => state.clearSelections);
+  const clearDaySelections = useOrderStore((state) => state.clearDaySelections);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [minDeliveryDate] = useState(() => {
-    // Calculate next Monday
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const daysUntilMonday = dayOfWeek === 1 ? 0 : (dayOfWeek === 0 ? 1 : 8 - dayOfWeek);
-    const nextMonday = new Date(today);
-    nextMonday.setDate(today.getDate() + daysUntilMonday);
-    
-    // Format as YYYY-MM-DD
-    const year = nextMonday.getFullYear();
-    const month = String(nextMonday.getMonth() + 1).padStart(2, '0');
-    const day = String(nextMonday.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  });
 
   useEffect(() => {
     if (authenticatedUser && !customerProfile.isAuthenticated) {
@@ -118,6 +112,28 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
     };
   }, [packageLimit, selectedPackage, selections]);
 
+  const deliveryDate = useMemo(
+    () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
+    [cartData.days, menuDayByItemId],
+  );
+
+  const cartDaysSchedule = useMemo(() => {
+    const ref = new Date();
+    const entries = cartData.days
+      .map((d) => {
+        const dow = menuDayByItemId[d.dayId];
+        if (!Number.isInteger(dow) || dow < 1 || dow > 7) {
+          return null;
+        }
+        const date = dateForMenuDayOfWeek(dow, ref);
+        return { date, dayId: d.dayId, dow, label: formatScheduleDayLabel(date) };
+      })
+      .filter((e): e is NonNullable<typeof e> => e !== null)
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+    return entries;
+  }, [cartData.days, menuDayByItemId]);
+
   const incompleteDaysCount = useMemo(
     () =>
       Object.values(selections).filter((daySelections) => {
@@ -145,6 +161,7 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+
     const submittedValues = parseCheckoutFormData(formData);
     const nextFieldErrors = validateCheckoutFormValues(submittedValues);
 
@@ -162,7 +179,15 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
     setFeedback(null);
 
     startTransition(async () => {
-      const result = await submitOrder(formData, cartData);
+      if (!deliveryDate) {
+        setFeedback({
+          message: "Не вдалося визначити дату доставки за кошиком.",
+          tone: "error",
+        });
+        return;
+      }
+
+      const result = await submitOrder(formData, cartData, deliveryDate);
 
       if (!result.ok) {
         setFeedback({
@@ -391,19 +416,8 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
               </label>
             )}
 
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 3. Дата доставки</span>
-              <input
-                type="date"
-                name="deliveryDate"
-                min={minDeliveryDate}
-                defaultValue={minDeliveryDate}
-                className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-              />
-            </label>
-
             <section className="rounded-3xl border border-gray-200 p-5">
-              <div className="text-sm font-semibold text-gray-900">Крок 4. Кількість приборів</div>
+              <div className="text-sm font-semibold text-gray-900">Крок 3. Кількість приборів</div>
               <div className="mt-4 flex flex-wrap items-center gap-4">
                 <button
                   type="button"
@@ -435,7 +449,7 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
             </section>
 
             <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 5. Коментар</span>
+              <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 4. Коментар</span>
               <textarea
                 className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                 defaultValue={customerProfile.notes}
@@ -492,8 +506,63 @@ export default function CheckoutPage({ authenticatedUser }: Props) {
                 <span className="text-gray-500">Прибори</span>
                 <span className="font-semibold text-gray-900">{customerProfile.cutlery}</span>
               </div>
+              <div className="flex items-start justify-between gap-3 text-sm">
+                <span className="shrink-0 text-gray-500">Перша доставка</span>
+                <span className="text-right font-semibold text-gray-900">
+                  {deliveryDate ? formatDisplayDate(deliveryDate) : "—"}
+                </span>
+              </div>
+              <div className="text-sm">
+                <div className="text-gray-500">Графік доставок</div>
+                {cartDaysSchedule.length > 0 ? (
+                  <ul className="mt-1.5 list-none space-y-1 text-right font-semibold text-gray-900">
+                    {cartDaysSchedule.map((entry) => (
+                      <li key={entry.dayId}>{entry.label}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-1.5 text-right font-semibold text-gray-900">—</p>
+                )}
+              </div>
             </div>
           </div>
+
+          {cartDaysSchedule.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Дні в кошику</div>
+              <ul className="mt-3 space-y-2">
+                {cartDaysSchedule.map((entry) => (
+                  <li
+                    key={entry.dayId}
+                    className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{entry.label}</span>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                      onClick={() => clearDaySelections(entry.dayId)}
+                      aria-label={`Видалити ${entry.label}`}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="h-4 w-4"
+                        aria-hidden
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.78 41.78 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Видалити
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {incompleteDaysCount > 0 && (
             <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">

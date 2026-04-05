@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { updateUserProfile } from "../actions/profile";
-import { getOrderStatusLabel } from "@/src/lib/order-status";
+import { getOrderStatusLabel } from "@/lib/order-status";
 
 export type DishItem = {
   dishId: string;

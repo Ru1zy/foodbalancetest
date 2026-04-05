@@ -3,7 +3,7 @@
 import { ChangeEvent, useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrderStatus } from "@/app/actions/admin";
-import { ORDER_STATUS_OPTIONS } from "@/src/lib/order-status";
+import { ORDER_STATUS_OPTIONS } from "@/lib/order-status";
 
 type OrderStatusSelectProps = {
   currentStatus: string;

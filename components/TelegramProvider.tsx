@@ -1,7 +1,7 @@
 "use client";
 
 import { PropsWithChildren, useEffect, useRef } from "react";
-import { useOrderStore } from "@/src/store/orderStore";
+import { useOrderStore } from "@/lib/orderStore";
 
 type TmaAuthResponse = {
   ok: boolean;
