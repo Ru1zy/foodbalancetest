@@ -2,31 +2,15 @@ export const MAX_CUTLERY_COUNT = 4;
 const MIN_PHONE_DIGITS = 10;
 const MAX_PHONE_DIGITS = 15;
 
-export const DELIVERY_METHOD_LABELS = {
-  delivery: "Доставка",
-  pickup: "Самовивіз",
-} as const;
-
-export type DeliveryMethod = keyof typeof DELIVERY_METHOD_LABELS;
-
 export type CheckoutFormValues = {
   address: string;
   comment: string;
   cutlery: number;
-  deliveryMethod: DeliveryMethod;
   name: string;
   phone: string;
 };
 
 export type CheckoutFieldErrors = Partial<Record<"address" | "cart" | "name" | "phone", string>>;
-
-export function isDeliveryMethod(value: string): value is DeliveryMethod {
-  return value === "delivery" || value === "pickup";
-}
-
-export function getDeliveryMethodLabel(method: DeliveryMethod) {
-  return DELIVERY_METHOD_LABELS[method];
-}
 
 export function clampCutleryCount(value: number) {
   return Math.min(MAX_CUTLERY_COUNT, Math.max(0, value));
@@ -90,13 +74,10 @@ export function kyivCalendarDateKey(d: Date): string {
 }
 
 export function parseCheckoutFormData(formData: FormData): CheckoutFormValues {
-  const rawDeliveryMethod = String(formData.get("deliveryMethod") || "delivery").trim();
-
   return {
     address: String(formData.get("address") || "").trim(),
     comment: String(formData.get("comment") || "").trim(),
     cutlery: parseCutleryCount(formData.get("cutlery")),
-    deliveryMethod: isDeliveryMethod(rawDeliveryMethod) ? rawDeliveryMethod : "delivery",
     name: String(formData.get("name") || "").trim(),
     phone: normalizePhone(String(formData.get("phone") || "")),
   };
@@ -113,7 +94,7 @@ export function validateCheckoutFormValues(values: CheckoutFormValues): Checkout
     errors.phone = "Вкажіть коректний номер телефону.";
   }
 
-  if (values.deliveryMethod === "delivery" && !values.address) {
+  if (!values.address) {
     errors.address = "Вкажіть адресу доставки.";
   }
 

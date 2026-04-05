@@ -2,7 +2,6 @@ import Link from "next/link";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
-import { getDeliveryMethodLabel, type DeliveryMethod } from "@/lib/checkout";
 import { getOrderStatusClasses, getOrderStatusLabel } from "@/lib/order-status";
 
 export const dynamic = "force-dynamic";
@@ -45,15 +44,10 @@ function formatDaysLabel(daysCount: number) {
 
 function getOrderAddressLabel(order: {
   deliveryAddress: string | null;
-  deliveryMethod: DeliveryMethod;
   user: {
     address: string | null;
   };
 }) {
-  if (order.deliveryMethod === "pickup") {
-    return "Самовивіз";
-  }
-
   return order.deliveryAddress || order.user.address || "Не вказано";
 }
 
@@ -141,10 +135,8 @@ export default async function AdminOrdersPage() {
                           <div className="mt-2 text-sm text-gray-600">{order.user.phone}</div>
                         </td>
                         <td className="px-4 py-5 sm:px-6 text-sm text-gray-700">
-                          <div className="font-medium text-gray-900">
-                            {getDeliveryMethodLabel(order.deliveryMethod as DeliveryMethod)}
-                          </div>
-                          {order.user.address || "Не вказано"}
+                          <div className="font-medium text-gray-900">Доставка</div>
+                          <div className="mt-1">{getOrderAddressLabel(order)}</div>
                         </td>
                         <td className="px-4 py-5 sm:px-6">
                           <div className="text-sm font-semibold text-gray-900">{order.packageType}</div>

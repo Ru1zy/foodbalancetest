@@ -1,4 +1,4 @@
-import OrderingWizardClient from "./OrderingWizardClient";
+import OrderWizard from "./OrderWizard";
 import prisma from "../lib/prisma";
 
 async function getMenuItems() {
@@ -32,7 +32,7 @@ export default async function Home() {
             Меню обновляется
           </div>
         ) : (
-          <OrderingWizardClient menuItems={menuItems} />
+          <OrderWizard menuItems={menuItems} />
         )}
       </section>
     </main>

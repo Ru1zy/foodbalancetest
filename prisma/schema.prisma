@@ -39,7 +39,6 @@ model Order {
   user            User     @relation(fields: [userId], references: [id])
   createdAt       DateTime @default(now())
   deliveryDate    DateTime
-  deliveryMethod  String   @default("delivery")
   deliveryAddress String?
   packageType     String
   items           Json

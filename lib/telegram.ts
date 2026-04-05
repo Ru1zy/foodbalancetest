@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
-import { getDeliveryMethodLabel, type DeliveryMethod } from "@/lib/checkout";
 import {
   isIndivPackage,
   parseIndivDishId,
@@ -10,7 +9,6 @@ import {
 type TelegramOrder = {
   cutlery: number;
   deliveryAddress: string | null;
-  deliveryMethod: string;
   items: unknown;
   notes: string | null;
   packageType: string;

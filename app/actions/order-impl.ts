@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
-import { earliestMenuDeliveryDateFromCartDays, PackageType } from "@/lib/order-logic";
+import {
+  earliestMenuDeliveryDateFromCartDays,
+  getOrderTotalUah,
+  PackageType,
+} from "@/lib/order-logic";
 import { kyivCalendarDateKey, parseCheckoutFormData, validateCheckoutFormValues } from "@/lib/checkout";
 import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
@@ -38,6 +42,23 @@ export type SubmitOrderResult =
     };
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
+  if (cartData.packageType === "Sushka") {
+    const days = (Array.isArray(cartData.days) ? cartData.days : [])
+      .filter((day) => day && typeof day.dayId === "string" && day.dayId.trim().length > 0)
+      .map((day) => ({
+        dayId: day.dayId.trim(),
+        selectedCount: 0,
+        selections: {} as StandardSelections,
+      }));
+
+    return {
+      days,
+      packageLimit: cartData.packageLimit,
+      packageType: "Sushka",
+      totalDays: days.length,
+    };
+  }
+
   const indivPackage = isIndivPackage(cartData.packageType);
   const days = Array.isArray(cartData.days)
     ? cartData.days.filter((day) => {
@@ -137,6 +158,7 @@ export async function submitOrder(
   formData: FormData,
   cartData: OrderCartData,
   deliveryDate: Date | string,
+  totalPrice: number,
 ): Promise<SubmitOrderResult> {
   const parsedFormData = parseCheckoutFormData(formData);
   const validationErrors = validateCheckoutFormValues(parsedFormData);
@@ -159,6 +181,19 @@ export async function submitOrder(
     return {
       ok: false,
       message: "У кошику немає жодного повністю зібраного дня.",
+      status: 400,
+    };
+  }
+
+  const expectedPrice = getOrderTotalUah(sanitizedCartData.packageType, sanitizedCartData.totalDays);
+  if (
+    typeof totalPrice !== "number" ||
+    !Number.isInteger(totalPrice) ||
+    totalPrice !== expectedPrice
+  ) {
+    return {
+      ok: false,
+      message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
       status: 400,
     };
   }
@@ -238,10 +273,7 @@ export async function submitOrder(
               id: userId,
             },
             data: {
-              address:
-                parsedFormData.deliveryMethod === "delivery"
-                  ? parsedFormData.address || null
-                  : currentUser.address,
+              address: parsedFormData.address || null,
               defaultCutlery: String(parsedFormData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
               name: parsedFormData.name,
@@ -252,14 +284,13 @@ export async function submitOrder(
 
           const order = await tx.order.create({
             data: {
-              deliveryAddress:
-                parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
+              deliveryAddress: parsedFormData.address || null,
               deliveryDate: resolvedDeliveryDate,
-              deliveryMethod: parsedFormData.deliveryMethod,
               cutlery: parsedFormData.cutlery,
               items: sanitizedCartData,
               notes: parsedFormData.comment || null,
               packageType: sanitizedCartData.packageType,
+              price: expectedPrice,
               status: "new",
               userId,
             },
@@ -281,10 +312,7 @@ export async function submitOrder(
               id: existingUser.id,
             },
             data: {
-              address:
-                parsedFormData.deliveryMethod === "delivery"
-                  ? parsedFormData.address || null
-                  : existingUser.address,
+              address: parsedFormData.address || null,
               defaultCutlery: String(parsedFormData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
               name: parsedFormData.name,
@@ -293,8 +321,7 @@ export async function submitOrder(
           })
         : await tx.user.create({
             data: {
-              address:
-                parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
+              address: parsedFormData.address || null,
               defaultCutlery: String(parsedFormData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
               name: parsedFormData.name,
@@ -305,14 +332,13 @@ export async function submitOrder(
 
       const order = await tx.order.create({
         data: {
-          deliveryAddress:
-            parsedFormData.deliveryMethod === "delivery" ? parsedFormData.address || null : null,
+          deliveryAddress: parsedFormData.address || null,
           deliveryDate: resolvedDeliveryDate,
-          deliveryMethod: parsedFormData.deliveryMethod,
           cutlery: parsedFormData.cutlery,
           items: sanitizedCartData,
           notes: parsedFormData.comment || null,
           packageType: sanitizedCartData.packageType,
+          price: expectedPrice,
           status: "new",
           userId: user.id,
         },

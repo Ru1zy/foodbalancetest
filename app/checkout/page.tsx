@@ -37,11 +37,24 @@ export default async function CheckoutPage() {
   }
 
   const menuRows = await prisma.menu.findMany({
-    select: { id: true, dayOfWeek: true },
+    select: { id: true, dayOfWeek: true, packageType: true },
   });
   const menuDayByItemId: Record<string, number> = Object.fromEntries(
     menuRows.map((m) => [m.id, m.dayOfWeek]),
   );
 
-  return <CheckoutPageImpl authenticatedUser={user} menuDayByItemId={menuDayByItemId} />;
+  const sushkaMenuIdByDay: Record<number, string> = {};
+  for (const m of menuRows) {
+    if (m.packageType === "Sushka") {
+      sushkaMenuIdByDay[m.dayOfWeek] = m.id;
+    }
+  }
+
+  return (
+    <CheckoutPageImpl
+      authenticatedUser={user}
+      menuDayByItemId={menuDayByItemId}
+      sushkaMenuIdByDay={sushkaMenuIdByDay}
+    />
+  );
 }

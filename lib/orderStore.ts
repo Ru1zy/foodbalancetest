@@ -1,8 +1,5 @@
 import { create } from "zustand";
-import { PackageType } from "@/lib/order-logic";
-import type { DeliveryMethod } from "@/lib/checkout";
-
-export type OrderWizardStep = 1 | 2 | 3;
+import type { PackageType } from "@/lib/order-logic";
 
 export type Selections = Record<string, Record<string, number>>;
 
@@ -19,7 +16,6 @@ export type CustomerProfile = {
   address: string;
   chatId: string;
   cutlery: number;
-  deliveryMethod: DeliveryMethod;
   isAuthenticated: boolean;
   name: string;
   notes: string;
@@ -30,19 +26,23 @@ export type CustomerProfile = {
 
 export interface OrderStore {
   customerProfile: CustomerProfile;
-  selectedPackage: PackageType;
-  /** Menu weekday indices 1–7 chosen on wizard step 2. */
-  selectedDates: number[];
-  orderWizardStep: OrderWizardStep;
+  /** Wizard / menu tariff id; `null` until the user completes step 1. */
+  selectedPackage: string | null;
+  /** Weekday indices as strings `"1"`…`"7"` (menu week days). */
+  selectedDates: string[];
+  /** Wizard screen: 1 = package, 2 = days, 3 = dishes. */
+  step: number;
   selections: Selections;
   cartItems: CartItem[];
   incrementDish: (dayId: string, dishId: string) => void;
   decrementDish: (dayId: string, dishId: string) => void;
   setCustomerProfile: (profile: Partial<CustomerProfile>) => void;
   setPackage: (packageType: PackageType) => void;
-  wizardSelectPackage: (packageType: PackageType) => void;
-  setWizardStep: (step: OrderWizardStep) => void;
-  setSelectedDates: (dates: number[]) => void;
+  /** Step 1 → 2: set tariff; clears selections & dates only if tariff changed. */
+  selectWizardPackage: (packageType: string) => void;
+  setStep: (step: number) => void;
+  setSelectedDates: (dates: string[]) => void;
+  resetWizard: () => void;
   setSelection: (dayId: string, category: string, dishIndex: number) => void;
   clearSelections: () => void;
   clearDaySelections: (dayId: string) => void;
@@ -52,12 +52,17 @@ export interface OrderStore {
   getCartTotal: () => number;
 }
 
+function normalizeSelectedDateStrings(dates: string[]): string[] {
+  return [...new Set(dates.map((s) => String(s).trim()))]
+    .filter((s) => /^[1-7]$/.test(s))
+    .sort((a, b) => Number(a) - Number(b));
+}
+
 export const useOrderStore = create<OrderStore>((set, get) => ({
   customerProfile: {
     address: "",
     chatId: "",
     cutlery: 0,
-    deliveryMethod: "delivery",
     isAuthenticated: false,
     name: "",
     notes: "",
@@ -65,9 +70,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     userId: "",
     username: "",
   },
-  selectedPackage: "Slim",
+  selectedPackage: null,
   selectedDates: [],
-  orderWizardStep: 1,
+  step: 1,
   selections: {},
   cartItems: [],
 
@@ -79,30 +84,35 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       },
     })),
 
-  setPackage: (packageType: PackageType) =>
+  setPackage: (packageType) =>
     set(() => ({
       selectedPackage: packageType,
       selections: {},
     })),
 
-  wizardSelectPackage: (packageType) =>
+  selectWizardPackage: (packageType) =>
     set((state) => {
       const pkgChanged = state.selectedPackage !== packageType;
       return {
         selectedPackage: packageType,
         selections: pkgChanged ? {} : state.selections,
         selectedDates: pkgChanged ? [] : state.selectedDates,
-        orderWizardStep: 2,
+        step: 2,
       };
     }),
 
-  setWizardStep: (step) => set({ orderWizardStep: step }),
+  setStep: (step) => set({ step }),
 
   setSelectedDates: (dates) =>
     set({
-      selectedDates: [...new Set(dates)]
-        .filter((d) => Number.isInteger(d) && d >= 1 && d <= 7)
-        .sort((a, b) => a - b),
+      selectedDates: normalizeSelectedDateStrings(dates),
+    }),
+
+  resetWizard: () =>
+    set({
+      step: 1,
+      selectedPackage: null,
+      selectedDates: [],
     }),
 
   setSelection: (dayId, category, dishIndex) =>

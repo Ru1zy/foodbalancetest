@@ -8,15 +8,14 @@ import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
 import {
   dateForMenuDayOfWeek,
   earliestMenuDeliveryDateFromCartDays,
+  getOrderTotalUah,
   getPackageLimit,
 } from "@/lib/order-logic";
 import {
   clampCutleryCount,
   formatDisplayDate,
   formatScheduleDayLabel,
-  getDeliveryMethodLabel,
   parseCheckoutFormData,
-  type DeliveryMethod,
   validateCheckoutFormValues,
 } from "@/lib/checkout";
 import {
@@ -24,6 +23,7 @@ import {
   isIndivPackage,
   toIndivDishQuantities,
 } from "@/lib/order-selection";
+import { parsePackageType } from "@/lib/package-coerce";
 import { useOrderStore } from "@/lib/orderStore";
 
 type FeedbackState = {
@@ -34,7 +34,6 @@ type FeedbackState = {
 type FieldErrors = Partial<Record<"address" | "cart" | "name" | "phone", string>>;
 
 type SubmittedState = {
-  deliveryMethod: DeliveryMethod;
   packageType: string;
   totalDays: number;
 };
@@ -49,13 +48,17 @@ type AuthenticatedUser = {
 type Props = {
   authenticatedUser: AuthenticatedUser;
   menuDayByItemId: Record<string, number>;
+  /** dayOfWeek (1–7) → menu row id для тарифу Сушка */
+  sushkaMenuIdByDay: Record<number, string>;
 };
 
-export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Props) {
+export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushkaMenuIdByDay }: Props) {
   const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
-  const selectedPackage = useOrderStore((state) => state.selectedPackage);
+  const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
+  const pkg = parsePackageType(selectedPackageRaw);
   const selections = useOrderStore((state) => state.selections);
+  const selectedDates = useOrderStore((state) => state.selectedDates);
   const clearSelections = useOrderStore((state) => state.clearSelections);
   const clearDaySelections = useOrderStore((state) => state.clearDaySelections);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
@@ -77,18 +80,53 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
         chatId: "",
         notes: "",
         username: "",
-        deliveryMethod: customerProfile.deliveryMethod, // Preserve existing
       });
     }
-  }, [authenticatedUser, customerProfile.isAuthenticated, customerProfile.deliveryMethod, setCustomerProfile]);
+  }, [authenticatedUser, customerProfile.isAuthenticated, setCustomerProfile]);
 
-  const packageLimit = getPackageLimit(selectedPackage);
+  const packageLimit = getPackageLimit(pkg ?? undefined);
   const cartData = useMemo<OrderCartData>(() => {
+    if (!pkg) {
+      return {
+        days: [],
+        packageLimit: getPackageLimit(),
+        packageType: "Slim",
+        totalDays: 0,
+      };
+    }
+
+    if (pkg === "Sushka") {
+      const dowSorted = [...new Set(selectedDates.map((s) => Number(s)))]
+        .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
+        .sort((a, b) => a - b);
+
+      const days = dowSorted
+        .map((dow) => {
+          const id = sushkaMenuIdByDay[dow];
+          if (!id) {
+            return null;
+          }
+          return {
+            dayId: id,
+            selectedCount: 0,
+            selections: {} as Record<string, number>,
+          };
+        })
+        .filter((d): d is NonNullable<typeof d> => d !== null);
+
+      return {
+        days,
+        packageLimit,
+        packageType: "Sushka",
+        totalDays: days.length,
+      };
+    }
+
     const days = Object.entries(selections)
       .map(([dayId, daySelections]) => {
-        const selectedCount = getDaySelectedCount(daySelections, selectedPackage);
+        const selectedCount = getDaySelectedCount(daySelections, pkg);
 
-        if (isIndivPackage(selectedPackage)) {
+        if (isIndivPackage(selectedPackageRaw ?? undefined)) {
           return {
             dayId,
             items: toIndivDishQuantities(daySelections),
@@ -107,10 +145,15 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
     return {
       days,
       packageLimit,
-      packageType: selectedPackage,
+      packageType: pkg,
       totalDays: days.length,
     };
-  }, [packageLimit, selectedPackage, selections]);
+  }, [packageLimit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay]);
+
+  const orderTotalUah = useMemo(
+    () => (pkg ? getOrderTotalUah(pkg, cartData.totalDays) : 0),
+    [cartData.totalDays, pkg],
+  );
 
   const deliveryDate = useMemo(
     () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
@@ -134,14 +177,15 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
     return entries;
   }, [cartData.days, menuDayByItemId]);
 
-  const incompleteDaysCount = useMemo(
-    () =>
-      Object.values(selections).filter((daySelections) => {
-        const selectedCount = getDaySelectedCount(daySelections, selectedPackage);
-        return selectedCount > 0 && selectedCount !== packageLimit;
-      }).length,
-    [packageLimit, selectedPackage, selections],
-  );
+  const incompleteDaysCount = useMemo(() => {
+    if (!pkg || pkg === "Sushka") {
+      return 0;
+    }
+    return Object.values(selections).filter((daySelections) => {
+      const selectedCount = getDaySelectedCount(daySelections, pkg);
+      return selectedCount > 0 && selectedCount !== packageLimit;
+    }).length;
+  }, [packageLimit, pkg, selections]);
 
   const formKey = useMemo(
     () =>
@@ -150,7 +194,6 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
         customerProfile.name,
         customerProfile.phone,
         customerProfile.address,
-        customerProfile.deliveryMethod,
         customerProfile.cutlery,
         customerProfile.notes,
       ].join("|"),
@@ -165,8 +208,13 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
     const submittedValues = parseCheckoutFormData(formData);
     const nextFieldErrors = validateCheckoutFormValues(submittedValues);
 
-    if (cartData.totalDays === 0) {
-      nextFieldErrors.cart = "Додайте хоча б один повністю зібраний день до кошика.";
+    if (!pkg) {
+      nextFieldErrors.cart = "Спочатку оберіть тариф і збережіть кошик на головній сторінці.";
+    } else if (cartData.totalDays === 0) {
+      nextFieldErrors.cart =
+        pkg === "Sushka"
+          ? "Для Сушки оберіть хоча б один день на кроці 2 або перевірте наявність меню в системі."
+          : "Додайте хоча б один повністю зібраний день до кошика.";
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -187,7 +235,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
         return;
       }
 
-      const result = await submitOrder(formData, cartData, deliveryDate);
+      const result = await submitOrder(formData, cartData, deliveryDate, orderTotalUah);
 
       if (!result.ok) {
         setFeedback({
@@ -198,17 +246,12 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
       }
 
       setSubmitted({
-        deliveryMethod: submittedValues.deliveryMethod,
         packageType: cartData.packageType,
         totalDays: cartData.totalDays,
       });
       setCustomerProfile({
-        address:
-          submittedValues.deliveryMethod === "delivery"
-            ? submittedValues.address
-            : customerProfile.address,
+        address: submittedValues.address,
         cutlery: submittedValues.cutlery,
-        deliveryMethod: submittedValues.deliveryMethod,
         name: submittedValues.name,
         notes: submittedValues.comment,
         phone: submittedValues.phone,
@@ -236,12 +279,8 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
           <h1 className="text-3xl font-bold text-gray-900">Оформлення завершено</h1>
           <p className="mt-3 text-sm text-gray-600">
             Тариф: <span className="font-semibold text-gray-900">{submitted.packageType}</span>. Днів у
-            замовленні: <span className="font-semibold text-gray-900">{submitted.totalDays}</span>. Спосіб
-            отримання:{" "}
-            <span className="font-semibold text-gray-900">
-              {getDeliveryMethodLabel(submitted.deliveryMethod)}
-            </span>
-            .
+            замовленні: <span className="font-semibold text-gray-900">{submitted.totalDays}</span>. Доставка
+            кур&apos;єром за вказаною адресою.
           </p>
           <p className="mt-6 text-sm font-medium text-gray-600">
             Повертаємо вас на головну сторінку...
@@ -309,48 +348,9 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
           <form key={formKey} className="space-y-5" onSubmit={handleSubmit}>
             <input type="hidden" name="cutlery" value={customerProfile.cutlery} />
 
-            <fieldset className="rounded-3xl border border-gray-200 p-5">
-              <legend className="px-2 text-sm font-semibold text-gray-900">Крок 1. Спосіб отримання</legend>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {(["delivery", "pickup"] as const).map((method) => {
-                  const isActive = customerProfile.deliveryMethod === method;
-
-                  return (
-                    <label
-                      key={method}
-                      className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-4 transition ${
-                        isActive
-                          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
-                          : "border-gray-200 bg-white hover:border-gray-300"
-                      }`}
-                    >
-                      <input
-                        checked={isActive}
-                        className="mt-1"
-                        name="deliveryMethod"
-                        onChange={() => setCustomerProfile({ deliveryMethod: method })}
-                        type="radio"
-                        value={method}
-                      />
-                      <span>
-                        <span className="block text-sm font-semibold text-gray-900">
-                          {getDeliveryMethodLabel(method)}
-                        </span>
-                        <span className="mt-1 block text-sm text-gray-600">
-                          {method === "delivery"
-                            ? "Курʼєр привезе замовлення за вказаною адресою."
-                            : "Заберете замовлення самостійно, без адреси доставки."}
-                        </span>
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </fieldset>
-
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 2. Ім&apos;я</span>
+                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 1. Ім&apos;я</span>
                 <input
                   aria-invalid={fieldErrors.name ? "true" : "false"}
                   autoComplete="name"
@@ -371,7 +371,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 2. Телефон</span>
+                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 1. Телефон</span>
                 <input
                   aria-invalid={fieldErrors.phone ? "true" : "false"}
                   autoComplete="tel"
@@ -393,9 +393,8 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
               </label>
             </div>
 
-            {customerProfile.deliveryMethod === "delivery" && (
-              <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 3. Адреса</span>
+            <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 2. Адреса доставки</span>
                 <input
                   aria-invalid={fieldErrors.address ? "true" : "false"}
                   autoComplete="street-address"
@@ -413,8 +412,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
                 {fieldErrors.address && (
                   <span className="mt-2 block text-sm text-red-600">{fieldErrors.address}</span>
                 )}
-              </label>
-            )}
+            </label>
 
             <section className="rounded-3xl border border-gray-200 p-5">
               <div className="text-sm font-semibold text-gray-900">Крок 3. Кількість приборів</div>
@@ -486,7 +484,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-gray-500">Тариф</span>
-                <span className="font-semibold text-gray-900">{selectedPackage}</span>
+                <span className="font-semibold text-gray-900">{selectedPackageRaw ?? "—"}</span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="text-gray-500">Ліміт страв на день</span>
@@ -497,9 +495,9 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
                 <span className="font-semibold text-gray-900">{cartData.totalDays}</span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Спосіб отримання</span>
+                <span className="text-gray-500">Вартість</span>
                 <span className="font-semibold text-gray-900">
-                  {getDeliveryMethodLabel(customerProfile.deliveryMethod)}
+                  {orderTotalUah > 0 ? `${orderTotalUah} ₴` : "—"}
                 </span>
               </div>
               <div className="flex items-center justify-between gap-3 text-sm">
@@ -571,8 +569,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId }: Pro
           )}
 
           <div className="mt-4 text-sm text-gray-600">
-            До бази буде передано вибраний тариф, спосіб отримання та всі повністю зібрані дні з поточного
-            кошика.
+            До бази буде передано тариф, адресу доставки, вартість та обрані дні з поточного кошика.
           </div>
         </aside>
       </section>

@@ -1,5 +1,24 @@
 export type PackageType = "Slim" | "Balance" | "Active" | "Sport" | "Sushka" | "Indiv" | "Template";
 
+/** Базова ціна одного дня (грн) для розрахунку замовлення. */
+export const PACKAGE_PRICES: Record<PackageType, number> = {
+  Slim: 450,
+  Balance: 520,
+  Active: 580,
+  Sport: 640,
+  Sushka: 490,
+  Indiv: 550,
+  Template: 0,
+};
+
+export function getOrderTotalUah(packageType: PackageType, totalDays: number): number {
+  if (totalDays < 1) {
+    return 0;
+  }
+  const unit = PACKAGE_PRICES[packageType] ?? 0;
+  return totalDays * unit;
+}
+
 export function getPackageLimit(packageName?: string): number {
   if (!packageName) return 4;
   const p = packageName.trim().toLowerCase();
