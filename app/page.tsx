@@ -1,4 +1,4 @@
-import MenuGridClient from "./MenuGridClient";
+import OrderingWizardClient from "./OrderingWizardClient";
 import prisma from "../lib/prisma";
 
 async function getMenuItems() {
@@ -32,7 +32,7 @@ export default async function Home() {
             Меню обновляется
           </div>
         ) : (
-          <MenuGridClient menuItems={menuItems} />
+          <OrderingWizardClient menuItems={menuItems} />
         )}
       </section>
     </main>

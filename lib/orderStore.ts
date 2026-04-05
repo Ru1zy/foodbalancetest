@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { PackageType } from "@/lib/order-logic";
 import type { DeliveryMethod } from "@/lib/checkout";
 
+export type OrderWizardStep = 1 | 2 | 3;
+
 export type Selections = Record<string, Record<string, number>>;
 
 export type CartItem = {
@@ -29,12 +31,18 @@ export type CustomerProfile = {
 export interface OrderStore {
   customerProfile: CustomerProfile;
   selectedPackage: PackageType;
+  /** Menu weekday indices 1–7 chosen on wizard step 2. */
+  selectedDates: number[];
+  orderWizardStep: OrderWizardStep;
   selections: Selections;
   cartItems: CartItem[];
   incrementDish: (dayId: string, dishId: string) => void;
   decrementDish: (dayId: string, dishId: string) => void;
   setCustomerProfile: (profile: Partial<CustomerProfile>) => void;
   setPackage: (packageType: PackageType) => void;
+  wizardSelectPackage: (packageType: PackageType) => void;
+  setWizardStep: (step: OrderWizardStep) => void;
+  setSelectedDates: (dates: number[]) => void;
   setSelection: (dayId: string, category: string, dishIndex: number) => void;
   clearSelections: () => void;
   clearDaySelections: (dayId: string) => void;
@@ -58,6 +66,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     username: "",
   },
   selectedPackage: "Slim",
+  selectedDates: [],
+  orderWizardStep: 1,
   selections: {},
   cartItems: [],
 
@@ -74,6 +84,26 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       selectedPackage: packageType,
       selections: {},
     })),
+
+  wizardSelectPackage: (packageType) =>
+    set((state) => {
+      const pkgChanged = state.selectedPackage !== packageType;
+      return {
+        selectedPackage: packageType,
+        selections: pkgChanged ? {} : state.selections,
+        selectedDates: pkgChanged ? [] : state.selectedDates,
+        orderWizardStep: 2,
+      };
+    }),
+
+  setWizardStep: (step) => set({ orderWizardStep: step }),
+
+  setSelectedDates: (dates) =>
+    set({
+      selectedDates: [...new Set(dates)]
+        .filter((d) => Number.isInteger(d) && d >= 1 && d <= 7)
+        .sort((a, b) => a - b),
+    }),
 
   setSelection: (dayId, category, dishIndex) =>
     set((state) => ({

@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { getPackageLimit, isDaySelectable, mealSuffix, PackageType } from "../lib/order-logic";
+import { getPackageLimit, isDaySelectable, type PackageType } from "../lib/order-logic";
+import { getMenuRowsForPackage } from "@/lib/menu-for-package";
+import type { Dishes, DishOption, MenuItem } from "@/lib/menu-types";
 import {
   buildIndivDishId,
   getDaySelectedCount,
@@ -10,27 +12,7 @@ import {
 } from "@/lib/order-selection";
 import { useOrderStore } from "@/lib/orderStore";
 
-// Типизация для конкретного варианта блюда
-export type DishOption = {
-  full: string;
-  short: string;
-};
-
-// Структура JSON поля dishes в базе
-export type Dishes = {
-  breakfast: DishOption[];
-  lunch: DishOption[];
-  dinner: DishOption[];
-  snack?: DishOption[];
-  extra?: DishOption[];
-};
-
-export type MenuItem = {
-  id: string;
-  dayOfWeek: number;
-  packageType: string;
-  dishes: Dishes;
-};
+export type { DishOption, Dishes, MenuItem } from "@/lib/menu-types";
 
 const dayNames: Record<number, string> = {
   1: "Понеділок",
@@ -44,40 +26,20 @@ const dayNames: Record<number, string> = {
 
 type Props = {
   menuItems: MenuItem[];
+  /** When set, only these menu weekdays (1–7) are shown. */
+  filterDayOfWeeks?: number[] | null;
+  hidePackageSwitcher?: boolean;
+  onWizardBack?: () => void;
 };
 
 const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka", "Indiv"];
 
-const normalizeDish = (dish: DishOption, suffix = "") => ({
-  full: suffix ? `${dish.full}${suffix}` : dish.full,
-  short: suffix ? `${dish.short}${suffix}` : dish.short,
-});
-
-const transformMenuForPackage = (item: MenuItem, packageType: PackageType): MenuItem => {
-  if (packageType === "Sushka") {
-    return item;
-  }
-
-  if (item.packageType !== "Template") {
-    return item;
-  }
-
-  const lunchSuffix = mealSuffix(packageType, "lunch");
-  const dinnerSuffix = mealSuffix(packageType, "dinner");
-
-  const breakfast = (item.dishes.breakfast || []).map((dish) => normalizeDish(dish, ""));
-  const lunch = (item.dishes.lunch || []).map((dish) => normalizeDish(dish, lunchSuffix));
-  const dinner = (item.dishes.dinner || []).map((dish) => normalizeDish(dish, dinnerSuffix));
-  const snack = packageType === "Slim" ? [] : (item.dishes.snack || []).map((dish) => normalizeDish(dish, ""));
-  const extra = packageType === "Sport" ? [...breakfast, ...lunch, ...dinner, ...snack] : undefined;
-
-  return {
-    ...item,
-    dishes: { breakfast, lunch, dinner, snack, extra },
-  };
-};
-
-export default function MenuGridClient({ menuItems }: Props) {
+export default function MenuGridClient({
+  menuItems,
+  filterDayOfWeeks = null,
+  hidePackageSwitcher = false,
+  onWizardBack,
+}: Props) {
   const router = useRouter();
   const selectedPackage = useOrderStore((state) => state.selectedPackage);
   const selections = useOrderStore((state) => state.selections);
@@ -87,15 +49,14 @@ export default function MenuGridClient({ menuItems }: Props) {
   const setSelection = useOrderStore((state) => state.setSelection);
   const indivSelected = isIndivPackage(selectedPackage);
 
-  const templates = useMemo(() => menuItems.filter((item) => item.packageType === "Template"), [menuItems]);
-  const sushka = useMemo(() => menuItems.filter((item) => item.packageType === "Sushka"), [menuItems]);
-
   const filtered = useMemo(() => {
-    const source = selectedPackage === "Sushka" ? sushka : templates;
-    return source
-      .map((item) => transformMenuForPackage(item, selectedPackage))
-      .sort((a, b) => a.dayOfWeek - b.dayOfWeek);
-  }, [templates, sushka, selectedPackage]);
+    const rows = getMenuRowsForPackage(menuItems, selectedPackage);
+    if (filterDayOfWeeks?.length) {
+      const allow = new Set(filterDayOfWeeks);
+      return rows.filter((item) => allow.has(item.dayOfWeek));
+    }
+    return rows;
+  }, [menuItems, selectedPackage, filterDayOfWeeks]);
 
   const packageLimit = getPackageLimit(selectedPackage);
   const sorted = filtered;
@@ -132,13 +93,13 @@ export default function MenuGridClient({ menuItems }: Props) {
     return (
       <div className="mx-auto max-w-7xl p-4 sm:p-6">
         <div className="rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm font-semibold text-yellow-800">
-          ⚠️ Наразі замовлення закриті. Меню на наступний тиждень публікується в суботу о 12:00 (приблизно). У п`&apos;`ятницю замовлення не приймаються.
+          ⚠️ Наразі замовлення закриті. Меню на наступний тиждень публікується в суботу о 12:00 (приблизно). У
+          п&apos;ятницю замовлення не приймаються.
         </div>
       </div>
     );
   }
 
-  // Хелпер для рендеру секції прийому їжі
   const MealSection = ({
     itemId,
     category,
@@ -254,27 +215,45 @@ export default function MenuGridClient({ menuItems }: Props) {
   return (
     <>
       <div className="mx-auto max-w-7xl p-4 pb-32 sm:p-6 sm:pb-36">
-        {/* Перемикач пакету */}
-        <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <div className="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner">
-            {PACKAGES.map((type) => (
-              <button
-                key={type}
-                onClick={() => setPackage(type)}
-                className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
-                  selectedPackage === type
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                {type === "Indiv" ? "INDIV" : type}
-              </button>
-            ))}
+        {onWizardBack && (
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={onWizardBack}
+              className="text-sm font-semibold text-blue-600 transition hover:text-blue-800"
+            >
+              ← Назад до вибору днів
+            </button>
           </div>
-        </div>
+        )}
 
-        {/* Сітка карток */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {!hidePackageSwitcher && (
+          <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+            <div className="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner">
+              {PACKAGES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setPackage(type)}
+                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
+                    selectedPackage === type
+                      ? "bg-white text-blue-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {type === "Indiv" ? "INDIV" : type}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {sorted.length === 0 && filterDayOfWeeks?.length ? (
+          <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-600">
+            Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {sorted.map((item) => {
             const day = dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`;
             const { dishes } = item;
@@ -313,7 +292,6 @@ export default function MenuGridClient({ menuItems }: Props) {
                   <MealSection itemId={item.id} category="extra" title="Додаткова страва (Sport)" options={dishes.extra} disabled={!selectable} />
                 </div>
 
-                {/* Футер картки */}
                 <div className="mt-4 border-t border-gray-50 pt-3">
                   {dayProgress.isComplete ? (
                     <p className="text-sm font-semibold text-green-600">День зібрано</p>
@@ -326,7 +304,8 @@ export default function MenuGridClient({ menuItems }: Props) {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
       </div>
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:px-6">
         <div className="pointer-events-auto mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-2xl border border-gray-200 bg-white/95 p-4 shadow-lg backdrop-blur">

@@ -173,3 +173,8 @@ export function isDaySelectable(dayOfWeek: number): boolean {
   const deadline = getDeadlineForDay(targetDate);
   return nowKyiv.getTime() < deadline.getTime();
 }
+
+/** Weekday indices 1–7 still open for the current menu week (same rules as `isDaySelectable`). */
+export function getSelectableMenuDayNumbers(): number[] {
+  return [1, 2, 3, 4, 5, 6, 7].filter((d) => isDaySelectable(d));
+}
