@@ -16,4 +16,5 @@ export type MenuItem = {
   dayOfWeek: number;
   packageType: string;
   dishes: Dishes;
+  photoUrl?: string | null;
 };

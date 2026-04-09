@@ -8,11 +8,22 @@ import MenuGridClient from "./MenuGridClient";
 import PackageSelector from "./PackageSelector";
 import SushkaPreview from "./SushkaPreview";
 
-type Props = {
-  menuItems: MenuItem[];
+type Tariff = {
+  id: string;
+  name: string;
+  title: string;
+  kcal: string;
+  price: string;
+  basePrice: number;
+  imageUrl: string | null;
 };
 
-export default function OrderWizard({ menuItems }: Props) {
+type Props = {
+  menuItems: MenuItem[];
+  tariffs: Tariff[];
+};
+
+export default function OrderWizard({ menuItems, tariffs }: Props) {
   const step = useOrderStore((s) => s.step);
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
 
@@ -35,7 +46,7 @@ export default function OrderWizard({ menuItems }: Props) {
 
   switch (step) {
     case 1:
-      return <PackageSelector />;
+      return <PackageSelector tariffs={tariffs} />;
     case 2:
       return <DateSelector menuItems={menuItems} />;
     case 3:
@@ -63,6 +74,6 @@ export default function OrderWizard({ menuItems }: Props) {
         </div>
       );
     default:
-      return <PackageSelector />;
+      return <PackageSelector tariffs={tariffs} />;
   }
 }

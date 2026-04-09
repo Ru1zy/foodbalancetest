@@ -29,7 +29,7 @@ type Props = {
   menuItems: MenuItem[];
 };
 
-const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka", "Indiv"];
+const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka XS", "Sushka S", "Indiv"];
 
 export default function MenuGridClient({ menuItems }: Props) {
   const router = useRouter();
@@ -45,6 +45,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   const pkg = parsePackageType(selectedPackageRaw);
   const indivSelected = isIndivPackage(selectedPackageRaw ?? undefined);
+  const isSushka = pkg?.includes("Sushka") ?? false;
 
   const filtered = useMemo(() => {
     if (!pkg) {
@@ -70,6 +71,19 @@ export default function MenuGridClient({ menuItems }: Props) {
       return { progressByDay: progress, completedDaysCount: 0, allWizardDaysComplete: false };
     }
 
+    // For Sushka packages, the menu is fixed - auto-complete all days
+    if (isSushka) {
+      for (const item of sorted) {
+        progress[item.id] = { selectedCount: packageLimit, isComplete: true };
+        completed += 1;
+      }
+      return {
+        progressByDay: progress,
+        completedDaysCount: sorted.length,
+        allWizardDaysComplete: sorted.length > 0,
+      };
+    }
+
     for (const item of sorted) {
       const daySelections = selections[item.id] ?? {};
       const selectedCount = getDaySelectedCount(daySelections, pkg);
@@ -91,7 +105,7 @@ export default function MenuGridClient({ menuItems }: Props) {
       completedDaysCount: completed,
       allWizardDaysComplete: allComplete,
     };
-  }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step]);
+  }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step, isSushka]);
 
   const allClosed = [1, 2, 3, 4, 5, 6, 7].every((day) => !isDaySelectable(day));
 
@@ -149,6 +163,27 @@ export default function MenuGridClient({ menuItems }: Props) {
   }) => {
     if (!options || options.length === 0) return null;
     if (!pkg) return null;
+
+    // For Sushka packages, render read-only list
+    if (isSushka) {
+      return (
+        <div className="mb-4 last:mb-0">
+          <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-blue-500">
+            {title}
+          </div>
+          <ul className="space-y-1">
+            {options.map((opt, idx) => (
+              <li key={idx} className="text-sm text-gray-700">
+                {opt.full}
+                {opt.short && opt.short !== opt.full && (
+                  <span className="text-xs text-gray-500"> ({opt.short})</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      );
+    }
 
     const isIndiv = indivSelected;
     const selectedIndex = selections[itemId]?.[category];
@@ -249,6 +284,12 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   const canProceedToCheckout = wizardFilterActive ? allWizardDaysComplete : completedDaysCount > 0;
 
+  const gridColsClass =
+    sorted.length === 1 ? 'max-w-sm grid-cols-1' :
+    sorted.length === 2 ? 'max-w-3xl sm:grid-cols-2' :
+    sorted.length === 3 ? 'max-w-5xl sm:grid-cols-2 lg:grid-cols-3' :
+    'max-w-7xl sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+
   return (
     <>
       <div className="mx-auto max-w-7xl p-4 pb-32 sm:p-6 sm:pb-36">
@@ -290,7 +331,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className={`mx-auto grid gap-6 justify-center ${gridColsClass}`}>
             {sorted.map((item) => {
               const day = dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`;
               const { dishes } = item;
@@ -300,16 +341,26 @@ export default function MenuGridClient({ menuItems }: Props) {
               return (
                 <div
                   key={item.id}
-                  className={`group flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 transition-all ${
+                  className={`group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 transition-all overflow-hidden ${
                     selectable ? "hover:shadow-md hover:ring-blue-200" : "opacity-50"
                   }`}
                 >
-                  <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-3">
-                    <h3 className="text-xl font-bold text-gray-900">{day}</h3>
-                    <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase">
-                      {selectedPackageRaw ?? "—"}
-                    </span>
-                  </div>
+                  {item.photoUrl && (
+                    <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                      <img
+                        src={item.photoUrl}
+                        alt={`${day} menu`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-3">
+                      <h3 className="text-xl font-bold text-gray-900">{day}</h3>
+                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase">
+                        {selectedPackageRaw ?? "—"}
+                      </span>
+                    </div>
                   {!selectable && (
                     <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
                       Вибір цього дня закритий за дедлайном
@@ -325,7 +376,9 @@ export default function MenuGridClient({ menuItems }: Props) {
                     <MealSection itemId={item.id} category="breakfast" title="Сніданок" options={dishes.breakfast} disabled={!selectable} />
                     <MealSection itemId={item.id} category="lunch" title="Обід" options={dishes.lunch} disabled={!selectable} />
                     <MealSection itemId={item.id} category="dinner" title="Вечеря" options={dishes.dinner} disabled={!selectable} />
-                    <MealSection itemId={item.id} category="snack" title="Перекус" options={dishes.snack} disabled={!selectable} />
+                    {!(isSushka && pkg === "Sushka XS") && (
+                      <MealSection itemId={item.id} category="snack" title="Перекус" options={dishes.snack} disabled={!selectable} />
+                    )}
                     <MealSection itemId={item.id} category="extra" title="Додаткова страва (Sport)" options={dishes.extra} disabled={!selectable} />
                   </div>
 
@@ -337,6 +390,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                         Зібрано {dayProgress.selectedCount}/{packageLimit}
                       </p>
                     )}
+                  </div>
                   </div>
                 </div>
               );

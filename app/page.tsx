@@ -8,6 +8,7 @@ async function getMenuItems() {
       ...item,
       dayOfWeek: item.dayOfWeek || 0,
       packageType: (item.packageType as string) || "Standard",
+      photoUrl: item.photoUrl || null,
       dishes:
         typeof item.dishes === "string"
           ? JSON.parse(item.dishes)
@@ -19,8 +20,21 @@ async function getMenuItems() {
   }
 }
 
+async function getTariffs() {
+  try {
+    const tariffs = await prisma.tariff.findMany({
+      orderBy: { name: "asc" },
+    });
+    return tariffs;
+  } catch (error) {
+    console.error("Error fetching tariffs:", error);
+    return [];
+  }
+}
+
 export default async function Home() {
   const menuItems = await getMenuItems();
+  const tariffs = await getTariffs();
 
   return (
     <main className="min-h-screen bg-gray-100 text-gray-800">
@@ -32,7 +46,7 @@ export default async function Home() {
             Меню обновляется
           </div>
         ) : (
-          <OrderWizard menuItems={menuItems} />
+          <OrderWizard menuItems={menuItems} tariffs={tariffs} />
         )}
       </section>
     </main>

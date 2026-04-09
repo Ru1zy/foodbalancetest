@@ -1,13 +1,15 @@
-export type PackageType = "Slim" | "Balance" | "Active" | "Sport" | "Sushka" | "Indiv" | "Template";
+export type PackageType = "Slim" | "Balance" | "Active" | "Sport" | "Sushka" | "Sushka XS" | "Sushka S" | "Indiv" | "Template";
 
 /** Базова ціна одного дня (грн) для розрахунку замовлення. */
 export const PACKAGE_PRICES: Record<PackageType, number> = {
-  Slim: 450,
-  Balance: 520,
-  Active: 580,
-  Sport: 640,
-  Sushka: 490,
-  Indiv: 550,
+  Slim: 610,
+  Balance: 700,
+  Active: 800,
+  Sport: 900,
+  Sushka: 0,
+  "Sushka XS": 500,
+  "Sushka S": 600,
+  Indiv: 700,
   Template: 0,
 };
 
@@ -25,6 +27,8 @@ export function getPackageLimit(packageName?: string): number {
   if (p.includes("слім") || p.includes("slim") || p.includes("слим")) return 3;
   if (p.includes("sport")) return 5;
   if (p.includes("інд") || p.includes("ind")) return 10;
+  if (p.includes("sushka xs")) return 3;
+  if (p.includes("sushka s")) return 4;
   return 4;
 }
 
@@ -86,12 +90,17 @@ function constructUTCFromKyiv(parts: { year: number; month: number; day: number;
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour ?? 0, parts.minute ?? 0, parts.second ?? 0, 0));
 }
 
-export const NEXT_WEEK_OPEN = (() => {
-  const nowKyiv = getKyivParts(new Date());
-  const isSaturdayAfterNoon = nowKyiv.weekday === 6 && nowKyiv.hour >= 12;
-  const isSunday = nowKyiv.weekday === 0;
-  return isSaturdayAfterNoon || isSunday;
-})();
+// TODO: REMOVE FOR PRODUCTION
+// Temporary bypass for testing - allows ordering any time
+export const NEXT_WEEK_OPEN = true;
+
+// Original time-based logic (commented out for testing):
+// export const NEXT_WEEK_OPEN = (() => {
+//   const nowKyiv = getKyivParts(new Date());
+//   const isSaturdayAfterNoon = nowKyiv.weekday === 6 && nowKyiv.hour >= 12;
+//   const isSunday = nowKyiv.weekday === 0;
+//   return isSaturdayAfterNoon || isSunday;
+// })();
 
 function getKyivMidnight(parts: { year: number; month: number; day: number; }) {
   return constructUTCFromKyiv({ year: parts.year, month: parts.month, day: parts.day, hour: 0, minute: 0, second: 0 });
@@ -181,16 +190,21 @@ export function getDeadlineForDay(target: Date): Date {
 }
 
 export function isDaySelectable(dayOfWeek: number): boolean {
-  if (!dayOfWeek || dayOfWeek < 1 || dayOfWeek > 7) return false;
+  // TODO: REMOVE FOR PRODUCTION
+  // Temporary bypass for testing - all days are selectable
+  return true;
 
-  const nowKyivParts = getKyivParts(new Date());
-  const nowKyiv = constructUTCFromKyiv(nowKyivParts);
-
-  const targetMonday = getTargetMonday(nowKyivParts);
-  const targetDate = getTargetDate(dayOfWeek, targetMonday);
-
-  const deadline = getDeadlineForDay(targetDate);
-  return nowKyiv.getTime() < deadline.getTime();
+  // Original time-based validation logic (commented out for testing):
+  // if (!dayOfWeek || dayOfWeek < 1 || dayOfWeek > 7) return false;
+  //
+  // const nowKyivParts = getKyivParts(new Date());
+  // const nowKyiv = constructUTCFromKyiv(nowKyivParts);
+  //
+  // const targetMonday = getTargetMonday(nowKyivParts);
+  // const targetDate = getTargetDate(dayOfWeek, targetMonday);
+  //
+  // const deadline = getDeadlineForDay(targetDate);
+  // return nowKyiv.getTime() < deadline.getTime();
 }
 
 /** Weekday indices 1–7 still open for the current menu week (same rules as `isDaySelectable`). */

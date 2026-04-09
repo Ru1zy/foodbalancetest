@@ -10,6 +10,7 @@ import {
   earliestMenuDeliveryDateFromCartDays,
   getOrderTotalUah,
   getPackageLimit,
+  PACKAGE_PRICES,
 } from "@/lib/order-logic";
 import {
   clampCutleryCount,
@@ -95,7 +96,8 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
       };
     }
 
-    if (pkg === "Sushka") {
+    // For Sushka XS and Sushka S, use auto-fill logic
+    if (pkg.includes("Sushka")) {
       const dowSorted = [...new Set(selectedDates.map((s) => Number(s)))]
         .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
         .sort((a, b) => a - b);
@@ -117,7 +119,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
       return {
         days,
         packageLimit,
-        packageType: "Sushka",
+        packageType: pkg,
         totalDays: days.length,
       };
     }
@@ -150,10 +152,19 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
     };
   }, [packageLimit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay]);
 
-  const orderTotalUah = useMemo(
-    () => (pkg ? getOrderTotalUah(pkg, cartData.totalDays) : 0),
-    [cartData.totalDays, pkg],
-  );
+  const orderTotalUah = useMemo(() => {
+    if (!pkg) return 0;
+    // For Sushka packages, use the specific variant price
+    if (pkg === "Sushka XS" || pkg === "Sushka S") {
+      return PACKAGE_PRICES[pkg] * cartData.totalDays;
+    }
+    // For Sushka (folder), calculate based on selected variant from store
+    if (pkg === "Sushka") {
+      // This shouldn't happen in checkout as Sushka should be resolved to XS or S
+      return 0;
+    }
+    return getOrderTotalUah(pkg, cartData.totalDays);
+  }, [cartData.totalDays, pkg]);
 
   const deliveryDate = useMemo(
     () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
@@ -178,7 +189,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
   }, [cartData.days, menuDayByItemId]);
 
   const incompleteDaysCount = useMemo(() => {
-    if (!pkg || pkg === "Sushka") {
+    if (!pkg || pkg.includes("Sushka")) {
       return 0;
     }
     return Object.values(selections).filter((daySelections) => {
@@ -211,10 +222,9 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
     if (!pkg) {
       nextFieldErrors.cart = "Спочатку оберіть тариф і збережіть кошик на головній сторінці.";
     } else if (cartData.totalDays === 0) {
-      nextFieldErrors.cart =
-        pkg === "Sushka"
-          ? "Для Сушки оберіть хоча б один день на кроці 2 або перевірте наявність меню в системі."
-          : "Додайте хоча б один повністю зібраний день до кошика.";
+      nextFieldErrors.cart = pkg.includes("Sushka")
+        ? "Для Сушки оберіть хоча б один день на кроці 2 або перевірте наявність меню в системі."
+        : "Додайте хоча б один повністю зібраний день до кошика.";
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {

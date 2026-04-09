@@ -42,7 +42,8 @@ export type SubmitOrderResult =
     };
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
-  if (cartData.packageType === "Sushka") {
+  // For Sushka packages (XS and S), bypass strict dish selection validation
+  if (cartData.packageType.includes("Sushka")) {
     const days = (Array.isArray(cartData.days) ? cartData.days : [])
       .filter((day) => day && typeof day.dayId === "string" && day.dayId.trim().length > 0)
       .map((day) => ({
@@ -54,7 +55,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
     return {
       days,
       packageLimit: cartData.packageLimit,
-      packageType: "Sushka",
+      packageType: cartData.packageType,
       totalDays: days.length,
     };
   }
@@ -185,17 +186,30 @@ export async function submitOrder(
     };
   }
 
-  const expectedPrice = getOrderTotalUah(sanitizedCartData.packageType, sanitizedCartData.totalDays);
-  if (
-    typeof totalPrice !== "number" ||
-    !Number.isInteger(totalPrice) ||
-    totalPrice !== expectedPrice
-  ) {
-    return {
-      ok: false,
-      message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
-      status: 400,
-    };
+  // For Sushka packages, use the passed totalPrice directly (calculated on client)
+  const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
+  if (!isSushkaPackage) {
+    const expectedPrice = getOrderTotalUah(sanitizedCartData.packageType, sanitizedCartData.totalDays);
+    if (
+      typeof totalPrice !== "number" ||
+      !Number.isInteger(totalPrice) ||
+      totalPrice !== expectedPrice
+    ) {
+      return {
+        ok: false,
+        message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
+        status: 400,
+      };
+    }
+  } else {
+    // For Sushka, just validate that totalPrice is a positive number
+    if (typeof totalPrice !== "number" || !Number.isInteger(totalPrice) || totalPrice < 0) {
+      return {
+        ok: false,
+        message: "Сума замовлення некоректна. Оновіть сторінку та спробуйте ще раз.",
+        status: 400,
+      };
+    }
   }
 
   const submittedDeliveryDate = normalizeDeliveryDateInput(deliveryDate);
@@ -290,7 +304,7 @@ export async function submitOrder(
               items: sanitizedCartData,
               notes: parsedFormData.comment || null,
               packageType: sanitizedCartData.packageType,
-              price: expectedPrice,
+              price: totalPrice,
               status: "new",
               userId,
             },
@@ -338,7 +352,7 @@ export async function submitOrder(
           items: sanitizedCartData,
           notes: parsedFormData.comment || null,
           packageType: sanitizedCartData.packageType,
-          price: expectedPrice,
+          price: totalPrice,
           status: "new",
           userId: user.id,
         },

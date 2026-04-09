@@ -6,6 +6,8 @@ const PACKAGE_VALUES: readonly string[] = [
   "Active",
   "Sport",
   "Sushka",
+  "Sushka XS",
+  "Sushka S",
   "Indiv",
   "Template",
 ];

@@ -33,6 +33,16 @@ model Menu {
   dishes     Json
 }
 
+model Tariff {
+  id        String  @id @default(uuid())
+  name      String  @unique
+  title     String
+  kcal      String
+  price     String
+  basePrice Int
+  imageUrl  String?
+}
+
 model Order {
   id              String   @id @default(uuid())
   userId          String
