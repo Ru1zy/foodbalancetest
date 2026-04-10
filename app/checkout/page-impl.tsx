@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import TelegramLoginButton from "@/components/TelegramLoginButton.impl";
+import TelegramOAuthButton from "@/components/TelegramOAuthButton";
 import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
 import {
   dateForMenuDayOfWeek,
@@ -346,7 +346,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
           {!customerProfile.isAuthenticated && (
             <div className="mb-6 rounded-3xl border border-dashed border-blue-200 bg-blue-50/70 p-4">
               <div className="mt-4">
-                <TelegramLoginButton />
+                <TelegramOAuthButton />
               </div>
             </div>
           )}
