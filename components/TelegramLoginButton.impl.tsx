@@ -67,6 +67,7 @@ export default function TelegramLoginButton() {
     container.innerHTML = "";
 
     window.onTelegramAuth = async (user: TelegramWidgetUser) => {
+      console.log("Telegram widget callback triggered with user:", user);
       try {
         const response = await fetch("/api/auth/telegram-widget", {
           body: JSON.stringify(user),
@@ -76,7 +77,11 @@ export default function TelegramLoginButton() {
           method: "POST",
         });
 
+        console.log("Server response status:", response.status);
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Server error:", errorText);
           setError("Не вдалося авторизуватися через Telegram.");
           return;
         }
@@ -150,6 +155,15 @@ export default function TelegramLoginButton() {
     script.setAttribute("data-size", "large");
     script.setAttribute("data-onauth", "onTelegramAuth(user)");
     script.setAttribute("data-request-access", "write");
+
+    script.onload = () => {
+      console.log("Telegram widget script loaded successfully");
+    };
+
+    script.onerror = () => {
+      console.error("Failed to load Telegram widget script");
+      setError("Не вдалося завантажити Telegram віджет. Перевірте з'єднання.");
+    };
 
     container.appendChild(script);
 
