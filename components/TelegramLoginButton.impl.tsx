@@ -75,6 +75,8 @@ export default function TelegramLoginButton() {
 
         const result = (await response.json()) as TelegramWidgetAuthResponse;
 
+        console.log('TELEGRAM AUTH PAYLOAD:', result);
+
         if (!result.ok || !result.user) {
           setError("Не вдалося отримати профіль Telegram.");
           return;

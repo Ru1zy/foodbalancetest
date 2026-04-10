@@ -60,6 +60,8 @@ export default function TelegramProvider({ children }: PropsWithChildren) {
 
         const result = (await response.json()) as TmaAuthResponse;
 
+        console.log('TMA AUTH PAYLOAD:', result);
+
         if (!result?.ok || !result.user) {
           return;
         }

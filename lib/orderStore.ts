@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { PackageType } from "@/lib/order-logic";
 
 export type Selections = Record<string, Record<string, number>>;
@@ -62,27 +63,29 @@ function normalizeSelectedDateStrings(dates: string[]): string[] {
     .sort((a, b) => Number(a) - Number(b));
 }
 
-export const useOrderStore = create<OrderStore>((set, get) => ({
-  customerProfile: {
-    street: "",
-    house: "",
-    apartment: "",
-    entrance: "",
-    intercom: "",
-    chatId: "",
-    cutlery: 0,
-    isAuthenticated: false,
-    name: "",
-    notes: "",
-    phone: "",
-    userId: "",
-    username: "",
-  },
-  selectedPackage: null,
-  selectedDates: [],
-  step: 1,
-  selections: {},
-  cartItems: [],
+export const useOrderStore = create<OrderStore>()(
+  persist(
+    (set, get) => ({
+      customerProfile: {
+        street: "",
+        house: "",
+        apartment: "",
+        entrance: "",
+        intercom: "",
+        chatId: "",
+        cutlery: 0,
+        isAuthenticated: false,
+        name: "",
+        notes: "",
+        phone: "",
+        userId: "",
+        username: "",
+      },
+      selectedPackage: null,
+      selectedDates: [],
+      step: 1,
+      selections: {},
+      cartItems: [],
 
   setCustomerProfile: (profile) =>
     set((state) => ({
@@ -216,4 +219,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     const state = get();
     return state.cartItems.reduce((total, item) => total + (item.price || 0), 0);
   },
-}));
+}),
+    {
+      name: "food-balance-storage",
+    }
+  )
+);
