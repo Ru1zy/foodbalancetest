@@ -67,8 +67,14 @@ export default function TelegramLoginButton() {
     container.innerHTML = "";
 
     window.onTelegramAuth = async (user: TelegramWidgetUser) => {
+      console.log("=== TELEGRAM WIDGET CALLBACK FIRED ===");
       console.log("Telegram widget callback triggered with user:", user);
+      console.log("User ID:", user.id);
+      console.log("User hash:", user.hash);
+      console.log("Auth date:", user.auth_date);
+
       try {
+        console.log("Sending request to /api/auth/telegram-widget...");
         const response = await fetch("/api/auth/telegram-widget", {
           body: JSON.stringify(user),
           headers: {
