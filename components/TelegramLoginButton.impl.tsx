@@ -140,8 +140,7 @@ export default function TelegramLoginButton() {
           username: result.user.username ?? "",
         });
 
-        // Hard reload to sync server-side header with new auth token
-        window.location.href = "/profile";
+        router.push("/profile");
       } catch (requestError) {
         console.error("Telegram widget auth request failed", requestError);
         setError("Сталася помилка під час авторизації через Telegram.");
