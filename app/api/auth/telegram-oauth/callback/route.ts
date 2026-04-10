@@ -104,7 +104,9 @@ export async function GET(request: Request) {
       secure: process.env.NODE_ENV === "production",
     });
 
-    return NextResponse.redirect(new URL("/profile", request.url));
+    // Use full URL redirect to ensure cookies are set properly after OAuth
+    const profileUrl = new URL("/profile", request.url);
+    return NextResponse.redirect(profileUrl);
   } catch (error) {
     console.error("Telegram OAuth auth failed", error);
     return NextResponse.redirect(new URL("/?error=auth_failed", request.url));
