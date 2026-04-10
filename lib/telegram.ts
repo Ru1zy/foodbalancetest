@@ -306,3 +306,54 @@ export async function sendOrderNotification(order: TelegramOrder, user: Telegram
     throw new Error(`Telegram sendMessage failed with status ${response.status}: ${await response.text()}`);
   }
 }
+
+type OrderDetails = {
+  date: Date;
+  pkg: string;
+};
+
+function formatDeliveryDate(date: Date): string {
+  return new Intl.DateTimeFormat("uk-UA", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Europe/Kyiv",
+  }).format(date);
+}
+
+export async function sendPaymentConfirmation(chatId: string, orderDetails: OrderDetails): Promise<void> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!token) {
+    console.error("TELEGRAM_BOT_TOKEN is not set");
+    return;
+  }
+
+  const formattedDate = formatDeliveryDate(orderDetails.date);
+  const text = `✅ <b>Оплату отримано. Замовлення підтверджено!</b>
+
+📅 На дату: ${formattedDate}
+Тариф: ${escapeHtml(orderDetails.pkg)}`;
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Telegram API error:", errorData);
+    }
+  } catch (error) {
+    console.error("Failed to send Telegram notification:", error);
+  }
+}

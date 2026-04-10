@@ -13,7 +13,11 @@ export type CartItem = {
 };
 
 export type CustomerProfile = {
-  address: string;
+  street: string;
+  house: string;
+  apartment: string;
+  entrance: string;
+  intercom: string;
   chatId: string;
   cutlery: number;
   isAuthenticated: boolean;
@@ -60,7 +64,11 @@ function normalizeSelectedDateStrings(dates: string[]): string[] {
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
   customerProfile: {
-    address: "",
+    street: "",
+    house: "",
+    apartment: "",
+    entrance: "",
+    intercom: "",
     chatId: "",
     cutlery: 0,
     isAuthenticated: false,

@@ -3,6 +3,11 @@ const MIN_PHONE_DIGITS = 10;
 const MAX_PHONE_DIGITS = 15;
 
 export type CheckoutFormValues = {
+  street: string;
+  house: string;
+  apartment: string;
+  entrance: string;
+  intercom: string;
   address: string;
   comment: string;
   cutlery: number;
@@ -74,8 +79,28 @@ export function kyivCalendarDateKey(d: Date): string {
 }
 
 export function parseCheckoutFormData(formData: FormData): CheckoutFormValues {
+  const street = String(formData.get("street") || "").trim();
+  const house = String(formData.get("house") || "").trim();
+  const apartment = String(formData.get("apartment") || "").trim();
+  const entrance = String(formData.get("entrance") || "").trim();
+  const intercom = String(formData.get("intercom") || "").trim();
+
+  const parts: string[] = [];
+  if (street) parts.push(`Вул. ${street}`);
+  if (house) parts.push(`буд. ${house}`);
+  if (apartment) parts.push(`кв. ${apartment}`);
+  if (entrance) parts.push(`під'їзд ${entrance}`);
+  if (intercom) parts.push(`код ${intercom}`);
+
+  const address = parts.join(", ");
+
   return {
-    address: String(formData.get("address") || "").trim(),
+    street,
+    house,
+    apartment,
+    entrance,
+    intercom,
+    address,
     comment: String(formData.get("comment") || "").trim(),
     cutlery: parseCutleryCount(formData.get("cutlery")),
     name: String(formData.get("name") || "").trim(),
@@ -94,8 +119,8 @@ export function validateCheckoutFormValues(values: CheckoutFormValues): Checkout
     errors.phone = "Вкажіть коректний номер телефону.";
   }
 
-  if (!values.address) {
-    errors.address = "Вкажіть адресу доставки.";
+  if (!values.street || !values.house) {
+    errors.address = "Вкажіть вулицю та будинок.";
   }
 
   return errors;

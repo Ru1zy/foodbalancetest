@@ -62,6 +62,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
   const selectedDates = useOrderStore((state) => state.selectedDates);
   const clearSelections = useOrderStore((state) => state.clearSelections);
   const clearDaySelections = useOrderStore((state) => state.clearDaySelections);
+  const resetWizard = useOrderStore((state) => state.resetWizard);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -70,10 +71,16 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
 
   useEffect(() => {
     if (authenticatedUser && !customerProfile.isAuthenticated) {
+      // Parse legacy address if exists
+      const legacyAddress = authenticatedUser.address || "";
       setCustomerProfile({
         name: authenticatedUser.name,
         phone: authenticatedUser.phone || "",
-        address: authenticatedUser.address || "",
+        street: legacyAddress, // Store legacy address in street for now
+        house: "",
+        apartment: "",
+        entrance: "",
+        intercom: "",
         cutlery: authenticatedUser.defaultCutlery || 0,
         isAuthenticated: true,
         // Keep other fields default
@@ -204,7 +211,11 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
         customerProfile.userId,
         customerProfile.name,
         customerProfile.phone,
-        customerProfile.address,
+        customerProfile.street,
+        customerProfile.house,
+        customerProfile.apartment,
+        customerProfile.entrance,
+        customerProfile.intercom,
         customerProfile.cutlery,
         customerProfile.notes,
       ].join("|"),
@@ -260,7 +271,11 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
         totalDays: cartData.totalDays,
       });
       setCustomerProfile({
-        address: submittedValues.address,
+        street: submittedValues.street,
+        house: submittedValues.house,
+        apartment: submittedValues.apartment,
+        entrance: submittedValues.entrance,
+        intercom: submittedValues.intercom,
         cutlery: submittedValues.cutlery,
         name: submittedValues.name,
         notes: submittedValues.comment,
@@ -268,6 +283,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
         userId: result.userId,
       });
       clearSelections();
+      resetWizard();
       setFeedback({
         message: "Замовлення успішно оформлено. Повертаємо на головну...",
         tone: "success",
@@ -329,10 +345,6 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
 
           {!customerProfile.isAuthenticated && (
             <div className="mb-6 rounded-3xl border border-dashed border-blue-200 bg-blue-50/70 p-4">
-              <p className="text-sm text-blue-900">
-                Вхід через Telegram необов&apos;язковий. Якщо хочете, можете використати його лише для
-                автозаповнення профілю перед оформленням.
-              </p>
               <div className="mt-4">
                 <TelegramLoginButton />
               </div>
@@ -403,26 +415,81 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
               </label>
             </div>
 
-            <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 2. Адреса доставки</span>
-                <input
-                  aria-invalid={fieldErrors.address ? "true" : "false"}
-                  autoComplete="street-address"
-                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
-                    fieldErrors.address
-                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
-                  }`}
-                  defaultValue={customerProfile.address}
-                  name="address"
-                  placeholder="Вулиця, будинок, квартира, під'їзд"
-                  required
-                  type="text"
-                />
-                {fieldErrors.address && (
-                  <span className="mt-2 block text-sm text-red-600">{fieldErrors.address}</span>
-                )}
-            </label>
+            <div>
+              <span className="mb-3 block text-sm font-semibold text-gray-900">Крок 2. Адреса доставки</span>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-xs font-medium text-gray-700">Вулиця *</span>
+                  <input
+                    aria-invalid={fieldErrors.address ? "true" : "false"}
+                    autoComplete="street-address"
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
+                      fieldErrors.address
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                    }`}
+                    defaultValue={customerProfile.street}
+                    name="street"
+                    placeholder="Назва вулиці"
+                    required
+                    type="text"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-xs font-medium text-gray-700">Будинок *</span>
+                  <input
+                    aria-invalid={fieldErrors.address ? "true" : "false"}
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
+                      fieldErrors.address
+                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                    }`}
+                    defaultValue={customerProfile.house}
+                    name="house"
+                    placeholder="Номер будинку"
+                    required
+                    type="text"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-xs font-medium text-gray-700">Квартира</span>
+                  <input
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    defaultValue={customerProfile.apartment}
+                    name="apartment"
+                    placeholder="Номер квартири"
+                    type="text"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-xs font-medium text-gray-700">Під&apos;їзд</span>
+                  <input
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    defaultValue={customerProfile.entrance}
+                    name="entrance"
+                    placeholder="Номер під'їзду"
+                    type="text"
+                  />
+                </label>
+
+                <label className="block sm:col-span-2">
+                  <span className="mb-2 block text-xs font-medium text-gray-700">Домофон</span>
+                  <input
+                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    defaultValue={customerProfile.intercom}
+                    name="intercom"
+                    placeholder="Код домофону"
+                    type="text"
+                  />
+                </label>
+              </div>
+              {fieldErrors.address && (
+                <span className="mt-2 block text-sm text-red-600">{fieldErrors.address}</span>
+              )}
+            </div>
 
             <section className="rounded-3xl border border-gray-200 p-5">
               <div className="text-sm font-semibold text-gray-900">Крок 3. Кількість приборів</div>

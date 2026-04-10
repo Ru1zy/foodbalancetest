@@ -1,5 +1,6 @@
 import Link from "next/link";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
+import OrderActionButtons from "@/components/admin/OrderActionButtons";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { getOrderStatusClasses, getOrderStatusLabel } from "@/lib/order-status";
@@ -76,6 +77,7 @@ export default async function AdminOrdersPage() {
       user: {
         select: {
           address: true,
+          chatId: true,
           name: true,
           phone: true,
         },
@@ -116,8 +118,10 @@ export default async function AdminOrdersPage() {
                     <th className="px-4 py-4 sm:px-6">Клієнт</th>
                     <th className="px-4 py-4 sm:px-6">Адреса</th>
                     <th className="px-4 py-4 sm:px-6">Пакет</th>
+                    <th className="px-4 py-4 sm:px-6">Оплата</th>
                     <th className="px-4 py-4 sm:px-6">Статус</th>
                     <th className="px-4 py-4 sm:px-6">Коментар</th>
+                    <th className="px-4 py-4 sm:px-6">Дії</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -142,6 +146,20 @@ export default async function AdminOrdersPage() {
                           <div className="text-sm font-semibold text-gray-900">{order.packageType}</div>
                           <div className="mt-2 text-sm text-gray-600">{formatDaysLabel(daysCount)}</div>
                           <div className="mt-2 text-sm text-gray-600">Прибори: {order.cutlery}</div>
+                          {order.price && (
+                            <div className="mt-2 text-sm font-semibold text-gray-900">{order.price} ₴</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-5 sm:px-6">
+                          <div
+                            className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
+                              order.isPaid
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : "border-amber-200 bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {order.isPaid ? "Оплачено" : "Не оплачено"}
+                          </div>
                         </td>
                         <td className="px-4 py-5 sm:px-6">
                           <div
@@ -153,6 +171,13 @@ export default async function AdminOrdersPage() {
                         </td>
                         <td className="px-4 py-5 text-sm text-gray-700 sm:px-6">
                           {order.notes || "Немає коментаря"}
+                        </td>
+                        <td className="px-4 py-5 sm:px-6">
+                          <OrderActionButtons
+                            orderId={order.id}
+                            isPaid={order.isPaid}
+                            hasChatId={!!order.user.chatId}
+                          />
                         </td>
                       </tr>
                     );
