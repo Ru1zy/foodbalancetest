@@ -40,10 +40,16 @@ export default function TelegramLoginButton() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
   const [error, setError] = useState<string | null>(null);
+  const [showHelper, setShowHelper] = useState(false);
   const configError = !BOT_USERNAME
     ? "NEXT_PUBLIC_BOT_USERNAME не заданий. Telegram Login Widget не може бути показаний."
     : null;
   const router = useRouter();
+
+  const handleTelegramWebRedirect = () => {
+    const returnUrl = encodeURIComponent(window.location.href);
+    window.location.href = `https://web.telegram.org/a/#?tgWebAuthToken=1&return_to=${returnUrl}`;
+  };
 
   useEffect(() => {
     if (!BOT_USERNAME) {
@@ -157,6 +163,41 @@ export default function TelegramLoginButton() {
       <p className="text-xs text-gray-500">
         Це потрібно лише для швидкого автозаповнення профілю. Замовлення можна оформити і без Telegram.
       </p>
+
+      {!showHelper && (
+        <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+          <strong>Не приходить код?</strong>{" "}
+          <button
+            type="button"
+            onClick={() => setShowHelper(true)}
+            className="underline font-semibold hover:text-blue-900"
+          >
+            Натисніть тут
+          </button>
+        </div>
+      )}
+
+      {showHelper && (
+        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold mb-2">Telegram Login потребує активної сесії в браузері</p>
+          <p className="mb-3">Зараз ви будете перенаправлені на Telegram Web для авторизації, після чого автоматично повернетесь сюди.</p>
+          <button
+            type="button"
+            onClick={handleTelegramWebRedirect}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
+          >
+            Перейти на Telegram Web
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowHelper(false)}
+            className="ml-3 text-sm text-gray-600 underline hover:text-gray-900"
+          >
+            Скасувати
+          </button>
+        </div>
+      )}
+
       {(configError || error) && (
         <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {configError || error}
