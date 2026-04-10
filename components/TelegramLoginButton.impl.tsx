@@ -46,9 +46,11 @@ export default function TelegramLoginButton() {
     : null;
   const router = useRouter();
 
-  const handleTelegramWebRedirect = () => {
+  const handleBotRedirect = () => {
+    // Open bot with start parameter containing return URL
     const returnUrl = encodeURIComponent(window.location.href);
-    window.location.href = `https://web.telegram.org/a/#?tgWebAuthToken=1&return_to=${returnUrl}`;
+    const botUrl = `https://t.me/${BOT_USERNAME}?start=auth_${returnUrl}`;
+    window.open(botUrl, '_blank');
   };
 
   useEffect(() => {
@@ -166,27 +168,32 @@ export default function TelegramLoginButton() {
 
       {!showHelper && (
         <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-          <strong>Не приходить код?</strong>{" "}
+          <strong>Не працює кнопка нижче?</strong>{" "}
           <button
             type="button"
             onClick={() => setShowHelper(true)}
             className="underline font-semibold hover:text-blue-900"
           >
-            Натисніть тут
+            Спробуйте альтернативний спосіб
           </button>
         </div>
       )}
 
       {showHelper && (
-        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p className="font-semibold mb-2">Telegram Login потребує активної сесії в браузері</p>
-          <p className="mb-3">Зараз ви будете перенаправлені на Telegram Web для авторизації, після чого автоматично повернетесь сюди.</p>
+        <div className="mt-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+          <p className="font-semibold mb-2">Авторизація через Telegram Mini App</p>
+          <p className="mb-3">
+            1. Відкрийте бота <strong>@{BOT_USERNAME}</strong> в Telegram<br/>
+            2. Натисніть кнопку меню (☰) або відправте команду /start<br/>
+            3. Відкрийте Mini App - авторизація відбудеться автоматично<br/>
+            4. Поверніться на цю сторінку - ваш профіль буде збережено
+          </p>
           <button
             type="button"
-            onClick={handleTelegramWebRedirect}
+            onClick={handleBotRedirect}
             className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition"
           >
-            Перейти на Telegram Web
+            Відкрити @{BOT_USERNAME}
           </button>
           <button
             type="button"
