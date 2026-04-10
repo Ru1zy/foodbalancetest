@@ -25,7 +25,7 @@ export default function TelegramOAuthButton() {
 
     const origin = window.location.origin;
     const redirectUri = `${origin}/api/auth/telegram-oauth/callback`;
-    const oauthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&return_to=${encodeURIComponent(redirectUri)}`;
+    const oauthUrl = `https://oauth.telegram.org/auth?bot_id=${botId}&origin=${encodeURIComponent(origin)}&embed=1&request_access=write&return_to=${encodeURIComponent(redirectUri)}`;
 
     window.location.href = oauthUrl;
   };
