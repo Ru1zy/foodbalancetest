@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       ].filter(Boolean).join(" ") || update.callback_query.from.username || "Telegram User";
 
       // Notify our auth endpoint
-      await fetch(`${new URL(request.url).origin}/api/auth/telegram-deeplink`, {
+      const confirmResponse = await fetch(`${new URL(request.url).origin}/api/auth/telegram-deeplink`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -68,6 +68,10 @@ export async function POST(request: Request) {
           userName
         })
       });
+
+      if (!confirmResponse.ok) {
+        console.error("Failed to confirm auth:", await confirmResponse.text());
+      }
 
       // Answer callback query
       await sendTelegramRequest("answerCallbackQuery", {

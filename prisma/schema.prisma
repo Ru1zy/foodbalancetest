@@ -58,3 +58,15 @@ model Order {
   notes           String?
   price           Int?
 }
+
+model AuthToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  chatId    String
+  userName  String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([token])
+  @@index([expiresAt])
+}

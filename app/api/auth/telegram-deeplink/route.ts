@@ -5,19 +5,6 @@ import { AUTH_TOKEN_MAX_AGE, createAuthToken } from "@/lib/auth-token";
 
 export const runtime = "nodejs";
 
-// In-memory store for pending auth requests (в продакшене использовать Redis)
-const pendingAuths = new Map<string, { chatId: string; userName: string; timestamp: number }>();
-
-// Cleanup old tokens every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [token, data] of pendingAuths.entries()) {
-    if (now - data.timestamp > 5 * 60 * 1000) {
-      pendingAuths.delete(token);
-    }
-  }
-}, 5 * 60 * 1000);
-
 export async function POST(request: Request) {
   const { action, token, chatId, userName } = await request.json();
 
@@ -29,20 +16,40 @@ export async function POST(request: Request) {
 
   // Confirm auth (called by bot webhook)
   if (action === "confirm" && token && chatId) {
-    pendingAuths.set(token, { chatId, userName: userName || "Telegram User", timestamp: Date.now() });
-    return NextResponse.json({ ok: true });
+    try {
+      await prisma.authToken.create({
+        data: {
+          token,
+          chatId,
+          userName: userName || "Telegram User",
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+        },
+      });
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      console.error("Failed to save auth token:", error);
+      return NextResponse.json({ error: "Failed to save token" }, { status: 500 });
+    }
   }
 
   // Check auth status (polling from frontend)
   if (action === "check" && token) {
-    const authData = pendingAuths.get(token);
-
-    if (!authData) {
-      return NextResponse.json({ status: "pending" });
-    }
-
-    // Auth confirmed, create user and session
     try {
+      const authData = await prisma.authToken.findUnique({
+        where: { token },
+      });
+
+      if (!authData) {
+        return NextResponse.json({ status: "pending" });
+      }
+
+      // Check if expired
+      if (authData.expiresAt < new Date()) {
+        await prisma.authToken.delete({ where: { token } });
+        return NextResponse.json({ status: "expired" });
+      }
+
+      // Auth confirmed, create user and session
       const user = await prisma.user.upsert({
         where: { chatId: authData.chatId },
         update: { name: authData.userName },
@@ -64,7 +71,8 @@ export async function POST(request: Request) {
         secure: process.env.NODE_ENV === "production",
       });
 
-      pendingAuths.delete(token);
+      // Delete used token
+      await prisma.authToken.delete({ where: { token } });
 
       return NextResponse.json({
         status: "confirmed",
@@ -76,7 +84,7 @@ export async function POST(request: Request) {
         }
       });
     } catch (error) {
-      console.error("Failed to create user session:", error);
+      console.error("Failed to check auth status:", error);
       return NextResponse.json({ status: "error" }, { status: 500 });
     }
   }
