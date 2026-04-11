@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getPackageLimit, isDaySelectable, type PackageType } from "../lib/order-logic";
 import { getMenuRowsForPackage } from "@/lib/menu-for-package";
@@ -33,6 +33,7 @@ const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka X
 
 export default function MenuGridClient({ menuItems }: Props) {
   const router = useRouter();
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
   const selectedDatesFromStore = useOrderStore((state) => state.selectedDates);
@@ -346,7 +347,10 @@ export default function MenuGridClient({ menuItems }: Props) {
                   }`}
                 >
                   {item.photoUrl && (
-                    <div className="relative h-48 w-full overflow-hidden bg-gray-100">
+                    <div
+                      className="relative h-48 w-full overflow-hidden bg-gray-100 cursor-pointer"
+                      onClick={() => setZoomedImage(item.photoUrl)}
+                    >
                       <img
                         src={item.photoUrl}
                         alt={`${day} menu`}
@@ -425,6 +429,28 @@ export default function MenuGridClient({ menuItems }: Props) {
           </button>
         </div>
       </div>
+
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 cursor-zoom-out"
+          onClick={() => setZoomedImage(null)}
+        >
+          <img
+            src={zoomedImage}
+            alt="Day menu details"
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+          />
+          <button
+            className="absolute top-6 right-6 text-white text-4xl leading-none hover:text-gray-300"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoomedImage(null);
+            }}
+          >
+            &times;
+          </button>
+        </div>
+      )}
     </>
   );
 }
