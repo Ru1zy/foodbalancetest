@@ -62,7 +62,13 @@ export async function POST(request: Request) {
       console.log("Confirming auth:", { token, chatId, userName });
 
       // Notify our auth endpoint
-      const confirmResponse = await fetch(`${new URL(request.url).origin}/api/auth/telegram-deeplink`, {
+      const apiUrl = process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}/api/auth/telegram-deeplink`
+        : `${new URL(request.url).origin}/api/auth/telegram-deeplink`;
+
+      console.log("Calling API:", apiUrl);
+
+      const confirmResponse = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
