@@ -46,3 +46,12 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# documentation and legacy files
+*.md
+legacy_bot_logic.js
+AGENTS.md
+CLAUDE.md
+README.md
+TELEGRAM_AUTH_HISTORY.md
+TEST_INSTRUCTIONS.md
