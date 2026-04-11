@@ -2,8 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 
 export async function updateMenuPhoto(menuId: string, photoUrl: string) {
+  const adminUser = await getAuthenticatedAdminUser();
+
+  if (!adminUser) {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
   try {
     await prisma.menu.update({
       where: { id: menuId },

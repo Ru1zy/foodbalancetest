@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 
 export async function getAllTariffs() {
   try {
@@ -26,6 +27,12 @@ export async function updateTariff(
     imageUrl?: string;
   }
 ) {
+  const adminUser = await getAuthenticatedAdminUser();
+
+  if (!adminUser) {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
   try {
     await prisma.tariff.update({
       where: { id },
@@ -50,6 +57,12 @@ export async function createTariff(data: {
   basePrice: number;
   imageUrl?: string;
 }) {
+  const adminUser = await getAuthenticatedAdminUser();
+
+  if (!adminUser) {
+    throw new Error("Unauthorized: Admin access required");
+  }
+
   try {
     await prisma.tariff.create({
       data,
