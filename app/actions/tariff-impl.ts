@@ -22,6 +22,7 @@ export async function updateTariff(
     kcal?: string;
     price?: string;
     basePrice?: number;
+    previewImageUrl?: string;
     imageUrl?: string;
   }
 ) {

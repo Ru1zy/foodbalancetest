@@ -10,6 +10,7 @@ type Tariff = {
   kcal: string;
   price: string;
   basePrice: number;
+  previewImageUrl: string | null;
   imageUrl: string | null;
 };
 
@@ -19,7 +20,8 @@ type Props = {
 
 export default function TariffRow({ tariff }: Props) {
   const [editing, setEditing] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingPreview, setUploadingPreview] = useState(false);
+  const [uploadingDetail, setUploadingDetail] = useState(false);
   const [formData, setFormData] = useState({
     title: tariff.title,
     kcal: tariff.kcal,
@@ -32,11 +34,37 @@ export default function TariffRow({ tariff }: Props) {
     setEditing(false);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePreviewImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
+    setUploadingPreview(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      const data = await response.json();
+      await updateTariff(tariff.id, { previewImageUrl: data.url });
+      window.location.reload();
+    } catch (error) {
+      console.error("Upload error:", error);
+    } finally {
+      setUploadingPreview(false);
+    }
+  };
+
+  const handleDetailImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingDetail(true);
     try {
       const formData = new FormData();
       formData.append("file", file);
@@ -50,10 +78,11 @@ export default function TariffRow({ tariff }: Props) {
 
       const data = await response.json();
       await updateTariff(tariff.id, { imageUrl: data.url });
+      window.location.reload();
     } catch (error) {
       console.error("Upload error:", error);
     } finally {
-      setUploading(false);
+      setUploadingDetail(false);
     }
   };
 
@@ -94,9 +123,20 @@ export default function TariffRow({ tariff }: Props) {
           />
         </td>
         <td className="px-6 py-4">
-          {tariff.imageUrl && (
-            <img src={tariff.imageUrl} alt={tariff.title} className="h-12 w-12 rounded object-cover" />
-          )}
+          <div className="flex gap-2">
+            <div className="text-center">
+              {tariff.previewImageUrl && (
+                <img src={tariff.previewImageUrl} alt="Preview" className="h-12 w-12 rounded object-cover mb-1" />
+              )}
+              <div className="text-xs text-gray-500">Preview</div>
+            </div>
+            <div className="text-center">
+              {tariff.imageUrl && (
+                <img src={tariff.imageUrl} alt="Detail" className="h-12 w-12 rounded object-cover mb-1" />
+              )}
+              <div className="text-xs text-gray-500">Detail</div>
+            </div>
+          </div>
         </td>
         <td className="px-6 py-4">
           <div className="flex gap-2">
@@ -126,27 +166,48 @@ export default function TariffRow({ tariff }: Props) {
       <td className="px-6 py-4 text-sm text-gray-600">{tariff.price}</td>
       <td className="px-6 py-4 text-sm text-gray-600">{tariff.basePrice} ₴</td>
       <td className="px-6 py-4">
-        {tariff.imageUrl ? (
-          <img src={tariff.imageUrl} alt={tariff.title} className="h-12 w-12 rounded object-cover" />
-        ) : (
-          <div className="h-12 w-12 rounded bg-gray-100" />
-        )}
+        <div className="flex gap-2">
+          <div className="text-center">
+            {tariff.previewImageUrl && (
+              <img src={tariff.previewImageUrl} alt="Preview" className="h-12 w-12 rounded object-cover mb-1" />
+            )}
+            {!tariff.previewImageUrl && <div className="h-12 w-12 rounded bg-gray-100 mb-1" />}
+            <div className="text-xs text-gray-500">Preview</div>
+          </div>
+          <div className="text-center">
+            {tariff.imageUrl && (
+              <img src={tariff.imageUrl} alt="Detail" className="h-12 w-12 rounded object-cover mb-1" />
+            )}
+            {!tariff.imageUrl && <div className="h-12 w-12 rounded bg-gray-100 mb-1" />}
+            <div className="text-xs text-gray-500">Detail</div>
+          </div>
+        </div>
       </td>
       <td className="px-6 py-4">
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           <button
             onClick={() => setEditing(true)}
             className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
           >
             Редагувати
           </button>
-          <label className="cursor-pointer rounded bg-gray-600 px-3 py-1 text-sm text-white hover:bg-gray-700">
-            {uploading ? "..." : "Фото"}
+          <label className="cursor-pointer rounded bg-green-600 px-3 py-1 text-center text-sm text-white hover:bg-green-700">
+            {uploadingPreview ? "..." : "Preview"}
             <input
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
-              disabled={uploading}
+              onChange={handlePreviewImageUpload}
+              disabled={uploadingPreview}
+              className="hidden"
+            />
+          </label>
+          <label className="cursor-pointer rounded bg-purple-600 px-3 py-1 text-center text-sm text-white hover:bg-purple-700">
+            {uploadingDetail ? "..." : "Detail"}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleDetailImageUpload}
+              disabled={uploadingDetail}
               className="hidden"
             />
           </label>

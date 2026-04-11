@@ -11,6 +11,7 @@ type Tariff = {
   kcal: string;
   price: string;
   basePrice: number;
+  previewImageUrl: string | null;
   imageUrl: string | null;
 };
 
@@ -52,9 +53,9 @@ export default function PackageSelector({ tariffs }: Props) {
               className="flex flex-col overflow-hidden rounded-2xl border bg-white shadow-sm ring-1 transition"
             >
               <div className="relative h-48 w-full overflow-hidden bg-gray-200">
-                {option.imageUrl ? (
+                {option.previewImageUrl ? (
                   <img
-                    src={option.imageUrl}
+                    src={option.previewImageUrl}
                     alt={option.title}
                     className="h-full w-full object-cover"
                     onError={(e) => {
@@ -189,9 +190,9 @@ export default function PackageSelector({ tariffs }: Props) {
               }`}
             >
               <div className="relative h-48 w-full overflow-hidden bg-gray-200">
-                {pkg.imageUrl && (
+                {pkg.previewImageUrl && (
                   <img
-                    src={pkg.imageUrl}
+                    src={pkg.previewImageUrl}
                     alt={pkg.title}
                     className="h-full w-full object-cover"
                     onError={(e) => {

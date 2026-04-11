@@ -34,13 +34,14 @@ model Menu {
 }
 
 model Tariff {
-  id        String  @id @default(uuid())
-  name      String  @unique
-  title     String
-  kcal      String
-  price     String
-  basePrice Int
-  imageUrl  String?
+  id              String  @id @default(uuid())
+  name            String  @unique
+  title           String
+  kcal            String
+  price           String
+  basePrice       Int
+  previewImageUrl String?
+  imageUrl        String?
 }
 
 model Order {
