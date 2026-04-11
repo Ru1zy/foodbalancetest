@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // Handle /start command with auth token
     if (update.message?.text?.startsWith("/start auth_")) {
-      const token = update.message.text.replace("/start auth_", "").trim();
+      const token = update.message.text.replace("/start ", "").trim();
       const chatId = update.message.chat.id;
 
       await sendTelegramRequest("sendMessage", {
