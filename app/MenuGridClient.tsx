@@ -14,6 +14,9 @@ import {
 import { useOrderStore } from "@/lib/orderStore";
 import DishCard from "@/components/DishCard";
 import CircularProgress from "@/components/CircularProgress";
+import FloatingCart from "@/components/FloatingCart";
+import CartPanel from "@/components/CartPanel";
+import FlyingCartIcons, { useFlyToCart } from "@/components/FlyingCartIcons";
 
 export type { DishOption, Dishes, MenuItem } from "@/lib/menu-types";
 
@@ -36,6 +39,8 @@ const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka X
 export default function MenuGridClient({ menuItems }: Props) {
   const router = useRouter();
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { flyingIcons, triggerFly } = useFlyToCart();
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
   const selectedDatesFromStore = useOrderStore((state) => state.selectedDates);
@@ -45,6 +50,11 @@ export default function MenuGridClient({ menuItems }: Props) {
   const decrementDish = useOrderStore((state) => state.decrementDish);
   const setPackage = useOrderStore((state) => state.setPackage);
   const setSelection = useOrderStore((state) => state.setSelection);
+
+  // Build menuDayByItemId mapping
+  const menuDayByItemId = useMemo(() => {
+    return Object.fromEntries(menuItems.map((item) => [item.id, item.dayOfWeek]));
+  }, [menuItems]);
 
   const pkg = parsePackageType(selectedPackageRaw);
   const indivSelected = isIndivPackage(selectedPackageRaw ?? undefined);
@@ -272,6 +282,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                   if (disabled) return;
                   setSelection(itemId, category as string, idx);
                 }}
+                onFlyAnimation={triggerFly}
               />
             );
           })}
@@ -454,6 +465,10 @@ export default function MenuGridClient({ menuItems }: Props) {
           </button>
         </div>
       )}
+
+      <FloatingCart onOpenCart={() => setIsCartOpen(true)} />
+      <CartPanel isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} menuDayByItemId={menuDayByItemId} />
+      <FlyingCartIcons flyingIcons={flyingIcons} />
     </>
   );
 }

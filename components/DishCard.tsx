@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
 type Props = {
   dishName: string;
@@ -9,9 +9,10 @@ type Props = {
   isSelected: boolean;
   disabled: boolean;
   onClick: () => void;
+  onFlyAnimation?: (element: HTMLElement) => void;
 };
 
-export default function DishCard({ dishName, dishShort, variantNumber, isSelected, disabled, onClick }: Props) {
+export default function DishCard({ dishName, dishShort, variantNumber, isSelected, disabled, onClick, onFlyAnimation }: Props) {
   const [ripples, setRipples] = useState<Array<{ x: number; y: number; id: number }>>([]);
   const cardRef = useRef<HTMLButtonElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -29,6 +30,11 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
     setTimeout(() => {
       setRipples((prev) => prev.filter((r) => r.id !== newRipple.id));
     }, 600);
+
+    // Trigger fly animation if selecting (not deselecting)
+    if (!isSelected && onFlyAnimation && cardRef.current) {
+      onFlyAnimation(cardRef.current);
+    }
 
     onClick();
   };
