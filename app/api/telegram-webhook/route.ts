@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
@@ -61,25 +62,19 @@ export async function POST(request: Request) {
 
       console.log("Confirming auth:", { token, chatId, userName });
 
-      // Notify our auth endpoint - hardcoded URL to avoid issues with request.url
-      const apiUrl = "https://foodbalancetest.vercel.app/api/auth/telegram-deeplink";
-      console.log("Calling API:", apiUrl);
-
-      const confirmResponse = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "confirm",
-          token,
-          chatId,
-          userName
-        })
-      });
-
-      if (!confirmResponse.ok) {
-        console.error("Failed to confirm auth:", await confirmResponse.text());
-      } else {
-        console.log("Auth confirmed successfully");
+      // Save directly to database instead of calling API
+      try {
+        await prisma.authToken.create({
+          data: {
+            token,
+            chatId,
+            userName,
+            expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+          },
+        });
+        console.log("Auth token saved to database");
+      } catch (error) {
+        console.error("Failed to save auth token:", error);
       }
 
       // Answer callback query
