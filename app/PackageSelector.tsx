@@ -57,7 +57,7 @@ export default function PackageSelector({ tariffs }: Props) {
                   <img
                     src={option.previewImageUrl}
                     alt={option.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
@@ -194,7 +194,7 @@ export default function PackageSelector({ tariffs }: Props) {
                   <img
                     src={pkg.previewImageUrl}
                     alt={pkg.title}
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
