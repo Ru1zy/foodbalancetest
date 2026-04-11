@@ -349,7 +349,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                   {item.photoUrl && (
                     <div
                       className="relative h-48 w-full overflow-hidden bg-gray-100 cursor-pointer"
-                      onClick={() => setZoomedImage(item.photoUrl)}
+                      onClick={() => setZoomedImage(item.photoUrl || null)}
                     >
                       <img
                         src={item.photoUrl}
