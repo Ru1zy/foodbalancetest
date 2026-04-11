@@ -519,6 +519,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
                   type="button"
                   onClick={() =>
                     setCustomerProfile({
+                      ...customerProfile,
                       cutlery: clampCutleryCount(customerProfile.cutlery - 1),
                     })
                   }
@@ -533,6 +534,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
                   type="button"
                   onClick={() =>
                     setCustomerProfile({
+                      ...customerProfile,
                       cutlery: clampCutleryCount(customerProfile.cutlery + 1),
                     })
                   }

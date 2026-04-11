@@ -11,7 +11,6 @@ type Props = {
 };
 
 export default function FloatingCart({ onOpenCart }: Props) {
-  const [isVisible, setIsVisible] = useState(false);
   const [prevCount, setPrevCount] = useState(0);
   const [isPulse, setIsPulse] = useState(false);
 
@@ -27,15 +26,6 @@ export default function FloatingCart({ onOpenCart }: Props) {
   }).length;
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 200);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  useEffect(() => {
     if (completedDaysCount > prevCount) {
       setIsPulse(true);
       setTimeout(() => setIsPulse(false), 600);
@@ -48,9 +38,9 @@ export default function FloatingCart({ onOpenCart }: Props) {
   return (
     <button
       onClick={onOpenCart}
-      className={`fixed bottom-6 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-blue-500/50 ${
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none"
-      } ${isPulse ? "animate-pulse" : ""}`}
+      className={`fixed right-0 top-1/2 -translate-y-1/2 z-40 flex h-20 w-16 flex-col items-center justify-center rounded-l-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-2xl transition-all duration-300 hover:w-20 hover:shadow-blue-500/50 ${
+        isPulse ? "animate-pulse" : ""
+      }`}
     >
       <svg
         className="h-7 w-7"
@@ -65,7 +55,7 @@ export default function FloatingCart({ onOpenCart }: Props) {
       </svg>
 
       {completedDaysCount > 0 && (
-        <div className={`absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg transition-transform ${
+        <div className={`absolute -top-2 -left-2 flex h-8 w-8 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white shadow-lg transition-transform ${
           isPulse ? "scale-125" : "scale-100"
         }`}>
           {completedDaysCount}
@@ -73,7 +63,7 @@ export default function FloatingCart({ onOpenCart }: Props) {
       )}
 
       {/* Glow effect */}
-      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 opacity-0 blur-xl transition-opacity group-hover:opacity-75" />
+      <div className="absolute inset-0 rounded-l-2xl bg-gradient-to-br from-blue-400 to-indigo-500 opacity-0 blur-xl transition-opacity hover:opacity-75" />
     </button>
   );
 }

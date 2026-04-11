@@ -416,33 +416,6 @@ export default function MenuGridClient({ menuItems }: Props) {
           </div>
         )}
       </div>
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-4 pb-4 sm:px-6">
-        <div className="pointer-events-auto mx-auto flex max-w-7xl flex-col gap-2 rounded-2xl border border-gray-200 bg-white/95 p-4 shadow-lg backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm font-semibold text-gray-900">
-            Днів зібрано: {completedDaysCount}
-            {wizardFilterActive && sorted.length > 0 ? (
-              <span className="block text-xs font-normal text-gray-500 sm:ml-2 sm:inline sm:block">
-                Потрібно зібрати всі обрані дні ({sorted.length}): {allWizardDaysComplete ? "готово" : "не всі"}
-              </span>
-            ) : null}
-          </p>
-          <button
-            type="button"
-            disabled={!canProceedToCheckout}
-            onClick={() => {
-              if (!canProceedToCheckout) return;
-              router.push("/checkout");
-            }}
-            className={`rounded-xl px-4 py-3 text-sm font-semibold transition ${
-              canProceedToCheckout
-                ? "bg-gray-900 text-white hover:bg-blue-600"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
-          >
-            Перейти до оформлення
-          </button>
-        </div>
-      </div>
 
       {zoomedImage && (
         <div
