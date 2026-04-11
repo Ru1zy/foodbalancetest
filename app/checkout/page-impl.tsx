@@ -497,9 +497,10 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
                 <button
                   type="button"
                   onClick={() =>
-                    setCustomerProfile({
+                    setCustomerProfile((prev) => ({
+                      ...prev,
                       cutlery: clampCutleryCount(customerProfile.cutlery - 1),
-                    })
+                    }))
                   }
                   className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 text-xl font-semibold text-gray-900 transition hover:border-gray-300"
                 >
@@ -511,9 +512,10 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
                 <button
                   type="button"
                   onClick={() =>
-                    setCustomerProfile({
+                    setCustomerProfile((prev) => ({
+                      ...prev,
                       cutlery: clampCutleryCount(customerProfile.cutlery + 1),
-                    })
+                    }))
                   }
                   className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 text-xl font-semibold text-gray-900 transition hover:border-gray-300"
                 >

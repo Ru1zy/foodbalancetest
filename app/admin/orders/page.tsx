@@ -53,7 +53,57 @@ function getOrderAddressLabel(order: {
   return order.deliveryAddress || order.user.address || "Не вказано";
 }
 
-export default async function AdminOrdersPage() {
+function parseOrderMenuDetails(items: unknown): string | null {
+  if (!items || typeof items !== "object") {
+    return null;
+  }
+
+  const days = Reflect.get(items, "days");
+  if (!Array.isArray(days) || days.length === 0) {
+    return null;
+  }
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    breakfast: "Сніданок",
+    lunch: "Обід",
+    dinner: "Вечеря",
+    snack: "Перекус",
+    extra: "Додатково",
+  };
+
+  const details = days.map((day: any, index: number) => {
+    const dayNum = index + 1;
+    const selections = day.selections || {};
+    const items = day.items || [];
+
+    let dayDetails = `День ${dayNum}:\n`;
+
+    // Handle regular package selections
+    if (Object.keys(selections).length > 0) {
+      Object.entries(selections).forEach(([category, selectionIndex]) => {
+        const label = CATEGORY_LABELS[category] || category;
+        dayDetails += `  • ${label}: вибір #${(selectionIndex as number) + 1}\n`;
+      });
+    }
+
+    // Handle individual package items
+    if (items.length > 0) {
+      items.forEach((item: any) => {
+        dayDetails += `  • ${item.dishId}: x${item.quantity}\n`;
+      });
+    }
+
+    return dayDetails;
+  }).join('\n');
+
+  return details || null;
+}
+
+export default async function AdminOrdersPage({
+  searchParams,
+}: {
+  searchParams: { filter?: string };
+}) {
   const adminUser = await getAuthenticatedAdminUser();
 
   if (!adminUser) {
@@ -73,7 +123,24 @@ export default async function AdminOrdersPage() {
     );
   }
 
+  // Get today's date in Kyiv timezone
+  const today = new Date();
+  const kyivDate = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Kyiv' }));
+  kyivDate.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(kyivDate);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const whereClause = searchParams.filter === 'today'
+    ? {
+        deliveryDate: {
+          gte: kyivDate,
+          lt: tomorrow,
+        },
+      }
+    : {};
+
   const orders = await prisma.order.findMany({
+    where: whereClause,
     include: {
       user: {
         select: {
@@ -130,6 +197,7 @@ export default async function AdminOrdersPage() {
                 <tbody>
                   {orders.map((order) => {
                     const daysCount = getOrderDaysCount(order.items);
+                    const menuDetails = parseOrderMenuDetails(order.items);
 
                     return (
                       <tr key={order.id} className="border-t border-gray-100 align-top">
@@ -151,6 +219,16 @@ export default async function AdminOrdersPage() {
                           <div className="mt-2 text-sm text-gray-600">Прибори: {order.cutlery}</div>
                           {order.price && (
                             <div className="mt-2 text-sm font-semibold text-gray-900">{order.price} ₴</div>
+                          )}
+                          {menuDetails && (
+                            <details className="mt-3">
+                              <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700">
+                                Деталі раціону
+                              </summary>
+                              <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-600 font-mono">
+                                {menuDetails}
+                              </pre>
+                            </details>
                           )}
                         </td>
                         <td className="px-4 py-5 sm:px-6">

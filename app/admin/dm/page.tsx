@@ -34,6 +34,8 @@ export default async function AdminDirectMessagesPage() {
     select: {
       id: true,
       name: true,
+      firstName: true,
+      lastName: true,
       phone: true,
       chatId: true,
     },

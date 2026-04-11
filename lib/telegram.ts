@@ -288,7 +288,7 @@ export async function sendOrderNotification(order: TelegramOrder, user: Telegram
     `🍴 <b>Прибори:</b> ${escapeHtml(order.cutlery || "Не вказано")}`,
     `💬 <b>Коментар:</b> ${escapeHtml(order.notes || user.notes || "Без коментаря")}`,
     `📅 <b>Дні:</b>\n${daysText}`,
-  ].join("\n");
+  ].join("\n").replace(/&nbsp;/g, ' ');
 
   const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
     method: "POST",
