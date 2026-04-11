@@ -10,25 +10,30 @@ export default async function Header() {
   const isAuthenticated = !!token;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-white/20 glass shadow-lg">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110">
-                <span className="text-xl">🍽️</span>
+        <div className="flex h-20 items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-6">
+                <span className="text-2xl">🍽️</span>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            </div>
+            <div>
+              <span className="text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
                 FoodBalance
               </span>
-            </Link>
-          </div>
-          <nav className="flex items-center gap-3">
+              <div className="text-xs text-slate-500 font-medium">Здорове харчування</div>
+            </div>
+          </Link>
+
+          <nav className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
                 <Link
                   href="/profile"
-                  className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900"
+                  className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-slate-700 transition-all hover:bg-white/50 hover:scale-105"
                 >
                   <span>👤</span>
                   <span className="hidden sm:inline">Профіль</span>

@@ -80,8 +80,6 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
             notes: "",
             username: "",
           });
-
-          window.location.href = "/profile";
         }
       } catch (error) {
         console.error("Polling error:", error);
