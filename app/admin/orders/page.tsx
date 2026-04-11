@@ -109,15 +109,6 @@ export default async function AdminOrdersPage() {
 
         <KitchenExport />
 
-        <div className="mb-6">
-          <Link
-            href="/admin/megaphone"
-            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
-          >
-            📢 Мегафон (Масова розсилка)
-          </Link>
-        </div>
-
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-200">
           {orders.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-500">Замовлень поки немає.</div>
@@ -133,7 +124,7 @@ export default async function AdminOrdersPage() {
                     <th className="px-4 py-4 sm:px-6">Оплата</th>
                     <th className="px-4 py-4 sm:px-6">Статус</th>
                     <th className="px-4 py-4 sm:px-6">Коментар</th>
-                    <th className="px-4 py-4 sm:px-6">Дії</th>
+                    <th className="sticky right-0 bg-gray-50 px-4 py-4 shadow-[-5px_0_15px_-3px_rgba(0,0,0,0.05)] sm:px-6 z-10">Дії</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,7 +175,7 @@ export default async function AdminOrdersPage() {
                         <td className="px-4 py-5 text-sm text-gray-700 sm:px-6">
                           {order.notes || "Немає коментаря"}
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="sticky right-0 bg-white px-4 py-5 shadow-[-5px_0_15px_-3px_rgba(0,0,0,0.05)] sm:px-6 z-10">
                           <OrderActionButtons
                             orderId={order.id}
                             isPaid={order.isPaid}

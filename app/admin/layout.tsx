@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/admin/menu", label: "Меню та Тарифи" },
   { href: "/admin/tariffs", label: "Тарифи" },
   { href: "/admin/broadcast", label: "Розсилка (Мегафон)" },
+  { href: "/admin/dm", label: "Особисті повідомлення" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

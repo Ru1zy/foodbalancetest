@@ -49,25 +49,25 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
 
   if (isPaid) {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 w-full max-w-[200px]">
         <div className="text-xs text-gray-500">
           Оплату підтверджено
         </div>
         {hasChatId && (
-          <div className="flex gap-2">
+          <>
             <input
               type="text"
               value={timeWindow}
               onChange={(e) => setTimeWindow(e.target.value)}
               placeholder="Time (e.g. 19:00-20:00)"
               disabled={isSendingTime}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               type="button"
               onClick={handleNotifyTime}
               disabled={isSendingTime}
-              className={`rounded-lg px-3 py-1 text-sm font-semibold transition ${
+              className={`w-full rounded-lg px-3 py-1 text-sm font-semibold transition ${
                 isSendingTime
                   ? "cursor-not-allowed bg-gray-200 text-gray-400"
                   : "bg-blue-600 text-white hover:bg-blue-700"
@@ -75,7 +75,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
             >
               {isSendingTime ? "..." : "Notify Time"}
             </button>
-          </div>
+          </>
         )}
       </div>
     );
