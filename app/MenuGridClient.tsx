@@ -12,6 +12,8 @@ import {
   isIndivPackage,
 } from "@/lib/order-selection";
 import { useOrderStore } from "@/lib/orderStore";
+import DishCard from "@/components/DishCard";
+import CircularProgress from "@/components/CircularProgress";
 
 export type { DishOption, Dishes, MenuItem } from "@/lib/menu-types";
 
@@ -259,28 +261,18 @@ export default function MenuGridClient({ menuItems }: Props) {
 
             const isSelected = selectedIndex === idx;
             return (
-              <button
+              <DishCard
                 key={idx}
-                type="button"
+                dishName={opt.full}
+                dishShort={opt.short !== opt.full ? opt.short : undefined}
+                variantNumber={options.length > 1 ? idx + 1 : undefined}
+                isSelected={isSelected}
                 disabled={disabled}
                 onClick={() => {
                   if (disabled) return;
                   setSelection(itemId, category as string, idx);
                 }}
-                className={`w-full rounded-lg border p-2 text-left text-sm transition ${
-                  isSelected
-                    ? "border-blue-500 bg-blue-50 font-bold"
-                    : "border-gray-200 bg-white hover:border-blue-200"
-                } ${disabled ? "pointer-events-none opacity-50" : ""}`}
-              >
-                <div className="font-medium text-gray-800">{opt.full}</div>
-                {opt.short && opt.short !== opt.full && (
-                  <div className="text-xs text-gray-500">{opt.short}</div>
-                )}
-                {options.length > 1 && (
-                  <div className="mt-1 text-[9px] text-blue-500">ВАРІАНТ {idx + 1}</div>
-                )}
-              </button>
+              />
             );
           })}
         </div>
@@ -391,12 +383,18 @@ export default function MenuGridClient({ menuItems }: Props) {
                     <MealSection itemId={item.id} category="extra" title="Додаткова страва (Sport)" options={dishes.extra} disabled={!selectable} />
                   </div>
 
-                  <div className="mt-4 border-t border-gray-50 pt-3">
+                  <div className="mt-4 border-t border-gray-50 pt-3 flex items-center justify-between">
+                    <CircularProgress
+                      current={dayProgress.selectedCount}
+                      total={packageLimit}
+                      size={50}
+                      strokeWidth={5}
+                    />
                     {dayProgress.isComplete ? (
-                      <p className="text-sm font-semibold text-green-600">День зібрано</p>
+                      <p className="text-sm font-semibold text-green-600">День зібрано ✓</p>
                     ) : (
                       <p className="text-sm font-semibold text-gray-600">
-                        Зібрано {dayProgress.selectedCount}/{packageLimit}
+                        Оберіть ще {packageLimit - dayProgress.selectedCount}
                       </p>
                     )}
                   </div>
