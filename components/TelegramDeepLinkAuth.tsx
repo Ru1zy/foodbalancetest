@@ -16,6 +16,7 @@ export default function TelegramDeepLinkAuth() {
 
     const pollInterval = setInterval(async () => {
       try {
+        console.log("Polling for token:", authToken);
         const response = await fetch("/api/auth/telegram-deeplink", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -23,8 +24,10 @@ export default function TelegramDeepLinkAuth() {
         });
 
         const data = await response.json();
+        console.log("Poll response:", data);
 
         if (data.status === "confirmed") {
+          console.log("Auth confirmed! Redirecting...");
           setIsPolling(false);
 
           // Parse address if exists
@@ -88,6 +91,7 @@ export default function TelegramDeepLinkAuth() {
 
   const handleLogin = async () => {
     try {
+      console.log("Generating auth token...");
       const response = await fetch("/api/auth/telegram-deeplink", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,12 +100,14 @@ export default function TelegramDeepLinkAuth() {
 
       const data = await response.json();
       const token = data.token;
+      console.log("Generated token:", token);
 
       setAuthToken(token);
       setIsPolling(true);
 
       // Open bot with deep link
       const botUrl = `https://t.me/${BOT_USERNAME}?start=${token}`;
+      console.log("Opening bot URL:", botUrl);
       window.open(botUrl, "_blank");
     } catch (error) {
       console.error("Failed to generate auth token:", error);
