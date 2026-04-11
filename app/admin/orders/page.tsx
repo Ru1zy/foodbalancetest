@@ -1,6 +1,7 @@
 import Link from "next/link";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import OrderActionButtons from "@/components/admin/OrderActionButtons";
+import KitchenExport from "./KitchenExport";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { getOrderStatusClasses, getOrderStatusLabel } from "@/lib/order-status";
@@ -105,6 +106,8 @@ export default async function AdminOrdersPage() {
             Авторизовано як <span className="font-semibold text-gray-900">{adminUser.name}</span>
           </div>
         </div>
+
+        <KitchenExport />
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-200">
           {orders.length === 0 ? (
