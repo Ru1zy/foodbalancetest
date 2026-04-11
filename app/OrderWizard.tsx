@@ -15,6 +15,7 @@ type Tariff = {
   kcal: string;
   price: string;
   basePrice: number;
+  previewImageUrl: string | null;
   imageUrl: string | null;
 };
 
