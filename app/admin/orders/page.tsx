@@ -109,6 +109,15 @@ export default async function AdminOrdersPage() {
 
         <KitchenExport />
 
+        <div className="mb-6">
+          <Link
+            href="/admin/megaphone"
+            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
+          >
+            📢 Мегафон (Масова розсилка)
+          </Link>
+        </div>
+
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-200">
           {orders.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-500">Замовлень поки немає.</div>

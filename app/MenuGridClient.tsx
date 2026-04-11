@@ -88,7 +88,12 @@ export default function MenuGridClient({ menuItems }: Props) {
     for (const item of sorted) {
       const daySelections = selections[item.id] ?? {};
       const selectedCount = getDaySelectedCount(daySelections, pkg);
-      const isComplete = selectedCount === packageLimit;
+
+      // For Indiv package, any selection >= 1 is complete
+      // For other packages, must match the exact limit
+      const isComplete = indivSelected
+        ? selectedCount >= 1
+        : selectedCount === packageLimit;
 
       progress[item.id] = { selectedCount, isComplete };
 
@@ -372,7 +377,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                   )}
                   {indivSelected && (
                     <div className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
-                      Для Indiv обирайте будь-які страви та вказуйте кількість до {packageLimit} на день.
+                      Для Indiv обирайте будь-які страви від 1 до {packageLimit} на день.
                     </div>
                   )}
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
-import { confirmOrderPayment } from "@/app/actions/admin";
+import { useState, useTransition } from "react";
+import { confirmOrderPayment, notifyDeliveryTime } from "@/app/actions/admin";
 
 type Props = {
   orderId: string;
@@ -11,6 +11,8 @@ type Props = {
 
 export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props) {
   const [isPending, startTransition] = useTransition();
+  const [isSendingTime, setIsSendingTime] = useState(false);
+  const [timeWindow, setTimeWindow] = useState("");
 
   const handleConfirmPayment = () => {
     if (!confirm("Підтвердити оплату цього замовлення?")) {
@@ -25,10 +27,56 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
     });
   };
 
+  const handleNotifyTime = async () => {
+    if (!timeWindow.trim()) {
+      alert("Вкажіть час доставки");
+      return;
+    }
+
+    setIsSendingTime(true);
+    try {
+      const result = await notifyDeliveryTime(orderId, timeWindow);
+      if (result.ok) {
+        setTimeWindow("");
+        alert("Повідомлення відправлено!");
+      } else {
+        alert(`Помилка: ${result.message}`);
+      }
+    } finally {
+      setIsSendingTime(false);
+    }
+  };
+
   if (isPaid) {
     return (
-      <div className="text-xs text-gray-500">
-        Оплату підтверджено
+      <div className="flex flex-col gap-2">
+        <div className="text-xs text-gray-500">
+          Оплату підтверджено
+        </div>
+        {hasChatId && (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={timeWindow}
+              onChange={(e) => setTimeWindow(e.target.value)}
+              placeholder="Time (e.g. 19:00-20:00)"
+              disabled={isSendingTime}
+              className="flex-1 rounded-lg border border-gray-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleNotifyTime}
+              disabled={isSendingTime}
+              className={`rounded-lg px-3 py-1 text-sm font-semibold transition ${
+                isSendingTime
+                  ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              {isSendingTime ? "..." : "Notify Time"}
+            </button>
+          </div>
+        )}
       </div>
     );
   }
