@@ -61,11 +61,8 @@ export async function POST(request: Request) {
 
       console.log("Confirming auth:", { token, chatId, userName });
 
-      // Notify our auth endpoint
-      const apiUrl = process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}/api/auth/telegram-deeplink`
-        : `${new URL(request.url).origin}/api/auth/telegram-deeplink`;
-
+      // Notify our auth endpoint - hardcoded URL to avoid issues with request.url
+      const apiUrl = "https://foodbalancetest.vercel.app/api/auth/telegram-deeplink";
       console.log("Calling API:", apiUrl);
 
       const confirmResponse = await fetch(apiUrl, {
