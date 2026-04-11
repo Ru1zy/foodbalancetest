@@ -29,6 +29,7 @@ async function sendTelegramRequest(method: string, body: any) {
 export async function POST(request: Request) {
   try {
     const update: TelegramUpdate = await request.json();
+    console.log("Webhook received:", JSON.stringify(update, null, 2));
 
     // Handle /start command with auth token
     if (update.message?.text?.startsWith("/start auth_")) {
@@ -50,12 +51,15 @@ export async function POST(request: Request) {
 
     // Handle callback button press
     if (update.callback_query?.data?.startsWith("confirm_")) {
+      console.log("Callback query received:", update.callback_query.data);
       const token = update.callback_query.data.replace("confirm_", "");
       const chatId = String(update.callback_query.from.id);
       const userName = [
         update.callback_query.from.first_name,
         update.callback_query.from.last_name
       ].filter(Boolean).join(" ") || update.callback_query.from.username || "Telegram User";
+
+      console.log("Confirming auth:", { token, chatId, userName });
 
       // Notify our auth endpoint
       const confirmResponse = await fetch(`${new URL(request.url).origin}/api/auth/telegram-deeplink`, {
@@ -71,6 +75,8 @@ export async function POST(request: Request) {
 
       if (!confirmResponse.ok) {
         console.error("Failed to confirm auth:", await confirmResponse.text());
+      } else {
+        console.log("Auth confirmed successfully");
       }
 
       // Answer callback query
