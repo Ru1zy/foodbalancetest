@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
-import TelegramLoginButton from "./TelegramLoginButton.impl";
+import TelegramAuthButton from "./TelegramAuthButton";
 import LogoutButton from "./LogoutButton";
 
 export default async function Header() {
@@ -28,9 +28,7 @@ export default async function Header() {
             <LogoutButton />
           </>
         ) : (
-          <div className="flex flex-col items-end text-right gap-1">
-            <TelegramLoginButton />
-          </div>
+          <TelegramAuthButton />
         )}
       </nav>
     </header>
