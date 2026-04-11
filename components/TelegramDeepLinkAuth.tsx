@@ -1,14 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useOrderStore } from "@/lib/orderStore";
 
-export default function TelegramDeepLinkAuth() {
-  const BOT_USERNAME = process.env.NEXT_PUBLIC_BOT_USERNAME || "fooddevtestbot";
+const BOT_USERNAME = process.env.NEXT_PUBLIC_BOT_USERNAME || "fooddevtestbot";
+
+type Props = {
+  onSuccess?: () => void;
+};
+
+export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
-  const router = useRouter();
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
 
   useEffect(() => {
@@ -29,6 +32,14 @@ export default function TelegramDeepLinkAuth() {
         if (data.status === "confirmed") {
           console.log("Auth confirmed! Redirecting...");
           setIsPolling(false);
+
+          if (onSuccess) {
+            onSuccess();
+          }
+
+          if (onSuccess) {
+            onSuccess();
+          }
 
           // Parse address if exists
           const rawAddress = data.user.address || "";
@@ -70,7 +81,7 @@ export default function TelegramDeepLinkAuth() {
             username: "",
           });
 
-          router.push("/profile");
+          window.location.href = "/profile";
         }
       } catch (error) {
         console.error("Polling error:", error);
@@ -87,7 +98,7 @@ export default function TelegramDeepLinkAuth() {
       clearInterval(pollInterval);
       clearTimeout(timeout);
     };
-  }, [authToken, isPolling, router, setCustomerProfile]);
+  }, [authToken, isPolling, setCustomerProfile]);
 
   const handleLogin = async () => {
     try {

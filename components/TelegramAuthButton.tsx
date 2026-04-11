@@ -16,7 +16,7 @@ export default function TelegramAuthButton() {
           >
             ✕
           </button>
-          <TelegramDeepLinkAuth />
+          <TelegramDeepLinkAuth onSuccess={() => setShowAuth(false)} />
         </div>
       </div>
     );
