@@ -37,13 +37,22 @@ export default async function Home() {
   const tariffs = await getTariffs();
 
   return (
-    <main className="min-h-screen bg-gray-100 text-gray-800">
-      <section className="mx-auto max-w-6xl p-4">
-        <h1 className="mb-4 text-3xl font-bold">Delivery CRM — Меню</h1>
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 text-center">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+            Delivery CRM — Меню
+          </h1>
+          <p className="text-lg text-slate-600">
+            Оберіть свій ідеальний раціон харчування
+          </p>
+        </div>
 
         {menuItems.length === 0 ? (
-          <div className="rounded-xl bg-white p-6 text-center text-gray-500 shadow-sm">
-            Меню обновляется
+          <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-12 text-center shadow-xl ring-1 ring-slate-200/60">
+            <div className="text-6xl mb-4">🍽️</div>
+            <p className="text-lg font-semibold text-slate-700">Меню оновляється</p>
+            <p className="text-sm text-slate-500 mt-2">Незабаром з'являться нові страви</p>
           </div>
         ) : (
           <OrderWizard menuItems={menuItems} tariffs={tariffs} />

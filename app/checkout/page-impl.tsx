@@ -297,35 +297,51 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-gray-100 px-4 py-10 text-gray-800 sm:px-6">
-        <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
-          <div className="mb-4 inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
-            Замовлення прийнято
+      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-10 text-gray-800 sm:px-6">
+        <section className="mx-auto max-w-2xl rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-xl ring-1 ring-slate-200/60">
+          <div className="text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30">
+              <span className="text-4xl">✓</span>
+            </div>
+            <div className="mb-4 inline-flex rounded-full bg-gradient-to-r from-green-400 to-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+              Замовлення прийнято
+            </div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Оформлення завершено
+            </h1>
+            <div className="mt-6 rounded-xl bg-slate-50 p-4">
+              <p className="text-sm text-slate-600">
+                Тариф: <span className="font-bold text-slate-900">{submitted.packageType}</span>
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                Днів у замовленні: <span className="font-bold text-slate-900">{submitted.totalDays}</span>
+              </p>
+              <p className="text-sm text-slate-600 mt-1">
+                Доставка кур&apos;єром за вказаною адресою
+              </p>
+            </div>
+            <p className="mt-6 text-sm font-medium text-slate-500 flex items-center justify-center gap-2">
+              <span className="animate-spin">⏳</span>
+              Повертаємо вас на головну сторінку...
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Оформлення завершено</h1>
-          <p className="mt-3 text-sm text-gray-600">
-            Тариф: <span className="font-semibold text-gray-900">{submitted.packageType}</span>. Днів у
-            замовленні: <span className="font-semibold text-gray-900">{submitted.totalDays}</span>. Доставка
-            кур&apos;єром за вказаною адресою.
-          </p>
-          <p className="mt-6 text-sm font-medium text-gray-600">
-            Повертаємо вас на головну сторінку...
-          </p>
         </section>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 px-4 py-10 text-gray-800 sm:px-6">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-10 text-gray-800 sm:px-6">
       <section className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_360px]">
-        <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
+        <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-slate-200/60 sm:p-8">
           <div className="mb-8">
-            <Link href="/" className="text-sm font-semibold text-blue-600 transition hover:text-blue-700">
-              ← Повернутися до меню
+            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700">
+              <span>←</span> Повернутися до меню
             </Link>
-            <h1 className="mt-4 text-3xl font-bold text-gray-900">Оформлення замовлення</h1>
-            <p className="mt-3 max-w-2xl text-sm text-gray-600">
+            <h1 className="mt-4 text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Оформлення замовлення
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm text-slate-600">
               Заповніть коротку форму нижче. Telegram-авторизація не обов&apos;язкова: оформити замовлення
               можна і як гість.
             </p>
@@ -333,10 +349,10 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
 
           {feedback && (
             <div
-              className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-medium ${
+              className={`mb-6 rounded-xl border px-4 py-3 text-sm font-medium shadow-sm ${
                 feedback.tone === "success"
-                  ? "border-green-200 bg-green-50 text-green-700"
-                  : "border-red-200 bg-red-50 text-red-700"
+                  ? "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700"
+                  : "border-red-200 bg-gradient-to-r from-red-50 to-rose-50 text-red-700"
               }`}
             >
               {feedback.message}
@@ -344,7 +360,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
           )}
 
           {!customerProfile.isAuthenticated && (
-            <div className="mb-6 rounded-3xl border border-dashed border-blue-200 bg-blue-50/70 p-4">
+            <div className="mb-6 rounded-2xl border border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
               <div className="mt-4">
                 <TelegramDeepLinkAuth />
               </div>
@@ -352,34 +368,39 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
           )}
 
           {cartData.totalDays === 0 && (
-            <div className="mb-6 rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-6">
-              <h2 className="text-lg font-semibold text-gray-900">Кошик порожній</h2>
-              <p className="mt-2 text-sm text-gray-600">
-                Форма вже готова, але для відправки потрібно зібрати хоча б один день відповідно до ліміту
-                тарифу.
-              </p>
+            <div className="mb-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🛒</span>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Кошик порожній</h2>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Форма вже готова, але для відправки потрібно зібрати хоча б один день відповідно до ліміту
+                    тарифу.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
           {fieldErrors.cart && (
-            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
               {fieldErrors.cart}
             </div>
           )}
 
-          <form key={formKey} className="space-y-5" onSubmit={handleSubmit}>
+          <form key={formKey} className="space-y-6" onSubmit={handleSubmit}>
             <input type="hidden" name="cutlery" value={customerProfile.cutlery} />
 
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 1. Ім&apos;я</span>
+                <span className="mb-2 block text-sm font-bold text-slate-900">Крок 1. Ім&apos;я</span>
                 <input
                   aria-invalid={fieldErrors.name ? "true" : "false"}
                   autoComplete="name"
-                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
+                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:ring-4 ${
                     fieldErrors.name
-                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                      : "border-slate-200 focus:border-blue-500 focus:ring-blue-100 hover:border-slate-300"
                   }`}
                   defaultValue={customerProfile.name}
                   name="name"
@@ -393,14 +414,14 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 1. Телефон</span>
+                <span className="mb-2 block text-sm font-bold text-slate-900">Крок 1. Телефон</span>
                 <input
                   aria-invalid={fieldErrors.phone ? "true" : "false"}
                   autoComplete="tel"
-                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
+                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:ring-4 ${
                     fieldErrors.phone
-                      ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                      : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                      : "border-slate-200 focus:border-blue-500 focus:ring-blue-100 hover:border-slate-300"
                   }`}
                   defaultValue={customerProfile.phone}
                   inputMode="tel"

@@ -10,27 +10,37 @@ export default async function Header() {
   const isAuthenticated = !!token;
 
   return (
-    <header className="flex items-center justify-between w-full p-4 border-b bg-white">
-      <div className="flex items-center">
-        <Link href="/" className="text-xl font-bold text-gray-900">
-          FoodBalance
-        </Link>
-      </div>
-      <nav className="flex items-center space-x-4">
-        {isAuthenticated ? (
-          <>
-            <Link
-              href="/profile"
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Профіль
+    <header className="sticky top-0 z-50 w-full border-b border-slate-200/60 bg-white/80 backdrop-blur-xl shadow-sm">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/30 transition-transform group-hover:scale-110">
+                <span className="text-xl">🍽️</span>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                FoodBalance
+              </span>
             </Link>
-            <LogoutButton />
-          </>
-        ) : (
-          <TelegramAuthButton />
-        )}
-      </nav>
+          </div>
+          <nav className="flex items-center gap-3">
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100 hover:text-slate-900"
+                >
+                  <span>👤</span>
+                  <span className="hidden sm:inline">Профіль</span>
+                </Link>
+                <LogoutButton />
+              </>
+            ) : (
+              <TelegramAuthButton />
+            )}
+          </nav>
+        </div>
+      </div>
     </header>
   );
 }
