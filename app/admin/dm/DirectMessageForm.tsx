@@ -8,6 +8,7 @@ type User = {
   name: string;
   phone: string;
   chatId: string | null;
+  orders: Array<{ id: string }>;
 };
 
 type Props = {
@@ -53,9 +54,11 @@ export default function DirectMessageForm({ users }: Props) {
         >
           <option value="">-- Оберіть користувача --</option>
           {users.map((user) => {
-            const displayName = user.name || 'No Name';
+            // Use the name from User table (which gets updated from checkout form)
+            const realName = user.name || 'Невідомий';
             const contact = user.phone || user.chatId;
-            const label = `${displayName} (${contact})`;
+            const hasOrders = user.orders && user.orders.length > 0;
+            const label = `${realName} (${contact})${hasOrders ? ' ✓' : ''}`;
 
             return (
               <option key={user.id} value={user.chatId || ""}>

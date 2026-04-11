@@ -53,7 +53,7 @@ function getOrderAddressLabel(order: {
   return order.deliveryAddress || order.user.address || "Не вказано";
 }
 
-function parseOrderMenuDetails(items: unknown): string | null {
+async function parseOrderMenuDetails(items: unknown, orderId: string): Promise<string | null> {
   if (!items || typeof items !== "object") {
     return null;
   }
@@ -71,18 +71,51 @@ function parseOrderMenuDetails(items: unknown): string | null {
     extra: "Додатково",
   };
 
+  // Fetch menu items for all dayIds in this order
+  const dayIds = days.map((day: any) => day.dayId).filter(Boolean);
+
+  if (dayIds.length === 0) {
+    return null;
+  }
+
+  const menuItems = await prisma.menu.findMany({
+    where: {
+      id: {
+        in: dayIds,
+      },
+    },
+    select: {
+      id: true,
+      dishes: true,
+      dayOfWeek: true,
+    },
+  });
+
+  const menuById = new Map(menuItems.map((item) => [item.id, item]));
+
   const details = days.map((day: any, index: number) => {
     const dayNum = index + 1;
     const selections = day.selections || {};
     const items = day.items || [];
+    const menu = menuById.get(day.dayId);
 
     let dayDetails = `День ${dayNum}:\n`;
 
     // Handle regular package selections
-    if (Object.keys(selections).length > 0) {
+    if (Object.keys(selections).length > 0 && menu) {
+      const dishes = typeof menu.dishes === 'string' ? JSON.parse(menu.dishes) : menu.dishes;
+
       Object.entries(selections).forEach(([category, selectionIndex]) => {
         const label = CATEGORY_LABELS[category] || category;
-        dayDetails += `  • ${label}: вибір #${(selectionIndex as number) + 1}\n`;
+        const categoryDishes = dishes[category];
+
+        if (Array.isArray(categoryDishes) && categoryDishes[selectionIndex as number]) {
+          const dish = categoryDishes[selectionIndex as number];
+          const dishName = typeof dish === 'object' && dish !== null ? (dish.full || dish.short || dish.name) : dish;
+          dayDetails += `  • ${label}: ${dishName}\n`;
+        } else {
+          dayDetails += `  • ${label}: вибір #${(selectionIndex as number) + 1}\n`;
+        }
       });
     }
 
@@ -123,18 +156,18 @@ export default async function AdminOrdersPage({
     );
   }
 
-  // Get today's date in Kyiv timezone
-  const today = new Date();
-  const kyivDate = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Kyiv' }));
-  kyivDate.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(kyivDate);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // Get today's date in Kyiv timezone (YYYY-MM-DD format)
+  const todayString = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Kiev' });
+
+  // Create Date objects for start and end of today in Kyiv timezone
+  const todayStart = new Date(`${todayString}T00:00:00.000+03:00`);
+  const todayEnd = new Date(`${todayString}T23:59:59.999+03:00`);
 
   const whereClause = searchParams.filter === 'today'
     ? {
         deliveryDate: {
-          gte: kyivDate,
-          lt: tomorrow,
+          gte: todayStart,
+          lte: todayEnd,
         },
       }
     : {};
@@ -155,6 +188,14 @@ export default async function AdminOrdersPage({
       createdAt: "desc",
     },
   });
+
+  // Fetch menu details for all orders
+  const ordersWithMenuDetails = await Promise.all(
+    orders.map(async (order) => ({
+      ...order,
+      menuDetails: await parseOrderMenuDetails(order.items, order.id),
+    }))
+  );
 
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-8 text-gray-800 sm:px-6">
@@ -177,7 +218,7 @@ export default async function AdminOrdersPage({
         <KitchenExport />
 
         <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-gray-200">
-          {orders.length === 0 ? (
+          {ordersWithMenuDetails.length === 0 ? (
             <div className="p-8 text-center text-sm text-gray-500">Замовлень поки немає.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -195,9 +236,8 @@ export default async function AdminOrdersPage({
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => {
+                  {ordersWithMenuDetails.map((order) => {
                     const daysCount = getOrderDaysCount(order.items);
-                    const menuDetails = parseOrderMenuDetails(order.items);
 
                     return (
                       <tr key={order.id} className="border-t border-gray-100 align-top">
@@ -220,13 +260,13 @@ export default async function AdminOrdersPage({
                           {order.price && (
                             <div className="mt-2 text-sm font-semibold text-gray-900">{order.price} ₴</div>
                           )}
-                          {menuDetails && (
+                          {order.menuDetails && (
                             <details className="mt-3">
                               <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-700">
                                 Деталі раціону
                               </summary>
                               <pre className="mt-2 whitespace-pre-wrap text-xs text-gray-600 font-mono">
-                                {menuDetails}
+                                {order.menuDetails}
                               </pre>
                             </details>
                           )}

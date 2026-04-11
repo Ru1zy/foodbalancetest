@@ -36,6 +36,15 @@ export default async function AdminDirectMessagesPage() {
       name: true,
       phone: true,
       chatId: true,
+      orders: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+        select: {
+          id: true,
+        },
+      },
     },
     orderBy: {
       name: "asc",
