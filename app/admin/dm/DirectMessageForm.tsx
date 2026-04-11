@@ -6,8 +6,6 @@ import { sendDirectMessage } from "@/app/actions/admin";
 type User = {
   id: string;
   name: string;
-  firstName: string | null;
-  lastName: string | null;
   phone: string;
   chatId: string | null;
 };
@@ -55,10 +53,9 @@ export default function DirectMessageForm({ users }: Props) {
         >
           <option value="">-- Оберіть користувача --</option>
           {users.map((user) => {
-            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
             const displayName = user.name || 'No Name';
             const contact = user.phone || user.chatId;
-            const label = `${fullName ? `${fullName} - ` : ''}${displayName} (${contact})`;
+            const label = `${displayName} (${contact})`;
 
             return (
               <option key={user.id} value={user.chatId || ""}>
