@@ -199,7 +199,7 @@ export default async function AdminOrdersPage({
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 sm:px-6">
-      <section className="mx-auto max-w-7xl">
+      <section className="mx-auto w-full px-6">
         <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-slate-200/60 sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>
             <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700">
@@ -234,14 +234,14 @@ export default async function AdminOrdersPage({
               <table className="min-w-full border-collapse">
                 <thead className="bg-gradient-to-r from-slate-50 to-blue-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
                   <tr>
-                    <th className="px-4 py-4 sm:px-6">ID / Дата</th>
-                    <th className="px-4 py-4 sm:px-6">Клієнт</th>
-                    <th className="px-4 py-4 sm:px-6">Адреса</th>
-                    <th className="px-4 py-4 sm:px-6">Пакет</th>
-                    <th className="px-4 py-4 sm:px-6">Оплата</th>
-                    <th className="px-4 py-4 sm:px-6">Статус</th>
-                    <th className="px-4 py-4 sm:px-6">Коментар</th>
-                    <th className="sticky right-0 bg-gradient-to-r from-slate-50 to-blue-50 px-4 py-4 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">Дії</th>
+                    <th className="px-4 py-4 sm:px-6 w-32">ID / Дата</th>
+                    <th className="px-4 py-4 sm:px-6 w-40">Клієнт</th>
+                    <th className="px-4 py-4 sm:px-6 w-48">Адреса</th>
+                    <th className="px-4 py-4 sm:px-6 min-w-[300px]">Пакет</th>
+                    <th className="px-4 py-4 sm:px-6 w-32">Оплата</th>
+                    <th className="px-4 py-4 sm:px-6 w-40">Статус</th>
+                    <th className="px-4 py-4 sm:px-6 w-48">Коментар</th>
+                    <th className="sticky right-0 bg-gradient-to-r from-slate-50 to-blue-50 px-4 py-4 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10 w-32">Дії</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -249,14 +249,14 @@ export default async function AdminOrdersPage({
                     const daysCount = getOrderDaysCount(order.items);
 
                     return (
-                      <tr key={order.id} className="hover:bg-blue-50/50 transition-colors duration-150">
-                        <td className="px-4 py-5 sm:px-6">
+                      <tr key={order.id} className="hover:bg-blue-50/50 transition-colors duration-150 align-top">
+                        <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
                             <span className="font-mono text-xs font-bold text-slate-700">{order.id.slice(0, 8)}</span>
                           </div>
                           <div className="mt-2 text-xs text-slate-500">{formatDateTime(order.createdAt)}</div>
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="flex items-center gap-2">
                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
                               {order.user.name.charAt(0).toUpperCase()}
@@ -267,13 +267,13 @@ export default async function AdminOrdersPage({
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="flex items-start gap-2">
                             <span className="text-slate-400 mt-0.5">📍</span>
                             <div className="text-sm text-slate-700 max-w-xs">{getOrderAddressLabel(order)}</div>
                           </div>
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="px-4 py-5 sm:px-6 align-top min-w-[300px]">
                           <div className="space-y-2">
                             <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 px-3 py-1.5">
                               <span className="text-sm font-bold text-indigo-700">{order.packageType}</span>
@@ -301,7 +301,7 @@ export default async function AdminOrdersPage({
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="px-4 py-5 sm:px-6 align-top">
                           <div
                             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm ${
                               order.isPaid
@@ -313,7 +313,7 @@ export default async function AdminOrdersPage({
                             <span>{order.isPaid ? "Оплачено" : "Очікує"}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="space-y-3">
                             <div
                               className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm ${getOrderStatusClasses(order.status)}`}
@@ -323,7 +323,7 @@ export default async function AdminOrdersPage({
                             <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
                           </div>
                         </td>
-                        <td className="px-4 py-5 sm:px-6">
+                        <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="max-w-xs">
                             {order.notes ? (
                               <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900">
