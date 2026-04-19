@@ -89,7 +89,7 @@ export default async function Home() {
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Меню оновляється
             </h2>
-            <p className="text-lg text-slate-600">Незабаром з'являться нові смачні страви</p>
+            <p className="text-lg text-slate-600">Незабаром з&apos;являться нові смачні страви</p>
           </div>
         ) : (
           <div className="glass rounded-3xl p-8 shadow-2xl">

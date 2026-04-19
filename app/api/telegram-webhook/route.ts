@@ -17,7 +17,7 @@ type TelegramUpdate = {
   };
 };
 
-async function sendTelegramRequest(method: string, body: any) {
+async function sendTelegramRequest(method: string, body: Record<string, unknown>) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const response = await fetch(`https://api.telegram.org/bot${botToken}/${method}`, {
     method: "POST",

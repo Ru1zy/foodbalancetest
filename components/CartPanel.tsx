@@ -25,7 +25,6 @@ const dayNames: Record<number, string> = {
 
 export default function CartPanel({ isOpen, onClose, menuDayByItemId }: Props) {
   const router = useRouter();
-  const [isAnimating, setIsAnimating] = useState(false);
 
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
   const selections = useOrderStore((state) => state.selections);
@@ -60,12 +59,7 @@ export default function CartPanel({ isOpen, onClose, menuDayByItemId }: Props) {
   }, [pkg, completedDays.length]);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsAnimating(true);
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
 
     return () => {
       document.body.style.overflow = "";
@@ -81,7 +75,7 @@ export default function CartPanel({ isOpen, onClose, menuDayByItemId }: Props) {
     onClose();
   };
 
-  if (!isOpen && !isAnimating) return null;
+  if (!isOpen) return null;
 
   return (
     <>
@@ -91,9 +85,6 @@ export default function CartPanel({ isOpen, onClose, menuDayByItemId }: Props) {
           isOpen ? "opacity-100" : "opacity-0"
         }`}
         onClick={onClose}
-        onTransitionEnd={() => {
-          if (!isOpen) setIsAnimating(false);
-        }}
       />
 
       {/* Panel */}

@@ -123,7 +123,7 @@ export default function MenuGridClient({ menuItems }: Props) {
       completedDaysCount: completed,
       allWizardDaysComplete: allComplete,
     };
-  }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step, isSushka]);
+  }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step, isSushka, indivSelected]);
 
   const allClosed = [1, 2, 3, 4, 5, 6, 7].every((day) => !isDaySelectable(day));
 

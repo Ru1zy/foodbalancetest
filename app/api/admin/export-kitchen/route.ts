@@ -25,7 +25,14 @@ async function parseOrderItems(items: unknown, orderId: string): Promise<string[
   const parsedItems: string[] = [];
 
   // Fetch menu items for all dayIds in this order
-  const dayIds = days.map((day: any) => day.dayId).filter(Boolean);
+  const dayIds = days
+    .map((day: unknown) => {
+      if (day && typeof day === "object" && "dayId" in day) {
+        return day.dayId;
+      }
+      return null;
+    })
+    .filter(Boolean) as string[];
 
   if (dayIds.length === 0) {
     return [];
@@ -73,11 +80,12 @@ async function parseOrderItems(items: unknown, orderId: string): Promise<string[
 
     // Handle individual package items
     if (items.length > 0) {
-      items.forEach((item: any) => {
-        if (item.dishId) {
-          const quantity = item.quantity || 1;
+      items.forEach((item: unknown) => {
+        if (item && typeof item === "object" && "dishId" in item) {
+          const dishId = (item as { dishId: string; quantity?: number }).dishId;
+          const quantity = (item as { quantity?: number }).quantity || 1;
           for (let i = 0; i < quantity; i++) {
-            parsedItems.push(String(item.dishId).trim());
+            parsedItems.push(String(dishId).trim());
           }
         }
       });
@@ -254,7 +262,7 @@ export async function GET(request: Request) {
       csv += "Клієнт,Телефон,Адреса,Chat ID,Пакет,Страви,Прибори,Особливості\n";
 
       for (const row of exportData) {
-        const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+        const escapeCsv = (str: string | number) => `"${String(str).replace(/"/g, '""')}"`;
 
         csv += [
           escapeCsv(row.name),

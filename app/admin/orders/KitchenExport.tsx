@@ -116,7 +116,7 @@ export default function KitchenExport() {
         <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
           <p className="font-semibold mb-2">ℹ️ Як працює експорт в Google Sheets:</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Шукає вкладку з назвою дати (наприклад, "23.02")</li>
+            <li>Шукає вкладку з назвою дати (наприклад, &quot;23.02&quot;)</li>
             <li>Знаходить рядки з Chat ID в колонці F та порожньою колонкою H</li>
             <li>Заповнює дані замовлення: ПІБ, телефон, адресу, страви, прибори</li>
             <li>Експортуються тільки оплачені замовлення</li>

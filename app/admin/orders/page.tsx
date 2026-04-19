@@ -73,7 +73,14 @@ async function parseOrderMenuDetails(items: unknown, orderId: string): Promise<s
   };
 
   // Fetch menu items for all dayIds in this order
-  const dayIds = days.map((day: any) => day.dayId).filter(Boolean);
+  const dayIds = days
+    .map((day: unknown) => {
+      if (day && typeof day === "object" && "dayId" in day) {
+        return (day as { dayId: string }).dayId;
+      }
+      return null;
+    })
+    .filter((id): id is string => Boolean(id));
 
   if (dayIds.length === 0) {
     return null;
@@ -94,11 +101,14 @@ async function parseOrderMenuDetails(items: unknown, orderId: string): Promise<s
 
   const menuById = new Map(menuItems.map((item) => [item.id, item]));
 
-  const details = days.map((day: any, index: number) => {
+  const details = days.map((day: unknown, index: number) => {
+    if (!day || typeof day !== "object") return "";
+
+    const dayObj = day as { dayId?: string; selections?: Record<string, number>; items?: Array<{ dishId: string; quantity: number }> };
     const dayNum = index + 1;
-    const selections = day.selections || {};
-    const items = day.items || [];
-    const menu = menuById.get(day.dayId);
+    const selections = dayObj.selections || {};
+    const items = dayObj.items || [];
+    const menu = menuById.get(dayObj.dayId || "");
 
     let dayDetails = `День ${dayNum}:\n`;
 
@@ -122,7 +132,7 @@ async function parseOrderMenuDetails(items: unknown, orderId: string): Promise<s
 
     // Handle individual package items
     if (items.length > 0) {
-      items.forEach((item: any) => {
+      items.forEach((item) => {
         dayDetails += `  • ${item.dishId}: x${item.quantity}\n`;
       });
     }

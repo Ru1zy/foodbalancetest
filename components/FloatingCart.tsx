@@ -28,10 +28,14 @@ export default function FloatingCart({ onOpenCart }: Props) {
   useEffect(() => {
     if (completedDaysCount > prevCount) {
       setIsPulse(true);
-      setTimeout(() => setIsPulse(false), 600);
+      const timer = setTimeout(() => setIsPulse(false), 600);
+      return () => clearTimeout(timer);
     }
-    setPrevCount(completedDaysCount);
   }, [completedDaysCount, prevCount]);
+
+  useEffect(() => {
+    setPrevCount(completedDaysCount);
+  }, [completedDaysCount]);
 
   if (!pkg) return null;
 

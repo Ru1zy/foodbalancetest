@@ -49,10 +49,10 @@ function parseTargetDate(targetDateStr: string): { start: Date; end: Date } | nu
  * Format dishes from order items into a single string.
  * Joins dish names with " + " separator.
  */
-function formatOrderDishes(items: any): string {
+function formatOrderDishes(items: unknown): string {
   if (!items || typeof items !== "object") return "";
 
-  const days = items.days;
+  const days = (items as Record<string, unknown>).days;
   if (!Array.isArray(days) || days.length === 0) return "";
 
   // Collect all dish names from all days
@@ -199,7 +199,10 @@ export async function exportToKitchenSheet(
     }
 
     // Prepare batch updates
-    const batchUpdateData: any[] = [];
+    const batchUpdateData: Array<{
+      range: string;
+      values: string[][];
+    }> = [];
     const exportedOrderIds: string[] = [];
     const unmatchedOrders: Array<{ name: string; phone: string; userId: string }> = [];
 
