@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
           gte: targetDate,
           lt: nextDay,
         },
-        isPaid: true,
         status: { not: "cancelled" },
       },
       include: {

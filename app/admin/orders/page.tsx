@@ -33,16 +33,33 @@ function getOrderDaysCount(items: unknown) {
   return Array.isArray(days) ? days.length : 0;
 }
 
-function formatDaysLabel(daysCount: number) {
+function formatDaysLabel(daysCount: number, deliveryDate: Date) {
+  const formatDate = (date: Date) => {
+    const d = String(date.getDate()).padStart(2, '0');
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const y = date.getFullYear();
+    return `${d}.${m}.${y}`;
+  };
+
+  let label = "";
   if (daysCount === 1) {
-    return "1 день";
+    label = "1 день";
+  } else if (daysCount >= 2 && daysCount <= 4) {
+    label = `${daysCount} дні`;
+  } else {
+    label = `${daysCount} днів`;
   }
 
-  if (daysCount >= 2 && daysCount <= 4) {
-    return `${daysCount} дні`;
+  // Add date range
+  if (daysCount === 1) {
+    label += ` (${formatDate(deliveryDate)})`;
+  } else {
+    const endDate = new Date(deliveryDate);
+    endDate.setDate(endDate.getDate() + daysCount - 1);
+    label += ` (${formatDate(deliveryDate)} - ${formatDate(endDate)})`;
   }
 
-  return `${daysCount} днів`;
+  return label;
 }
 
 function getOrderAddressLabel(order: {
@@ -54,7 +71,7 @@ function getOrderAddressLabel(order: {
   return order.deliveryAddress || order.user.address || "Не вказано";
 }
 
-async function parseOrderMenuDetails(items: unknown, orderId: string): Promise<string | null> {
+async function parseOrderMenuDetails(items: unknown, orderId: string, deliveryDate: Date): Promise<string | null> {
   if (!items || typeof items !== "object") {
     return null;
   }
@@ -110,7 +127,12 @@ async function parseOrderMenuDetails(items: unknown, orderId: string): Promise<s
     const items = dayObj.items || [];
     const menu = menuById.get(dayObj.dayId || "");
 
-    let dayDetails = `День ${dayNum}:\n`;
+    // Calculate actual date for this day
+    const actualDate = new Date(deliveryDate);
+    actualDate.setDate(actualDate.getDate() + index);
+    const dateStr = `${String(actualDate.getDate()).padStart(2, '0')}.${String(actualDate.getMonth() + 1).padStart(2, '0')}`;
+
+    let dayDetails = `День ${dayNum} (${dateStr}):\n`;
 
     // Handle regular package selections
     if (Object.keys(selections).length > 0 && menu) {
@@ -204,7 +226,7 @@ export default async function AdminOrdersPage({
   const ordersWithMenuDetails = await Promise.all(
     orders.map(async (order) => ({
       ...order,
-      menuDetails: await parseOrderMenuDetails(order.items, order.id),
+      menuDetails: await parseOrderMenuDetails(order.items, order.id, order.deliveryDate),
     }))
   );
 
@@ -293,7 +315,7 @@ export default async function AdminOrdersPage({
                             <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 px-3 py-1.5">
                               <span className="text-sm font-bold text-indigo-700">{order.packageType}</span>
                             </div>
-                            <div className="text-xs text-slate-600">📅 {formatDaysLabel(daysCount)}</div>
+                            <div className="text-xs text-slate-600">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
                             <div className="text-xs text-slate-600">🍴 Прибори: {order.cutlery}</div>
                             {order.price && (
                               <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">

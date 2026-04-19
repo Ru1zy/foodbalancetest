@@ -23,7 +23,6 @@ async function getTodayOrders(dateStr: string) {
           gte: targetDate,
           lt: nextDay,
         },
-        isPaid: true,
         status: { not: "cancelled" },
       },
       include: {

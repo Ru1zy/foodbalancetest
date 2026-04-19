@@ -42,7 +42,7 @@ function parseTargetDate(targetDateStr: string): { start: Date; end: Date } | nu
 
 /**
  * Format dishes from order items into a single string.
- * Joins dish names with " + " separator.
+ * Extracts actual dish names from menu data and joins with " + " separator.
  */
 function formatOrderDishes(items: unknown): string {
   if (!items || typeof items !== "object") return "";
@@ -54,23 +54,35 @@ function formatOrderDishes(items: unknown): string {
   const allDishes: string[] = [];
 
   for (const day of days) {
-    // Handle individual package items
+    // Handle individual package items (Indiv package)
     if (Array.isArray(day.items)) {
       for (const item of day.items) {
-        const dishName = item.dishId || "";
+        const dishId = item.dishId || "";
         const quantity = item.quantity || 1;
         for (let i = 0; i < quantity; i++) {
-          allDishes.push(dishName);
+          allDishes.push(dishId);
         }
       }
     }
 
     // Handle standard package selections
-    if (day.selections && typeof day.selections === "object") {
-      const categoryNames = Object.keys(day.selections);
-      for (const category of categoryNames) {
-        allDishes.push(category);
-      }
+    if (day.selections && typeof day.selections === "object" && day.dishes) {
+      const dishes = typeof day.dishes === "string" ? JSON.parse(day.dishes) : day.dishes;
+
+      Object.entries(day.selections).forEach(([category, selectionIndex]) => {
+        const categoryDishes = dishes[category];
+
+        if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
+          const dish = categoryDishes[selectionIndex];
+          const dishName =
+            typeof dish === "object" && dish !== null
+              ? dish.full || dish.short || dish.name
+              : dish;
+          if (dishName) {
+            allDishes.push(String(dishName).trim());
+          }
+        }
+      });
     }
   }
 
