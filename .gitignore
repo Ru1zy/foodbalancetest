@@ -55,3 +55,5 @@ CLAUDE.md
 README.md
 TELEGRAM_AUTH_HISTORY.md
 TEST_INSTRUCTIONS.md
+build-output.txt
+.gitignore

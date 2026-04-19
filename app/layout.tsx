@@ -19,6 +19,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "FoodBalance - Здорове харчування з доставкою",
   description: "Замовте здорове харчування з доставкою додому",
+  icons: {
+    icon: "/foodbalancelogo.png",
+    apple: "/foodbalancelogo.png",
+  },
+  openGraph: {
+    title: "FoodBalance - Здорове харчування з доставкою",
+    description: "Замовте здорове харчування з доставкою додому",
+    images: ["/foodbalancelogo.png"],
+  },
 };
 
 export default function RootLayout({

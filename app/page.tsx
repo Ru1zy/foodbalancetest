@@ -42,7 +42,9 @@ export default async function Home() {
         {/* Hero Section */}
         <div className="mb-16 text-center relative">
           <div className="inline-block mb-6 animate-float">
-            <div className="text-8xl mb-4 drop-shadow-2xl">🍽️</div>
+            <div className="mb-4 drop-shadow-2xl flex justify-center">
+              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain" />
+            </div>
           </div>
 
           <h1 className="text-7xl font-black mb-6 leading-tight">
@@ -85,7 +87,9 @@ export default async function Home() {
         {/* Menu Section */}
         {menuItems.length === 0 ? (
           <div className="glass rounded-3xl p-16 text-center shadow-2xl hover-lift">
-            <div className="text-8xl mb-6 animate-float">🍽️</div>
+            <div className="mb-6 animate-float flex justify-center">
+              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain" />
+            </div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
               Меню оновляється
             </h2>

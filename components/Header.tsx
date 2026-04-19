@@ -16,8 +16,8 @@ export default async function Header() {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-6">
-                <span className="text-2xl">🍽️</span>
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-6 overflow-hidden">
+                <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-full w-full object-cover" />
               </div>
             </div>
             <div>
