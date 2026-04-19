@@ -69,7 +69,9 @@ function formatOrderDishes(items: unknown): string {
     if (day.selections && typeof day.selections === "object" && day.dishes) {
       const dishes = typeof day.dishes === "string" ? JSON.parse(day.dishes) : day.dishes;
 
-      Object.entries(day.selections).forEach(([category, selectionIndex]) => {
+      // Extract all selected dish names using Object.values()
+      const selectedDishes = Object.values(day.selections).map((selectionIndex, idx) => {
+        const category = Object.keys(day.selections)[idx];
         const categoryDishes = dishes[category];
 
         if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
@@ -78,11 +80,12 @@ function formatOrderDishes(items: unknown): string {
             typeof dish === "object" && dish !== null
               ? dish.full || dish.short || dish.name
               : dish;
-          if (dishName) {
-            allDishes.push(String(dishName).trim());
-          }
+          return dishName ? String(dishName).trim() : null;
         }
-      });
+        return null;
+      }).filter((name): name is string => name !== null);
+
+      allDishes.push(...selectedDishes);
     }
   }
 
@@ -145,15 +148,12 @@ export async function exportToKitchenSheet(
 
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Fetch orders for the target date (excluding already exported)
+    // Fetch orders for the target date (allow re-export)
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
           gte: dateRange.start,
           lte: dateRange.end,
-        },
-        status: {
-          not: "Передано в учёт",
         },
       },
       include: {
@@ -211,8 +211,8 @@ export async function exportToKitchenSheet(
         order.user.chatId || "", // F: Chat ID
         order.packageType || "", // G: Раціон
         formattedDishes || "", // H: Страви
-        order.cutlery ? `${order.cutlery} шт` : "", // I: Прибори
-        order.notes || "", // J: Особливості
+        order.cutlery ? `${order.cutlery} шт` : "0 шт", // I: Прибори
+        order.deliveryNote || "", // J: Нотатка адміна
         order.price ? order.price.toString() : "", // K: Ціна
       ];
     });
@@ -227,7 +227,7 @@ export async function exportToKitchenSheet(
       },
     });
 
-    // Mark orders as exported
+    // Mark orders as exported (AFTER successful Google API call)
     await prisma.order.updateMany({
       where: {
         id: {
