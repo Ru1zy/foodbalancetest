@@ -8,11 +8,6 @@ export type ExportToKitchenSheetResult =
   | {
       ok: true;
       exported: number;
-      unmatched: Array<{
-        name: string;
-        phone: string;
-        userId: string;
-      }>;
     }
   | {
       ok: false;
@@ -83,15 +78,14 @@ function formatOrderDishes(items: unknown): string {
 }
 
 /**
- * Replicate the legacy exportToExternalSheet function.
+ * Simplified export function that appends orders to Google Sheets.
  *
  * Algorithm:
  * 1. Authenticate with Google Sheets API
- * 2. Fetch the target sheet tab data
- * 3. Scan Column F (Chat ID) and Column H (Dishes) to find available slots
- * 4. Match orders by User ID (chatId) to available rows
- * 5. Batch update the sheet with order details
- * 6. Return unmatched orders for error display
+ * 2. Fetch orders for target date (excluding already exported)
+ * 3. Format each order as a 10-column row
+ * 4. Append all rows to the sheet using append API
+ * 5. Mark orders as exported
  */
 export async function exportToKitchenSheet(
   targetDateStr: string
@@ -138,17 +132,16 @@ export async function exportToKitchenSheet(
 
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Fetch orders for the target date
+    // Fetch orders for the target date (excluding already exported)
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
           gte: dateRange.start,
           lte: dateRange.end,
         },
-        OR: [
-          { isPaid: true },
-          { status: { in: ["Оплачено", "processed", "delivered"] } },
-        ],
+        status: {
+          not: "Передано в учёт",
+        },
       },
       include: {
         user: {
@@ -166,108 +159,56 @@ export async function exportToKitchenSheet(
     if (orders.length === 0) {
       return {
         ok: false,
-        message: `Не знайдено оплачених замовлень на ${targetDateStr}.`,
+        message: `Не знайдено замовлень для експорту на ${targetDateStr}.`,
       };
     }
 
-    // Fetch the target sheet tab
-    const sheetData = await sheets.spreadsheets.values.get({
-      spreadsheetId: sheetId,
-      range: `${targetDateStr}!A:J`,
-    });
-
-    const rows = sheetData.data.values || [];
-
-    // CRITICAL: Find available slots
-    // Column F (index 5) = Chat ID
-    // Column H (index 7) = Dishes
-    // Available slot = Chat ID exists AND Dishes is empty
-    const availableSlotsByUserId: Record<string, number[]> = {};
-
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const chatId = row[5]?.toString().trim(); // Column F
-      const dishes = row[7]?.toString().trim(); // Column H
-
-      if (chatId && !dishes) {
-        // Available slot found
-        if (!availableSlotsByUserId[chatId]) {
-          availableSlotsByUserId[chatId] = [];
-        }
-        availableSlotsByUserId[chatId].push(i + 1); // Row number (1-indexed)
-      }
-    }
-
-    // Prepare batch updates
-    const batchUpdateData: Array<{
-      range: string;
-      values: string[][];
-    }> = [];
-    const exportedOrderIds: string[] = [];
-    const unmatchedOrders: Array<{ name: string; phone: string; userId: string }> = [];
-
-    for (const order of orders) {
-      const userId = order.user.chatId;
-
-      if (!userId || !availableSlotsByUserId[userId] || availableSlotsByUserId[userId].length === 0) {
-        // No available slot for this user
-        unmatchedOrders.push({
-          name: order.user.name,
-          phone: order.user.phone,
-          userId: userId || order.user.id,
-        });
-        continue;
-      }
-
-      // Get the first available row for this user
-      const rowNumber = availableSlotsByUserId[userId].shift()!;
-
-      // Format dishes
+    // Format orders into rows (columns A-J)
+    const rows: string[][] = orders.map((order) => {
       const formattedDishes = formatOrderDishes(order.items);
 
-      // Prepare data for columns C:E (Name, Phone, Address)
-      batchUpdateData.push({
-        range: `${targetDateStr}!C${rowNumber}:E${rowNumber}`,
-        values: [[
-          order.user.name,
-          order.user.phone,
-          order.user.address || "",
-        ]],
-      });
+      return [
+        "", // Column A - empty
+        "", // Column B - empty
+        order.user.name, // Column C - Name
+        order.user.phone, // Column D - Phone
+        order.user.address || "", // Column E - Address
+        order.user.chatId || "", // Column F - Chat ID
+        order.packageType, // Column G - Package Type
+        formattedDishes, // Column H - Dishes
+        order.cutlery.toString(), // Column I - Cutlery
+        order.notes || "", // Column J - Notes
+      ];
+    });
 
-      // Prepare data for columns G:J (Package, Dishes, Cutlery, Notes)
-      batchUpdateData.push({
-        range: `${targetDateStr}!G${rowNumber}:J${rowNumber}`,
-        values: [[
-          order.packageType,
-          formattedDishes,
-          order.cutlery.toString(),
-          order.notes || "",
-        ]],
-      });
+    // Append rows to the sheet
+    await sheets.spreadsheets.values.append({
+      spreadsheetId: sheetId,
+      range: `'${targetDateStr}'!A:J`,
+      valueInputOption: "USER_ENTERED",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        values: rows,
+      },
+    });
 
-      exportedOrderIds.push(order.id);
-    }
-
-    // Execute batch update
-    if (batchUpdateData.length > 0) {
-      await sheets.spreadsheets.values.batchUpdate({
-        spreadsheetId: sheetId,
-        requestBody: {
-          valueInputOption: "RAW",
-          data: batchUpdateData,
+    // Mark orders as exported
+    await prisma.order.updateMany({
+      where: {
+        id: {
+          in: orders.map((o) => o.id),
         },
-      });
+      },
+      data: {
+        status: "Передано в учёт",
+      },
+    });
 
-      // Mark orders as exported (optional: add a field to track this)
-      // For now, we'll just log it
-      console.log(`Exported ${exportedOrderIds.length} orders to Google Sheets`);
-    }
+    console.log(`Exported ${orders.length} orders to Google Sheets`);
 
     return {
       ok: true,
-      exported: exportedOrderIds.length,
-      unmatched: unmatchedOrders,
+      exported: orders.length,
     };
   } catch (error) {
     console.error("exportToKitchenSheet failed", error);

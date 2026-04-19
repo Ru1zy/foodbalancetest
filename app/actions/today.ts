@@ -6,14 +6,14 @@ import { revalidatePath } from "next/cache";
 export async function updateOrderDeliveryInfo(
   orderId: string,
   deliveryTime: string | null,
-  notes: string | null
+  deliveryNote: string | null
 ) {
   try {
     await prisma.order.update({
       where: { id: orderId },
       data: {
         deliveryTime: deliveryTime || null,
-        notes: notes || null,
+        deliveryNote: deliveryNote || null,
       },
     });
 
@@ -86,8 +86,8 @@ export async function notifyTodayOrders(dateStr: string) {
       // Build message
       let message = `Сьогодні у вас доставка:\nПІБ: <b>${order.user.name}</b>\nЧас доставки: ${order.deliveryTime} ⏰`;
 
-      if (order.notes) {
-        message += `\n\nНотатка для Вас: ${order.notes}`;
+      if (order.deliveryNote) {
+        message += `\n\nНотатка для Вас: ${order.deliveryNote}`;
       }
 
       // Send Telegram message

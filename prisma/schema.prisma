@@ -59,6 +59,7 @@ model Order {
   notes           String?
   price           Int?
   deliveryTime    String?
+  deliveryNote    String?
 }
 
 model AuthToken {

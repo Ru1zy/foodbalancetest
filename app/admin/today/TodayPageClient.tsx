@@ -11,6 +11,7 @@ type Order = {
   cutlery: number;
   notes: string | null;
   deliveryTime: string | null;
+  deliveryNote: string | null;
   price: number | null;
   user: {
     id: string;
@@ -49,7 +50,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
 
   const handleFieldUpdate = (
     orderId: string,
-    field: "deliveryTime" | "notes",
+    field: "deliveryTime" | "deliveryNote",
     value: string
   ) => {
     // Optimistic update
@@ -74,7 +75,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
         await updateOrderDeliveryInfo(
           orderId,
           field === "deliveryTime" ? value : order.deliveryTime,
-          field === "notes" ? value : order.notes
+          field === "deliveryNote" ? value : order.deliveryNote
         );
       });
     }, 800);
@@ -175,10 +176,13 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
                       Прибори
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Коментар клієнта
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Час доставки
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Нотатки
+                      Нотатка адміна
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       Ціна
@@ -206,6 +210,15 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
                       <td className="px-4 py-3 text-sm text-slate-600">
                         {order.cutlery}
                       </td>
+                      <td className="px-4 py-3 text-sm text-slate-600">
+                        {order.notes ? (
+                          <div className="max-w-xs text-xs italic text-slate-500">
+                            {order.notes}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <input
                           type="text"
@@ -220,11 +233,11 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
                       <td className="px-4 py-3">
                         <input
                           type="text"
-                          value={order.notes || ""}
+                          value={order.deliveryNote || ""}
                           onChange={(e) =>
-                            handleFieldUpdate(order.id, "notes", e.target.value)
+                            handleFieldUpdate(order.id, "deliveryNote", e.target.value)
                           }
-                          placeholder="Нотатки..."
+                          placeholder="Нотатка для клієнта..."
                           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                         />
                       </td>
@@ -250,9 +263,11 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
           <p className="font-semibold mb-2">ℹ️ Як працює сторінка:</p>
           <ul className="list-disc list-inside space-y-1">
             <li>Показує всі оплачені замовлення на обрану дату</li>
-            <li>Редагуйте час доставки та нотатки прямо в таблиці (автозбереження)</li>
+            <li>&quot;Коментар клієнта&quot; - побажання клієнта при оформленні (тільки для перегляду)</li>
+            <li>&quot;Нотатка адміна&quot; - ваше повідомлення для клієнта (автозбереження)</li>
+            <li>Редагуйте час доставки та нотатку адміна прямо в таблиці</li>
             <li>Кнопка &quot;Відправити сповіщення&quot; надсилає Telegram повідомлення всім клієнтам з chatId та часом доставки</li>
-            <li>Формат повідомлення: ПІБ, час доставки, нотатки (якщо є)</li>
+            <li>Формат повідомлення: ПІБ, час доставки, нотатка адміна (якщо є)</li>
           </ul>
         </div>
       </div>
