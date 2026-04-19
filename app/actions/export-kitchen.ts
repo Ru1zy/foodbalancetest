@@ -78,14 +78,15 @@ function formatOrderDishes(items: unknown): string {
 }
 
 /**
- * Simplified export function that appends orders to Google Sheets.
+ * Export orders to Google Sheets with strict template compliance.
  *
  * Algorithm:
  * 1. Authenticate with Google Sheets API
  * 2. Fetch orders for target date (excluding already exported)
- * 3. Format each order as a 10-column row
- * 4. Append all rows to the sheet using append API
- * 5. Mark orders as exported
+ * 3. Calculate first empty row (data starts at row 5)
+ * 4. Format each order as a 9-column row (C through K)
+ * 5. Update the sheet using update API (not append)
+ * 6. Mark orders as exported
  */
 export async function exportToKitchenSheet(
   targetDateStr: string
@@ -163,30 +164,52 @@ export async function exportToKitchenSheet(
       };
     }
 
-    // Format orders into rows (columns A-J)
+    // Calculate first empty row (data starts at row 5)
+    const existingDataResponse = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetId,
+      range: `'${targetDateStr}'!C5:C200`,
+    });
+
+    let firstEmptyRow = 5;
+    const existingValues = existingDataResponse.data.values;
+
+    if (existingValues && existingValues.length > 0) {
+      // Find first empty cell in column C
+      const emptyIndex = existingValues.findIndex(
+        (row) => !row[0] || row[0].toString().trim() === ""
+      );
+
+      if (emptyIndex !== -1) {
+        // Found an empty gap
+        firstEmptyRow = 5 + emptyIndex;
+      } else {
+        // All rows filled, append after last row
+        firstEmptyRow = 5 + existingValues.length;
+      }
+    }
+
+    // Format orders into rows (columns C-K: 9 columns)
     const rows: string[][] = orders.map((order) => {
       const formattedDishes = formatOrderDishes(order.items);
 
       return [
-        "", // Column A - empty
-        "", // Column B - empty
-        order.user.name, // Column C - Name
-        order.user.phone, // Column D - Phone
-        order.user.address || "", // Column E - Address
-        order.user.chatId || "", // Column F - Chat ID
-        order.packageType, // Column G - Package Type
-        formattedDishes, // Column H - Dishes
-        order.cutlery.toString(), // Column I - Cutlery
-        order.notes || "", // Column J - Notes
+        order.user.name || "", // C: ПІБ
+        order.user.phone || "", // D: Телефон
+        order.user.address || "", // E: Адреса
+        order.user.chatId || "", // F: Chat ID
+        order.packageType || "", // G: Раціон
+        formattedDishes || "", // H: Страви
+        order.cutlery ? `${order.cutlery} шт` : "", // I: Прибори
+        order.notes || "", // J: Особливості
+        order.price ? order.price.toString() : "", // K: Ціна
       ];
     });
 
-    // Append rows to the sheet
-    await sheets.spreadsheets.values.append({
+    // Update the sheet (not append)
+    await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
-      range: `'${targetDateStr}'`,
+      range: `'${targetDateStr}'!C${firstEmptyRow}`,
       valueInputOption: "USER_ENTERED",
-      insertDataOption: "INSERT_ROWS",
       requestBody: {
         values: rows,
       },
@@ -204,7 +227,7 @@ export async function exportToKitchenSheet(
       },
     });
 
-    console.log(`Exported ${orders.length} orders to Google Sheets`);
+    console.log(`Exported ${orders.length} orders to Google Sheets at row ${firstEmptyRow}`);
 
     return {
       ok: true,
