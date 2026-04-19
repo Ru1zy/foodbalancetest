@@ -317,41 +317,90 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
         tone: "success",
       });
 
-      window.setTimeout(() => {
-        router.replace("/");
-      }, 1200);
+      // Don't auto-redirect - let user read the confirmation
     });
   };
 
   if (submitted) {
     return (
       <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-10 text-gray-800 sm:px-6">
-        <section className="mx-auto max-w-2xl rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-xl ring-1 ring-slate-200/60">
+        <section className="mx-auto max-w-3xl rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-xl ring-1 ring-slate-200/60">
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30">
-              <span className="text-4xl">✓</span>
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30">
+              <span className="text-5xl">✓</span>
             </div>
-            <div className="mb-4 inline-flex rounded-full bg-gradient-to-r from-green-400 to-emerald-500 px-4 py-2 text-sm font-bold text-white shadow-lg">
+            <div className="mb-4 inline-flex rounded-full bg-gradient-to-r from-green-400 to-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg">
               Замовлення прийнято
             </div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
               Оформлення завершено
             </h1>
-            <div className="mt-6 rounded-xl bg-slate-50 p-4">
-              <p className="text-sm text-slate-600">
-                Тариф: <span className="font-bold text-slate-900">{submitted.packageType}</span>
-              </p>
-              <p className="text-sm text-slate-600 mt-1">
-                Днів у замовленні: <span className="font-bold text-slate-900">{submitted.totalDays}</span>
-              </p>
-              <p className="text-sm text-slate-600 mt-1">
-                Доставка кур&apos;єром за вказаною адресою
-              </p>
-            </div>
-            <p className="mt-6 text-sm font-medium text-slate-500 flex items-center justify-center gap-2">
-              <span className="animate-spin">⏳</span>
-              Повертаємо вас на головну сторінку...
+            <p className="text-sm text-slate-600 mb-8">
+              Дякуємо за замовлення! Ми зв'яжемося з вами найближчим часом.
             </p>
+
+            {/* Order Summary */}
+            <div className="mt-6 space-y-4">
+              <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 p-6 border border-blue-200">
+                <h2 className="text-lg font-bold text-slate-900 mb-4">📋 Деталі замовлення</h2>
+                <dl className="space-y-3 text-left">
+                  <div className="flex justify-between items-center">
+                    <dt className="text-sm text-slate-600">Тариф:</dt>
+                    <dd className="text-sm font-bold text-slate-900">{submitted.packageType}</dd>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <dt className="text-sm text-slate-600">Кількість днів:</dt>
+                    <dd className="text-sm font-bold text-slate-900">{submitted.totalDays}</dd>
+                  </div>
+                  {orderTotalUah > 0 && (
+                    <div className="flex justify-between items-center pt-3 border-t border-blue-200">
+                      <dt className="text-base font-semibold text-slate-900">Сума:</dt>
+                      <dd className="text-xl font-bold text-blue-600">{orderTotalUah} ₴</dd>
+                    </div>
+                  )}
+                </dl>
+              </div>
+
+              <div className="rounded-xl bg-slate-50 p-6 border border-slate-200">
+                <h2 className="text-lg font-bold text-slate-900 mb-3">📞 Що далі?</h2>
+                <ul className="space-y-2 text-left text-sm text-slate-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-0.5">✓</span>
+                    <span>Ваше замовлення збережено в системі</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Наш менеджер зв'яжеться з вами для підтвердження</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Після оплати ви отримаєте підтвердження в Telegram</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-0.5">•</span>
+                    <span>Доставка здійснюється кур'єром за вказаною адресою</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+              <Link
+                href="/"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
+              >
+                <span>←</span>
+                <span>Повернутися на головну</span>
+              </Link>
+              <Link
+                href="/profile"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                <span>👤</span>
+                <span>Переглянути профіль</span>
+              </Link>
+            </div>
           </div>
         </section>
       </main>

@@ -11,15 +11,19 @@ type User = {
   defaultCutlery: number | null;
 };
 
+export type ResolvedDay = {
+  date: Date;
+  dishes: string[];
+};
+
 export type OrderWithResolvedDishes = {
   id: string;
   createdAt: Date;
   deliveryDate: Date;
-  status: string;
   packageType: string;
   price: number | null;
   isPaid: boolean;
-  resolvedDishes: string[];
+  resolvedDays: ResolvedDay[];
 };
 
 type Props = {
@@ -27,31 +31,19 @@ type Props = {
   orders: OrderWithResolvedDishes[];
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  new: "bg-gray-100 text-gray-800 border-gray-300",
-  "Очікує": "bg-yellow-100 text-yellow-800 border-yellow-300",
-  "Оплачено": "bg-green-100 text-green-800 border-green-300",
-  "Передано в учёт": "bg-blue-100 text-blue-800 border-blue-300",
-  "Доставлено": "bg-emerald-100 text-emerald-800 border-emerald-300",
-  cancelled: "bg-red-100 text-red-800 border-red-300",
-  archived: "bg-slate-100 text-slate-800 border-slate-300",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  new: "Нове",
-  "Очікує": "Очікує",
-  "Оплачено": "Оплачено",
-  "Передано в учёт": "Передано в учёт",
-  "Доставлено": "Доставлено",
-  cancelled: "Скасовано",
-  archived: "Архівовано",
-};
-
 function formatDate(date: Date): string {
   return new Intl.DateTimeFormat("uk-UA", {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "Europe/Kiev",
+  }).format(new Date(date));
+}
+
+function formatShortDate(date: Date): string {
+  return new Intl.DateTimeFormat("uk-UA", {
+    day: "numeric",
+    month: "short",
     timeZone: "Europe/Kiev",
   }).format(new Date(date));
 }
@@ -181,9 +173,6 @@ export default function ProfilePageClient({ user, orders }: Props) {
           ) : (
             <div className="space-y-4">
               {orders.map((order) => {
-                const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.new;
-                const statusLabel = STATUS_LABELS[order.status] || order.status;
-
                 return (
                   <div
                     key={order.id}
@@ -198,16 +187,8 @@ export default function ProfilePageClient({ user, orders }: Props) {
                         <p className="text-sm text-slate-600 mt-1">
                           Створено: {formatDate(order.createdAt)}
                         </p>
-                        <p className="text-sm text-slate-600">
-                          Доставка: {formatDate(order.deliveryDate)}
-                        </p>
                       </div>
                       <div className="flex flex-col items-start sm:items-end gap-2">
-                        <span
-                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold ${statusStyle}`}
-                        >
-                          {statusLabel}
-                        </span>
                         {order.price && (
                           <p className="text-xl font-bold text-slate-900">{order.price} ₴</p>
                         )}
@@ -220,20 +201,28 @@ export default function ProfilePageClient({ user, orders }: Props) {
                       </div>
                     </div>
 
-                    {/* Dishes */}
-                    {order.resolvedDishes.length > 0 && (
-                      <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">
-                          Страви
-                        </p>
-                        <ul className="space-y-2">
-                          {order.resolvedDishes.map((dish, index) => (
-                            <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
-                              <span className="text-blue-600 mt-0.5">•</span>
-                              <span>{dish}</span>
-                            </li>
-                          ))}
-                        </ul>
+                    {/* Days with Dishes */}
+                    {order.resolvedDays.length > 0 && (
+                      <div className="space-y-3">
+                        {order.resolvedDays.map((day, dayIndex) => (
+                          <div key={dayIndex} className="rounded-lg bg-slate-50 p-4 border border-slate-200">
+                            <p className="text-sm font-bold text-slate-900 mb-3">
+                              📅 День {dayIndex + 1} — {formatShortDate(day.date)}
+                            </p>
+                            {day.dishes.length > 0 ? (
+                              <ul className="space-y-2">
+                                {day.dishes.map((dish, dishIndex) => (
+                                  <li key={dishIndex} className="flex items-start gap-2 text-sm text-slate-700">
+                                    <span className="text-blue-600 mt-0.5">•</span>
+                                    <span>{dish}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-sm text-slate-500 italic">Немає страв</p>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>

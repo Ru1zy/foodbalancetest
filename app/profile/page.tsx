@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
-import ProfilePageClient, { type OrderWithResolvedDishes } from "./ProfilePageClient";
+import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay } from "./ProfilePageClient";
 import { parseCutleryCount } from "@/lib/checkout";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -12,7 +12,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   snack: "Перекус",
 };
 
-async function resolveOrderDishes(order: any): Promise<string[]> {
+async function resolveOrderDishes(order: any): Promise<ResolvedDay[]> {
   if (!order.items || typeof order.items !== "object") {
     return [];
   }
@@ -46,16 +46,23 @@ async function resolveOrderDishes(order: any): Promise<string[]> {
 
   const menuById = new Map(menus.map((menu) => [menu.id, menu]));
 
-  // Resolve dish names
-  const allDishes: string[] = [];
+  // Resolve dish names per day
+  const resolvedDays: ResolvedDay[] = [];
 
-  for (const day of days) {
+  for (let dayIndex = 0; dayIndex < days.length; dayIndex++) {
+    const day = days[dayIndex];
+    const dayDishes: string[] = [];
+
+    // Calculate actual date for this day
+    const actualDate = new Date(order.deliveryDate);
+    actualDate.setDate(actualDate.getDate() + dayIndex);
+
     // Handle individual package items (Indiv package)
     if (Array.isArray(day.items)) {
       for (const item of day.items) {
         const dishId = item.dishId || "";
         const quantity = item.quantity || 1;
-        allDishes.push(`${dishId} (x${quantity})`);
+        dayDishes.push(`${dishId} (x${quantity})`);
       }
     }
 
@@ -63,36 +70,39 @@ async function resolveOrderDishes(order: any): Promise<string[]> {
     if (day.selections && typeof day.selections === "object" && day.dayId) {
       const menu = menuById.get(day.dayId);
 
-      if (!menu) {
-        continue;
-      }
+      if (menu) {
+        const dishes = typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes;
 
-      const dishes = typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes;
+        Object.entries(day.selections).forEach(([category, selectionIndex]) => {
+          const categoryLabel = CATEGORY_LABELS[category] || category;
+          const categoryDishes = dishes[category];
 
-      Object.entries(day.selections).forEach(([category, selectionIndex]) => {
-        const categoryLabel = CATEGORY_LABELS[category] || category;
-        const categoryDishes = dishes[category];
+          if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
+            const dish = categoryDishes[selectionIndex];
+            const dishName =
+              typeof dish === "object" && dish !== null
+                ? dish.full || dish.short || dish.name
+                : dish;
 
-        if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
-          const dish = categoryDishes[selectionIndex];
-          const dishName =
-            typeof dish === "object" && dish !== null
-              ? dish.full || dish.short || dish.name
-              : dish;
-
-          if (dishName) {
-            allDishes.push(`${categoryLabel}: ${String(dishName).trim()}`);
+            if (dishName) {
+              dayDishes.push(`${categoryLabel}: ${String(dishName).trim()}`);
+            } else {
+              dayDishes.push(`${categoryLabel}: Страва не знайдена`);
+            }
           } else {
-            allDishes.push(`${categoryLabel}: Страва не знайдена`);
+            dayDishes.push(`${categoryLabel}: Страва не знайдена`);
           }
-        } else {
-          allDishes.push(`${categoryLabel}: Страва не знайдена`);
-        }
-      });
+        });
+      }
     }
+
+    resolvedDays.push({
+      date: actualDate,
+      dishes: dayDishes,
+    });
   }
 
-  return allDishes;
+  return resolvedDays;
 }
 
 export default async function ProfilePage() {
@@ -138,11 +148,10 @@ export default async function ProfilePage() {
       id: order.id,
       createdAt: order.createdAt,
       deliveryDate: order.deliveryDate,
-      status: order.status,
       packageType: order.packageType,
       price: order.price,
       isPaid: order.isPaid,
-      resolvedDishes: await resolveOrderDishes(order),
+      resolvedDays: await resolveOrderDishes(order),
     }))
   );
 
