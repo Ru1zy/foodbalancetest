@@ -18,6 +18,7 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
     if (disabled) return;
 
     const rect = e.currentTarget.getBoundingClientRect();

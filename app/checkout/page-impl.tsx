@@ -216,7 +216,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
         customerProfile.apartment,
         customerProfile.entrance,
         customerProfile.intercom,
-        customerProfile.cutlery,
+        // Don't include cutlery - it causes form reset when changed
         customerProfile.notes,
       ].join("|"),
     [customerProfile],
@@ -470,7 +470,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
 
             <div className="grid gap-5 sm:grid-cols-2">
               <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-900">Крок 1. Ім&apos;я</span>
+                <span className="mb-2 block text-sm font-bold text-slate-900">Ім&apos;я</span>
                 <input
                   aria-invalid={fieldErrors.name ? "true" : "false"}
                   autoComplete="name"
@@ -491,7 +491,7 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
               </label>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-900">Крок 1. Телефон</span>
+                <span className="mb-2 block text-sm font-bold text-slate-900">Телефон</span>
                 <input
                   aria-invalid={fieldErrors.phone ? "true" : "false"}
                   autoComplete="tel"

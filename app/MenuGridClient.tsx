@@ -243,7 +243,8 @@ export default function MenuGridClient({ menuItems }: Props) {
                       <button
                         type="button"
                         disabled={disabled || quantity === 0}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           if (disabled || quantity === 0) return;
                           decrementDish(itemId, dishId);
                         }}
@@ -255,7 +256,8 @@ export default function MenuGridClient({ menuItems }: Props) {
                       <button
                         type="button"
                         disabled={disabled || isAtLimit}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
                           if (disabled || isAtLimit) return;
                           incrementDish(itemId, dishId);
                         }}
