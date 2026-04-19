@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { exportToKitchenSheet } from "@/app/actions/export-kitchen";
+import { exportToKitchenSheet } from "@/app/actions/admin";
 
 export default function KitchenExport() {
   // Initialize to tomorrow's date in DD.MM format

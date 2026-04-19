@@ -1,5 +1,6 @@
 import { getAllMenuItems } from "@/app/actions/menu-impl";
 import MenuPhotoUpload from "./MenuPhotoUpload";
+import MenuDishesEditor from "./MenuDishesEditor";
 
 const dayNames: Record<number, string> = {
   1: "Понеділок",
@@ -20,7 +21,7 @@ export default async function AdminMenuPage() {
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Управління меню</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Завантажте зображення для кожного дня меню
+            Завантажте зображення та редагуйте страви для кожного дня меню
           </p>
         </div>
 
@@ -38,6 +39,9 @@ export default async function AdminMenuPage() {
                   <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                     Фото
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Страви
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -53,6 +57,14 @@ export default async function AdminMenuPage() {
                       <MenuPhotoUpload
                         menuId={item.id}
                         currentPhotoUrl={item.photoUrl}
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <MenuDishesEditor
+                        menuId={item.id}
+                        currentDishes={item.dishes}
+                        packageType={item.packageType}
+                        dayOfWeek={item.dayOfWeek}
                       />
                     </td>
                   </tr>

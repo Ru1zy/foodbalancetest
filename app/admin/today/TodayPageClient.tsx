@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { updateOrderDeliveryInfo, notifyTodayOrders } from "@/app/actions/today";
-import { exportToKitchenSheet } from "@/app/actions/export-kitchen";
+import { updateOrderDeliveryInfo, notifyTodayOrders, exportToKitchenSheet } from "@/app/actions/admin";
 
 type Order = {
   id: string;
