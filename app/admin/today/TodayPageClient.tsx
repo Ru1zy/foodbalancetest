@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { updateOrderDeliveryInfo, notifyTodayOrders } from "@/app/actions/today";
+import { exportToKitchenSheet } from "@/app/actions/export-kitchen";
 
 type Order = {
   id: string;
@@ -100,6 +101,29 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
     });
   };
 
+  const handleExportToKitchen = () => {
+    setNotifyMessage(null);
+    startTransition(async () => {
+      // Format date to DD.MM
+      const [day, month] = selectedDate.split('.');
+      const formattedDate = `${day}.${month}`;
+
+      const result = await exportToKitchenSheet(formattedDate);
+
+      if (result.ok) {
+        setNotifyMessage({
+          type: "success",
+          text: `✓ Успішно експортовано ${result.exported} замовлень в Google Sheets!`,
+        });
+      } else {
+        setNotifyMessage({
+          type: "error",
+          text: `✗ ${result.message}`,
+        });
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
       <div className="mx-auto max-w-7xl">
@@ -126,14 +150,25 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
               />
             </div>
 
-            <button
-              onClick={handleNotifyAll}
-              disabled={isPending || orders.length === 0}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span>{isPending ? "⏳" : "📢"}</span>
-              <span>{isPending ? "Відправка..." : "Відправити сповіщення (Telegram)"}</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExportToKitchen}
+                disabled={isPending || orders.length === 0}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{isPending ? "⏳" : "🍳"}</span>
+                <span>{isPending ? "Експорт..." : "Експорт на кухню"}</span>
+              </button>
+
+              <button
+                onClick={handleNotifyAll}
+                disabled={isPending || orders.length === 0}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{isPending ? "⏳" : "📢"}</span>
+                <span>{isPending ? "Відправка..." : "Відправити сповіщення (Telegram)"}</span>
+              </button>
+            </div>
           </div>
 
           {notifyMessage && (

@@ -184,7 +184,7 @@ export async function exportToKitchenSheet(
     // Append rows to the sheet
     await sheets.spreadsheets.values.append({
       spreadsheetId: sheetId,
-      range: `'${targetDateStr}'!A:J`,
+      range: `'${targetDateStr}'`,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: {
