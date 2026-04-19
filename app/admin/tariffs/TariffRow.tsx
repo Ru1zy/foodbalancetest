@@ -95,7 +95,7 @@ export default function TariffRow({ tariff }: Props) {
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -103,7 +103,7 @@ export default function TariffRow({ tariff }: Props) {
             type="text"
             value={formData.kcal}
             onChange={(e) => setFormData({ ...formData, kcal: e.target.value })}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -111,7 +111,7 @@ export default function TariffRow({ tariff }: Props) {
             type="text"
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -119,7 +119,7 @@ export default function TariffRow({ tariff }: Props) {
             type="number"
             value={formData.basePrice}
             onChange={(e) => setFormData({ ...formData, basePrice: Number(e.target.value) })}
-            className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">

@@ -75,7 +75,7 @@ export default function KitchenExport() {
               value={targetDate}
               onChange={(e) => setTargetDate(e.target.value)}
               placeholder="23.02"
-              className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
             />
             <p className="text-xs text-slate-500">Приклад: 23.02 (23 лютого)</p>
           </div>

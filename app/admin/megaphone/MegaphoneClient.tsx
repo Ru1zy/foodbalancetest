@@ -46,7 +46,7 @@ export default function MegaphoneClient() {
           disabled={isSending}
           placeholder="Введіть текст повідомлення. Можна використовувати HTML теги: <b>жирний</b>, <i>курсив</i>, <code>код</code>"
           rows={10}
-          className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
         />
         <p className="mt-2 text-xs text-gray-500">
           Символів: {htmlContent.length}

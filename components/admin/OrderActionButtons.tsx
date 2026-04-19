@@ -61,7 +61,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
               onChange={(e) => setTimeWindow(e.target.value)}
               placeholder="Time (e.g. 19:00-20:00)"
               disabled={isSendingTime}
-              className="w-full rounded-lg border border-gray-300 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               type="button"

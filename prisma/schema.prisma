@@ -58,6 +58,7 @@ model Order {
   cutlery         Int      @default(0)
   notes           String?
   price           Int?
+  deliveryTime    String?
 }
 
 model AuthToken {
