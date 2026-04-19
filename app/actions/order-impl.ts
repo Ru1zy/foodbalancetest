@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import {
   earliestMenuDeliveryDateFromCartDays,
   getOrderTotalUah,
+  getPackageLimit,
   PackageType,
 } from "@/lib/order-logic";
 import { kyivCalendarDateKey, parseCheckoutFormData, validateCheckoutFormValues } from "@/lib/checkout";
@@ -42,6 +43,16 @@ export type SubmitOrderResult =
     };
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
+  // CRITICAL: Calculate server-side package limit - NEVER trust client's packageLimit
+  const serverPackageLimit = getPackageLimit(cartData.packageType);
+
+  // Validate that client-provided limit matches server calculation
+  if (cartData.packageLimit !== serverPackageLimit) {
+    throw new Error(
+      `Package limit mismatch: client sent ${cartData.packageLimit}, server expects ${serverPackageLimit} for ${cartData.packageType}`
+    );
+  }
+
   // For Sushka packages (XS and S), bypass strict dish selection validation
   if (cartData.packageType.includes("Sushka")) {
     const days = (Array.isArray(cartData.days) ? cartData.days : [])
@@ -54,7 +65,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
 
     return {
       days,
-      packageLimit: cartData.packageLimit,
+      packageLimit: serverPackageLimit,
       packageType: cartData.packageType,
       totalDays: days.length,
     };
@@ -78,12 +89,18 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
               typeof item.dishId === "string" &&
               item.dishId.trim().length > 0 &&
               Number.isInteger(item.quantity) &&
-              item.quantity > 0,
+              item.quantity > 0 &&
+              item.quantity <= 3, // Max 3 of same dish for Indiv
           );
 
           const totalQuantity = normalizedItems.reduce((sum, item) => sum + item.quantity, 0);
 
-          return totalQuantity === cartData.packageLimit && day.selectedCount === cartData.packageLimit;
+          // For Indiv: min 1, max 10 total dishes per day
+          if (totalQuantity < 1 || totalQuantity > 10) {
+            return false;
+          }
+
+          return day.selectedCount === totalQuantity;
         }
 
         if (!day.selections || typeof day.selections !== "object" || Array.isArray(day.selections)) {
@@ -94,7 +111,8 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
           ([category, index]) => category.trim().length > 0 && Number.isInteger(index) && index >= 0,
         );
 
-        return normalizedSelections.length === cartData.packageLimit && day.selectedCount === cartData.packageLimit;
+        // For non-Indiv packages: must match exact server-calculated package limit
+        return normalizedSelections.length === serverPackageLimit && day.selectedCount === serverPackageLimit;
       })
     : [];
 
@@ -125,7 +143,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
         selections: day.selections ?? {},
       };
     }),
-    packageLimit: cartData.packageLimit,
+    packageLimit: serverPackageLimit, // Use server-calculated limit, not client's
     packageType: cartData.packageType,
     totalDays: days.length,
   };

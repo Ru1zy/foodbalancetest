@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PackageType } from "@/lib/order-logic";
+import { getPackageLimit } from "@/lib/order-logic";
 
 export type Selections = Record<string, Record<string, number>>;
 
@@ -138,15 +139,45 @@ export const useOrderStore = create<OrderStore>()(
     })),
 
   incrementDish: (dayId, dishId) =>
-    set((state) => ({
-      selections: {
-        ...state.selections,
-        [dayId]: {
-          ...state.selections[dayId],
-          [dishId]: (state.selections[dayId]?.[dishId] ?? 0) + 1,
+    set((state) => {
+      const packageLimit = getPackageLimit(state.selectedPackage ?? undefined);
+      const isIndiv = state.selectedPackage?.toLowerCase().includes("інд") ||
+                      state.selectedPackage?.toLowerCase().includes("ind");
+
+      const daySelections = state.selections[dayId] ?? {};
+      const currentQuantity = daySelections[dishId] ?? 0;
+
+      // Calculate total dishes for this day
+      const totalDishesInDay = Object.values(daySelections).reduce((sum, qty) => sum + qty, 0);
+
+      // For "Indiv" package
+      if (isIndiv) {
+        // Max 10 total dishes per day
+        if (totalDishesInDay >= 10) {
+          return state; // Prevent increment, max total reached
+        }
+        // Max 3 of the same dish
+        if (currentQuantity >= 3) {
+          return state; // Prevent increment, max per dish reached
+        }
+      } else {
+        // For all other packages: total must equal package limit exactly
+        if (totalDishesInDay >= packageLimit) {
+          return state; // Prevent increment, limit reached
+        }
+      }
+
+      // Allow increment
+      return {
+        selections: {
+          ...state.selections,
+          [dayId]: {
+            ...daySelections,
+            [dishId]: currentQuantity + 1,
+          },
         },
-      },
-    })),
+      };
+    }),
 
   decrementDish: (dayId, dishId) =>
     set((state) => {

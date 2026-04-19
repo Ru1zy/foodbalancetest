@@ -2,6 +2,7 @@ import Link from "next/link";
 import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import OrderActionButtons from "@/components/admin/OrderActionButtons";
 import KitchenExport from "./KitchenExport";
+import ArchiveOrdersButton from "@/components/admin/ArchiveOrdersButton";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { getOrderStatusClasses, getOrderStatusLabel } from "@/lib/order-status";
@@ -221,6 +222,10 @@ export default async function AdminOrdersPage({
         </div>
 
         <KitchenExport />
+
+        <div className="mb-6">
+          <ArchiveOrdersButton />
+        </div>
 
         <div className="overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm shadow-xl ring-1 ring-slate-200/60">
           {ordersWithMenuDetails.length === 0 ? (

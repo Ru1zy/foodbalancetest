@@ -1,12 +1,97 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { google } from "googleapis";
 
 export const runtime = "nodejs";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  breakfast: "Сніданок",
+  lunch: "Обід",
+  dinner: "Вечеря",
+  snack: "Перекус",
+  extra: "Додатково",
+};
+
+async function parseOrderItems(items: unknown, orderId: string): Promise<string[]> {
+  if (!items || typeof items !== "object") {
+    return [];
+  }
+
+  const days = Reflect.get(items, "days");
+  if (!Array.isArray(days) || days.length === 0) {
+    return [];
+  }
+
+  const parsedItems: string[] = [];
+
+  // Fetch menu items for all dayIds in this order
+  const dayIds = days.map((day: any) => day.dayId).filter(Boolean);
+
+  if (dayIds.length === 0) {
+    return [];
+  }
+
+  const menuItems = await prisma.menu.findMany({
+    where: {
+      id: {
+        in: dayIds,
+      },
+    },
+    select: {
+      id: true,
+      dishes: true,
+    },
+  });
+
+  const menuById = new Map(menuItems.map((item) => [item.id, item]));
+
+  // Parse each day
+  for (const day of days) {
+    const selections = day.selections || {};
+    const items = day.items || [];
+    const menu = menuById.get(day.dayId);
+
+    // Handle regular package selections
+    if (Object.keys(selections).length > 0 && menu) {
+      const dishes = typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes;
+
+      Object.entries(selections).forEach(([category, selectionIndex]) => {
+        const categoryDishes = dishes[category];
+
+        if (Array.isArray(categoryDishes) && categoryDishes[selectionIndex as number]) {
+          const dish = categoryDishes[selectionIndex as number];
+          const dishName =
+            typeof dish === "object" && dish !== null
+              ? dish.full || dish.short || dish.name
+              : dish;
+          if (dishName) {
+            parsedItems.push(String(dishName).trim());
+          }
+        }
+      });
+    }
+
+    // Handle individual package items
+    if (items.length > 0) {
+      items.forEach((item: any) => {
+        if (item.dishId) {
+          const quantity = item.quantity || 1;
+          for (let i = 0; i < quantity; i++) {
+            parsedItems.push(String(item.dishId).trim());
+          }
+        }
+      });
+    }
+  }
+
+  return parsedItems;
+}
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
+    const format = searchParams.get("format") || "csv"; // csv or sheets
 
     if (!date) {
       return NextResponse.json({ error: "Date parameter required" }, { status: 400 });
@@ -29,78 +114,168 @@ export async function GET(request: Request) {
         isPaid: true,
       },
       include: {
-        user: true,
+        user: {
+          select: {
+            name: true,
+            phone: true,
+            address: true,
+            chatId: true,
+          },
+        },
       },
       orderBy: {
         createdAt: "asc",
       },
     });
 
-    // Build CSV with UTF-8 BOM for Excel
-    let csv = "\uFEFF"; // UTF-8 BOM
-    csv += "Клієнт,Телефон,Тариф,Адреса,Страви\n";
+    // Parse all orders
+    const exportData = await Promise.all(
+      orders.map(async (order) => {
+        const parsedItems = await parseOrderItems(order.items, order.id);
+        const dishesString = parsedItems.join("+");
 
-    for (const order of orders) {
-      const client = `"${order.user.name || "Невідомо"}"`;
-      const phone = `"${order.user.phone || ""}"`;
-      const tariff = `"${order.packageType || ""}"`;
-      const address = `"${(order.deliveryAddress || "").replace(/,/g, ";")}"`; // Replace commas with semicolons
-
-      // Parse items JSON and format
-      let items = "";
-      try {
-        const itemsData = typeof order.items === "string" ? JSON.parse(order.items) : order.items;
-
-        if (itemsData && typeof itemsData === "object") {
-          const itemsList: string[] = [];
-
-          // Handle different item formats
-          if (Array.isArray(itemsData)) {
-            itemsList.push(...itemsData.map((item: any) => String(item).replace(/,/g, ";")));
-          } else if (itemsData.days && Array.isArray(itemsData.days)) {
-            // Format: {days: [{selections: {...}}, ...]}
-            itemsData.days.forEach((day: any) => {
-              if (day.selections) {
-                Object.entries(day.selections).forEach(([meal, dishes]: [string, any]) => {
-                  if (Array.isArray(dishes)) {
-                    dishes.forEach((dish: any) => {
-                      const dishName = typeof dish === "string" ? dish : dish.name || "";
-                      if (dishName) itemsList.push(dishName.replace(/,/g, ";"));
-                    });
-                  }
-                });
-              }
-            });
-          } else {
-            // Generic object format
-            Object.values(itemsData).forEach((value: any) => {
-              if (typeof value === "string") {
-                itemsList.push(value.replace(/,/g, ";"));
-              } else if (Array.isArray(value)) {
-                value.forEach((item: any) => {
-                  const str = typeof item === "string" ? item : item.name || "";
-                  if (str) itemsList.push(str.replace(/,/g, ";"));
-                });
-              }
-            });
-          }
-
-          items = `"${itemsList.join("; ")}"`;
+        // Get cutlery info
+        let cutlery = order.cutlery || "";
+        if (cutlery === "Без приборів" || cutlery === "—") {
+          cutlery = "";
         }
-      } catch (error) {
-        console.error("Failed to parse items:", error);
-        items = `"${String(order.items).replace(/,/g, ";")}"`;
+
+        // Get notes
+        let notes = order.notes || "";
+        if (notes === "—") {
+          notes = "";
+        }
+
+        return {
+          name: order.user.name || "—",
+          phone: order.user.phone ? `'${order.user.phone}` : "—",
+          address: order.deliveryAddress || order.user.address || "—",
+          chatId: order.user.chatId || "",
+          packageType: order.packageType || "",
+          dishes: dishesString,
+          cutlery,
+          notes,
+        };
+      })
+    );
+
+    if (format === "sheets") {
+      // Google Sheets export
+      const sheetId = process.env.GOOGLE_SHEET_ID;
+      const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+
+      if (!sheetId || !credentials) {
+        return NextResponse.json(
+          { error: "Google Sheets credentials not configured" },
+          { status: 500 }
+        );
       }
 
-      csv += `${client},${phone},${tariff},${address},${items}\n`;
-    }
+      try {
+        const auth = new google.auth.GoogleAuth({
+          credentials: JSON.parse(credentials),
+          scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+        });
 
-    return new NextResponse(csv, {
-      headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename="kitchen-${date}.csv"`,
-      },
-    });
+        const sheets = google.sheets({ version: "v4", auth });
+
+        // Format date as DD.MM for sheet name
+        const sheetName = new Date(date).toLocaleDateString("uk-UA", {
+          day: "2-digit",
+          month: "2-digit",
+        });
+
+        // Prepare rows for Google Sheets
+        const rows = exportData.map((row) => [
+          row.name,
+          row.phone,
+          row.address,
+          row.chatId,
+          row.packageType,
+          row.dishes,
+          row.cutlery,
+          row.notes,
+        ]);
+
+        // Check if sheet exists, if not create it
+        const spreadsheet = await sheets.spreadsheets.get({
+          spreadsheetId: sheetId,
+        });
+
+        const sheetExists = spreadsheet.data.sheets?.some(
+          (sheet) => sheet.properties?.title === sheetName
+        );
+
+        if (!sheetExists) {
+          await sheets.spreadsheets.batchUpdate({
+            spreadsheetId: sheetId,
+            requestBody: {
+              requests: [
+                {
+                  addSheet: {
+                    properties: {
+                      title: sheetName,
+                    },
+                  },
+                },
+              ],
+            },
+          });
+        }
+
+        // Write data to sheet
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: sheetId,
+          range: `${sheetName}!A1`,
+          valueInputOption: "RAW",
+          requestBody: {
+            values: [
+              ["Клієнт", "Телефон", "Адреса", "Chat ID", "Пакет", "Страви", "Прибори", "Особливості"],
+              ...rows,
+            ],
+          },
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Exported ${exportData.length} orders to Google Sheets`,
+          sheetName,
+        });
+      } catch (error) {
+        console.error("Google Sheets error:", error);
+        return NextResponse.json(
+          { error: "Failed to export to Google Sheets" },
+          { status: 500 }
+        );
+      }
+    } else {
+      // CSV export
+      let csv = "\uFEFF"; // UTF-8 BOM
+      csv += "Клієнт,Телефон,Адреса,Chat ID,Пакет,Страви,Прибори,Особливості\n";
+
+      for (const row of exportData) {
+        const escapeCsv = (str: string) => `"${str.replace(/"/g, '""')}"`;
+
+        csv += [
+          escapeCsv(row.name),
+          escapeCsv(row.phone),
+          escapeCsv(row.address),
+          escapeCsv(row.chatId),
+          escapeCsv(row.packageType),
+          escapeCsv(row.dishes),
+          escapeCsv(row.cutlery),
+          escapeCsv(row.notes),
+        ].join(",");
+        csv += "\n";
+      }
+
+      return new NextResponse(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="kitchen-${date}.csv"`,
+        },
+      });
+    }
   } catch (error) {
     console.error("Export error:", error);
     return NextResponse.json({ error: "Export failed" }, { status: 500 });

@@ -236,6 +236,34 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
       nextFieldErrors.cart = pkg.includes("Sushka")
         ? "Для Сушки оберіть хоча б один день на кроці 2 або перевірте наявність меню в системі."
         : "Додайте хоча б один повністю зібраний день до кошика.";
+    } else {
+      // CRITICAL: Validate each day meets package requirements
+      const isIndiv = isIndivPackage(selectedPackageRaw ?? undefined);
+      const serverLimit = getPackageLimit(pkg);
+
+      for (const day of cartData.days) {
+        if (isIndiv) {
+          // For Indiv: check 1-10 total dishes, max 3 per dish
+          if (day.items) {
+            const totalQty = day.items.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalQty < 1 || totalQty > 10) {
+              nextFieldErrors.cart = `Для тарифу Indiv кожен день повинен містити від 1 до 10 страв. Перевірте кошик.`;
+              break;
+            }
+            const hasInvalidQty = day.items.some(item => item.quantity > 3);
+            if (hasInvalidQty) {
+              nextFieldErrors.cart = `Для тарифу Indiv максимум 3 однакові страви на день. Перевірте кошик.`;
+              break;
+            }
+          }
+        } else {
+          // For standard packages: must match exact limit
+          if (day.selectedCount !== serverLimit) {
+            nextFieldErrors.cart = `Для тарифу ${pkg} кожен день повинен містити рівно ${serverLimit} страв. Знайдено день з ${day.selectedCount} стравами.`;
+            break;
+          }
+        }
+      }
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {

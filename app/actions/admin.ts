@@ -318,3 +318,103 @@ export async function sendDirectMessage(chatId: string, htmlContent: string): Pr
     };
   }
 }
+
+export type ArchiveOrdersResult =
+  | {
+      ok: true;
+      archived: number;
+      deleted: number;
+    }
+  | {
+      ok: false;
+      message: string;
+    };
+
+/**
+ * Archive old orders and clean up abandoned carts.
+ * Based on legacy autoArchiveDaily logic from Google Apps Script bot.
+ *
+ * Rules:
+ * 1. Orders with deliveryDate in the past (before today's midnight in Kyiv):
+ *    - If isPaid=true OR status is "delivered"/"processed" → archive
+ * 2. Orders older than 7 days with isPaid=false and not processed → DELETE
+ */
+export async function archiveOldOrders(): Promise<ArchiveOrdersResult> {
+  const adminUser = await getAuthenticatedAdminUser();
+
+  if (!adminUser) {
+    return {
+      ok: false,
+      message: "Недостатньо прав для архівації замовлень.",
+    };
+  }
+
+  try {
+    // Get today's midnight in Kyiv timezone
+    const todayString = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Kiev' });
+    const todayMidnightKyiv = new Date(`${todayString}T00:00:00.000+03:00`);
+
+    // Get date 7 days ago
+    const sevenDaysAgo = new Date(todayMidnightKyiv);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Find orders to archive: past delivery date, paid or delivered/processed
+    const ordersToArchive = await prisma.order.findMany({
+      where: {
+        deliveryDate: {
+          lt: todayMidnightKyiv,
+        },
+        status: {
+          not: "archived",
+        },
+        OR: [
+          { isPaid: true },
+          { status: { in: ["delivered", "processed", "Оплачено", "Доставлено"] } },
+        ],
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // Archive them
+    const archivedResult = await prisma.order.updateMany({
+      where: {
+        id: {
+          in: ordersToArchive.map(o => o.id),
+        },
+      },
+      data: {
+        status: "archived",
+      },
+    });
+
+    // Find abandoned carts to delete: older than 7 days, not paid, not processed
+    const deletedResult = await prisma.order.deleteMany({
+      where: {
+        deliveryDate: {
+          lt: sevenDaysAgo,
+        },
+        isPaid: false,
+        status: {
+          notIn: ["delivered", "processed", "archived", "Оплачено", "Доставлено"],
+        },
+      },
+    });
+
+    revalidatePath("/admin/orders");
+
+    return {
+      ok: true,
+      archived: archivedResult.count,
+      deleted: deletedResult.count,
+    };
+  } catch (error) {
+    console.error("archiveOldOrders failed", error);
+
+    return {
+      ok: false,
+      message: "Не вдалося виконати архівацію замовлень.",
+    };
+  }
+}

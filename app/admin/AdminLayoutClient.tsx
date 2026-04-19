@@ -7,6 +7,7 @@ import LogoutButton from "@/components/LogoutButton";
 const navLinks = [
   { href: "/admin/orders", label: "Замовлення", icon: "📦" },
   { href: "/admin/orders?filter=today", label: "Сьогодні", icon: "📅" },
+  { href: "/admin/clients", label: "Клієнти (CRM)", icon: "👥" },
   { href: "/admin/menu", label: "Меню", icon: "🍽️" },
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
   { href: "/admin/broadcast", label: "Розсилка", icon: "📢" },
