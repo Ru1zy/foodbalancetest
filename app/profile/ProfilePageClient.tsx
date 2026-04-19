@@ -2,26 +2,6 @@
 
 import { useState } from "react";
 import { updateUserProfile } from "../actions/profile";
-import { getOrderStatusLabel } from "@/lib/order-status";
-
-export type DishItem = {
-  dishId: string;
-  quantity: number;
-};
-
-export type OrderDay = {
-  dayId: string;
-  items?: DishItem[];
-  selections?: Record<string, number>;
-  selectedCount?: number;
-};
-
-export type OrderItems = {
-  days: OrderDay[];
-  packageLimit: number;
-  packageType: string;
-  totalDays: number;
-};
 
 type User = {
   id: string;
@@ -29,24 +9,52 @@ type User = {
   phone: string | null;
   address: string | null;
   defaultCutlery: number | null;
-  // other fields if needed
 };
 
-export type Order = {
+export type OrderWithResolvedDishes = {
   id: string;
   createdAt: Date;
-  status: string;
-  items: OrderItems;
-  price: number | null;
   deliveryDate: Date;
+  status: string;
   packageType: string;
-  // other fields
+  price: number | null;
+  isPaid: boolean;
+  resolvedDishes: string[];
 };
 
 type Props = {
   user: User;
-  orders: Order[];
+  orders: OrderWithResolvedDishes[];
 };
+
+const STATUS_STYLES: Record<string, string> = {
+  new: "bg-gray-100 text-gray-800 border-gray-300",
+  "Очікує": "bg-yellow-100 text-yellow-800 border-yellow-300",
+  "Оплачено": "bg-green-100 text-green-800 border-green-300",
+  "Передано в учёт": "bg-blue-100 text-blue-800 border-blue-300",
+  "Доставлено": "bg-emerald-100 text-emerald-800 border-emerald-300",
+  cancelled: "bg-red-100 text-red-800 border-red-300",
+  archived: "bg-slate-100 text-slate-800 border-slate-300",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  new: "Нове",
+  "Очікує": "Очікує",
+  "Оплачено": "Оплачено",
+  "Передано в учёт": "Передано в учёт",
+  "Доставлено": "Доставлено",
+  cancelled: "Скасовано",
+  archived: "Архівовано",
+};
+
+function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat("uk-UA", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Kiev",
+  }).format(new Date(date));
+}
 
 export default function ProfilePageClient({ user, orders }: Props) {
   const [isEditing, setIsEditing] = useState(false);
@@ -65,145 +73,172 @@ export default function ProfilePageClient({ user, orders }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 text-gray-900">
-      <div className="mx-auto max-w-4xl">
-        <h1 className="mb-8 text-3xl font-bold text-black">Профіль</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+      <div className="mx-auto max-w-5xl">
+        <h1 className="mb-8 text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          Профіль
+        </h1>
 
         {/* Settings Section */}
-        <div className="mb-8 rounded-xl border border-gray-200 bg-white p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-black">Налаштування</h2>
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-8 shadow-xl">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900">Налаштування</h2>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
             >
-              {isEditing ? "Скасувати" : "Редагувати"}
+              <span>{isEditing ? "✕" : "✏️"}</span>
+              <span>{isEditing ? "Скасувати" : "Редагувати"}</span>
             </button>
           </div>
 
           {error && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {error}
             </div>
           )}
 
-        {isEditing ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-black">Ім&apos;я</label>
-              <input
-                name="name"
-                defaultValue={user.name}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black">Телефон</label>
-              <input
-                name="phone"
-                defaultValue={user.phone || ""}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black">Адреса за замовчуванням</label>
-              <input
-                name="address"
-                defaultValue={user.address || ""}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-black">Прибори за замовчуванням</label>
-              <select
-                name="cutlery"
-                defaultValue={user.defaultCutlery || 0}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none"
+          {isEditing ? (
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Ім&apos;я</label>
+                <input
+                  name="name"
+                  defaultValue={user.name}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Телефон</label>
+                <input
+                  name="phone"
+                  defaultValue={user.phone || ""}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Адреса за замовчуванням</label>
+                <input
+                  name="address"
+                  defaultValue={user.address || ""}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-500 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Прибори за замовчуванням</label>
+                <select
+                  name="cutlery"
+                  defaultValue={user.defaultCutlery || 0}
+                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                >
+                  <option value={0}>0</option>
+                  <option value={1}>1</option>
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                  <option value={4}>4</option>
+                </select>
+              </div>
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
               >
-                <option value={0}>0</option>
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={3}>3</option>
-                <option value={4}>4</option>
-              </select>
-            </div>
-            <button
-              type="submit"
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700"
-            >
-              Зберегти
-            </button>
-          </form>
-        ) : (
-          <div className="space-y-3">
-            <div>
-              <span className="font-medium text-black">Ім&apos;я:</span> <span className="text-gray-700">{user.name}</span>
-            </div>
-            <div>
-              <span className="font-medium text-black">Телефон:</span> <span className="text-gray-700">{user.phone || "Не вказано"}</span>
-            </div>
-            <div>
-              <span className="font-medium text-black">Адреса:</span> <span className="text-gray-700">{user.address || "Не вказано"}</span>
-            </div>
-            <div>
-              <span className="font-medium text-black">Прибори:</span> <span className="text-gray-700">{user.defaultCutlery || 0}</span>
-            </div>
-          </div>
-        )}
+                <span>💾</span>
+                <span>Зберегти</span>
+              </button>
+            </form>
+          ) : (
+            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Ім&apos;я</dt>
+                <dd className="text-base font-medium text-slate-900">{user.name}</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Телефон</dt>
+                <dd className="text-base font-medium text-slate-900">{user.phone || "Не вказано"}</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-4 sm:col-span-2">
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Адреса</dt>
+                <dd className="text-base font-medium text-slate-900 break-words">{user.address || "Не вказано"}</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-4">
+                <dt className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Прибори</dt>
+                <dd className="text-base font-medium text-slate-900">{user.defaultCutlery || 0} шт</dd>
+              </div>
+            </dl>
+          )}
         </div>
 
         {/* Order History Section */}
-        <div className="rounded-xl border border-gray-200 bg-white p-6">
-          <h2 className="mb-4 text-xl font-semibold text-black">Історія замовлень</h2>
+        <div className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-8 shadow-xl">
+          <h2 className="mb-6 text-2xl font-bold text-slate-900">Історія замовлень</h2>
           {orders.length === 0 ? (
-            <p className="text-gray-700">Немає замовлень</p>
+            <div className="rounded-xl bg-slate-50 p-12 text-center">
+              <div className="text-6xl mb-4">📦</div>
+              <p className="text-lg font-semibold text-slate-700">Немає замовлень</p>
+              <p className="text-sm text-slate-500 mt-2">Ваші замовлення з'являться тут</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
-                <div key={order.id} className="rounded-lg border border-gray-200 p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-black">
-                        Замовлення від {new Date(order.createdAt).toLocaleDateString("uk-UA")}
-                      </p>
-                      <p className="text-sm text-gray-700">
-                        Статус: {order.status} | Пакет: {order.packageType} | Дата доставки: {new Date(order.deliveryDate).toLocaleDateString("uk-UA")}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-black">{order.price ? `${order.price} грн` : "Ціна не вказана"}</p>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-700">
-                    Статус: <span className="font-medium text-black">{getOrderStatusLabel(order.status)}</span>
-                  </div>
-                  <div className="mt-2 text-sm text-gray-700">
-                    {order.items && Array.isArray(order.items?.days) && order.items.days.length > 0 ? (
-                      <div className="space-y-1">
-                        {order.items.days.map((day: OrderDay, index: number) => (
-                          <div key={index} className="text-xs">
-                            <span className="font-medium text-black">День {index + 1}:</span>
-                            {Array.isArray(day.items) && day.items.length > 0 ? (
-                              <span className="text-gray-700">
-                                {" "}{day.items.map((item: DishItem) => `${item.dishId} (x${item.quantity})`).join(", ")}
-                              </span>
-                            ) : day.selections && Object.keys(day.selections).length > 0 ? (
-                              <span className="text-gray-700">
-                                {" "}{Object.entries(day.selections).map(([cat, idx]: [string, number]) => `${cat}: позиція ${idx}`).join(", ")}
-                              </span>
-                            ) : (
-                              <span className="text-gray-500">без деталей</span>
-                            )}
-                          </div>
-                        ))}
+              {orders.map((order) => {
+                const statusStyle = STATUS_STYLES[order.status] || STATUS_STYLES.new;
+                const statusLabel = STATUS_LABELS[order.status] || order.status;
+
+                return (
+                  <div
+                    key={order.id}
+                    className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm hover:shadow-md transition"
+                  >
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                      <div>
+                        <p className="text-lg font-bold text-slate-900">
+                          {order.packageType}
+                        </p>
+                        <p className="text-sm text-slate-600 mt-1">
+                          Створено: {formatDate(order.createdAt)}
+                        </p>
+                        <p className="text-sm text-slate-600">
+                          Доставка: {formatDate(order.deliveryDate)}
+                        </p>
                       </div>
-                    ) : (
-                      <span className="text-gray-500">Без деталей позицій</span>
+                      <div className="flex flex-col items-start sm:items-end gap-2">
+                        <span
+                          className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold ${statusStyle}`}
+                        >
+                          {statusLabel}
+                        </span>
+                        {order.price && (
+                          <p className="text-xl font-bold text-slate-900">{order.price} ₴</p>
+                        )}
+                        {order.isPaid && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">
+                            <span>✓</span>
+                            <span>Оплачено</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dishes */}
+                    {order.resolvedDishes.length > 0 && (
+                      <div className="rounded-lg bg-slate-50 p-4 border border-slate-200">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-slate-600 mb-3">
+                          Страви
+                        </p>
+                        <ul className="space-y-2">
+                          {order.resolvedDishes.map((dish, index) => (
+                            <li key={index} className="flex items-start gap-2 text-sm text-slate-700">
+                              <span className="text-blue-600 mt-0.5">•</span>
+                              <span>{dish}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
