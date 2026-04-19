@@ -42,9 +42,14 @@ function parseTargetDate(targetDateStr: string): { start: Date; end: Date } | nu
 
 /**
  * Format dishes from order items into a single string.
- * Extracts actual dish names from menu data and joins with " + " separator.
+ * Resolves dish indices to actual names from Menu records.
+ * Adds portion indicators for Active/Sport Active plans.
  */
-function formatOrderDishes(items: unknown): string {
+async function formatOrderDishes(
+  items: unknown,
+  menuById: Map<string, { dishes: unknown }>,
+  packageType: string
+): Promise<string> {
   if (!items || typeof items !== "object") return "";
 
   const days = (items as Record<string, unknown>).days;
@@ -66,26 +71,40 @@ function formatOrderDishes(items: unknown): string {
     }
 
     // Handle standard package selections
-    if (day.selections && typeof day.selections === "object" && day.dishes) {
-      const dishes = typeof day.dishes === "string" ? JSON.parse(day.dishes) : day.dishes;
+    if (day.selections && typeof day.selections === "object" && day.dayId) {
+      const menu = menuById.get(day.dayId);
 
-      // Extract all selected dish names using Object.values()
-      const selectedDishes = Object.values(day.selections).map((selectionIndex, idx) => {
-        const category = Object.keys(day.selections)[idx];
+      if (!menu) {
+        continue; // Skip if menu not found
+      }
+
+      const dishes = typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes;
+
+      // Extract all selected dish names
+      Object.entries(day.selections).forEach(([category, selectionIndex]) => {
         const categoryDishes = dishes[category];
 
         if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
           const dish = categoryDishes[selectionIndex];
-          const dishName =
+          let dishName =
             typeof dish === "object" && dish !== null
-              ? dish.full || dish.short || dish.name
+              ? dish.short || dish.full || dish.name
               : dish;
-          return dishName ? String(dishName).trim() : null;
-        }
-        return null;
-      }).filter((name): name is string => name !== null);
 
-      allDishes.push(...selectedDishes);
+          if (dishName) {
+            dishName = String(dishName).trim();
+
+            // Add portion indicator for Active/Sport Active plans
+            if (['Active', 'Sport Active'].includes(packageType) && ['lunch', 'dinner'].includes(category)) {
+              if (!dishName.includes('(1,5)')) {
+                dishName += " (1,5)";
+              }
+            }
+
+            allDishes.push(dishName);
+          }
+        }
+      });
     }
   }
 
@@ -176,6 +195,36 @@ export async function exportToKitchenSheet(
       };
     }
 
+    // Collect all unique dayIds from all orders to fetch menus efficiently
+    const dayIds = new Set<string>();
+    for (const order of orders) {
+      if (order.items && typeof order.items === "object") {
+        const days = (order.items as Record<string, unknown>).days;
+        if (Array.isArray(days)) {
+          for (const day of days) {
+            if (day && typeof day === "object" && "dayId" in day && typeof day.dayId === "string") {
+              dayIds.add(day.dayId);
+            }
+          }
+        }
+      }
+    }
+
+    // Fetch all relevant Menu records in one query (avoid N+1)
+    const menus = await prisma.menu.findMany({
+      where: {
+        id: {
+          in: Array.from(dayIds),
+        },
+      },
+      select: {
+        id: true,
+        dishes: true,
+      },
+    });
+
+    const menuById = new Map(menus.map((menu) => [menu.id, menu]));
+
     // Calculate first empty row (data starts at row 5)
     const existingDataResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -201,21 +250,23 @@ export async function exportToKitchenSheet(
     }
 
     // Format orders into rows (columns C-K: 9 columns)
-    const rows: string[][] = orders.map((order) => {
-      const formattedDishes = formatOrderDishes(order.items);
+    const rows: string[][] = await Promise.all(
+      orders.map(async (order) => {
+        const formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType);
 
-      return [
-        order.user.name || "", // C: ПІБ
-        order.user.phone || "", // D: Телефон
-        order.user.address || "", // E: Адреса
-        order.user.chatId || "", // F: Chat ID
-        order.packageType || "", // G: Раціон
-        formattedDishes || "", // H: Страви
-        order.cutlery ? `${order.cutlery} шт` : "0 шт", // I: Прибори
-        order.deliveryNote || "", // J: Нотатка адміна
-        order.price ? order.price.toString() : "", // K: Ціна
-      ];
-    });
+        return [
+          order.user.name || "", // C: ПІБ
+          order.user.phone || "", // D: Телефон
+          order.user.address || "", // E: Адреса
+          order.user.chatId || "", // F: Chat ID
+          order.packageType || "", // G: Раціон
+          formattedDishes || "Меню не знайдено", // H: Страви
+          order.cutlery ? `${order.cutlery} шт` : "0 шт", // I: Прибори
+          order.deliveryNote || "", // J: Нотатка адміна
+          order.price ? order.price.toString() : "", // K: Ціна
+        ];
+      })
+    );
 
     // Update the sheet (not append)
     await sheets.spreadsheets.values.update({
