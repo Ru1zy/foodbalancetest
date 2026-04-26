@@ -12,19 +12,37 @@ const CATEGORY_LABELS: Record<string, string> = {
   snack: "Перекус",
 };
 
-async function resolveOrderDishes(order: any): Promise<ResolvedDay[]> {
+type OrderDayItemPayload = {
+  dishId?: string;
+  quantity?: number;
+};
+
+type OrderDayPayload = {
+  dayId?: string;
+  items?: OrderDayItemPayload[];
+  selections?: Record<string, unknown>;
+};
+
+type OrderItemsPayload = {
+  days?: OrderDayPayload[];
+};
+
+async function resolveOrderDishes(order: {
+  deliveryDate: Date;
+  items: unknown;
+}): Promise<ResolvedDay[]> {
   if (!order.items || typeof order.items !== "object") {
     return [];
   }
 
-  const days = (order.items as Record<string, unknown>).days;
+  const { days } = order.items as OrderItemsPayload;
   if (!Array.isArray(days) || days.length === 0) {
     return [];
   }
 
   // Collect all unique dayIds
   const dayIds = days
-    .map((day: any) => day?.dayId)
+    .map((day) => day?.dayId)
     .filter((id): id is string => Boolean(id));
 
   if (dayIds.length === 0) {
@@ -58,26 +76,33 @@ async function resolveOrderDishes(order: any): Promise<ResolvedDay[]> {
     actualDate.setDate(actualDate.getDate() + dayIndex);
 
     // Handle individual package items (Indiv package)
-    if (Array.isArray(day.items)) {
+    if (Array.isArray(day?.items)) {
       for (const item of day.items) {
         const dishId = item.dishId || "";
-        const quantity = item.quantity || 1;
+        const quantity = typeof item.quantity === "number" ? item.quantity : 1;
         dayDishes.push(`${dishId} (x${quantity})`);
       }
     }
 
     // Handle standard package selections
-    if (day.selections && typeof day.selections === "object" && day.dayId) {
+    if (day?.selections && typeof day.selections === "object" && day.dayId) {
       const menu = menuById.get(day.dayId);
 
       if (menu) {
-        const dishes = typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes;
+        const dishes =
+          typeof menu.dishes === "string"
+            ? (JSON.parse(menu.dishes) as Record<string, unknown>)
+            : (menu.dishes as Record<string, unknown>);
 
         Object.entries(day.selections).forEach(([category, selectionIndex]) => {
           const categoryLabel = CATEGORY_LABELS[category] || category;
           const categoryDishes = dishes[category];
 
-          if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
+          if (
+            Array.isArray(categoryDishes) &&
+            typeof selectionIndex === "number" &&
+            categoryDishes[selectionIndex]
+          ) {
             const dish = categoryDishes[selectionIndex];
             const dishName =
               typeof dish === "object" && dish !== null

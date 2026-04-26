@@ -1,7 +1,7 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getPackageLimit, isDaySelectable, type PackageType } from "../lib/order-logic";
 import { getMenuRowsForPackage } from "@/lib/menu-for-package";
 import type { Dishes, DishOption, MenuItem } from "@/lib/menu-types";
@@ -14,7 +14,6 @@ import {
 import { useOrderStore } from "@/lib/orderStore";
 import DishCard from "@/components/DishCard";
 import CircularProgress from "@/components/CircularProgress";
-import CartPanel from "@/components/CartPanel";
 
 export type { DishOption, Dishes, MenuItem } from "@/lib/menu-types";
 
@@ -35,9 +34,7 @@ type Props = {
 const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka XS", "Sushka S", "Indiv"];
 
 export default function MenuGridClient({ menuItems }: Props) {
-  const router = useRouter();
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
   const selectedDatesFromStore = useOrderStore((state) => state.selectedDates);
@@ -47,11 +44,6 @@ export default function MenuGridClient({ menuItems }: Props) {
   const decrementDish = useOrderStore((state) => state.decrementDish);
   const setPackage = useOrderStore((state) => state.setPackage);
   const setSelection = useOrderStore((state) => state.setSelection);
-
-  // Build menuDayByItemId mapping
-  const menuDayByItemId = useMemo(() => {
-    return Object.fromEntries(menuItems.map((item) => [item.id, item.dayOfWeek]));
-  }, [menuItems]);
 
   const pkg = parsePackageType(selectedPackageRaw);
   const indivSelected = isIndivPackage(selectedPackageRaw ?? undefined);
@@ -437,8 +429,6 @@ export default function MenuGridClient({ menuItems }: Props) {
         </div>
       )}
 
-      <CartPanel isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} menuDayByItemId={menuDayByItemId} />
-
       {/* Fixed Bottom Checkout Button */}
       {canProceedToCheckout && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 shadow-lg">
@@ -448,13 +438,12 @@ export default function MenuGridClient({ menuItems }: Props) {
                 Днів зібрано: <span className="text-blue-600">{completedDaysCount}</span>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsCartOpen(true)}
+            <Link
+              href="/checkout"
               className="flex-1 max-w-md rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-center text-base font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
             >
               Перейти до оформлення →
-            </button>
+            </Link>
           </div>
         </div>
       )}

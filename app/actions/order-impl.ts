@@ -318,6 +318,7 @@ export async function submitOrder(
             data: {
               deliveryAddress: parsedFormData.address || null,
               deliveryDate: resolvedDeliveryDate,
+              deliveryTime: parsedFormData.deliveryTime || null,
               cutlery: parsedFormData.cutlery,
               items: sanitizedCartData,
               notes: parsedFormData.comment || null,
@@ -366,6 +367,7 @@ export async function submitOrder(
         data: {
           deliveryAddress: parsedFormData.address || null,
           deliveryDate: resolvedDeliveryDate,
+          deliveryTime: parsedFormData.deliveryTime || null,
           cutlery: parsedFormData.cutlery,
           items: sanitizedCartData,
           notes: parsedFormData.comment || null,

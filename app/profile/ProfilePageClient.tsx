@@ -168,7 +168,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
             <div className="rounded-xl bg-slate-50 p-12 text-center">
               <div className="text-6xl mb-4">📦</div>
               <p className="text-lg font-semibold text-slate-700">Немає замовлень</p>
-              <p className="text-sm text-slate-500 mt-2">Ваші замовлення з'являться тут</p>
+              <p className="text-sm text-slate-500 mt-2">Ваші замовлення з&apos;являться тут</p>
             </div>
           ) : (
             <div className="space-y-4">

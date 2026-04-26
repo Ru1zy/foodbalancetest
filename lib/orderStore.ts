@@ -15,13 +15,10 @@ export type CartItem = {
 };
 
 export type CustomerProfile = {
-  street: string;
-  house: string;
-  apartment: string;
-  entrance: string;
-  intercom: string;
+  address: string;
   chatId: string;
   cutlery: number;
+  deliveryTime: string;
   isAuthenticated: boolean;
   name: string;
   notes: string;
@@ -68,13 +65,10 @@ export const useOrderStore = create<OrderStore>()(
   persist(
     (set, get) => ({
       customerProfile: {
-        street: "",
-        house: "",
-        apartment: "",
-        entrance: "",
-        intercom: "",
+        address: "",
         chatId: "",
         cutlery: 0,
+        deliveryTime: "",
         isAuthenticated: false,
         name: "",
         notes: "",

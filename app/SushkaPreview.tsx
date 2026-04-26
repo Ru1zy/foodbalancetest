@@ -1,10 +1,9 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useOrderStore } from "@/lib/orderStore";
 
 export default function SushkaPreview() {
-  const router = useRouter();
   const selectedDates = useOrderStore((s) => s.selectedDates);
   const setStep = useOrderStore((s) => s.setStep);
 
@@ -29,21 +28,22 @@ export default function SushkaPreview() {
           >
             Назад
           </button>
-          <button
-            type="button"
-            disabled={dayCount === 0}
-            onClick={() => {
-              if (dayCount === 0) return;
-              router.push("/checkout");
-            }}
-            className={`rounded-xl px-6 py-3 text-sm font-semibold transition ${
-              dayCount > 0
-                ? "bg-gray-900 text-white hover:bg-blue-600"
-                : "cursor-not-allowed bg-gray-200 text-gray-400"
-            }`}
-          >
-            Перейти до оформлення
-          </button>
+          {dayCount > 0 ? (
+            <Link
+              href="/checkout"
+              className="rounded-xl bg-gray-900 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-600"
+            >
+              Перейти до оформлення
+            </Link>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="cursor-not-allowed rounded-xl bg-gray-200 px-6 py-3 text-sm font-semibold text-gray-400"
+            >
+              Перейти до оформлення
+            </button>
+          )}
         </div>
       </div>
     </>

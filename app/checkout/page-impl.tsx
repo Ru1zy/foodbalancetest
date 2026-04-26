@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { type FormEvent, useEffect, useMemo, useState, useTransition } from "react";
 import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
 import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
 import {
@@ -13,7 +12,6 @@ import {
   PACKAGE_PRICES,
 } from "@/lib/order-logic";
 import {
-  clampCutleryCount,
   formatDisplayDate,
   formatScheduleDayLabel,
   parseCheckoutFormData,
@@ -35,8 +33,10 @@ type FeedbackState = {
 type FieldErrors = Partial<Record<"address" | "cart" | "name" | "phone", string>>;
 
 type SubmittedState = {
+  deliveryDateLabel: string | null;
   packageType: string;
   totalDays: number;
+  totalPrice: number;
 };
 
 type AuthenticatedUser = {
@@ -49,50 +49,69 @@ type AuthenticatedUser = {
 type Props = {
   authenticatedUser: AuthenticatedUser;
   menuDayByItemId: Record<string, number>;
-  /** dayOfWeek (1–7) → menu row id для тарифу Сушка */
   sushkaMenuIdByDay: Record<number, string>;
 };
 
-export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushkaMenuIdByDay }: Props) {
-  const router = useRouter();
+type SummaryDay = {
+  dayId: string;
+  dayName: string;
+  dayOfWeek: number;
+  scheduleLabel: string;
+};
+
+const CUTLERY_OPTIONS = [0, 1, 2, 3, 4] as const;
+
+const dayNames: Record<number, string> = {
+  1: "Понеділок",
+  2: "Вівторок",
+  3: "Середа",
+  4: "Четвер",
+  5: "П’ятниця",
+  6: "Субота",
+  7: "Неділя",
+};
+
+export default function CheckoutPageImpl({
+  authenticatedUser,
+  menuDayByItemId,
+  sushkaMenuIdByDay,
+}: Props) {
   const customerProfile = useOrderStore((state) => state.customerProfile);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
-  const pkg = parsePackageType(selectedPackageRaw);
-  const selections = useOrderStore((state) => state.selections);
   const selectedDates = useOrderStore((state) => state.selectedDates);
+  const selections = useOrderStore((state) => state.selections);
   const clearSelections = useOrderStore((state) => state.clearSelections);
   const clearDaySelections = useOrderStore((state) => state.clearDaySelections);
   const resetWizard = useOrderStore((state) => state.resetWizard);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
+  const setSelectedDates = useOrderStore((state) => state.setSelectedDates);
+  const pkg = parsePackageType(selectedPackageRaw);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
-    if (authenticatedUser && !customerProfile.isAuthenticated) {
-      // Parse legacy address if exists
-      const legacyAddress = authenticatedUser.address || "";
-      setCustomerProfile({
-        name: authenticatedUser.name,
-        phone: authenticatedUser.phone || "",
-        street: legacyAddress, // Store legacy address in street for now
-        house: "",
-        apartment: "",
-        entrance: "",
-        intercom: "",
-        cutlery: authenticatedUser.defaultCutlery || 0,
-        isAuthenticated: true,
-        // Keep other fields default
-        userId: "",
-        chatId: "",
-        notes: "",
-        username: "",
-      });
+    if (!authenticatedUser || customerProfile.isAuthenticated) {
+      return;
     }
+
+    setCustomerProfile({
+      address: authenticatedUser.address || "",
+      cutlery: authenticatedUser.defaultCutlery || 0,
+      deliveryTime: "",
+      isAuthenticated: true,
+      name: authenticatedUser.name,
+      phone: authenticatedUser.phone || "",
+      userId: "",
+      chatId: "",
+      notes: "",
+      username: "",
+    });
   }, [authenticatedUser, customerProfile.isAuthenticated, setCustomerProfile]);
 
   const packageLimit = getPackageLimit(pkg ?? undefined);
+
   const cartData = useMemo<OrderCartData>(() => {
     if (!pkg) {
       return {
@@ -103,25 +122,25 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
       };
     }
 
-    // For Sushka XS and Sushka S, use auto-fill logic
     if (pkg.includes("Sushka")) {
-      const dowSorted = [...new Set(selectedDates.map((s) => Number(s)))]
-        .filter((n) => Number.isInteger(n) && n >= 1 && n <= 7)
-        .sort((a, b) => a - b);
+      const dayOfWeeks = [...new Set(selectedDates.map((value) => Number(value)))]
+        .filter((value) => Number.isInteger(value) && value >= 1 && value <= 7)
+        .sort((left, right) => left - right);
 
-      const days = dowSorted
-        .map((dow) => {
-          const id = sushkaMenuIdByDay[dow];
-          if (!id) {
+      const days = dayOfWeeks
+        .map((dayOfWeek) => {
+          const dayId = sushkaMenuIdByDay[dayOfWeek];
+          if (!dayId) {
             return null;
           }
+
           return {
-            dayId: id,
+            dayId,
             selectedCount: 0,
             selections: {} as Record<string, number>,
           };
         })
-        .filter((d): d is NonNullable<typeof d> => d !== null);
+        .filter((day): day is NonNullable<typeof day> => day !== null);
 
       return {
         days,
@@ -160,16 +179,18 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
   }, [packageLimit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay]);
 
   const orderTotalUah = useMemo(() => {
-    if (!pkg) return 0;
-    // For Sushka packages, use the specific variant price
+    if (!pkg) {
+      return 0;
+    }
+
     if (pkg === "Sushka XS" || pkg === "Sushka S") {
       return PACKAGE_PRICES[pkg] * cartData.totalDays;
     }
-    // For Sushka (folder), calculate based on selected variant from store
+
     if (pkg === "Sushka") {
-      // This shouldn't happen in checkout as Sushka should be resolved to XS or S
       return 0;
     }
+
     return getOrderTotalUah(pkg, cartData.totalDays);
   }, [cartData.totalDays, pkg]);
 
@@ -178,27 +199,34 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
     [cartData.days, menuDayByItemId],
   );
 
-  const cartDaysSchedule = useMemo(() => {
-    const ref = new Date();
-    const entries = cartData.days
-      .map((d) => {
-        const dow = menuDayByItemId[d.dayId];
-        if (!Number.isInteger(dow) || dow < 1 || dow > 7) {
+  const summaryDays = useMemo<SummaryDay[]>(() => {
+    const referenceDate = new Date();
+
+    return cartData.days
+      .map((day) => {
+        const dayOfWeek = menuDayByItemId[day.dayId];
+        if (!Number.isInteger(dayOfWeek) || dayOfWeek < 1 || dayOfWeek > 7) {
           return null;
         }
-        const date = dateForMenuDayOfWeek(dow, ref);
-        return { date, dayId: d.dayId, dow, label: formatScheduleDayLabel(date) };
-      })
-      .filter((e): e is NonNullable<typeof e> => e !== null)
-      .sort((a, b) => a.date.getTime() - b.date.getTime());
 
-    return entries;
+        const date = dateForMenuDayOfWeek(dayOfWeek, referenceDate);
+
+        return {
+          dayId: day.dayId,
+          dayName: dayNames[dayOfWeek] || `День ${dayOfWeek}`,
+          dayOfWeek,
+          scheduleLabel: formatScheduleDayLabel(date),
+        };
+      })
+      .filter((day): day is SummaryDay => day !== null)
+      .sort((left, right) => left.dayOfWeek - right.dayOfWeek);
   }, [cartData.days, menuDayByItemId]);
 
   const incompleteDaysCount = useMemo(() => {
     if (!pkg || pkg.includes("Sushka")) {
       return 0;
     }
+
     return Object.values(selections).filter((daySelections) => {
       const selectedCount = getDaySelectedCount(daySelections, pkg);
       return selectedCount > 0 && selectedCount !== packageLimit;
@@ -211,57 +239,62 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
         customerProfile.userId,
         customerProfile.name,
         customerProfile.phone,
-        customerProfile.street,
-        customerProfile.house,
-        customerProfile.apartment,
-        customerProfile.entrance,
-        customerProfile.intercom,
-        // Don't include cutlery - it causes form reset when changed
+        customerProfile.address,
+        customerProfile.cutlery,
+        customerProfile.deliveryTime,
         customerProfile.notes,
       ].join("|"),
     [customerProfile],
   );
 
+  const handleRemoveDay = (day: SummaryDay) => {
+    if (cartData.packageType.includes("Sushka")) {
+      setSelectedDates(selectedDates.filter((value) => Number(value) !== day.dayOfWeek));
+      return;
+    }
+
+    clearDaySelections(day.dayId);
+  };
+
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-
     const submittedValues = parseCheckoutFormData(formData);
     const nextFieldErrors = validateCheckoutFormValues(submittedValues);
 
     if (!pkg) {
-      nextFieldErrors.cart = "Спочатку оберіть тариф і збережіть кошик на головній сторінці.";
+      nextFieldErrors.cart = "Спочатку оберіть тариф і збережіть кошик на сторінці меню.";
     } else if (cartData.totalDays === 0) {
       nextFieldErrors.cart = pkg.includes("Sushka")
-        ? "Для Сушки оберіть хоча б один день на кроці 2 або перевірте наявність меню в системі."
-        : "Додайте хоча б один повністю зібраний день до кошика.";
+        ? "Для Сушки оберіть хоча б один день доставки."
+        : "Додайте хоча б один повністю зібраний день до замовлення.";
     } else {
-      // CRITICAL: Validate each day meets package requirements
-      const isIndiv = isIndivPackage(selectedPackageRaw ?? undefined);
-      const serverLimit = getPackageLimit(pkg);
+      const indivPackage = isIndivPackage(selectedPackageRaw ?? undefined);
+      const serverPackageLimit = getPackageLimit(pkg);
 
       for (const day of cartData.days) {
-        if (isIndiv) {
-          // For Indiv: check 1-10 total dishes, max 3 per dish
-          if (day.items) {
-            const totalQty = day.items.reduce((sum, item) => sum + item.quantity, 0);
-            if (totalQty < 1 || totalQty > 10) {
-              nextFieldErrors.cart = `Для тарифу Indiv кожен день повинен містити від 1 до 10 страв. Перевірте кошик.`;
-              break;
-            }
-            const hasInvalidQty = day.items.some(item => item.quantity > 3);
-            if (hasInvalidQty) {
-              nextFieldErrors.cart = `Для тарифу Indiv максимум 3 однакові страви на день. Перевірте кошик.`;
-              break;
-            }
-          }
-        } else {
-          // For standard packages: must match exact limit
-          if (day.selectedCount !== serverLimit) {
-            nextFieldErrors.cart = `Для тарифу ${pkg} кожен день повинен містити рівно ${serverLimit} страв. Знайдено день з ${day.selectedCount} стравами.`;
+        if (indivPackage) {
+          if (!day.items) {
+            nextFieldErrors.cart = "Для тарифу Indiv перевірте склад кожного дня.";
             break;
           }
+
+          const totalQuantity = day.items.reduce((sum, item) => sum + item.quantity, 0);
+          if (totalQuantity < 1 || totalQuantity > 10) {
+            nextFieldErrors.cart = "Для тарифу Indiv кожен день повинен містити від 1 до 10 страв.";
+            break;
+          }
+
+          const hasInvalidQuantity = day.items.some((item) => item.quantity > 3);
+          if (hasInvalidQuantity) {
+            nextFieldErrors.cart = "Для тарифу Indiv максимум 3 однакові страви на день.";
+            break;
+          }
+        } else if (day.selectedCount !== serverPackageLimit) {
+          nextFieldErrors.cart =
+            `Для тарифу ${pkg} кожен день повинен містити рівно ${serverPackageLimit} страв.`;
+          break;
         }
       }
     }
@@ -278,14 +311,13 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
     startTransition(async () => {
       if (!deliveryDate) {
         setFeedback({
-          message: "Не вдалося визначити дату доставки за кошиком.",
+          message: "Не вдалося визначити дату доставки за вибраними днями.",
           tone: "error",
         });
         return;
       }
 
       const result = await submitOrder(formData, cartData, deliveryDate, orderTotalUah);
-
       if (!result.ok) {
         setFeedback({
           message: result.message,
@@ -295,112 +327,83 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
       }
 
       setSubmitted({
+        deliveryDateLabel: formatDisplayDate(deliveryDate),
         packageType: cartData.packageType,
         totalDays: cartData.totalDays,
+        totalPrice: orderTotalUah,
       });
+
       setCustomerProfile({
-        street: submittedValues.street,
-        house: submittedValues.house,
-        apartment: submittedValues.apartment,
-        entrance: submittedValues.entrance,
-        intercom: submittedValues.intercom,
+        address: submittedValues.address,
         cutlery: submittedValues.cutlery,
+        deliveryTime: submittedValues.deliveryTime,
         name: submittedValues.name,
         notes: submittedValues.comment,
         phone: submittedValues.phone,
         userId: result.userId,
       });
+
       clearSelections();
       resetWizard();
-      setFeedback({
-        message: "Замовлення успішно оформлено. Повертаємо на головну...",
-        tone: "success",
-      });
-
-      // Don't auto-redirect - let user read the confirmation
     });
   };
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-10 text-gray-800 sm:px-6">
-        <section className="mx-auto max-w-3xl rounded-2xl bg-white/80 backdrop-blur-sm p-8 shadow-xl ring-1 ring-slate-200/60">
+      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_38%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] px-4 py-10 text-slate-900 sm:px-6">
+        <section className="mx-auto max-w-3xl rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-10">
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-emerald-500 shadow-lg shadow-green-500/30">
-              <span className="text-5xl">✓</span>
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl text-emerald-600">
+              ✓
             </div>
-            <div className="mb-4 inline-flex rounded-full bg-gradient-to-r from-green-400 to-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow-lg">
+            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
               Замовлення прийнято
-            </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-              Оформлення завершено
-            </h1>
-            <p className="text-sm text-slate-600 mb-8">
-              Дякуємо за замовлення! Ми зв'яжемося з вами найближчим часом.
             </p>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950">
+              Дякуємо за замовлення
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600">
+              Ми вже зберегли ваше замовлення в системі. Найближчим часом менеджер зв&apos;яжеться з вами
+              для підтвердження деталей доставки.
+            </p>
+          </div>
 
-            {/* Order Summary */}
-            <div className="mt-6 space-y-4">
-              <div className="rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 p-6 border border-blue-200">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">📋 Деталі замовлення</h2>
-                <dl className="space-y-3 text-left">
-                  <div className="flex justify-between items-center">
-                    <dt className="text-sm text-slate-600">Тариф:</dt>
-                    <dd className="text-sm font-bold text-slate-900">{submitted.packageType}</dd>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <dt className="text-sm text-slate-600">Кількість днів:</dt>
-                    <dd className="text-sm font-bold text-slate-900">{submitted.totalDays}</dd>
-                  </div>
-                  {orderTotalUah > 0 && (
-                    <div className="flex justify-between items-center pt-3 border-t border-blue-200">
-                      <dt className="text-base font-semibold text-slate-900">Сума:</dt>
-                      <dd className="text-xl font-bold text-blue-600">{orderTotalUah} ₴</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-
-              <div className="rounded-xl bg-slate-50 p-6 border border-slate-200">
-                <h2 className="text-lg font-bold text-slate-900 mb-3">📞 Що далі?</h2>
-                <ul className="space-y-2 text-left text-sm text-slate-700">
-                  <li className="flex items-start gap-2">
-                    <span className="text-green-600 mt-0.5">✓</span>
-                    <span>Ваше замовлення збережено в системі</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Наш менеджер зв'яжеться з вами для підтвердження</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Після оплати ви отримаєте підтвердження в Telegram</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-600 mt-0.5">•</span>
-                    <span>Доставка здійснюється кур'єром за вказаною адресою</span>
-                  </li>
-                </ul>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Тариф</div>
+              <div className="mt-2 text-lg font-bold text-slate-900">{submitted.packageType}</div>
+            </div>
+            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Днів</div>
+              <div className="mt-2 text-lg font-bold text-slate-900">{submitted.totalDays}</div>
+            </div>
+            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
+              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Сума</div>
+              <div className="mt-2 text-lg font-bold text-slate-900">
+                {submitted.totalPrice > 0 ? `${submitted.totalPrice} ₴` : "—"}
               </div>
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
-              >
-                <span>←</span>
-                <span>Повернутися на головну</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-              >
-                <span>👤</span>
-                <span>Переглянути профіль</span>
-              </Link>
+          {submitted.deliveryDateLabel && (
+            <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-900">
+              Перша доставка запланована на <span className="font-semibold">{submitted.deliveryDateLabel}</span>.
             </div>
+          )}
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            >
+              Повернутися до меню
+            </Link>
+            <Link
+              href="/profile"
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Перейти до профілю
+            </Link>
           </div>
         </section>
       </main>
@@ -408,347 +411,277 @@ export default function CheckoutPage({ authenticatedUser, menuDayByItemId, sushk
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-10 text-gray-800 sm:px-6">
-      <section className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_360px]">
-        <div className="rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-slate-200/60 sm:p-8">
-          <div className="mb-8">
-            <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700">
-              <span>←</span> Повернутися до меню
-            </Link>
-            <h1 className="mt-4 text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              Оформлення замовлення
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm text-slate-600">
-              Заповніть коротку форму нижче. Telegram-авторизація не обов&apos;язкова: оформити замовлення
-              можна і як гість.
-            </p>
-          </div>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_38%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] px-4 py-10 text-slate-900 sm:px-6">
+      <section className="mx-auto max-w-6xl">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:text-blue-800"
+        >
+          <span>←</span>
+          <span>Повернутися до меню</span>
+        </Link>
 
-          {feedback && (
-            <div
-              className={`mb-6 rounded-xl border px-4 py-3 text-sm font-medium shadow-sm ${
-                feedback.tone === "success"
-                  ? "border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 text-green-700"
-                  : "border-red-200 bg-gradient-to-r from-red-50 to-rose-50 text-red-700"
-              }`}
-            >
-              {feedback.message}
-            </div>
-          )}
-
-          {!customerProfile.isAuthenticated && (
-            <div className="mb-6 rounded-2xl border border-dashed border-blue-300 bg-gradient-to-r from-blue-50 to-indigo-50 p-4">
-              <div className="mt-4">
-                <TelegramDeepLinkAuth />
-              </div>
-            </div>
-          )}
-
-          {cartData.totalDays === 0 && (
-            <div className="mb-6 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6">
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">🛒</span>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Кошик порожній</h2>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Форма вже готова, але для відправки потрібно зібрати хоча б один день відповідно до ліміту
-                    тарифу.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {fieldErrors.cart && (
-            <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {fieldErrors.cart}
-            </div>
-          )}
-
-          <form key={formKey} className="space-y-6" onSubmit={handleSubmit}>
-            <input type="hidden" name="cutlery" value={customerProfile.cutlery} />
-
-            <div className="grid gap-5 sm:grid-cols-2">
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-900">Ім&apos;я</span>
-                <input
-                  aria-invalid={fieldErrors.name ? "true" : "false"}
-                  autoComplete="name"
-                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:ring-4 ${
-                    fieldErrors.name
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                      : "border-slate-200 focus:border-blue-500 focus:ring-blue-100 hover:border-slate-300"
-                  }`}
-                  defaultValue={customerProfile.name}
-                  name="name"
-                  placeholder="Як до вас звертатися"
-                  required
-                  type="text"
-                />
-                {fieldErrors.name && (
-                  <span className="mt-2 block text-sm text-red-600">{fieldErrors.name}</span>
-                )}
-              </label>
-
-              <label className="block">
-                <span className="mb-2 block text-sm font-bold text-slate-900">Телефон</span>
-                <input
-                  aria-invalid={fieldErrors.phone ? "true" : "false"}
-                  autoComplete="tel"
-                  className={`w-full rounded-xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition-all focus:ring-4 ${
-                    fieldErrors.phone
-                      ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                      : "border-slate-200 focus:border-blue-500 focus:ring-blue-100 hover:border-slate-300"
-                  }`}
-                  defaultValue={customerProfile.phone}
-                  inputMode="tel"
-                  name="phone"
-                  placeholder="+380..."
-                  required
-                  type="tel"
-                />
-                {fieldErrors.phone && (
-                  <span className="mt-2 block text-sm text-red-600">{fieldErrors.phone}</span>
-                )}
-              </label>
-            </div>
-
-            <div>
-              <span className="mb-3 block text-sm font-semibold text-gray-900">Крок 2. Адреса доставки</span>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-2 block text-xs font-medium text-gray-700">Вулиця *</span>
-                  <input
-                    aria-invalid={fieldErrors.address ? "true" : "false"}
-                    autoComplete="street-address"
-                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
-                      fieldErrors.address
-                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
-                    }`}
-                    defaultValue={customerProfile.street}
-                    name="street"
-                    placeholder="Назва вулиці"
-                    required
-                    type="text"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs font-medium text-gray-700">Будинок *</span>
-                  <input
-                    aria-invalid={fieldErrors.address ? "true" : "false"}
-                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:ring-4 ${
-                      fieldErrors.address
-                        ? "border-red-300 focus:border-red-400 focus:ring-red-100"
-                        : "border-gray-200 focus:border-blue-500 focus:ring-blue-100"
-                    }`}
-                    defaultValue={customerProfile.house}
-                    name="house"
-                    placeholder="Номер будинку"
-                    required
-                    type="text"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs font-medium text-gray-700">Квартира</span>
-                  <input
-                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    defaultValue={customerProfile.apartment}
-                    name="apartment"
-                    placeholder="Номер квартири"
-                    type="text"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs font-medium text-gray-700">Під&apos;їзд</span>
-                  <input
-                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    defaultValue={customerProfile.entrance}
-                    name="entrance"
-                    placeholder="Номер під'їзду"
-                    type="text"
-                  />
-                </label>
-
-                <label className="block sm:col-span-2">
-                  <span className="mb-2 block text-xs font-medium text-gray-700">Домофон</span>
-                  <input
-                    className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    defaultValue={customerProfile.intercom}
-                    name="intercom"
-                    placeholder="Код домофону"
-                    type="text"
-                  />
-                </label>
-              </div>
-              {fieldErrors.address && (
-                <span className="mt-2 block text-sm text-red-600">{fieldErrors.address}</span>
-              )}
-            </div>
-
-            <section className="rounded-3xl border border-gray-200 p-5">
-              <div className="text-sm font-semibold text-gray-900">Крок 3. Кількість приборів</div>
-              <div className="mt-4 flex flex-wrap items-center gap-4">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCustomerProfile({
-                      ...customerProfile,
-                      cutlery: clampCutleryCount(customerProfile.cutlery - 1),
-                    })
-                  }
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 text-xl font-semibold text-gray-900 transition hover:border-gray-300"
-                >
-                  -
-                </button>
-                <div className="min-w-24 rounded-2xl bg-gray-50 px-4 py-3 text-center text-lg font-semibold text-gray-900">
-                  {customerProfile.cutlery}
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCustomerProfile({
-                      ...customerProfile,
-                      cutlery: clampCutleryCount(customerProfile.cutlery + 1),
-                    })
-                  }
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-200 text-xl font-semibold text-gray-900 transition hover:border-gray-300"
-                >
-                  +
-                </button>
-                <p className="text-sm text-gray-500">Вкажіть кількість від 0 до 4.</p>
-              </div>
-            </section>
-
-            <label className="block">
-              <span className="mb-2 block text-sm font-semibold text-gray-900">Крок 4. Коментар</span>
-              <textarea
-                className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                defaultValue={customerProfile.notes}
-                name="comment"
-                placeholder="Деталі для курʼєра, побажання або орієнтири"
-                rows={4}
-              />
-            </label>
-
-            <div className="flex flex-col gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-gray-500">
-                Натискаючи кнопку, ви підтверджуєте відправку замовлення в обробку.
-              </p>
-              <button
-                type="submit"
-                disabled={isPending || cartData.totalDays === 0}
-                className={`rounded-2xl px-5 py-3 text-sm font-semibold transition ${
-                  isPending || cartData.totalDays === 0
-                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
-                    : "bg-gray-900 text-white hover:bg-blue-600"
-                }`}
-              >
-                {isPending ? "Надсилаємо..." : "Оформити замовлення"}
-              </button>
-            </div>
-          </form>
+        <div className="mt-5 max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">Checkout</p>
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">
+            Завершення замовлення
+          </h1>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            Перевірте обрані дні, залиште контакти та підтвердьте замовлення. Кошик зберігається окремо,
+            тому ви можете повернутися до меню й відредагувати його без втрати даних.
+          </p>
         </div>
 
-        <aside className="h-fit rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
-          <div className="rounded-2xl bg-gray-50 p-5">
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">
-              Сводка замовлення
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <aside className="h-fit rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8 lg:sticky lg:top-24">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
+                  Підсумок
+                </p>
+                <h2 className="mt-2 text-2xl font-bold text-slate-950">Ваше замовлення</h2>
+              </div>
+              <div className="rounded-2xl bg-slate-100 px-4 py-3 text-right">
+                <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Днів</div>
+                <div className="mt-1 text-2xl font-black text-slate-950">{cartData.totalDays}</div>
+              </div>
             </div>
-            <div className="mt-4 space-y-3">
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Тариф</span>
-                <span className="font-semibold text-gray-900">{selectedPackageRaw ?? "—"}</span>
+
+            <div className="mt-6 rounded-3xl bg-slate-950 px-5 py-5 text-white">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-slate-300">Тариф</span>
+                <span className="text-sm font-semibold text-white">{selectedPackageRaw ?? "—"}</span>
               </div>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Ліміт страв на день</span>
-                <span className="font-semibold text-gray-900">{packageLimit}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Днів у замовленні</span>
-                <span className="font-semibold text-gray-900">{cartData.totalDays}</span>
-              </div>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Вартість</span>
-                <span className="font-semibold text-gray-900">
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <span className="text-sm text-slate-300">До сплати</span>
+                <span className="text-3xl font-black text-white">
                   {orderTotalUah > 0 ? `${orderTotalUah} ₴` : "—"}
                 </span>
               </div>
-              <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="text-gray-500">Прибори</span>
-                <span className="font-semibold text-gray-900">{customerProfile.cutlery}</span>
-              </div>
-              <div className="flex items-start justify-between gap-3 text-sm">
-                <span className="shrink-0 text-gray-500">Перша доставка</span>
-                <span className="text-right font-semibold text-gray-900">
+              <div className="mt-3 flex items-start justify-between gap-3">
+                <span className="text-sm text-slate-300">Перша доставка</span>
+                <span className="text-right text-sm font-semibold text-white">
                   {deliveryDate ? formatDisplayDate(deliveryDate) : "—"}
                 </span>
               </div>
-              <div className="text-sm">
-                <div className="text-gray-500">Графік доставок</div>
-                {cartDaysSchedule.length > 0 ? (
-                  <ul className="mt-1.5 list-none space-y-1 text-right font-semibold text-gray-900">
-                    {cartDaysSchedule.map((entry) => (
-                      <li key={entry.dayId}>{entry.label}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-1.5 text-right font-semibold text-gray-900">—</p>
+            </div>
+
+            <div className="mt-6">
+              <div className="mb-3 flex items-center justify-between">
+                <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Обрані дні
+                </h3>
+                {summaryDays.length > 0 && (
+                  <span className="text-xs font-medium text-slate-500">{summaryDays.length} позицій</span>
                 )}
               </div>
-            </div>
-          </div>
 
-          {cartDaysSchedule.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-gray-200 bg-white p-4">
-              <div className="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500">Дні в кошику</div>
-              <ul className="mt-3 space-y-2">
-                {cartDaysSchedule.map((entry) => (
-                  <li
-                    key={entry.dayId}
-                    className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2 last:border-b-0 last:pb-0"
-                  >
-                    <span className="text-sm font-medium text-gray-900">{entry.label}</span>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-red-600 transition hover:bg-red-50"
-                      onClick={() => clearDaySelections(entry.dayId)}
-                      aria-label={`Видалити ${entry.label}`}
+              {summaryDays.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+                  Поки що немає повністю зібраних днів. Поверніться до меню та додайте хоча б один день.
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {summaryDays.map((day) => (
+                    <li
+                      key={day.dayId}
+                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        className="h-4 w-4"
-                        aria-hidden
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.78 41.78 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      Видалити
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">
+                            {day.dayName} - {cartData.packageType}
+                          </p>
+                          <p className="mt-1 text-sm text-slate-500">{day.scheduleLabel}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDay(day)}
+                          className="inline-flex shrink-0 items-center rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                        >
+                          Видалити
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          )}
 
-          {incompleteDaysCount > 0 && (
-            <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Незаповнені дні не потраплять у замовлення. Зараз неповних днів: {incompleteDaysCount}.
+            {incompleteDaysCount > 0 && (
+              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                Неповністю зібрані дні не потраплять у замовлення. Зараз таких днів: {incompleteDaysCount}.
+              </div>
+            )}
+          </aside>
+
+          <section className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8">
+            <div className="mb-8">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950">Куди і кому доставляти</h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Telegram-авторизація необов&apos;язкова, але допоможе швидше підтягнути ваші дані.
+              </p>
             </div>
-          )}
 
-          <div className="mt-4 text-sm text-gray-600">
-            До бази буде передано тариф, адресу доставки, вартість та обрані дні з поточного кошика.
-          </div>
-        </aside>
+            {!customerProfile.isAuthenticated && (
+              <div className="mb-6 rounded-3xl border border-dashed border-blue-200 bg-blue-50 px-5 py-5">
+                <TelegramDeepLinkAuth />
+              </div>
+            )}
+
+            {feedback && (
+              <div
+                className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-medium ${
+                  feedback.tone === "success"
+                    ? "border-green-200 bg-green-50 text-green-800"
+                    : "border-red-200 bg-red-50 text-red-700"
+                }`}
+              >
+                {feedback.message}
+              </div>
+            )}
+
+            {fieldErrors.cart && (
+              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {fieldErrors.cart}
+              </div>
+            )}
+
+            <form key={formKey} className="space-y-6" onSubmit={handleSubmit}>
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-slate-900">Ім&apos;я</span>
+                  <input
+                    aria-invalid={fieldErrors.name ? "true" : "false"}
+                    autoComplete="name"
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                      fieldErrors.name
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                    }`}
+                    defaultValue={customerProfile.name ?? ""}
+                    name="name"
+                    placeholder="Як до вас звертатися"
+                    required
+                    type="text"
+                  />
+                  {fieldErrors.name && (
+                    <span className="mt-2 block text-sm text-red-600">{fieldErrors.name}</span>
+                  )}
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-slate-900">Телефон</span>
+                  <input
+                    aria-invalid={fieldErrors.phone ? "true" : "false"}
+                    autoComplete="tel"
+                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                      fieldErrors.phone
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                    }`}
+                    defaultValue={customerProfile.phone ?? ""}
+                    inputMode="tel"
+                    name="phone"
+                    placeholder="+380..."
+                    required
+                    type="tel"
+                  />
+                  {fieldErrors.phone && (
+                    <span className="mt-2 block text-sm text-red-600">{fieldErrors.phone}</span>
+                  )}
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-slate-900">Адреса доставки</span>
+                <textarea
+                  aria-invalid={fieldErrors.address ? "true" : "false"}
+                  autoComplete="street-address"
+                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                    fieldErrors.address
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                      : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                  }`}
+                  defaultValue={customerProfile.address ?? ""}
+                  name="address"
+                  placeholder="Вулиця, будинок, квартира, під’їзд, орієнтир"
+                  required
+                  rows={3}
+                />
+                {fieldErrors.address && (
+                  <span className="mt-2 block text-sm text-red-600">{fieldErrors.address}</span>
+                )}
+              </label>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-slate-900">
+                    Кількість приборів
+                  </span>
+                  <select
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    defaultValue={String(customerProfile.cutlery ?? 0)}
+                    name="cutlery"
+                  >
+                    {CUTLERY_OPTIONS.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-semibold text-slate-900">
+                    Бажаний час доставки
+                  </span>
+                  <input
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    defaultValue={customerProfile.deliveryTime ?? ""}
+                    name="deliveryTime"
+                    placeholder="08:00 - 10:00"
+                    type="text"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold text-slate-900">Коментар до замовлення</span>
+                <textarea
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  defaultValue={customerProfile.notes ?? ""}
+                  name="comment"
+                  placeholder="Побажання, деталі для курʼєра або зручний орієнтир"
+                  rows={4}
+                />
+              </label>
+
+              <div className="rounded-3xl bg-slate-50 px-5 py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">До підтвердження: {orderTotalUah} ₴</p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Натискаючи кнопку, ви передаєте замовлення менеджеру в обробку.
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isPending || cartData.totalDays === 0}
+                    className={`inline-flex items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition ${
+                      isPending || cartData.totalDays === 0
+                        ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                        : "bg-blue-600 text-white hover:bg-blue-700"
+                    }`}
+                  >
+                    {isPending ? "Надсилаємо..." : "Підтвердити замовлення"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </section>
+        </div>
       </section>
     </main>
   );

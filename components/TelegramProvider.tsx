@@ -66,43 +66,11 @@ export default function TelegramProvider({ children }: PropsWithChildren) {
           return;
         }
 
-        // Parse address into 5 fields
-        const rawAddress = result.user.address ?? "";
-        let street = "";
-        let house = "";
-        let apartment = "";
-        let entrance = "";
-        let intercom = "";
-
-        if (rawAddress) {
-          // Try to parse format: "Вул. [street], буд. [house], кв. [apartment], під'їзд [entrance], код [intercom]"
-          const streetMatch = rawAddress.match(/Вул\.\s*([^,]+)/);
-          const houseMatch = rawAddress.match(/буд\.\s*([^,]+)/);
-          const apartmentMatch = rawAddress.match(/кв\.\s*([^,]+)/);
-          const entranceMatch = rawAddress.match(/під'їзд\s*([^,]+)/);
-          const intercomMatch = rawAddress.match(/код\s*([^,]+)/);
-
-          if (streetMatch || houseMatch) {
-            // Structured format detected
-            street = streetMatch?.[1]?.trim() ?? "";
-            house = houseMatch?.[1]?.trim() ?? "";
-            apartment = apartmentMatch?.[1]?.trim() ?? "";
-            entrance = entranceMatch?.[1]?.trim() ?? "";
-            intercom = intercomMatch?.[1]?.trim() ?? "";
-          } else {
-            // Fallback: put entire address in street field
-            street = rawAddress;
-          }
-        }
-
         setCustomerProfile({
-          street,
-          house,
-          apartment,
-          entrance,
-          intercom,
+          address: result.user.address ?? "",
           chatId: result.user.chatId ?? "",
           cutlery: result.user.cutlery ?? 0,
+          deliveryTime: "",
           isAuthenticated: true,
           name: result.user.name ?? "",
           notes: result.user.notes ?? "",

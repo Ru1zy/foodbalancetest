@@ -264,7 +264,7 @@ export default async function AdminOrdersPage({
             <div className="p-12 text-center">
               <div className="text-6xl mb-4">📦</div>
               <p className="text-lg font-semibold text-slate-700">Замовлень поки немає</p>
-              <p className="text-sm text-slate-500 mt-2">Нові замовлення з'являться тут</p>
+              <p className="text-sm text-slate-500 mt-2">Нові замовлення з&apos;являться тут</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

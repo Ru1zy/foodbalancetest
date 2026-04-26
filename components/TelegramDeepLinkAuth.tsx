@@ -35,37 +35,10 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           console.log("Auth confirmed! Refreshing...");
           setIsPolling(false);
 
-          // Parse address if exists
-          const rawAddress = data.user.address || "";
-          let street = rawAddress;
-          let house = "";
-          let apartment = "";
-          let entrance = "";
-          let intercom = "";
-
-          if (rawAddress) {
-            const streetMatch = rawAddress.match(/Вул\.\s*([^,]+)/);
-            const houseMatch = rawAddress.match(/буд\.\s*([^,]+)/);
-            const apartmentMatch = rawAddress.match(/кв\.\s*([^,]+)/);
-            const entranceMatch = rawAddress.match(/під'їзд\s*([^,]+)/);
-            const intercomMatch = rawAddress.match(/код\s*([^,]+)/);
-
-            if (streetMatch || houseMatch) {
-              street = streetMatch?.[1]?.trim() || "";
-              house = houseMatch?.[1]?.trim() || "";
-              apartment = apartmentMatch?.[1]?.trim() || "";
-              entrance = entranceMatch?.[1]?.trim() || "";
-              intercom = intercomMatch?.[1]?.trim() || "";
-            }
-          }
-
           setCustomerProfile({
-            street,
-            house,
-            apartment,
-            entrance,
-            intercom,
+            address: data.user.address || "",
             chatId: data.user.chatId || "",
+            deliveryTime: "",
             name: data.user.name || "",
             phone: data.user.phone || "",
             userId: data.user.userId || "",

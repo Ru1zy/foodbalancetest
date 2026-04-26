@@ -84,7 +84,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
           <div className="rounded-lg bg-slate-50 p-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-slate-500">Ім'я:</span>
+                <span className="text-slate-500">Ім&apos;я:</span>
                 <div className="font-semibold text-slate-900">{client.name}</div>
               </div>
               <div>
@@ -106,7 +106,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
                         disabled={isPending}
                         className="text-xs text-red-600 hover:text-red-700 underline"
                       >
-                        Відв'язати
+                        Відв&apos;язати
                       </button>
                     </>
                   ) : (
