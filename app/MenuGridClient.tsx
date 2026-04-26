@@ -502,16 +502,16 @@ export default function MenuGridClient({ menuItems }: Props) {
 
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4 cursor-zoom-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 cursor-zoom-out"
           onClick={() => setZoomedImage(null)}
         >
           <img
             src={zoomedImage}
             alt="Day menu details"
-            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            className="max-w-full max-h-full object-contain rounded-lg border border-gray-200"
           />
           <button
-            className="absolute top-6 right-6 text-white text-4xl leading-none hover:text-gray-300"
+            className="absolute top-6 right-6 text-gray-100 text-4xl leading-none hover:text-gray-300"
             onClick={(e) => {
               e.stopPropagation();
               setZoomedImage(null);
@@ -524,7 +524,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
       {/* Fixed Bottom Checkout Button */}
       {canProceedToCheckout && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm sm:px-6 sm:py-4">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-sm sm:px-6 sm:py-4">
           <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="text-sm font-semibold text-gray-700">
@@ -533,7 +533,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             </div>
             <Link
               href="/checkout"
-              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-center text-base font-bold text-white shadow-lg transition-all hover:shadow-xl sm:w-auto sm:min-w-[320px]"
+              className="w-full rounded-xl border border-gray-200 bg-green-50 px-6 py-3 text-center text-base font-bold text-gray-900 hover:bg-green-100 sm:w-auto sm:min-w-[320px]"
             >
               Перейти до оформлення →
             </Link>

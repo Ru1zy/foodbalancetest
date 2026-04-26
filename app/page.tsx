@@ -42,8 +42,8 @@ export default async function Home() {
         {/* Hero Section */}
         <div className="mb-16 text-center relative">
           <div className="inline-block mb-6 animate-float">
-            <div className="mb-4 drop-shadow-2xl flex justify-center">
-              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain" />
+            <div className="mb-4 flex justify-center">
+              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain border border-gray-200" />
             </div>
           </div>
 
@@ -63,48 +63,48 @@ export default async function Home() {
 
           {/* Stats */}
           <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
-            <div className="glass rounded-2xl px-8 py-4 hover-lift">
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <div className="rounded-2xl px-8 py-4 border border-gray-200 bg-white hover:border-gray-300">
+              <div className="text-3xl font-bold text-gray-900">
                 500+
               </div>
-              <div className="text-sm text-slate-600 font-medium">Задоволених клієнтів</div>
+              <div className="text-sm text-gray-500 font-medium">Задоволених клієнтів</div>
             </div>
-            <div className="glass rounded-2xl px-8 py-4 hover-lift">
-              <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <div className="rounded-2xl px-8 py-4 border border-gray-200 bg-white hover:border-gray-300">
+              <div className="text-3xl font-bold text-gray-900">
                 1000+
               </div>
-              <div className="text-sm text-slate-600 font-medium">Доставлених страв</div>
+              <div className="text-sm text-gray-500 font-medium">Доставлених страв</div>
             </div>
-            <div className="glass rounded-2xl px-8 py-4 hover-lift">
-              <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            <div className="rounded-2xl px-8 py-4 border border-gray-200 bg-white hover:border-gray-300">
+              <div className="text-3xl font-bold text-gray-900">
                 100%
               </div>
-              <div className="text-sm text-slate-600 font-medium">Свіжі продукти</div>
+              <div className="text-sm text-gray-500 font-medium">Свіжі продукти</div>
             </div>
           </div>
         </div>
 
         {/* Menu Section */}
         {menuItems.length === 0 ? (
-          <div className="glass rounded-3xl p-16 text-center shadow-2xl hover-lift">
+          <div className="rounded-3xl p-16 text-center border border-gray-200 bg-white">
             <div className="mb-6 animate-float flex justify-center">
-              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain" />
+              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain border border-gray-200" />
             </div>
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-              Меню оновляється
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Меню оновлюється
             </h2>
-            <p className="text-lg text-slate-600">Незабаром з&apos;являться нові смачні страви</p>
+            <p className="text-lg text-gray-500">Незабаром з’являться нові смачні страви</p>
           </div>
         ) : (
-          <div className="glass rounded-3xl p-8 shadow-2xl">
+          <div className="rounded-3xl p-8 border border-gray-200 bg-white">
             <OrderWizard menuItems={menuItems} tariffs={tariffs} />
           </div>
         )}
       </section>
 
       {/* Floating elements */}
-      <div className="fixed bottom-10 right-10 glass rounded-full p-4 shadow-xl hover-lift cursor-pointer animate-glow hidden lg:block">
-        <span className="text-3xl">💬</span>
+      <div className="fixed bottom-10 right-10 rounded-full p-4 border border-gray-200 bg-white hover:border-gray-300 cursor-pointer animate-glow hidden lg:block">
+        <span className="text-3xl text-gray-900">💬</span>
       </div>
     </main>
   );

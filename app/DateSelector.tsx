@@ -77,7 +77,7 @@ export default function DateSelector({ menuItems }: Props) {
           />
         ))}
       </div>
-      <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">{title}</h2>
+      <h2 className="mb-6 text-2xl font-bold text-gray-900">{title}</h2>
       {children}
     </div>
   );
@@ -85,7 +85,7 @@ export default function DateSelector({ menuItems }: Props) {
   if (!pkg) {
     return shell(
       "Оберіть дні доставки",
-      <p className="text-center text-sm text-gray-600">Спочатку оберіть тариф (крок 1).</p>,
+      <p className="text-sm text-gray-600">Спочатку оберіть тариф (крок 1).</p>,
     );
   }
 

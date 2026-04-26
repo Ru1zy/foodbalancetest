@@ -10,21 +10,21 @@ export default async function Header() {
   const isAuthenticated = !!token;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-white/20 glass shadow-lg">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-6 overflow-hidden">
+              <div className="absolute inset-0 bg-gray-100 rounded-2xl"></div>
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200">
                 <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-full w-full object-cover" />
               </div>
             </div>
             <div>
-              <span className="text-2xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              <span className="text-2xl font-black text-gray-900">
                 FoodBalance
               </span>
-              <div className="text-xs text-slate-500 font-medium">Здорове харчування</div>
+              <div className="text-xs text-gray-500 font-medium">Здорове харчування</div>
             </div>
           </Link>
 
@@ -33,7 +33,7 @@ export default async function Header() {
               <>
                 <Link
                   href="/profile"
-                  className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-slate-700 transition-all hover:bg-white/50 hover:scale-105"
+                  className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 >
                   <span>👤</span>
                   <span className="hidden sm:inline">Профіль</span>
