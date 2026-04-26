@@ -34,7 +34,7 @@ export default function ArchiveOrdersButton() {
       <button
         onClick={handleArchive}
         disabled={isPending}
-        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span>📦</span>
         <span>{isPending ? "Очищення..." : "Очистити стару базу"}</span>

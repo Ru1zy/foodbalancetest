@@ -233,21 +233,21 @@ export default async function AdminOrdersPage({
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 sm:px-6">
       <section className="mx-auto w-full px-6">
-        <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-slate-200/60 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+        <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>
             <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700">
               <span>←</span> Повернутися до сайту
             </Link>
-            <h1 className="mt-4 text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="mt-4 text-4xl font-bold text-gray-900">
               Замовлення
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-gray-600">
               Панель адміністратора для перегляду нових замовлень і оновлення статусів.
             </p>
           </div>
-          <div className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3 text-sm text-white shadow-lg">
+          <div className="rounded-xl bg-gray-900 px-5 py-3 text-sm text-white shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="text-blue-100">👤</span>
+              <span className="text-gray-300">👤</span>
               <span className="font-semibold">{adminUser.name}</span>
             </div>
           </div>
@@ -259,17 +259,17 @@ export default async function AdminOrdersPage({
           <ArchiveOrdersButton />
         </div>
 
-        <div className="overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm shadow-xl ring-1 ring-slate-200/60">
+        <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
           {ordersWithMenuDetails.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-6xl mb-4">📦</div>
-              <p className="text-lg font-semibold text-slate-700">Замовлень поки немає</p>
-              <p className="text-sm text-slate-500 mt-2">Нові замовлення з&apos;являться тут</p>
+              <p className="text-lg font-semibold text-gray-700">Замовлень поки немає</p>
+              <p className="text-sm text-gray-500 mt-2">Нові замовлення з&apos;являться тут</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse">
-                <thead className="bg-gradient-to-r from-slate-50 to-blue-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                <thead className="bg-gray-50 text-left text-xs font-bold uppercase tracking-wider text-gray-600">
                   <tr>
                     <th className="px-4 py-4 sm:px-6 w-32">ID / Дата</th>
                     <th className="px-4 py-4 sm:px-6 w-40">Клієнт</th>

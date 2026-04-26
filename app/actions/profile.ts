@@ -29,16 +29,16 @@ export async function updateUserProfile(formData: FormData) {
   const address = formData.get("address") as string;
   const cutlery = parseInt(formData.get("cutlery") as string) || 0;
 
-  if (!name || name.trim().length === 0) {
+  if (!name || (name || '').trim().length === 0) {
     throw new Error("Name is required");
   }
 
   await prisma.user.update({
     where: { id: userId },
     data: {
-      name: name.trim(),
-      phone: phone.trim() || undefined,
-      address: address.trim() || undefined,
+      name: (name || '').trim(),
+      phone: (phone || '').trim() || undefined,
+      address: (address || '').trim() || undefined,
       defaultCutlery: String(cutlery),
     },
   });

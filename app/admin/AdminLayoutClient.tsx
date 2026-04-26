@@ -18,13 +18,13 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Desktop Sidebar */}
-      <aside className="hidden w-72 border-r border-slate-200/60 bg-white/80 backdrop-blur-xl lg:block shadow-xl">
+      <aside className="hidden w-72 border-r border-gray-200 bg-white lg:block shadow-sm">
         <div className="flex h-full flex-col">
-          <div className="border-b border-slate-200/60 p-6 bg-gradient-to-r from-blue-600 to-indigo-600">
+          <div className="border-b border-gray-200 p-6 bg-gray-900">
             <h1 className="text-2xl font-bold text-white tracking-tight">🎯 Адмін-панель</h1>
-            <p className="text-blue-100 text-sm mt-1">Керування системою</p>
+            <p className="text-gray-300 text-sm mt-1">Керування системою</p>
           </div>
           <nav className="flex-1 space-y-2 p-4">
             {navLinks.map((link) => {
@@ -35,8 +35,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                   href={link.href}
                   className={`group flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
                     isActive
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg shadow-blue-500/30 scale-105"
-                      : "text-slate-700 hover:bg-slate-100 hover:scale-102 hover:shadow-md"
+                      ? "bg-gray-900 text-white shadow-sm scale-105"
+                      : "text-gray-700 hover:bg-gray-100 hover:scale-102"
                   }`}
                 >
                   <span className="text-xl">{link.icon}</span>
@@ -48,19 +48,19 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
               );
             })}
           </nav>
-          <div className="border-t border-slate-200/60 p-4 bg-slate-50/50">
+          <div className="border-t border-gray-200 p-4 bg-gray-50">
             <LogoutButton />
           </div>
         </div>
       </aside>
 
       {/* Mobile Topbar */}
-      <div className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/60 bg-white/90 backdrop-blur-xl shadow-lg lg:hidden">
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-indigo-600">
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-gray-200 bg-white shadow-sm lg:hidden">
+        <div className="flex items-center justify-between p-4 bg-gray-900">
           <h1 className="text-lg font-bold text-white">🎯 Адмін-панель</h1>
           <LogoutButton />
         </div>
-        <nav className="flex overflow-x-auto border-t border-slate-200/60 bg-white/95">
+        <nav className="flex overflow-x-auto border-t border-gray-200 bg-white">
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href.includes('?') && pathname.startsWith(link.href.split('?')[0]));
             return (

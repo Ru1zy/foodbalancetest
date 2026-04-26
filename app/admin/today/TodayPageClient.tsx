@@ -124,19 +124,19 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-gray-900">
             📅 Доставки на сьогодні
           </h1>
         </div>
 
         {/* Date Picker and Notify Button */}
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-6 shadow-xl">
+        <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-2">
-              <label htmlFor="date-picker" className="text-sm font-semibold text-slate-700">
+              <label htmlFor="date-picker" className="text-sm font-semibold text-gray-700">
                 Дата доставки (формат: ДД.МM.РРРР):
               </label>
               <input
@@ -145,7 +145,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
                 value={selectedDate}
                 onChange={(e) => handleDateChange(e.target.value)}
                 placeholder="19.04.2026"
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
               />
             </div>
 
@@ -153,7 +153,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
               <button
                 onClick={handleExportToKitchen}
                 disabled={isPending || orders.length === 0}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>{isPending ? "⏳" : "🍳"}</span>
                 <span>{isPending ? "Експорт..." : "Експорт на кухню"}</span>
@@ -162,7 +162,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
               <button
                 onClick={handleNotifyAll}
                 disabled={isPending || orders.length === 0}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>{isPending ? "⏳" : "📢"}</span>
                 <span>{isPending ? "Відправка..." : "Відправити сповіщення (Telegram)"}</span>
@@ -185,14 +185,14 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
 
         {/* Orders Table */}
         {orders.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-12 text-center shadow-xl">
-            <p className="text-lg text-slate-600">Немає замовлень на цю дату</p>
+          <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
+            <p className="text-lg text-gray-600">Немає замовлень на цю дату</p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm shadow-xl overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
                       ПІБ

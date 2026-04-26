@@ -47,10 +47,8 @@ export default async function Home() {
             </div>
           </div>
 
-          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-7xl lg:text-8xl">
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
-              FoodBalance
-            </span>
+          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight text-gray-900 sm:text-5xl md:text-7xl lg:text-8xl">
+            FoodBalance
           </h1>
 
           <p className="text-2xl font-semibold text-slate-700 mb-4">

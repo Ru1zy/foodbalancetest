@@ -65,14 +65,14 @@ export default function ProfilePageClient({ user, orders }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-8 text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent sm:text-4xl">
+        <h1 className="mb-8 text-3xl font-bold text-gray-900 sm:text-4xl">
           Профіль
         </h1>
 
         {/* Settings Section */}
-        <div className="mb-8 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-xl backdrop-blur-sm sm:p-8">
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-bold text-slate-900">Налаштування</h2>
             <button
@@ -162,13 +162,13 @@ export default function ProfilePageClient({ user, orders }: Props) {
         </div>
 
         {/* Order History Section */}
-        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-xl backdrop-blur-sm sm:p-8">
-          <h2 className="mb-6 text-2xl font-bold text-slate-900">Історія замовлень</h2>
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+          <h2 className="mb-6 text-2xl font-bold text-gray-900">Історія замовлень</h2>
           {orders.length === 0 ? (
-            <div className="rounded-xl bg-slate-50 p-12 text-center">
+            <div className="rounded-xl bg-gray-50 p-12">
               <div className="text-6xl mb-4">📦</div>
-              <p className="text-lg font-semibold text-slate-700">Немає замовлень</p>
-              <p className="text-sm text-slate-500 mt-2">Ваші замовлення з&apos;являться тут</p>
+              <p className="text-lg font-semibold text-gray-700">Немає замовлень</p>
+              <p className="text-sm text-gray-500 mt-2">Ваші замовлення з&apos;являться тут</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -176,7 +176,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
                 return (
                   <div
                     key={order.id}
-                    className="overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition hover:shadow-md sm:p-6"
+                    className="overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:shadow-md sm:p-6"
                   >
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">

@@ -309,7 +309,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl p-4 pb-28 md:p-6 md:pb-32">
+      <div className="mx-auto max-w-7xl px-4 pb-28 md:px-8 md:pb-32">
         {step === 3 && (
           <div className="mb-4">
             <button

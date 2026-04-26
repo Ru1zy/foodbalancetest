@@ -12,11 +12,11 @@ export default function SushkaPreview() {
   return (
     <>
       <div className="mx-auto max-w-2xl rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <p className="text-center text-base leading-relaxed text-gray-700">
+        <p className="text-base leading-relaxed text-gray-700">
           Тариф <span className="font-semibold text-gray-900">Сушка</span> має фіксоване меню. Обрано днів:{" "}
           <span className="font-semibold text-gray-900">{dayCount}</span>.
         </p>
-        <p className="mt-4 text-center text-sm text-gray-500">
+        <p className="mt-4 text-sm text-gray-500">
           Страви підбираються автоматично за обраними днями доставки. Перейдіть до оформлення, щоб вказати адресу
           та контакти.
         </p>
@@ -31,7 +31,7 @@ export default function SushkaPreview() {
           {dayCount > 0 ? (
             <Link
               href="/checkout"
-              className="rounded-xl bg-gray-900 px-6 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-600"
+              className="rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
             >
               Перейти до оформлення
             </Link>

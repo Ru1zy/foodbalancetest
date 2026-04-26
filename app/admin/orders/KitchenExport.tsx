@@ -44,8 +44,8 @@ export default function KitchenExport() {
   };
 
   return (
-    <div className="mb-6 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-slate-200/60">
-      <h2 className="mb-4 text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+    <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="mb-4 text-xl font-bold text-gray-900">
         📊 Експорт на кухню
       </h2>
 
@@ -69,7 +69,7 @@ export default function KitchenExport() {
           <button
             onClick={handleExportCSV}
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>📥</span>
             <span>CSV</span>
@@ -78,7 +78,7 @@ export default function KitchenExport() {
           <button
             onClick={handleExportToSheets}
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <span>{isPending ? "⏳" : "📊"}</span>
             <span>{isPending ? "Експорт..." : "Google Sheets"}</span>

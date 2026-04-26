@@ -372,8 +372,8 @@ export default function CheckoutPageImpl({
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_38%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] px-4 py-10 text-slate-900 sm:px-6">
-        <section className="mx-auto max-w-3xl rounded-[2rem] border border-white/70 bg-white/90 p-8 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-10">
+      <main className="min-h-screen bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
+      <section className="mx-auto max-w-3xl rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm sm:p-10">
           <div className="text-center">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl text-emerald-600">
               ✓
@@ -433,7 +433,7 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.12),_transparent_38%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)] px-4 py-10 text-slate-900 sm:px-6">
+    <main className="min-h-screen bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
       <section className="mx-auto max-w-6xl">
         <Link
           href="/"
@@ -455,7 +455,7 @@ export default function CheckoutPageImpl({
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <aside className="h-fit rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8 lg:sticky lg:top-24">
+          <aside className="h-fit rounded-[2rem] border border-gray-200 bg-white p-5 shadow-sm sm:p-8 lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -537,7 +537,7 @@ export default function CheckoutPageImpl({
             )}
           </aside>
 
-          <section className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8">
+          <section className="rounded-[2rem] border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">Куди і кому доставляти</h2>

@@ -65,8 +65,8 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
     };
   }
 
-  const nextOrderId = orderId.trim();
-  const nextStatus = status.trim();
+  const nextOrderId = (orderId || '').trim();
+  const nextStatus = (status || '').trim();
 
   if (!nextOrderId) {
     return {
@@ -118,7 +118,7 @@ export async function confirmOrderPayment(orderId: string): Promise<ConfirmPayme
     };
   }
 
-  const nextOrderId = orderId.trim();
+  const nextOrderId = (orderId || '').trim();
 
   if (!nextOrderId) {
     return {
@@ -177,7 +177,7 @@ export async function notifyDeliveryTime(orderId: string, timeWindow: string): P
     };
   }
 
-  if (!orderId.trim() || !timeWindow.trim()) {
+  if (!(orderId || '').trim() || !(timeWindow || '').trim()) {
     return {
       ok: false,
       message: "Не вказано час доставки.",

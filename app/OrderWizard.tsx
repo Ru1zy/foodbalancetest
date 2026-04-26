@@ -64,7 +64,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
               />
             ))}
           </div>
-          <h2 className="mb-4 text-center text-xl font-bold text-gray-900">
+          <h2 className="mb-4 text-xl font-bold text-gray-900">
             {selectedPackage === "Sushka" ? "Підтвердження (Сушка)" : "Оберіть страви"}
           </h2>
           {selectedPackage === "Sushka" ? (

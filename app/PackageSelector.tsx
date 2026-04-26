@@ -111,7 +111,7 @@ export default function PackageSelector({ tariffs }: Props) {
             onClick={() => setPreviewPkg(null)}
           >
             <div
-              className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl"
+              className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-sm"
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="mb-4 text-2xl font-bold text-gray-900">{previewPkg.title}</h2>
@@ -178,7 +178,7 @@ export default function PackageSelector({ tariffs }: Props) {
           />
         ))}
       </div>
-      <h2 className="mb-6 text-center text-2xl font-bold text-gray-900">Оберіть тариф</h2>
+      <h2 className="mb-6 text-2xl font-bold text-gray-900">Оберіть тариф</h2>
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {mainPackages.map((pkg) => {
           const active = selectedPackage === pkg.name;
@@ -258,7 +258,7 @@ export default function PackageSelector({ tariffs }: Props) {
           onClick={() => setPreviewPkg(null)}
         >
           <div
-            className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl"
+            className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="mb-4 text-2xl font-bold text-gray-900">{previewPkg.title}</h2>

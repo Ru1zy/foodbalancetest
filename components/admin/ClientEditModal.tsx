@@ -67,7 +67,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-2xl">
+      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
           <h2 className="text-2xl font-bold text-gray-900">Редагувати клієнта</h2>
           <button
@@ -157,7 +157,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
             <button
               onClick={handleSave}
               disabled={isPending}
-              className="flex-1 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 py-3 text-sm font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? "Збереження..." : "Зберегти зміни"}
             </button>

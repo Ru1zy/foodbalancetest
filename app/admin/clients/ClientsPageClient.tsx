@@ -40,7 +40,7 @@ export default function ClientsPageClient({ clients }: Props) {
 
   return (
     <>
-      <div className="mb-6 rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-xl ring-1 ring-slate-200/60">
+      <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <input
@@ -51,20 +51,20 @@ export default function ClientsPageClient({ clients }: Props) {
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </div>
-          <div className="rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 px-5 py-3 text-sm font-bold text-white shadow-lg">
+          <div className="rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white shadow-sm">
             {filteredClients.length} клієнтів
           </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white/80 backdrop-blur-sm shadow-xl ring-1 ring-slate-200/60">
+      <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
         {filteredClients.length === 0 ? (
-          <div className="p-12 text-center">
+          <div className="p-12">
             <div className="text-6xl mb-4">👥</div>
-            <p className="text-lg font-semibold text-slate-700">
+            <p className="text-lg font-semibold text-gray-700">
               {searchQuery ? "Клієнтів не знайдено" : "Клієнтів поки немає"}
             </p>
-            <p className="text-sm text-slate-500 mt-2">
+            <p className="text-sm text-gray-500 mt-2">
               {searchQuery ? "Спробуйте інший запит" : "Нові клієнти з'являться тут після першого замовлення"}
             </p>
           </div>

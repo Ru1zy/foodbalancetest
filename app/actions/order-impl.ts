@@ -56,9 +56,9 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   // For Sushka packages (XS and S), bypass strict dish selection validation
   if (cartData.packageType.includes("Sushka")) {
     const days = (Array.isArray(cartData.days) ? cartData.days : [])
-      .filter((day) => day && typeof day.dayId === "string" && day.dayId.trim().length > 0)
+      .filter((day) => day && typeof day.dayId === "string" && (day.dayId || '').trim().length > 0)
       .map((day) => ({
-        dayId: day.dayId.trim(),
+        dayId: (day.dayId || '').trim(),
         selectedCount: 0,
         selections: {} as StandardSelections,
       }));
@@ -74,7 +74,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   const indivPackage = isIndivPackage(cartData.packageType);
   const days = Array.isArray(cartData.days)
     ? cartData.days.filter((day) => {
-        if (!day || typeof day.dayId !== "string" || !day.dayId.trim()) {
+        if (!day || typeof day.dayId !== "string" || !(day.dayId || '').trim()) {
           return false;
         }
 
@@ -87,7 +87,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
             (item) =>
               !!item &&
               typeof item.dishId === "string" &&
-              item.dishId.trim().length > 0 &&
+              (item.dishId || '').trim().length > 0 &&
               Number.isInteger(item.quantity) &&
               item.quantity > 0 &&
               item.quantity <= 3, // Max 3 of same dish for Indiv
@@ -108,7 +108,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
         }
 
         const normalizedSelections = Object.entries(day.selections).filter(
-          ([category, index]) => category.trim().length > 0 && Number.isInteger(index) && index >= 0,
+          ([category, index]) => (category || '').trim().length > 0 && Number.isInteger(index) && index >= 0,
         );
 
         // For non-Indiv packages: must match exact server-calculated package limit
@@ -125,7 +125,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
             .filter(
               (item) =>
                 typeof item.dishId === "string" &&
-                item.dishId.trim().length > 0 &&
+                (item.dishId || '').trim().length > 0 &&
                 Number.isInteger(item.quantity) &&
                 item.quantity > 0,
             )

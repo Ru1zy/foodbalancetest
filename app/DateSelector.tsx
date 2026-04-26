@@ -92,7 +92,7 @@ export default function DateSelector({ menuItems }: Props) {
   return shell(
     "Оберіть дні доставки",
     <>
-      <p className="mb-2 text-center text-sm text-gray-600">
+      <p className="mb-2 text-sm text-gray-600">
         Доступні лише дні поточного тижня меню, для яких ще не минув дедлайн (
         <span className="font-medium text-gray-800">понеділок: {menuWeekMondayLabel}</span>
         {NEXT_WEEK_OPEN ? ", замовлення на наступний тиждень" : ""}).
@@ -106,7 +106,7 @@ export default function DateSelector({ menuItems }: Props) {
               key={dow}
               type="button"
               onClick={() => toggleDay(dow)}
-              className={`rounded-2xl border-2 px-4 py-4 text-center text-sm font-semibold transition ${
+              className={`rounded-2xl border-2 px-4 py-4 text-sm font-semibold transition ${
                 on
                   ? "border-blue-500 bg-blue-50 text-blue-900"
                   : "border-gray-200 bg-white text-gray-800 hover:border-gray-300"

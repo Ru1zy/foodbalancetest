@@ -11,7 +11,7 @@ export default async function AdminDirectMessagesPage() {
   if (!adminUser) {
     return (
       <main className="min-h-screen bg-gray-100 px-4 py-8 text-gray-800 sm:px-6">
-        <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-200">
+        <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
           <h1 className="text-2xl font-bold text-gray-900">Доступ заборонено</h1>
           <p className="mt-3 text-sm text-gray-600">Увійдіть як адміністратор, щоб відправляти повідомлення.</p>
           <Link
