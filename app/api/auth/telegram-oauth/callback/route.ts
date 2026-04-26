@@ -6,9 +6,7 @@ import {
   AUTH_TOKEN_MAX_AGE,
   buildTelegramPlaceholderPhone,
   createAuthToken,
-  isTelegramPlaceholderPhone,
 } from "@/lib/auth-token";
-import { parseCutleryCount } from "@/lib/checkout";
 
 export const runtime = "nodejs";
 

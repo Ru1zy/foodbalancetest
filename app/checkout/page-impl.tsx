@@ -12,18 +12,22 @@ import {
   PACKAGE_PRICES,
 } from "@/lib/order-logic";
 import {
+  DELIVERY_TIME_OPTIONS,
   formatDisplayDate,
   formatScheduleDayLabel,
+  normalizeDeliveryTime,
   parseCheckoutFormData,
   validateCheckoutFormValues,
 } from "@/lib/checkout";
 import {
   getDaySelectedCount,
+  isDaySelectionComplete,
   isIndivPackage,
   toIndivDishQuantities,
 } from "@/lib/order-selection";
 import { parsePackageType } from "@/lib/package-coerce";
 import { useOrderStore } from "@/lib/orderStore";
+import { isTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 type FeedbackState = {
   message: string;
@@ -90,6 +94,8 @@ export default function CheckoutPageImpl({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [isPending, startTransition] = useTransition();
+  const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
+  const normalizedDeliveryTime = normalizeDeliveryTime(customerProfile.deliveryTime);
 
   useEffect(() => {
     if (!authenticatedUser || customerProfile.isAuthenticated) {
@@ -109,6 +115,22 @@ export default function CheckoutPageImpl({
       username: "",
     });
   }, [authenticatedUser, customerProfile.isAuthenticated, setCustomerProfile]);
+
+  useEffect(() => {
+    if (!isTelegramPlaceholderPhone(customerProfile.phone)) {
+      return;
+    }
+
+    setCustomerProfile({ phone: "" });
+  }, [customerProfile.phone, setCustomerProfile]);
+
+  useEffect(() => {
+    if (customerProfile.deliveryTime === normalizedDeliveryTime) {
+      return;
+    }
+
+    setCustomerProfile({ deliveryTime: normalizedDeliveryTime });
+  }, [customerProfile.deliveryTime, normalizedDeliveryTime, setCustomerProfile]);
 
   const packageLimit = getPackageLimit(pkg ?? undefined);
 
@@ -168,7 +190,7 @@ export default function CheckoutPageImpl({
           selections: daySelections,
         };
       })
-      .filter((day) => day.selectedCount === packageLimit);
+      .filter((day) => isDaySelectionComplete(day.selectedCount, pkg));
 
     return {
       days,
@@ -229,9 +251,9 @@ export default function CheckoutPageImpl({
 
     return Object.values(selections).filter((daySelections) => {
       const selectedCount = getDaySelectedCount(daySelections, pkg);
-      return selectedCount > 0 && selectedCount !== packageLimit;
+      return selectedCount > 0 && !isDaySelectionComplete(selectedCount, pkg);
     }).length;
-  }, [packageLimit, pkg, selections]);
+  }, [pkg, selections]);
 
   const formKey = useMemo(
     () =>
@@ -581,7 +603,7 @@ export default function CheckoutPageImpl({
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                         : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
                     }`}
-                    defaultValue={customerProfile.phone ?? ""}
+                    defaultValue={normalizedPhone}
                     inputMode="tel"
                     name="phone"
                     placeholder="+380..."
@@ -637,13 +659,18 @@ export default function CheckoutPageImpl({
                   <span className="mb-2 block text-sm font-semibold text-slate-900">
                     Бажаний час доставки
                   </span>
-                  <input
+                  <select
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
-                    defaultValue={customerProfile.deliveryTime ?? ""}
+                    defaultValue={normalizedDeliveryTime}
                     name="deliveryTime"
-                    placeholder="08:00 - 10:00"
-                    type="text"
-                  />
+                  >
+                    <option value="">Не вказано</option>
+                    {DELIVERY_TIME_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
 

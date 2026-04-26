@@ -3,6 +3,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import CheckoutPageImpl from "./page-impl";
 import { parseCutleryCount } from "@/lib/checkout";
+import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 export default async function CheckoutPage() {
   const cookieStore = await cookies();
@@ -25,7 +26,7 @@ export default async function CheckoutPage() {
         if (dbUser) {
           user = {
             name: dbUser.name,
-            phone: dbUser.phone,
+            phone: sanitizeTelegramPhone(dbUser.phone),
             address: dbUser.address,
             defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),
           };

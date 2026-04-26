@@ -9,6 +9,7 @@ import { parsePackageType } from "@/lib/package-coerce";
 import {
   buildIndivDishId,
   getDaySelectedCount,
+  isDaySelectionComplete,
   isIndivPackage,
 } from "@/lib/order-selection";
 import { useOrderStore } from "@/lib/orderStore";
@@ -243,9 +244,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
       // For Indiv package, any selection >= 1 is complete
       // For other packages, must match the exact limit
-      const isComplete = indivSelected
-        ? selectedCount >= 1
-        : selectedCount === packageLimit;
+      const isComplete = isDaySelectionComplete(selectedCount, pkg);
 
       progress[item.id] = { selectedCount, isComplete };
 
@@ -263,7 +262,7 @@ export default function MenuGridClient({ menuItems }: Props) {
       completedDaysCount: completed,
       allWizardDaysComplete: allComplete,
     };
-  }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step, isSushka, indivSelected]);
+  }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step, isSushka]);
 
   const allClosed = [1, 2, 3, 4, 5, 6, 7].every((day) => !isDaySelectable(day));
 

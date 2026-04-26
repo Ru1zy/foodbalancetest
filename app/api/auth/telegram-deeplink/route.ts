@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { AUTH_TOKEN_MAX_AGE, createAuthToken } from "@/lib/auth-token";
+import { buildTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 export const runtime = "nodejs";
 
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
         create: {
           chatId: authData.chatId,
           name: authData.userName,
-          phone: `tg_${authData.chatId}`,
+          phone: buildTelegramPlaceholderPhone(authData.chatId),
         },
       });
 
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
         user: {
           chatId: user.chatId,
           name: user.name,
-          phone: user.phone,
+          phone: sanitizeTelegramPhone(user.phone),
           userId: user.id,
         }
       });

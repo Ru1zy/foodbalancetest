@@ -2,6 +2,7 @@
 
 import { PropsWithChildren, useEffect, useRef } from "react";
 import { useOrderStore } from "@/lib/orderStore";
+import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 type TmaAuthResponse = {
   ok: boolean;
@@ -60,8 +61,6 @@ export default function TelegramProvider({ children }: PropsWithChildren) {
 
         const result = (await response.json()) as TmaAuthResponse;
 
-        console.log('TMA AUTH PAYLOAD:', result);
-
         if (!result?.ok || !result.user) {
           return;
         }
@@ -74,7 +73,7 @@ export default function TelegramProvider({ children }: PropsWithChildren) {
           isAuthenticated: true,
           name: result.user.name ?? "",
           notes: result.user.notes ?? "",
-          phone: result.user.phone ?? "",
+          phone: sanitizeTelegramPhone(result.user.phone),
           userId: result.user.userId ?? "",
           username: result.user.username ?? "",
         });

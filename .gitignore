@@ -73,3 +73,6 @@ build-output.txt
 # OS
 .DS_Store
 Thumbs.db
+scripts/remote-smoke.mjs
+scripts/remote-smoke.spec.js
+test-results/.last-run.json

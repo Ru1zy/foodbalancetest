@@ -4,6 +4,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay } from "./ProfilePageClient";
 import { parseCutleryCount } from "@/lib/checkout";
+import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: "Сніданок",
@@ -160,6 +161,7 @@ export default async function ProfilePage() {
   const user = {
     ...dbUser,
     defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),
+    phone: sanitizeTelegramPhone(dbUser.phone),
   };
 
   const rawOrders = await prisma.order.findMany({

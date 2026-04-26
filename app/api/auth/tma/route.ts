@@ -6,9 +6,9 @@ import {
   AUTH_TOKEN_MAX_AGE,
   buildTelegramPlaceholderPhone,
   createAuthToken,
-  isTelegramPlaceholderPhone,
 } from "@/lib/auth-token";
 import { parseCutleryCount } from "@/lib/checkout";
+import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 export const runtime = "nodejs";
 
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
         cutlery: parseCutleryCount(user.defaultCutlery),
         name: user.name,
         notes: user.notes ?? "",
-        phone: isTelegramPlaceholderPhone(user.phone) ? "" : user.phone,
+        phone: sanitizeTelegramPhone(user.phone),
         userId: user.id,
         username: telegramUser.username ?? "",
       },

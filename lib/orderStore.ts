@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PackageType } from "@/lib/order-logic";
 import { getPackageLimit } from "@/lib/order-logic";
+import { normalizeDeliveryTime } from "@/lib/checkout";
+import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 export type Selections = Record<string, Record<string, number>>;
 
@@ -83,12 +85,26 @@ export const useOrderStore = create<OrderStore>()(
       cartItems: [],
 
   setCustomerProfile: (profile) =>
-    set((state) => ({
-      customerProfile: {
-        ...state.customerProfile,
+    set((state) => {
+      const nextProfile = {
         ...profile,
-      },
-    })),
+      };
+
+      if ("deliveryTime" in nextProfile) {
+        nextProfile.deliveryTime = normalizeDeliveryTime(String(nextProfile.deliveryTime ?? ""));
+      }
+
+      if ("phone" in nextProfile) {
+        nextProfile.phone = sanitizeTelegramPhone(nextProfile.phone);
+      }
+
+      return {
+        customerProfile: {
+          ...state.customerProfile,
+          ...nextProfile,
+        },
+      };
+    }),
 
   setPackage: (packageType) =>
     set(() => ({

@@ -1,7 +1,11 @@
 import { jwtVerify, SignJWT } from "jose";
+import {
+  buildTelegramPlaceholderPhone,
+  isTelegramPlaceholderPhone,
+  TELEGRAM_PLACEHOLDER_PHONE_PREFIX,
+} from "@/lib/telegram-phone";
 
 export const AUTH_TOKEN_MAX_AGE = 60 * 60 * 24 * 30;
-export const TELEGRAM_PLACEHOLDER_PHONE_PREFIX = "telegram-user:";
 
 function getJwtSecret() {
   const secret = process.env.AUTH_SECRET ?? process.env.TELEGRAM_BOT_TOKEN;
@@ -36,10 +40,8 @@ export async function verifyAuthToken(token: string) {
   return null;
 }
 
-export function buildTelegramPlaceholderPhone(chatId: string) {
-  return `${TELEGRAM_PLACEHOLDER_PHONE_PREFIX}${chatId}`;
-}
-
-export function isTelegramPlaceholderPhone(phone?: string | null) {
-  return typeof phone === "string" && phone.startsWith(TELEGRAM_PLACEHOLDER_PHONE_PREFIX);
-}
+export {
+  buildTelegramPlaceholderPhone,
+  isTelegramPlaceholderPhone,
+  TELEGRAM_PLACEHOLDER_PHONE_PREFIX,
+};

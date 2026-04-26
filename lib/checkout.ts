@@ -1,6 +1,10 @@
 export const MAX_CUTLERY_COUNT = 4;
 const MIN_PHONE_DIGITS = 10;
 const MAX_PHONE_DIGITS = 15;
+const DELIVERY_SLOT_DURATION_MINUTES = 30;
+const DELIVERY_SLOT_STEP_MINUTES = 10;
+const DELIVERY_WINDOW_START_MINUTES = 17 * 60;
+const DELIVERY_WINDOW_END_MINUTES = 22 * 60;
 
 export type CheckoutFormValues = {
   address: string;
@@ -12,6 +16,34 @@ export type CheckoutFormValues = {
 };
 
 export type CheckoutFieldErrors = Partial<Record<"address" | "cart" | "name" | "phone", string>>;
+
+function formatMinutesAsTime(totalMinutes: number) {
+  const hours = String(Math.floor(totalMinutes / 60)).padStart(2, "0");
+  const minutes = String(totalMinutes % 60).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function buildDeliveryTimeOptions() {
+  const options: string[] = [];
+
+  for (
+    let startMinutes = DELIVERY_WINDOW_START_MINUTES;
+    startMinutes + DELIVERY_SLOT_DURATION_MINUTES <= DELIVERY_WINDOW_END_MINUTES;
+    startMinutes += DELIVERY_SLOT_STEP_MINUTES
+  ) {
+    const endMinutes = startMinutes + DELIVERY_SLOT_DURATION_MINUTES;
+    options.push(`${formatMinutesAsTime(startMinutes)} - ${formatMinutesAsTime(endMinutes)}`);
+  }
+
+  return options;
+}
+
+export const DELIVERY_TIME_OPTIONS = buildDeliveryTimeOptions();
+
+export function normalizeDeliveryTime(value: string) {
+  const normalizedValue = value.trim();
+  return DELIVERY_TIME_OPTIONS.includes(normalizedValue) ? normalizedValue : "";
+}
 
 export function clampCutleryCount(value: number) {
   return Math.min(MAX_CUTLERY_COUNT, Math.max(0, value));
@@ -79,7 +111,7 @@ export function parseCheckoutFormData(formData: FormData): CheckoutFormValues {
     address: String(formData.get("address") || "").trim(),
     comment: String(formData.get("comment") || "").trim(),
     cutlery: parseCutleryCount(formData.get("cutlery")),
-    deliveryTime: String(formData.get("deliveryTime") || "").trim(),
+    deliveryTime: normalizeDeliveryTime(String(formData.get("deliveryTime") || "")),
     name: String(formData.get("name") || "").trim(),
     phone: normalizePhone(String(formData.get("phone") || "")),
   };

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useOrderStore } from "@/lib/orderStore";
+import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 const BOT_USERNAME = process.env.NEXT_PUBLIC_BOT_USERNAME || "fooddevtestbot";
 
@@ -40,7 +41,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
             chatId: data.user.chatId || "",
             deliveryTime: "",
             name: data.user.name || "",
-            phone: data.user.phone || "",
+            phone: sanitizeTelegramPhone(data.user.phone),
             userId: data.user.userId || "",
             isAuthenticated: true,
             cutlery: 0,

@@ -1,4 +1,4 @@
-import { PackageType } from "@/lib/order-logic";
+import { getPackageLimit, PackageType } from "@/lib/order-logic";
 
 export type DaySelections = Record<string, number>;
 
@@ -45,6 +45,18 @@ export function getIndivDaySelectedCount(daySelections: DaySelections) {
 
 export function getDaySelectedCount(daySelections: DaySelections, packageType: PackageType) {
   return isIndivPackage(packageType) ? getIndivDaySelectedCount(daySelections) : Object.keys(daySelections).length;
+}
+
+export function isDaySelectionComplete(selectedCount: number, packageType?: string) {
+  if (!packageType) {
+    return false;
+  }
+
+  if (isIndivPackage(packageType)) {
+    return selectedCount >= 1;
+  }
+
+  return selectedCount === getPackageLimit(packageType);
 }
 
 export function toIndivDishQuantities(daySelections: DaySelections): IndivDishQuantity[] {
