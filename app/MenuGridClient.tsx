@@ -348,7 +348,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
-          <div className="mx-auto grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mx-auto flex flex-wrap justify-center items-start gap-6">
             {sorted.map((item) => {
               const day = dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`;
               const { dishes } = item;
@@ -358,7 +358,7 @@ export default function MenuGridClient({ menuItems }: Props) {
               return (
                 <div
                   key={item.id}
-                  className={`group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 transition-all overflow-hidden ${
+                  className={`w-full sm:max-w-md md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)] shrink-0 group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200 transition-all overflow-hidden ${
                     selectable ? "hover:shadow-md hover:ring-blue-200" : "opacity-50"
                   }`}
                 >
