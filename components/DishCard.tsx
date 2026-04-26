@@ -12,8 +12,14 @@ type Props = {
 export default function DishCard({ dishName, dishShort, variantNumber, isSelected, disabled, onClick }: Props) {
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    e.stopPropagation();
     if (disabled) return;
     onClick();
+    e.currentTarget.blur();
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
+    e.preventDefault();
   };
 
   return (
@@ -21,6 +27,7 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
       type="button"
       disabled={disabled}
       onClick={handleClick}
+      onPointerDown={handlePointerDown}
       className={`relative w-full overflow-hidden rounded-xl p-3 pr-12 text-left transition-colors md:p-4 md:pr-14 ${
         isSelected
           ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg"

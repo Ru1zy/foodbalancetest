@@ -37,8 +37,8 @@ export default async function Home() {
   const tariffs = await getTariffs();
 
   return (
-    <main className="min-h-screen relative">
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <main className="relative min-h-screen overflow-x-hidden">
+      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 lg:px-16">
         {/* Hero Section */}
         <div className="mb-16 text-center relative">
           <div className="inline-block mb-6 animate-float">
@@ -47,7 +47,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <h1 className="text-7xl font-black mb-6 leading-tight">
+          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight sm:text-5xl md:text-7xl lg:text-8xl">
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
               FoodBalance
             </span>
@@ -62,7 +62,7 @@ export default async function Home() {
           </p>
 
           {/* Stats */}
-          <div className="flex flex-wrap justify-center gap-8 mb-12">
+          <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
             <div className="glass rounded-2xl px-8 py-4 hover-lift">
               <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                 500+

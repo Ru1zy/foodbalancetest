@@ -33,6 +33,157 @@ type Props = {
 
 const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka XS", "Sushka S", "Indiv"];
 
+function buildDishOptionKey(itemId: string, category: keyof Dishes, option: DishOption, index: number) {
+  return [itemId, category, option.short || option.full, option.full, index].join("::");
+}
+
+type MealSectionProps = {
+  itemId: string;
+  category: keyof Dishes;
+  title: string;
+  options?: DishOption[];
+  disabled: boolean;
+  pkg: PackageType | null;
+  isSushka: boolean;
+  indivSelected: boolean;
+  packageLimit: number;
+  selections: Record<string, Record<string, number>>;
+  progressByDay: Record<string, { selectedCount: number; isComplete: boolean }>;
+  incrementDish: (dayId: string, dishId: string) => void;
+  decrementDish: (dayId: string, dishId: string) => void;
+  setSelection: (dayId: string, category: string, dishIndex: number) => void;
+};
+
+function MealSection({
+  itemId,
+  category,
+  title,
+  options,
+  disabled,
+  pkg,
+  isSushka,
+  indivSelected,
+  packageLimit,
+  selections,
+  progressByDay,
+  incrementDish,
+  decrementDish,
+  setSelection,
+}: MealSectionProps) {
+  if (!options || options.length === 0) return null;
+  if (!pkg) return null;
+
+  if (isSushka) {
+    return (
+      <div className="mb-4 last:mb-0">
+        <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-blue-600 md:text-xl">
+          {title}
+        </div>
+        <ul className="space-y-1">
+          {options.map((opt, idx) => (
+            <li
+              key={buildDishOptionKey(itemId, category, opt, idx)}
+              className="break-words text-sm text-gray-700"
+            >
+              {opt.full}
+              {opt.short && opt.short !== opt.full && (
+                <span className="text-xs text-gray-500"> ({opt.short})</span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  const selectedIndex = selections[itemId]?.[category];
+  const daySelectedCount = progressByDay[itemId]?.selectedCount ?? 0;
+
+  return (
+    <div className="mb-4 last:mb-0">
+      <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-blue-600 md:text-xl">
+        {title}
+      </div>
+      <div className="space-y-2">
+        {options.map((opt, idx) => {
+          if (indivSelected) {
+            const dishId = buildIndivDishId(category, idx);
+            const quantity = selections[itemId]?.[dishId] ?? 0;
+            const isAtLimit = daySelectedCount >= packageLimit;
+
+            return (
+              <div
+                key={dishId}
+                className={`rounded-lg border p-3 text-left text-sm transition ${
+                  quantity > 0 ? "border-blue-500 bg-blue-50" : "border-gray-200 bg-white"
+                } ${disabled ? "opacity-50" : ""}`}
+              >
+                <div className="break-words font-medium text-gray-800">{opt.full}</div>
+                {opt.short && opt.short !== opt.full && (
+                  <div className="break-words text-xs text-gray-500">{opt.short}</div>
+                )}
+                {options.length > 1 && (
+                  <div className="mt-1 text-[9px] text-blue-500">ВАРІАНТ {idx + 1}</div>
+                )}
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div className="text-xs font-semibold text-gray-500">
+                    Обрано: {quantity}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={disabled || quantity === 0}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (disabled || quantity === 0) return;
+                        decrementDish(itemId, dishId);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-base font-bold text-gray-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      -
+                    </button>
+                    <div className="min-w-8 text-center text-sm font-bold text-gray-900">{quantity}</div>
+                    <button
+                      type="button"
+                      disabled={disabled || isAtLimit}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (disabled || isAtLimit) return;
+                        incrementDish(itemId, dishId);
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-200 bg-white text-base font-bold text-blue-600 transition hover:border-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          const isSelected = selectedIndex === idx;
+          return (
+            <DishCard
+              key={buildDishOptionKey(itemId, category, opt, idx)}
+              dishName={opt.full}
+              dishShort={opt.short !== opt.full ? opt.short : undefined}
+              variantNumber={options.length > 1 ? idx + 1 : undefined}
+              isSelected={isSelected}
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return;
+                setSelection(itemId, category as string, idx);
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function MenuGridClient({ menuItems }: Props) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const step = useOrderStore((state) => state.step);
@@ -155,132 +306,6 @@ export default function MenuGridClient({ menuItems }: Props) {
     );
   }
 
-  const MealSection = ({
-    itemId,
-    category,
-    title,
-    options,
-    disabled,
-  }: {
-    itemId: string;
-    category: keyof Dishes;
-    title: string;
-    options?: DishOption[];
-    disabled: boolean;
-  }) => {
-    if (!options || options.length === 0) return null;
-    if (!pkg) return null;
-
-    // For Sushka packages, render read-only list
-    if (isSushka) {
-      return (
-        <div className="mb-4 last:mb-0">
-          <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-blue-600 md:text-xl">
-            {title}
-          </div>
-          <ul className="space-y-1">
-            {options.map((opt, idx) => (
-              <li key={idx} className="break-words text-sm text-gray-700">
-                {opt.full}
-                {opt.short && opt.short !== opt.full && (
-                  <span className="text-xs text-gray-500"> ({opt.short})</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </div>
-      );
-    }
-
-    const isIndiv = indivSelected;
-    const selectedIndex = selections[itemId]?.[category];
-    const daySelectedCount = progressByDay[itemId]?.selectedCount ?? 0;
-
-    return (
-      <div className="mb-4 last:mb-0">
-        <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-blue-600 md:text-xl">
-          {title}
-        </div>
-        <div className="space-y-2">
-          {options.map((opt, idx) => {
-            if (isIndiv) {
-              const dishId = buildIndivDishId(category, idx);
-              const quantity = selections[itemId]?.[dishId] ?? 0;
-              const isAtLimit = daySelectedCount >= packageLimit;
-
-              return (
-                <div
-                  key={dishId}
-                  className={`rounded-lg border p-3 text-left text-sm transition ${
-                    quantity > 0
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-gray-200 bg-white"
-                  } ${disabled ? "opacity-50" : ""}`}
-                >
-                  <div className="break-words font-medium text-gray-800">{opt.full}</div>
-                  {opt.short && opt.short !== opt.full && (
-                    <div className="break-words text-xs text-gray-500">{opt.short}</div>
-                  )}
-                  {options.length > 1 && (
-                    <div className="mt-1 text-[9px] text-blue-500">ВАРІАНТ {idx + 1}</div>
-                  )}
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <div className="text-xs font-semibold text-gray-500">
-                      Обрано: {quantity}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={disabled || quantity === 0}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (disabled || quantity === 0) return;
-                          decrementDish(itemId, dishId);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-base font-bold text-gray-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        -
-                      </button>
-                      <div className="min-w-8 text-center text-sm font-bold text-gray-900">{quantity}</div>
-                      <button
-                        type="button"
-                        disabled={disabled || isAtLimit}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (disabled || isAtLimit) return;
-                          incrementDish(itemId, dishId);
-                        }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full border border-blue-200 bg-white text-base font-bold text-blue-600 transition hover:border-blue-400 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-
-            const isSelected = selectedIndex === idx;
-            return (
-              <DishCard
-                key={idx}
-                dishName={opt.full}
-                dishShort={opt.short !== opt.full ? opt.short : undefined}
-                variantNumber={options.length > 1 ? idx + 1 : undefined}
-                isSelected={isSelected}
-                disabled={disabled}
-                onClick={() => {
-                  if (disabled) return;
-                  setSelection(itemId, category as string, idx);
-                }}
-              />
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
-
   const canProceedToCheckout = wizardFilterActive ? allWizardDaysComplete : completedDaysCount > 0;
 
   return (
@@ -369,13 +394,88 @@ export default function MenuGridClient({ menuItems }: Props) {
                   )}
 
                   <div className="flex-grow">
-                    <MealSection itemId={item.id} category="breakfast" title="Сніданок" options={dishes.breakfast} disabled={!selectable} />
-                    <MealSection itemId={item.id} category="lunch" title="Обід" options={dishes.lunch} disabled={!selectable} />
-                    <MealSection itemId={item.id} category="dinner" title="Вечеря" options={dishes.dinner} disabled={!selectable} />
+                    <MealSection
+                      itemId={item.id}
+                      category="breakfast"
+                      title="Сніданок"
+                      options={dishes.breakfast}
+                      disabled={!selectable}
+                      pkg={pkg}
+                      isSushka={isSushka}
+                      indivSelected={indivSelected}
+                      packageLimit={packageLimit}
+                      selections={selections}
+                      progressByDay={progressByDay}
+                      incrementDish={incrementDish}
+                      decrementDish={decrementDish}
+                      setSelection={setSelection}
+                    />
+                    <MealSection
+                      itemId={item.id}
+                      category="lunch"
+                      title="Обід"
+                      options={dishes.lunch}
+                      disabled={!selectable}
+                      pkg={pkg}
+                      isSushka={isSushka}
+                      indivSelected={indivSelected}
+                      packageLimit={packageLimit}
+                      selections={selections}
+                      progressByDay={progressByDay}
+                      incrementDish={incrementDish}
+                      decrementDish={decrementDish}
+                      setSelection={setSelection}
+                    />
+                    <MealSection
+                      itemId={item.id}
+                      category="dinner"
+                      title="Вечеря"
+                      options={dishes.dinner}
+                      disabled={!selectable}
+                      pkg={pkg}
+                      isSushka={isSushka}
+                      indivSelected={indivSelected}
+                      packageLimit={packageLimit}
+                      selections={selections}
+                      progressByDay={progressByDay}
+                      incrementDish={incrementDish}
+                      decrementDish={decrementDish}
+                      setSelection={setSelection}
+                    />
                     {!(isSushka && pkg === "Sushka XS") && (
-                      <MealSection itemId={item.id} category="snack" title="Перекус" options={dishes.snack} disabled={!selectable} />
+                      <MealSection
+                        itemId={item.id}
+                        category="snack"
+                        title="Перекус"
+                        options={dishes.snack}
+                        disabled={!selectable}
+                        pkg={pkg}
+                        isSushka={isSushka}
+                        indivSelected={indivSelected}
+                        packageLimit={packageLimit}
+                        selections={selections}
+                        progressByDay={progressByDay}
+                        incrementDish={incrementDish}
+                        decrementDish={decrementDish}
+                        setSelection={setSelection}
+                      />
                     )}
-                    <MealSection itemId={item.id} category="extra" title="Додаткова страва (Sport)" options={dishes.extra} disabled={!selectable} />
+                    <MealSection
+                      itemId={item.id}
+                      category="extra"
+                      title="Додаткова страва (Sport)"
+                      options={dishes.extra}
+                      disabled={!selectable}
+                      pkg={pkg}
+                      isSushka={isSushka}
+                      indivSelected={indivSelected}
+                      packageLimit={packageLimit}
+                      selections={selections}
+                      progressByDay={progressByDay}
+                      incrementDish={incrementDish}
+                      decrementDish={decrementDish}
+                      setSelection={setSelection}
+                    />
                   </div>
 
                   <div className="mt-4 flex flex-col gap-3 border-t border-gray-50 pt-3 sm:flex-row sm:items-center sm:justify-between">
