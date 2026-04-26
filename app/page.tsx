@@ -43,11 +43,11 @@ export default async function Home() {
         <div className="mb-16 text-center relative">
           <div className="inline-block mb-6 animate-float">
             <div className="mb-4 flex justify-center">
-              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain border border-gray-200" />
+              <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-32 w-32 object-contain drop-shadow-sm mix-blend-multiply" />
             </div>
           </div>
 
-          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight text-gray-900 sm:text-5xl md:text-7xl lg:text-8xl">
+          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight text-slate-800 sm:text-5xl md:text-7xl lg:text-8xl">
             FoodBalance
           </h1>
 

@@ -28,17 +28,20 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
       disabled={disabled}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
-      className={`relative w-full overflow-hidden rounded-xl p-3 pr-12 text-left transition-colors md:p-4 md:pr-14 ${
+      className={`w-full rounded-xl p-4 text-left transition-shadow md:p-5 ${
         isSelected
-          ? "bg-green-50/50 border-2 border-green-500 text-gray-900"
-          : "bg-white border-2 border-transparent ring-1 ring-gray-200 hover:border-gray-300"
-      } ${disabled ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+          ? "bg-gradient-to-br from-green-50 to-emerald-50/30 border-2 border-emerald-400"
+          : "bg-white shadow-sm hover:shadow-md border border-slate-100"
+      } ${disabled ? "pointer-events-none opacity-50" : "cursor-pointer"} flex items-center`}
     >
-      {/* Checkmark */}
+      <div className="flex-1 text-lg md:text-xl font-semibold text-slate-800 break-words">
+        {dishName}
+      </div>
+
       {isSelected && (
-        <div className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-green-500/20">
+        <div className="flex-shrink-0 ml-4">
           <svg
-            className="h-5 w-5 text-green-600"
+            className="w-6 h-6 text-green-600"
             fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -50,22 +53,6 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
           </svg>
         </div>
       )}
-
-      <div className="min-w-0">
-        <div className="mb-1 break-words text-sm font-semibold leading-snug text-gray-900">
-          {dishName}
-        </div>
-        {dishShort && dishShort !== dishName && (
-          <div className="break-words text-xs leading-snug text-gray-500">
-            {dishShort}
-          </div>
-        )}
-        {variantNumber !== undefined && (
-          <div className="mt-2 break-words text-[9px] font-bold tracking-wider text-gray-500">
-            ВАРІАНТ {variantNumber}
-          </div>
-        )}
-      </div>
     </button>
   );
 }

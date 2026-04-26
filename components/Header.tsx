@@ -15,13 +15,12 @@ export default async function Header() {
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
-              <div className="absolute inset-0 bg-gray-100 rounded-2xl"></div>
-              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-200">
-                <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-full w-full object-cover" />
+              <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl drop-shadow-sm">
+                <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-full w-full object-cover mix-blend-multiply" />
               </div>
             </div>
             <div>
-              <span className="text-2xl font-black text-gray-900">
+              <span className="text-2xl font-black text-slate-800">
                 FoodBalance
               </span>
               <div className="text-xs text-gray-500 font-medium">Здорове харчування</div>
