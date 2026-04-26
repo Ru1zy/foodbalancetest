@@ -423,7 +423,7 @@ export default function CheckoutPageImpl({
 
         <div className="mt-5 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">Checkout</p>
-          <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             Завершення замовлення
           </h1>
           <p className="mt-4 text-sm leading-6 text-slate-600">
@@ -432,8 +432,8 @@ export default function CheckoutPageImpl({
           </p>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <aside className="h-fit rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8 lg:sticky lg:top-24">
+        <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <aside className="h-fit rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8 lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -487,17 +487,17 @@ export default function CheckoutPageImpl({
                       key={day.dayId}
                       className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="break-words text-sm font-bold text-slate-900">
                             {day.dayName} - {cartData.packageType}
                           </p>
-                          <p className="mt-1 text-sm text-slate-500">{day.scheduleLabel}</p>
+                          <p className="mt-1 break-words text-sm text-slate-500">{day.scheduleLabel}</p>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleRemoveDay(day)}
-                          className="inline-flex shrink-0 items-center rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                          className="inline-flex shrink-0 items-center self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
                         >
                           Видалити
                         </button>
@@ -515,7 +515,7 @@ export default function CheckoutPageImpl({
             )}
           </aside>
 
-          <section className="rounded-[2rem] border border-white/70 bg-white/90 p-6 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8">
+          <section className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-[0_32px_90px_-40px_rgba(37,99,235,0.55)] backdrop-blur-sm sm:p-8">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">Куди і кому доставляти</h2>
@@ -549,7 +549,7 @@ export default function CheckoutPageImpl({
             )}
 
             <form key={formKey} className="space-y-6" onSubmit={handleSubmit}>
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 md:gap-5">
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-900">Ім&apos;я</span>
                   <input
@@ -615,7 +615,7 @@ export default function CheckoutPageImpl({
                 )}
               </label>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2 md:gap-5">
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-900">
                     Кількість приборів
@@ -669,7 +669,7 @@ export default function CheckoutPageImpl({
                   <button
                     type="submit"
                     disabled={isPending || cartData.totalDays === 0}
-                    className={`inline-flex items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition ${
+                    className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition sm:w-full ${
                       isPending || cartData.totalDays === 0
                         ? "cursor-not-allowed bg-slate-200 text-slate-400"
                         : "bg-blue-600 text-white hover:bg-blue-700"

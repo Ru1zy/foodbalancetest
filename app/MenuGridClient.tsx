@@ -175,12 +175,12 @@ export default function MenuGridClient({ menuItems }: Props) {
     if (isSushka) {
       return (
         <div className="mb-4 last:mb-0">
-          <div className="mb-3 text-xl font-extrabold uppercase tracking-wider text-blue-600 mt-6">
+          <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-blue-600 md:text-xl">
             {title}
           </div>
           <ul className="space-y-1">
             {options.map((opt, idx) => (
-              <li key={idx} className="text-sm text-gray-700">
+              <li key={idx} className="break-words text-sm text-gray-700">
                 {opt.full}
                 {opt.short && opt.short !== opt.full && (
                   <span className="text-xs text-gray-500"> ({opt.short})</span>
@@ -198,7 +198,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
     return (
       <div className="mb-4 last:mb-0">
-        <div className="mb-3 text-xl font-extrabold uppercase tracking-wider text-blue-600 mt-6">
+        <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-blue-600 md:text-xl">
           {title}
         </div>
         <div className="space-y-2">
@@ -217,9 +217,9 @@ export default function MenuGridClient({ menuItems }: Props) {
                       : "border-gray-200 bg-white"
                   } ${disabled ? "opacity-50" : ""}`}
                 >
-                  <div className="font-medium text-gray-800">{opt.full}</div>
+                  <div className="break-words font-medium text-gray-800">{opt.full}</div>
                   {opt.short && opt.short !== opt.full && (
-                    <div className="text-xs text-gray-500">{opt.short}</div>
+                    <div className="break-words text-xs text-gray-500">{opt.short}</div>
                   )}
                   {options.length > 1 && (
                     <div className="mt-1 text-[9px] text-blue-500">ВАРІАНТ {idx + 1}</div>
@@ -283,15 +283,9 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   const canProceedToCheckout = wizardFilterActive ? allWizardDaysComplete : completedDaysCount > 0;
 
-  const gridColsClass =
-    sorted.length === 1 ? 'max-w-sm grid-cols-1' :
-    sorted.length === 2 ? 'max-w-3xl sm:grid-cols-2' :
-    sorted.length === 3 ? 'max-w-5xl sm:grid-cols-2 lg:grid-cols-3' :
-    'max-w-7xl sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
-
   return (
     <>
-      <div className="mx-auto max-w-7xl p-4 pb-28 sm:p-6 sm:pb-32">
+      <div className="mx-auto max-w-7xl p-4 pb-28 md:p-6 md:pb-32">
         {step === 3 && (
           <div className="mb-4">
             <button
@@ -306,7 +300,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
         {!hidePackageSwitcher && (
           <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-            <div className="inline-flex rounded-xl bg-gray-100 p-1 shadow-inner">
+            <div className="flex flex-wrap justify-center gap-1 rounded-xl bg-gray-100 p-1 shadow-inner">
               {PACKAGES.map((type) => (
                 <button
                   key={type}
@@ -330,7 +324,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
-          <div className={`mx-auto grid gap-6 justify-center ${gridColsClass}`}>
+          <div className="mx-auto grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {sorted.map((item) => {
               const day = dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`;
               const { dishes } = item;
@@ -356,10 +350,10 @@ export default function MenuGridClient({ menuItems }: Props) {
                       />
                     </div>
                   )}
-                  <div className="p-5">
-                    <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-3">
-                      <h3 className="text-xl font-bold text-gray-900">{day}</h3>
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase">
+                  <div className="p-4 sm:p-5">
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-50 pb-3">
+                      <h3 className="break-words text-lg font-bold text-gray-900 sm:text-xl">{day}</h3>
+                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold uppercase text-gray-500">
                         {selectedPackageRaw ?? "—"}
                       </span>
                     </div>
@@ -384,7 +378,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                     <MealSection itemId={item.id} category="extra" title="Додаткова страва (Sport)" options={dishes.extra} disabled={!selectable} />
                   </div>
 
-                  <div className="mt-4 border-t border-gray-50 pt-3 flex items-center justify-between">
+                  <div className="mt-4 flex flex-col gap-3 border-t border-gray-50 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     <CircularProgress
                       current={dayProgress.selectedCount}
                       total={packageLimit}
@@ -431,8 +425,8 @@ export default function MenuGridClient({ menuItems }: Props) {
 
       {/* Fixed Bottom Checkout Button */}
       {canProceedToCheckout && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 shadow-lg">
-          <div className="mx-auto max-w-7xl flex items-center justify-between gap-4">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white/95 px-4 py-3 shadow-lg backdrop-blur-sm sm:px-6 sm:py-4">
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="text-sm font-semibold text-gray-700">
                 Днів зібрано: <span className="text-blue-600">{completedDaysCount}</span>
@@ -440,7 +434,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             </div>
             <Link
               href="/checkout"
-              className="flex-1 max-w-md rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-center text-base font-bold text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
+              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-center text-base font-bold text-white shadow-lg transition-all hover:shadow-xl sm:w-auto sm:min-w-[320px]"
             >
               Перейти до оформлення →
             </Link>

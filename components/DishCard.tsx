@@ -21,7 +21,7 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
       type="button"
       disabled={disabled}
       onClick={handleClick}
-      className={`relative w-full rounded-xl p-4 text-left transition-colors ${
+      className={`relative w-full overflow-hidden rounded-xl p-3 pr-12 text-left transition-colors md:p-4 md:pr-14 ${
         isSelected
           ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg"
           : "bg-white text-gray-800 shadow-sm hover:shadow-md border border-gray-200 hover:border-blue-300"
@@ -44,17 +44,17 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
         </div>
       )}
 
-      <div>
-        <div className={`font-semibold text-sm mb-1 ${isSelected ? "text-white" : "text-gray-900"}`}>
+      <div className="min-w-0">
+        <div className={`mb-1 break-words text-sm font-semibold leading-snug ${isSelected ? "text-white" : "text-gray-900"}`}>
           {dishName}
         </div>
         {dishShort && dishShort !== dishName && (
-          <div className={`text-xs ${isSelected ? "text-white/80" : "text-gray-500"}`}>
+          <div className={`break-words text-xs leading-snug ${isSelected ? "text-white/80" : "text-gray-500"}`}>
             {dishShort}
           </div>
         )}
         {variantNumber !== undefined && (
-          <div className={`mt-2 text-[9px] font-bold tracking-wider ${isSelected ? "text-white/90" : "text-blue-500"}`}>
+          <div className={`mt-2 break-words text-[9px] font-bold tracking-wider ${isSelected ? "text-white/90" : "text-blue-500"}`}>
             ВАРІАНТ {variantNumber}
           </div>
         )}

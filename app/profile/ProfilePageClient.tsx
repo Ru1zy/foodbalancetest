@@ -65,19 +65,19 @@ export default function ProfilePageClient({ user, orders }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6">
       <div className="mx-auto max-w-5xl">
-        <h1 className="mb-8 text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        <h1 className="mb-8 text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent sm:text-4xl">
           Профіль
         </h1>
 
         {/* Settings Section */}
-        <div className="mb-8 rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-8 shadow-xl">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="mb-8 rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-xl backdrop-blur-sm sm:p-8">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-2xl font-bold text-slate-900">Налаштування</h2>
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl sm:w-auto"
             >
               <span>{isEditing ? "✕" : "✏️"}</span>
               <span>{isEditing ? "Скасувати" : "Редагувати"}</span>
@@ -133,7 +133,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
               </div>
               <button
                 type="submit"
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl hover:scale-105"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:shadow-xl sm:w-auto"
               >
                 <span>💾</span>
                 <span>Зберегти</span>
@@ -162,7 +162,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
         </div>
 
         {/* Order History Section */}
-        <div className="rounded-2xl border border-slate-200 bg-white/80 backdrop-blur-sm p-8 shadow-xl">
+        <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-xl backdrop-blur-sm sm:p-8">
           <h2 className="mb-6 text-2xl font-bold text-slate-900">Історія замовлень</h2>
           {orders.length === 0 ? (
             <div className="rounded-xl bg-slate-50 p-12 text-center">
@@ -176,12 +176,12 @@ export default function ProfilePageClient({ user, orders }: Props) {
                 return (
                   <div
                     key={order.id}
-                    className="rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm hover:shadow-md transition"
+                    className="overflow-hidden rounded-xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm transition hover:shadow-md sm:p-6"
                   >
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-                      <div>
-                        <p className="text-lg font-bold text-slate-900">
+                      <div className="min-w-0">
+                        <p className="break-words text-lg font-bold text-slate-900">
                           {order.packageType}
                         </p>
                         <p className="text-sm text-slate-600 mt-1">
@@ -205,7 +205,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
                     {order.resolvedDays.length > 0 && (
                       <div className="space-y-3">
                         {order.resolvedDays.map((day, dayIndex) => (
-                          <div key={dayIndex} className="rounded-lg bg-slate-50 p-4 border border-slate-200">
+                          <div key={dayIndex} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                             <p className="text-sm font-bold text-slate-900 mb-3">
                               📅 День {dayIndex + 1} — {formatShortDate(day.date)}
                             </p>
@@ -214,7 +214,7 @@ export default function ProfilePageClient({ user, orders }: Props) {
                                 {day.dishes.map((dish, dishIndex) => (
                                   <li key={dishIndex} className="flex items-start gap-2 text-sm text-slate-700">
                                     <span className="text-blue-600 mt-0.5">•</span>
-                                    <span>{dish}</span>
+                                    <span className="break-words">{dish}</span>
                                   </li>
                                 ))}
                               </ul>
