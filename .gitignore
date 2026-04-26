@@ -26,6 +26,10 @@ build
 # misc
 .DS_Store
 *.pem
+Thumbs.db
+*.swp
+*.swo
+*~
 
 # debug
 npm-debug.log*
@@ -56,4 +60,16 @@ README.md
 TELEGRAM_AUTH_HISTORY.md
 TEST_INSTRUCTIONS.md
 build-output.txt
-.gitignore
+
+# Claude Code configuration
+.claude/
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+.fleet/
+
+# OS
+.DS_Store
+Thumbs.db
