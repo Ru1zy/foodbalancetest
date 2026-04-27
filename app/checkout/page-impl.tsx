@@ -433,8 +433,8 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
-      <section className="mx-auto max-w-6xl">
+    <main className="flex-1 flex flex-col bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
+      <section className="flex-1 mx-auto w-full max-w-6xl">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700 active:scale-95"

@@ -86,7 +86,7 @@ export default function DateSelector({ menuItems }: Props) {
         <span className="font-semibold text-gray-900">{menuWeekMondayLabel}</span>
         {NEXT_WEEK_OPEN ? ", замовлення на наступний тиждень" : ""}).
       </p>
-      <div className="mx-auto grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-4xl mx-auto w-full">
         {selectableDays.map((dow) => {
           const key = String(dow);
           const on = selectedDates.includes(key);
@@ -95,7 +95,7 @@ export default function DateSelector({ menuItems }: Props) {
               key={dow}
               type="button"
               onClick={() => toggleDay(dow)}
-              className={`rounded-2xl border-2 px-6 py-5 text-base font-bold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+              className={`w-full sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] rounded-2xl border-2 px-6 py-5 text-base font-bold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
                 on
                   ? "border-emerald-500 bg-emerald-50 text-emerald-900"
                   : "border-gray-100 bg-white text-gray-700 hover:border-gray-200"

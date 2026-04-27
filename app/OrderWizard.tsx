@@ -48,7 +48,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
   switch (step) {
     case 1:
       return (
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-6">
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center gap-6 px-4 sm:px-6 md:px-8">
           <div className="flex items-center justify-center gap-2">
             {([1, 2, 3] as const).map((n) => (
               <div
@@ -65,7 +65,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
       );
     case 2:
       return (
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-6">
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center gap-6 px-4 sm:px-6 md:px-8">
           <div className="flex items-center justify-center gap-2">
             {([1, 2, 3] as const).map((n) => (
               <div
@@ -82,7 +82,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
       );
     case 3:
       return (
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
+        <div className="w-full max-w-6xl mx-auto flex flex-col items-center text-center gap-6 px-4 sm:px-6 md:px-8">
           <div className="flex items-center justify-center gap-2">
             {([1, 2, 3] as const).map((n) => (
               <div

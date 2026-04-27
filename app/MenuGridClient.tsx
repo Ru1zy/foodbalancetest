@@ -348,7 +348,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
-          <div className="mx-auto flex flex-wrap justify-center items-start gap-6">
+          <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
             {sorted.map((item) => {
               const day = dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`;
               const { dishes } = item;

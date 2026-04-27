@@ -38,7 +38,7 @@ export default async function Home() {
 
   return (
     <main className="relative min-h-screen overflow-x-hidden">
-      <section className="mx-auto max-w-7xl px-4 py-16 md:px-8 lg:px-16">
+      <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 md:px-8 lg:px-16">
         {/* Hero Section */}
         <div className="mb-16 text-center relative">
           <div className="inline-block mb-6 animate-float">
@@ -47,11 +47,11 @@ export default async function Home() {
             </div>
           </div>
 
-          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tighter drop-shadow-md sm:text-5xl md:text-7xl lg:text-8xl">
+          <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
             <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span> <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
           </h1>
 
-          <p className="text-2xl font-semibold text-slate-600 mb-4">
+          <p className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-600 mb-4">
             Здорове харчування з доставкою
           </p>
 
@@ -94,9 +94,7 @@ export default async function Home() {
             <p className="text-lg text-gray-500">Незабаром з’являться нові смачні страви</p>
           </div>
         ) : (
-          <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
-            <OrderWizard menuItems={menuItems} tariffs={tariffs} />
-          </div>
+          <OrderWizard menuItems={menuItems} tariffs={tariffs} />
         )}
       </section>
 

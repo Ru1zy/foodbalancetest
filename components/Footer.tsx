@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Instagram, Video, Phone } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -15,7 +16,10 @@ export default function Footer() {
         {/* Column 2: Delivery Schedule */}
         <div>
           <h3 className="text-lg font-bold text-slate-800 mb-4">Графік доставки</h3>
-          <p className="text-sm text-slate-600 font-medium">Щодня: 17:00 - 20:30</p>
+          <p className="text-sm font-medium text-slate-800">Неділя - П&apos;ятниця: 17:00 - 20:30</p>
+          <p className="text-xs text-emerald-600 font-medium mt-1 mb-2">
+            У п&apos;ятницю доставляємо раціони одразу на вихідні (суботу та неділю).
+          </p>
           <p className="text-xs text-slate-500 mt-2">
             Кур&apos;єр зв&apos;яжеться з вами за 15 хвилин до прибуття.
           </p>
@@ -25,24 +29,24 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-bold text-slate-800 mb-4">Контакти</h3>
           <div className="flex flex-col space-y-3 text-sm text-slate-600">
-            <a href="tel:+380000000000" className="hover:text-emerald-600 transition-colors">
-              +38 (000) 000-00-00
+            <a href="tel:+380000000000" className="flex items-center gap-2 hover:text-emerald-600 transition-colors">
+              <Phone className="w-4 h-4" /> +38 (000) 000-00-00
             </a>
             <a 
               href="https://instagram.com/food.balance.zp" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-emerald-600 transition-colors"
+              className="flex items-center gap-2 hover:text-emerald-600 transition-colors"
             >
-              Instagram: @food.balance.zp
+              <Instagram className="w-4 h-4" /> Instagram: @food.balance.zp
             </a>
             <a 
               href="https://www.tiktok.com/@food.balance.zp" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-emerald-600 transition-colors"
+              className="flex items-center gap-2 hover:text-emerald-600 transition-colors"
             >
-              TikTok: @food.balance.zp
+              <Video className="w-4 h-4" /> TikTok: @food.balance.zp
             </a>
           </div>
         </div>
