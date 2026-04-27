@@ -66,14 +66,14 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">{option.title}</h3>
+                  <h3 className="text-lg font-bold text-slate-700">{option.title}</h3>
                   <p className="mt-1 text-sm text-gray-600">{option.kcal}</p>
                   <p className="text-sm font-semibold text-gray-800">{option.price}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setPreviewPkg(option)}
-                  className="mt-auto rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                  className="mt-auto rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
                 >
                   Обрати
                 </button>
@@ -97,7 +97,7 @@ export default function PackageSelector({ tariffs }: Props) {
             </div>
             <div className="flex flex-1 flex-col gap-3 p-5">
               <div className="text-center">
-                <h3 className="text-lg font-bold text-gray-900">Назад</h3>
+                <h3 className="text-lg font-bold text-slate-700">Назад</h3>
                 <p className="mt-1 text-sm text-gray-600">Повернутися до вибору тарифу</p>
               </div>
             </div>
@@ -114,7 +114,7 @@ export default function PackageSelector({ tariffs }: Props) {
               className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-sm"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="mb-4 text-2xl font-bold text-gray-900">{previewPkg.title}</h2>
+              <h2 className="mb-4 text-2xl font-bold text-slate-700">{previewPkg.title}</h2>
 
               {previewPkg.imageUrl ? (
                 <div className="mb-4 overflow-hidden rounded-lg bg-gray-100">
@@ -150,7 +150,7 @@ export default function PackageSelector({ tariffs }: Props) {
                 <button
                   type="button"
                   onClick={() => handleSelectPackage(previewPkg)}
-                  className="flex-1 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                  className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
                 >
                   ✅ Обрати цей тариф
                 </button>
@@ -178,7 +178,7 @@ export default function PackageSelector({ tariffs }: Props) {
           />
         ))}
       </div>
-      <h2 className="mb-6 text-2xl font-bold text-gray-900">Оберіть тариф</h2>
+      <h2 className="mb-6 text-2xl font-bold text-slate-700">Оберіть тариф</h2>
       <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {mainPackages.map((pkg) => {
           const active = selectedPackage === pkg.name;
@@ -203,14 +203,14 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-3 p-5">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900">{pkg.title}</h3>
+                  <h3 className="text-lg font-bold text-slate-700">{pkg.title}</h3>
                   <p className="mt-1 text-sm text-gray-600">{pkg.kcal}</p>
                   <p className="text-sm font-semibold text-gray-800">{pkg.price}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setPreviewPkg(pkg)}
-                  className="mt-auto rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                  className="mt-auto rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
                 >
                   Обрати
                 </button>
@@ -235,14 +235,14 @@ export default function PackageSelector({ tariffs }: Props) {
             </div>
             <div className="flex flex-1 flex-col gap-3 p-5">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Сушка</h3>
+                <h3 className="text-lg font-bold text-slate-700">Сушка</h3>
                 <p className="mt-1 text-sm text-gray-600">≈ 1600–1800 ккал</p>
                 <p className="text-sm font-semibold text-gray-800">від 500 ₴</p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowSushkaOptions(true)}
-                className="mt-auto rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                className="mt-auto rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
                 Обрати
               </button>
@@ -261,7 +261,7 @@ export default function PackageSelector({ tariffs }: Props) {
             className="relative w-full max-w-2xl rounded-3xl bg-white p-6 shadow-sm"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-4 text-2xl font-bold text-gray-900">{previewPkg.title}</h2>
+            <h2 className="mb-4 text-2xl font-bold text-slate-700">{previewPkg.title}</h2>
 
             {previewPkg.imageUrl ? (
               <div className="mb-4 overflow-hidden rounded-lg bg-gray-100">
@@ -297,7 +297,7 @@ export default function PackageSelector({ tariffs }: Props) {
               <button
                 type="button"
                 onClick={() => handleSelectPackage(previewPkg)}
-                className="flex-1 rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+                className="flex-1 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
                 ✅ Обрати цей тариф
               </button>

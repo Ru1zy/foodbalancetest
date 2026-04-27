@@ -17,14 +17,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FoodBalance - Здорове харчування з доставкою",
+  title: "Food Balance - Здорове харчування з доставкою",
   description: "Замовте здорове харчування з доставкою додому",
   icons: {
     icon: "/foodbalancelogo.png",
     apple: "/foodbalancelogo.png",
   },
   openGraph: {
-    title: "FoodBalance - Здорове харчування з доставкою",
+    title: "Food Balance - Здорове харчування з доставкою",
     description: "Замовте здорове харчування з доставкою додому",
     images: ["/foodbalancelogo.png"],
   },
@@ -40,7 +40,7 @@ export default function RootLayout({
       lang="uk"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="relative flex min-h-full flex-col overflow-x-hidden bg-gradient-to-b from-slate-50 to-white">
+      <body className="relative flex min-h-full flex-col overflow-x-hidden bg-slate-50">
         <GradientOrbs />
         <AnimatedBackground />
         <Header />

@@ -52,8 +52,8 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
       return <DateSelector menuItems={menuItems} />;
     case 3:
       return (
-        <div className="transition-opacity duration-300 ease-out motion-reduce:transition-none">
-          <div className="mb-4 flex items-center justify-center gap-2">
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
+          <div className="flex items-center justify-center gap-2">
             {([1, 2, 3] as const).map((n) => (
               <div
                 key={n}
@@ -64,7 +64,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
               />
             ))}
           </div>
-          <h2 className="mb-4 text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 text-center">
             {selectedPackage === "Sushka" ? "Підтвердження (Сушка)" : "Оберіть страви"}
           </h2>
           {selectedPackage === "Sushka" ? (

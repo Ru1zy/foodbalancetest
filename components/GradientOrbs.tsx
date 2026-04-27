@@ -13,7 +13,7 @@ export default function GradientOrbs() {
 
       {/* Grid pattern */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.02]"
         style={{
           backgroundImage: `
             linear-gradient(to right, #6366f1 1px, transparent 1px),

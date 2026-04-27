@@ -39,7 +39,7 @@ export async function POST(request: Request) {
 
       await sendTelegramRequest("sendMessage", {
         chat_id: chatId,
-        text: "🔐 Підтвердіть вхід на сайт FoodBalance\n\nНатисніть кнопку нижче для авторизації.",
+        text: "🔐 Підтвердіть вхід на сайт Food Balance\n\nНатисніть кнопку нижче для авторизації.",
         reply_markup: {
           inline_keyboard: [[
             { text: "✅ Підтвердити вхід", callback_data: `confirm_${token}` }
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
         await sendTelegramRequest("editMessageText", {
           chat_id: update.callback_query.message.chat.id,
           message_id: update.callback_query.message.message_id,
-          text: "✅ Ви успішно авторизувалися на сайті FoodBalance!"
+          text: "✅ Ви успішно авторизувалися на сайті Food Balance!"
         });
       }
 

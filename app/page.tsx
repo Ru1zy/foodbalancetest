@@ -47,11 +47,11 @@ export default async function Home() {
             </div>
           </div>
 
-          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tight text-slate-800 sm:text-5xl md:text-7xl lg:text-8xl">
-            FoodBalance
+          <h1 className="mb-6 text-4xl font-black leading-tight tracking-tighter drop-shadow-md sm:text-5xl md:text-7xl lg:text-8xl">
+            <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span><span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
           </h1>
 
-          <p className="text-2xl font-semibold text-slate-700 mb-4">
+          <p className="text-2xl font-semibold text-slate-600 mb-4">
             Здорове харчування з доставкою
           </p>
 
@@ -61,20 +61,20 @@ export default async function Home() {
 
           {/* Stats */}
           <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
-            <div className="rounded-2xl px-8 py-4 border border-gray-200 bg-white hover:border-gray-300">
-              <div className="text-3xl font-bold text-gray-900">
+            <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white shadow-md hover:border-gray-300">
+              <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
                 500+
               </div>
               <div className="text-sm text-gray-500 font-medium">Задоволених клієнтів</div>
             </div>
-            <div className="rounded-2xl px-8 py-4 border border-gray-200 bg-white hover:border-gray-300">
-              <div className="text-3xl font-bold text-gray-900">
+            <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white shadow-md hover:border-gray-300">
+              <div className="text-3xl font-bold bg-gradient-to-r from-orange-500 to-amber-400 bg-clip-text text-transparent">
                 1000+
               </div>
               <div className="text-sm text-gray-500 font-medium">Доставлених страв</div>
             </div>
-            <div className="rounded-2xl px-8 py-4 border border-gray-200 bg-white hover:border-gray-300">
-              <div className="text-3xl font-bold text-gray-900">
+            <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white shadow-md hover:border-gray-300">
+              <div className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-emerald-500 bg-clip-text text-transparent">
                 100%
               </div>
               <div className="text-sm text-gray-500 font-medium">Свіжі продукти</div>
@@ -94,7 +94,7 @@ export default async function Home() {
             <p className="text-lg text-gray-500">Незабаром з’являться нові смачні страви</p>
           </div>
         ) : (
-          <div className="rounded-3xl p-8 border border-gray-200 bg-white">
+          <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
             <OrderWizard menuItems={menuItems} tariffs={tariffs} />
           </div>
         )}

@@ -20,8 +20,8 @@ export default async function Header() {
               </div>
             </div>
             <div>
-              <span className="text-2xl font-black text-slate-800">
-                FoodBalance
+              <span className="text-2xl font-black text-slate-700">
+                Food Balance
               </span>
               <div className="text-xs text-gray-500 font-medium">Здорове харчування</div>
             </div>
