@@ -39,12 +39,19 @@ export default function RootLayout({
       lang="uk"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="relative flex min-h-full flex-col overflow-x-hidden bg-slate-50">
+      <body className="relative flex min-h-full flex-col overflow-x-hidden bg-slate-50 text-slate-900">
+        <GradientOrbs />
+        <AnimatedBackground />
         <Header />
         <main className="flex-grow">
           <TelegramProvider>{children}</TelegramProvider>
         </main>
         <Footer />
+      </body>
+    </html>
+  );
+}
+     <Footer />
       </body>
     </html>
   );

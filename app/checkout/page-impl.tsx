@@ -313,7 +313,7 @@ export default function CheckoutPageImpl({
             nextFieldErrors.cart = "Для тарифу Indiv максимум 3 однакові страви на день.";
             break;
           }
-        } else if (day.selectedCount !== serverPackageLimit) {
+        } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit) {
           nextFieldErrors.cart =
             `Для тарифу ${pkg} кожен день повинен містити рівно ${serverPackageLimit} страв.`;
           break;
@@ -433,8 +433,8 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="flex-1 flex flex-col bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
-      <section className="flex-1 mx-auto w-full max-w-6xl">
+    <main className="flex-1 flex flex-col min-h-[calc(100vh-theme(spacing.20))] bg-transparent px-4 py-10 text-slate-900 md:px-8">
+      <section className="flex-grow mx-auto w-full max-w-6xl">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700 active:scale-95"

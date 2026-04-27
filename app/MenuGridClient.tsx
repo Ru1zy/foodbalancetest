@@ -308,7 +308,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   return (
     <>
-      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-32">
         {step === 3 && (
           <div className="mb-4 flex justify-center">
             <button

@@ -220,9 +220,9 @@ export default function PackageSelector({ tariffs }: Props) {
           >
             <div className="relative h-56 w-full overflow-hidden bg-gray-50">
               <img 
-                src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800" 
+                src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800" 
                 alt="Sushka program" 
-                className="aspect-video h-full w-full object-cover"
+                className="aspect-video h-full w-full object-cover rounded-xl mb-4"
               />
             </div>
             <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
