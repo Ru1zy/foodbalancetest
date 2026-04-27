@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import TelegramProvider from "@/components/TelegramProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import AnimatedBackground from "@/components/AnimatedBackground";
+import GradientOrbs from "@/components/GradientOrbs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,11 +49,6 @@ export default function RootLayout({
           <TelegramProvider>{children}</TelegramProvider>
         </main>
         <Footer />
-      </body>
-    </html>
-  );
-}
-     <Footer />
       </body>
     </html>
   );

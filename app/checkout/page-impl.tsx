@@ -433,8 +433,8 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="flex-1 flex flex-col min-h-[calc(100vh-theme(spacing.20))] bg-transparent px-4 py-10 text-slate-900 md:px-8">
-      <section className="flex-grow mx-auto w-full max-w-6xl">
+    <main className="flex-1 flex flex-col min-h-screen bg-slate-50/50 px-4 py-10 text-slate-900 md:px-8">
+      <section className="flex-grow mx-auto w-full max-w-6xl pb-20">
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700 active:scale-95"
@@ -710,6 +710,10 @@ export default function CheckoutPageImpl({
           </section>
         </div>
       </section>
+    </main>
+  );
+}
+</section>
     </main>
   );
 }
