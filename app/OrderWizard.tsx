@@ -47,9 +47,39 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
 
   switch (step) {
     case 1:
-      return <PackageSelector tariffs={tariffs} />;
+      return (
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-6">
+          <div className="flex items-center justify-center gap-2">
+            {([1, 2, 3] as const).map((n) => (
+              <div
+                key={n}
+                className={`h-2 w-8 rounded-full transition-colors ${
+                  n === 1 ? "bg-emerald-500" : "bg-emerald-100"
+                }`}
+                aria-hidden
+              />
+            ))}
+          </div>
+          <PackageSelector tariffs={tariffs} />
+        </div>
+      );
     case 2:
-      return <DateSelector menuItems={menuItems} />;
+      return (
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center gap-6">
+          <div className="flex items-center justify-center gap-2">
+            {([1, 2, 3] as const).map((n) => (
+              <div
+                key={n}
+                className={`h-2 w-8 rounded-full transition-colors ${
+                  n === 2 ? "bg-emerald-500" : "bg-emerald-100"
+                }`}
+                aria-hidden
+              />
+            ))}
+          </div>
+          <DateSelector menuItems={menuItems} />
+        </div>
+      );
     case 3:
       return (
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center text-center gap-6">
@@ -58,7 +88,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
               <div
                 key={n}
                 className={`h-2 w-8 rounded-full transition-colors ${
-                  n === 3 ? "bg-blue-600" : "bg-blue-200"
+                  n === 3 ? "bg-emerald-500" : "bg-emerald-100"
                 }`}
                 aria-hidden
               />

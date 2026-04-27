@@ -358,7 +358,7 @@ export default function MenuGridClient({ menuItems }: Props) {
               return (
                 <div
                   key={item.id}
-                  className={`w-full sm:max-w-md md:w-[calc(50%-1.5rem)] lg:w-[calc(33.333%-1.5rem)] shrink-0 group flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all ${
+                  className={`w-full min-w-[320px] max-w-md mx-auto shrink-0 group flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all ${
                     selectable ? "hover:shadow-md" : "opacity-50"
                   }`}
                 >

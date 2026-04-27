@@ -16,7 +16,7 @@ export default async function Header() {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative">
               <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl drop-shadow-sm">
-                <img src="/foodbalancelogo.png" alt="FoodBalance" className="h-full w-full object-cover mix-blend-multiply" />
+                <img src="/foodbalancelogo.png" alt="Food Balance" className="h-full w-full object-cover mix-blend-multiply" />
               </div>
             </div>
             <div>
