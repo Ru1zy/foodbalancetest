@@ -28,10 +28,10 @@ export default function DishCard({ dishName, dishShort, variantNumber, isSelecte
       disabled={disabled}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
-      className={`w-full rounded-2xl p-4 text-left transition-all duration-200 md:p-5 ${
+      className={`w-full rounded-2xl p-4 text-left transition-all duration-200 ease-out md:p-5 active:scale-95 ${
         isSelected
-          ? "bg-emerald-50/70 border-2 border-emerald-500 rounded-2xl shadow-md"
-          : "bg-white border border-gray-150 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.08)] transition-all duration-200"
+          ? "bg-emerald-50 border-2 border-emerald-500 shadow-md"
+          : "bg-white border border-gray-100 shadow-sm hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.08)]"
       } ${disabled ? "pointer-events-none opacity-50" : "cursor-pointer"} flex items-center`}
     >
       <div className="flex-1 text-lg md:text-xl font-semibold text-slate-700 break-words">

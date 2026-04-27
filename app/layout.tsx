@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import TelegramProvider from "@/components/TelegramProvider";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import GradientOrbs from "@/components/GradientOrbs";
 import "./globals.css";
@@ -44,7 +45,10 @@ export default function RootLayout({
         <GradientOrbs />
         <AnimatedBackground />
         <Header />
-        <TelegramProvider>{children}</TelegramProvider>
+        <main className="flex-grow">
+          <TelegramProvider>{children}</TelegramProvider>
+        </main>
+        <Footer />
       </body>
     </html>
   );

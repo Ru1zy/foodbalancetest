@@ -408,7 +408,7 @@ export default function CheckoutPageImpl({
           </div>
 
           {submitted.deliveryDateLabel && (
-            <div className="mt-4 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm text-blue-900">
+            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
               Перша доставка запланована на <span className="font-semibold">{submitted.deliveryDateLabel}</span>.
             </div>
           )}
@@ -416,13 +416,13 @@ export default function CheckoutPageImpl({
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+              className="inline-flex items-center justify-center rounded-xl bg-gray-900 px-6 py-4 text-base font-bold text-white transition-all duration-200 ease-out hover:bg-emerald-600 active:scale-95 shadow-sm hover:shadow-md"
             >
               Повернутися до меню
             </Link>
             <Link
               href="/profile"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-4 text-base font-bold text-gray-700 transition-all duration-200 ease-out hover:bg-gray-50 active:scale-95"
             >
               Перейти до профілю
             </Link>
@@ -437,14 +437,14 @@ export default function CheckoutPageImpl({
       <section className="mx-auto max-w-6xl">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 transition hover:text-blue-800"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700 active:scale-95"
         >
           <span>←</span>
           <span>Повернутися до меню</span>
         </Link>
 
         <div className="mt-5 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">Checkout</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Checkout</p>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             Завершення замовлення
           </h1>
@@ -519,7 +519,7 @@ export default function CheckoutPageImpl({
                         <button
                           type="button"
                           onClick={() => handleRemoveDay(day)}
-                          className="inline-flex shrink-0 items-center self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50"
+                          className="inline-flex shrink-0 items-center self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 active:scale-95"
                         >
                           Видалити
                         </button>
@@ -547,7 +547,7 @@ export default function CheckoutPageImpl({
             </div>
 
             {!customerProfile.isAuthenticated && (
-              <div className="mb-6 rounded-3xl border border-dashed border-blue-200 bg-blue-50 px-5 py-5">
+              <div className="mb-6 rounded-3xl border border-dashed border-emerald-200 bg-emerald-50 px-5 py-5">
                 <TelegramDeepLinkAuth />
               </div>
             )}
@@ -580,7 +580,7 @@ export default function CheckoutPageImpl({
                     className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
                       fieldErrors.name
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                        : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
                     }`}
                     defaultValue={customerProfile.name ?? ""}
                     name="name"
@@ -601,7 +601,7 @@ export default function CheckoutPageImpl({
                     className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
                       fieldErrors.phone
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                        : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
                     }`}
                     defaultValue={normalizedPhone}
                     inputMode="tel"
@@ -624,7 +624,7 @@ export default function CheckoutPageImpl({
                   className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
                     fieldErrors.address
                       ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                      : "border-slate-200 focus:border-blue-500 focus:ring-blue-100"
+                      : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
                   }`}
                   defaultValue={customerProfile.address ?? ""}
                   name="address"
@@ -643,7 +643,7 @@ export default function CheckoutPageImpl({
                     Кількість приборів
                   </span>
                   <select
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                     defaultValue={String(customerProfile.cutlery ?? 0)}
                     name="cutlery"
                   >
@@ -660,7 +660,7 @@ export default function CheckoutPageImpl({
                     Бажаний час доставки
                   </span>
                   <select
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                     defaultValue={normalizedDeliveryTime}
                     name="deliveryTime"
                   >
@@ -677,7 +677,7 @@ export default function CheckoutPageImpl({
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-900">Коментар до замовлення</span>
                 <textarea
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                   defaultValue={customerProfile.notes ?? ""}
                   name="comment"
                   placeholder="Побажання, деталі для курʼєра або зручний орієнтир"
@@ -696,10 +696,10 @@ export default function CheckoutPageImpl({
                   <button
                     type="submit"
                     disabled={isPending || cartData.totalDays === 0}
-                    className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition sm:w-full ${
+                    className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition-all duration-200 ease-out active:scale-95 sm:w-full ${
                       isPending || cartData.totalDays === 0
                         ? "cursor-not-allowed bg-slate-200 text-slate-400"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                     }`}
                   >
                     {isPending ? "Надсилаємо..." : "Підтвердити замовлення"}

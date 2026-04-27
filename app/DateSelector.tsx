@@ -65,19 +65,8 @@ export default function DateSelector({ menuItems }: Props) {
   );
 
   const shell = (title: string, children: ReactNode) => (
-    <div className="transition-opacity duration-300 ease-out motion-reduce:transition-none">
-      <div className="mb-6 flex items-center justify-center gap-2">
-        {([1, 2, 3] as const).map((n) => (
-          <div
-            key={n}
-            className={`h-2 w-8 rounded-full transition-colors ${
-              n === 2 ? "bg-blue-600" : n < 2 ? "bg-blue-200" : "bg-gray-200"
-            }`}
-            aria-hidden
-          />
-        ))}
-      </div>
-      <h2 className="mb-6 text-2xl font-bold text-gray-900">{title}</h2>
+    <div className="w-full max-w-4xl mx-auto transition-opacity duration-300 ease-out motion-reduce:transition-none">
+      <h2 className="mb-6 text-3xl font-black text-gray-900 text-center">{title}</h2>
       {children}
     </div>
   );
@@ -85,19 +74,19 @@ export default function DateSelector({ menuItems }: Props) {
   if (!pkg) {
     return shell(
       "Оберіть дні доставки",
-      <p className="text-sm text-gray-600">Спочатку оберіть тариф (крок 1).</p>,
+      <p className="text-center text-gray-500">Спочатку оберіть тариф (крок 1).</p>,
     );
   }
 
   return shell(
     "Оберіть дні доставки",
     <>
-      <p className="mb-2 text-sm text-gray-600">
+      <p className="mb-8 text-center text-gray-600 max-w-2xl mx-auto">
         Доступні лише дні поточного тижня меню, для яких ще не минув дедлайн (
-        <span className="font-medium text-gray-800">понеділок: {menuWeekMondayLabel}</span>
+        <span className="font-semibold text-gray-900">{menuWeekMondayLabel}</span>
         {NEXT_WEEK_OPEN ? ", замовлення на наступний тиждень" : ""}).
       </p>
-      <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      <div className="mx-auto grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3">
         {selectableDays.map((dow) => {
           const key = String(dow);
           const on = selectedDates.includes(key);
@@ -106,10 +95,10 @@ export default function DateSelector({ menuItems }: Props) {
               key={dow}
               type="button"
               onClick={() => toggleDay(dow)}
-              className={`rounded-2xl border-2 px-4 py-4 text-sm font-semibold transition ${
+              className={`rounded-2xl border-2 px-6 py-5 text-base font-bold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
                 on
-                  ? "border-blue-500 bg-blue-50 text-blue-900"
-                  : "border-gray-200 bg-white text-gray-800 hover:border-gray-300"
+                  ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                  : "border-gray-100 bg-white text-gray-700 hover:border-gray-200"
               }`}
             >
               {dayNames[dow] ?? `День ${dow}`}
@@ -117,11 +106,11 @@ export default function DateSelector({ menuItems }: Props) {
           );
         })}
       </div>
-      <div className="mt-8 flex flex-col-reverse items-stretch justify-center gap-3 sm:flex-row sm:justify-center">
+      <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-800 transition hover:bg-gray-50"
+          className="w-full sm:w-auto min-w-[140px] rounded-xl border border-gray-200 bg-white px-8 py-4 text-lg font-bold text-gray-700 transition hover:bg-gray-50 active:scale-95"
         >
           Назад
         </button>
@@ -129,9 +118,9 @@ export default function DateSelector({ menuItems }: Props) {
           type="button"
           disabled={selectedDates.length === 0}
           onClick={() => setStep(3)}
-          className={`rounded-xl px-6 py-3 text-sm font-semibold transition ${
+          className={`w-full sm:w-auto min-w-[200px] rounded-xl px-8 py-4 text-lg font-bold transition-all duration-200 ease-out active:scale-95 ${
             selectedDates.length > 0
-              ? "bg-gray-900 text-white hover:bg-blue-600"
+              ? "bg-gray-900 text-white hover:bg-emerald-600 hover:shadow-lg"
               : "cursor-not-allowed bg-gray-200 text-gray-400"
           }`}
         >
