@@ -6,7 +6,6 @@ import { useOrderStore } from "@/lib/orderStore";
 import DateSelector from "./DateSelector";
 import MenuGridClient from "./MenuGridClient";
 import PackageSelector from "./PackageSelector";
-import SushkaPreview from "./SushkaPreview";
 
 type Tariff = {
   id: string;
@@ -26,7 +25,6 @@ type Props = {
 
 export default function OrderWizard({ menuItems, tariffs }: Props) {
   const step = useOrderStore((s) => s.step);
-  const selectedPackage = useOrderStore((s) => s.selectedPackage);
 
   if (!menuItems.length) {
     return (
@@ -94,14 +92,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
               />
             ))}
           </div>
-          <h2 className="text-xl font-bold text-gray-900 text-center">
-            {selectedPackage === "Sushka" ? "Підтвердження (Сушка)" : "Оберіть страви"}
-          </h2>
-          {selectedPackage === "Sushka" ? (
-            <SushkaPreview />
-          ) : (
-            <MenuGridClient menuItems={menuItems} />
-          )}
+          <MenuGridClient menuItems={menuItems} />
         </div>
       );
     default:

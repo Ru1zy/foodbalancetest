@@ -10,8 +10,6 @@ const navLinks = [
   { href: "/admin/clients", label: "Клієнти (CRM)", icon: "👥" },
   { href: "/admin/menu", label: "Меню", icon: "🍽️" },
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
-  { href: "/admin/broadcast", label: "Розсилка", icon: "📢" },
-  { href: "/admin/dm", label: "Повідомлення", icon: "💬" },
 ];
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
@@ -42,7 +40,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                   <span className="text-xl">{link.icon}</span>
                   <span>{link.label}</span>
                   {isActive && (
-                    <span className="ml-auto h-2 w-2 rounded-full bg-white animate-pulse"></span>
+                    <span className="ml-auto h-2 w-2 rounded-full bg-white"></span>
                   )}
                 </Link>
               );

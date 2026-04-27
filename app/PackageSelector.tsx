@@ -219,11 +219,11 @@ export default function PackageSelector({ tariffs }: Props) {
             }`}
           >
             <div className="relative h-56 w-full overflow-hidden bg-gray-50">
-              <div className="flex h-full items-center justify-center text-gray-300">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-20 w-20">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-                </svg>
-              </div>
+              <img 
+                src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=800" 
+                alt="Sushka program" 
+                className="aspect-video h-full w-full object-cover"
+              />
             </div>
             <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
               <div>

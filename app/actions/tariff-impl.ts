@@ -49,31 +49,3 @@ export async function updateTariff(
   }
 }
 
-export async function createTariff(data: {
-  name: string;
-  title: string;
-  kcal: string;
-  price: string;
-  basePrice: number;
-  imageUrl?: string;
-}) {
-  const adminUser = await getAuthenticatedAdminUser();
-
-  if (!adminUser) {
-    throw new Error("Unauthorized: Admin access required");
-  }
-
-  try {
-    await prisma.tariff.create({
-      data,
-    });
-
-    revalidatePath("/admin/tariffs");
-    revalidatePath("/");
-
-    return { ok: true };
-  } catch (error) {
-    console.error("Failed to create tariff:", error);
-    return { ok: false, error: "Failed to create tariff" };
-  }
-}

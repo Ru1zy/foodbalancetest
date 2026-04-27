@@ -41,7 +41,7 @@ export default async function Home() {
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 md:px-8 lg:px-16">
         {/* Hero Section */}
         <div className="mb-16 text-center relative">
-          <div className="inline-block mb-6 animate-float">
+          <div className="inline-block mb-6">
             <div className="mb-4 flex justify-center">
               <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain drop-shadow-sm mix-blend-multiply" />
             </div>
@@ -85,7 +85,7 @@ export default async function Home() {
         {/* Menu Section */}
         {menuItems.length === 0 ? (
           <div className="rounded-3xl p-16 text-center border border-gray-200 bg-white">
-            <div className="mb-6 animate-float flex justify-center">
+            <div className="mb-6 flex justify-center">
               <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain border border-gray-200" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -97,11 +97,6 @@ export default async function Home() {
           <OrderWizard menuItems={menuItems} tariffs={tariffs} />
         )}
       </section>
-
-      {/* Floating elements */}
-      <div className="fixed bottom-10 right-10 rounded-full p-4 border border-gray-200 bg-white hover:border-gray-300 cursor-pointer animate-glow hidden lg:block">
-        <span className="text-3xl text-gray-900">💬</span>
-      </div>
     </main>
   );
 }

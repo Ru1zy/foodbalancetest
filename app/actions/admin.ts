@@ -871,12 +871,10 @@ export async function exportToKitchenSheet(
       ok: true,
       exported: orders.length,
     };
-  } catch (error) {
-    console.error("exportToKitchenSheet failed", error);
-
+  } catch {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "Не вдалося експортувати в Google Sheets.",
+      message: "Не вдалося експортувати в Google Sheets.",
     };
   }
 }

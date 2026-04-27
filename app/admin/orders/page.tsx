@@ -374,7 +374,7 @@ export default async function AdminOrdersPage({
                             )}
                           </div>
                         </td>
-                        <td className="sticky right-0 bg-white/95 backdrop-blur-sm px-4 py-5 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">
+                        <td className="sticky right-0 bg-white px-4 py-5 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">
                           <OrderActionButtons
                             orderId={order.id}
                             isPaid={order.isPaid}

@@ -14,7 +14,6 @@ import {
 } from "@/lib/order-selection";
 import { useOrderStore } from "@/lib/orderStore";
 import DishCard from "@/components/DishCard";
-import CircularProgress from "@/components/CircularProgress";
 
 export type { DishOption, Dishes, MenuItem } from "@/lib/menu-types";
 
@@ -477,18 +476,12 @@ export default function MenuGridClient({ menuItems }: Props) {
                     />
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-3 border-t border-gray-50 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                    <CircularProgress
-                      current={dayProgress.selectedCount}
-                      total={packageLimit}
-                      size={50}
-                      strokeWidth={5}
-                    />
+                  <div className="mt-4 flex flex-col gap-3 border-t border-gray-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
                     {dayProgress.isComplete ? (
-                      <p className="text-sm font-semibold text-green-600">День зібрано ✓</p>
+                      <p className="text-sm font-semibold text-emerald-600">День зібрано ✓</p>
                     ) : (
                       <p className="text-sm font-semibold text-gray-600">
-                        Оберіть ще {packageLimit - dayProgress.selectedCount}
+                        Обрано {dayProgress.selectedCount} з {packageLimit}
                       </p>
                     )}
                   </div>

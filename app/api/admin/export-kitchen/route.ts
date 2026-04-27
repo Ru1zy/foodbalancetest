@@ -4,15 +4,7 @@ import { google } from "googleapis";
 
 export const runtime = "nodejs";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  breakfast: "Сніданок",
-  lunch: "Обід",
-  dinner: "Вечеря",
-  snack: "Перекус",
-  extra: "Додатково",
-};
-
-async function parseOrderItems(items: unknown, orderId: string): Promise<string[]> {
+async function parseOrderItems(items: unknown, _orderId: string): Promise<string[]> {
   if (!items || typeof items !== "object") {
     return [];
   }
