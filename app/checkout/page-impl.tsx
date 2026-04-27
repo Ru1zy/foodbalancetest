@@ -156,10 +156,22 @@ export default function CheckoutPageImpl({
             return null;
           }
 
+          const isSushkaXS = pkg === "Sushka XS";
+          const limit = isSushkaXS ? 3 : 4;
+
+          const sushkaSelections: Record<string, number> = {
+            breakfast: 0,
+            lunch: 0,
+            dinner: 0,
+          };
+          if (!isSushkaXS) {
+            sushkaSelections.snack = 0;
+          }
+
           return {
             dayId,
-            selectedCount: 0,
-            selections: {} as Record<string, number>,
+            selectedCount: limit,
+            selections: sushkaSelections,
           };
         })
         .filter((day): day is NonNullable<typeof day> => day !== null);

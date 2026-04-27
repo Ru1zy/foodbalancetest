@@ -55,13 +55,27 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
 
   // For Sushka packages (XS and S), bypass strict dish selection validation
   if (cartData.packageType.includes("Sushka")) {
+    const isSushkaXS = cartData.packageType === "Sushka XS";
+    const limit = isSushkaXS ? 3 : 4;
+
     const days = (Array.isArray(cartData.days) ? cartData.days : [])
       .filter((day) => day && typeof day.dayId === "string" && (day.dayId || '').trim().length > 0)
-      .map((day) => ({
-        dayId: (day.dayId || '').trim(),
-        selectedCount: 0,
-        selections: {} as StandardSelections,
-      }));
+      .map((day) => {
+        const selections: StandardSelections = {
+          breakfast: 0,
+          lunch: 0,
+          dinner: 0,
+        };
+        if (!isSushkaXS) {
+          selections.snack = 0;
+        }
+
+        return {
+          dayId: (day.dayId || '').trim(),
+          selectedCount: limit,
+          selections,
+        };
+      });
 
     return {
       days,

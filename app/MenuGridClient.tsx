@@ -73,6 +73,8 @@ function MealSection({
   if (!options || options.length === 0) return null;
   if (!pkg) return null;
 
+  const visibleOptions = isSushka ? options.slice(0, 1) : options;
+
   if (isSushka) {
     return (
       <div className="mb-4 last:mb-0">
@@ -80,7 +82,7 @@ function MealSection({
           {title}
         </div>
         <ul className="space-y-1">
-          {options.map((opt, idx) => (
+          {visibleOptions.map((opt, idx) => (
             <li
               key={buildDishOptionKey(itemId, category, opt, idx)}
               className="break-words text-sm text-gray-700"
@@ -105,7 +107,7 @@ function MealSection({
         {title}
       </div>
       <div className="space-y-2">
-        {options.map((opt, idx) => {
+        {visibleOptions.map((opt, idx) => {
           if (indivSelected) {
             const dishId = buildIndivDishId(category, idx);
             const quantity = selections[itemId]?.[dishId] ?? 0;
