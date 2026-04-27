@@ -713,7 +713,3 @@ export default function CheckoutPageImpl({
     </main>
   );
 }
-</section>
-    </main>
-  );
-}
