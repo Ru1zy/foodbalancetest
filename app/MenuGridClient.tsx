@@ -310,7 +310,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   return (
     <>
-      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-32">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-48 md:pb-64">
         {step === 3 && (
           <div className="mb-4 flex justify-center">
             <button
@@ -517,21 +517,21 @@ export default function MenuGridClient({ menuItems }: Props) {
         </div>
       )}
 
-      {/* Fixed Bottom Checkout Button */}
-      <div className="fixed bottom-6 left-0 right-0 w-full flex justify-center px-4 pointer-events-none z-[9999]">
-        <div className="pointer-events-auto bg-white/95 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-200 rounded-full py-3 md:py-3.5 px-6 md:px-8 flex items-center justify-between gap-4 sm:gap-6 w-full max-w-lg transition-all duration-300">
-          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+      {/* Fixed Bottom Checkout Button Container */}
+      <div className="fixed bottom-0 left-0 right-0 w-full p-4 md:p-6 pointer-events-none flex justify-center z-[9999]">
+        <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-200">
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0 text-center sm:text-left">
             <div className="text-sm md:text-base font-semibold text-slate-700">
-              Днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
+              Обрано днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
             </div>
           </div>
           <Link
             href={canProceedToCheckout ? "/checkout" : "#"}
             onClick={(e) => !canProceedToCheckout && e.preventDefault()}
-            className={`text-sm md:text-base font-bold py-3 md:py-3.5 px-6 md:px-10 rounded-full shadow-md transition-all active:scale-95 whitespace-nowrap ${
+            className={`w-full sm:w-auto text-center text-sm md:text-base font-bold py-3.5 px-8 rounded-xl shadow-md transition-all active:scale-95 whitespace-nowrap ${
               canProceedToCheckout 
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg" 
-                : "bg-gray-200 text-gray-500 opacity-50 pointer-events-none"
+                : "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed"
             }`}
           >
             {canProceedToCheckout ? "Оформити замовлення →" : "Оберіть страви"}
