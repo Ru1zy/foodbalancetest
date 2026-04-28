@@ -519,18 +519,18 @@ export default function MenuGridClient({ menuItems }: Props) {
 
       {/* Fixed Bottom Checkout Button */}
       {canProceedToCheckout && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white px-4 py-3 shadow-sm sm:px-6 sm:py-4">
-          <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-sm font-semibold text-gray-700">
-                Днів зібрано: <span className="text-emerald-600">{completedDaysCount}</span>
+        <div className="fixed bottom-6 left-0 right-0 px-4 pointer-events-none flex justify-center z-50">
+          <div className="pointer-events-auto bg-white/90 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 sm:gap-6 w-full max-w-lg transition-transform duration-300">
+            <div className="flex items-center gap-2 md:gap-3 shrink-0">
+              <div className="text-sm md:text-base font-semibold text-slate-700">
+                Днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
               </div>
             </div>
             <Link
               href="/checkout"
-              className="w-full rounded-xl border border-gray-200 bg-green-50 px-6 py-3 text-center text-base font-bold text-gray-900 hover:bg-green-100 sm:w-auto sm:min-w-[320px]"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm md:text-base font-bold py-2.5 md:py-3 px-6 md:px-8 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
             >
-              Перейти до оформлення →
+              Оформити замовлення →
             </Link>
           </div>
         </div>
