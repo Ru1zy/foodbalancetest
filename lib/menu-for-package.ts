@@ -34,7 +34,7 @@ export function getMenuRowsForPackage(menuItems: MenuItem[], selectedPackage: Pa
   const templates = menuItems.filter((item) => item.packageType === "Template");
   const sushka = menuItems.filter((item) => item.packageType === "Sushka");
 
-  const source = selectedPackage === "Sushka" ? sushka : templates;
+  const source = selectedPackage.includes("Sushka") ? sushka : templates;
   return source
     .map((item) => transformMenuForPackage(item, selectedPackage))
     .sort((a, b) => a.dayOfWeek - b.dayOfWeek);

@@ -17,12 +17,12 @@ export default function Footer() {
         {/* Column 2: Delivery Schedule */}
         <div>
           <h3 className="text-lg font-bold text-slate-800 mb-4">Графік доставки</h3>
-          <p className="text-sm font-medium text-slate-800">Неділя - П&apos;ятниця: 17:00 - 20:30</p>
+          <p className="text-sm font-medium text-slate-800">Неділя - П&apos;ятниця: 17:00 - 21:30</p>
           <p className="text-xs text-emerald-600 font-medium mt-1 mb-2">
             У п&apos;ятницю доставляємо раціони одразу на вихідні (суботу та неділю).
           </p>
           <p className="text-xs text-slate-500 mt-2">
-            Кур&apos;єр зв&apos;яжеться з вами за 15 хвилин до прибуття.
+            Вранці перед доставкою ми повідомимо вам більш точний час.
           </p>
         </div>
 
