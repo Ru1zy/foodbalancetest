@@ -37,7 +37,7 @@ export default async function Home() {
   const tariffs = await getTariffs();
 
   return (
-    <main className="relative min-h-screen overflow-x-hidden">
+    <main className="flex-grow flex flex-col">
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 md:px-8 lg:px-16">
         {/* Hero Section */}
         <div className="mb-16 text-center relative">
