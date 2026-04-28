@@ -30,8 +30,8 @@ export default function DishCard({ dishName, isSelected, disabled, onClick }: Pr
       onPointerDown={handlePointerDown}
       className={`relative w-full rounded-2xl p-4 text-left transition-all duration-200 ease-out md:p-5 active:scale-95 ${
         isSelected
-          ? "bg-emerald-50 border-2 border-emerald-500 shadow-md"
-          : "bg-white border border-gray-100 shadow-sm hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.08)]"
+          ? "bg-emerald-50 ring-2 ring-emerald-500 shadow-md"
+          : "bg-white ring-1 ring-gray-100 shadow-sm hover:-translate-y-0.5 hover:shadow-lg"
       } ${disabled ? "pointer-events-none opacity-50" : "cursor-pointer"} flex items-center`}
     >
       <div className="flex-1 text-lg md:text-xl font-semibold text-slate-700 break-words pr-12">

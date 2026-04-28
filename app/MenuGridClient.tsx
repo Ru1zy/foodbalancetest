@@ -519,7 +519,7 @@ export default function MenuGridClient({ menuItems }: Props) {
       )}
 
       {/* Solid Docked Bottom Bar */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 z-[99999] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-slate-200 p-4 z-[999999] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] transform-gpu translate-z-0">
         <div className="max-w-6xl mx-auto flex flex-row items-center justify-between gap-4">
           <span className="text-slate-800 font-semibold text-sm md:text-base whitespace-nowrap">
             Обрано днів: {completedDaysCount}
