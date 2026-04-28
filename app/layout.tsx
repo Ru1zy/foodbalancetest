@@ -41,11 +41,11 @@ export default function RootLayout({
       lang="uk"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="relative flex min-h-full flex-col bg-slate-50 text-slate-900">
+      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
         <GradientOrbs />
         <AnimatedBackground />
         <Header />
-        <main className="flex-grow">
+        <main className="flex-grow flex flex-col">
           <TelegramProvider>{children}</TelegramProvider>
         </main>
         <Footer />

@@ -511,14 +511,30 @@ export default function MenuGridClient({ menuItems }: Props) {
               e.stopPropagation();
               setZoomedImage(null);
             }}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 cursor-zoom-out"
+          onClick={() => setZoomedImage(null)}
+        >
+          <img
+            src={zoomedImage}
+            alt="Day menu details"
+            className="max-w-full max-h-full object-contain rounded-lg border border-gray-200"
+          />
+          <button
+            className="absolute top-6 right-6 text-gray-100 text-4xl leading-none hover:text-gray-300"
+            onClick={(e) => {
+              e.stopPropagation();
+              setZoomedImage(null);
+            }}
           >
             &times;
           </button>
         </div>
       )}
 
-      {/* Fixed Bottom Checkout Button Container - OUTSIDE ALL CONTAINERS */}
-      <div className="fixed bottom-0 left-0 right-0 z-[99999] pointer-events-none p-4 pb-6 md:p-6 flex justify-center">
+      {/* Bulletproof Sticky Checkout Button - Native Browser Behavior */}
+      <div className="sticky bottom-4 left-0 right-0 z-[99999] pointer-events-none p-4 mt-auto flex justify-center">
         <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur shadow-[0_-8px_30px_rgba(0,0,0,0.1)] rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-200">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0 text-center sm:text-left">
             <div className="text-sm md:text-base font-semibold text-slate-700">
