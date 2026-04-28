@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useMemo, useState } from "react";
 import { getPackageLimit, isDaySelectable, type PackageType } from "../lib/order-logic";
 import { getMenuRowsForPackage } from "@/lib/menu-for-package";
 import type { Dishes, DishOption, MenuItem } from "@/lib/menu-types";
@@ -188,13 +187,7 @@ function MealSection({
 }
 
 export default function MenuGridClient({ menuItems }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
 
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
@@ -318,7 +311,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   return (
     <>
-      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-48 md:pb-64">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-32 md:pb-40">
         {step === 3 && (
           <div className="mb-4 flex justify-center">
             <button
@@ -525,30 +518,23 @@ export default function MenuGridClient({ menuItems }: Props) {
         </div>
       )}
 
-      {/* REACT PORTAL: Floating Checkout Button Container */}
-      {mounted && typeof document !== 'undefined' && createPortal(
-        <div className="fixed bottom-6 left-0 right-0 z-[99999] pointer-events-none px-4 flex justify-center">
-          <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all duration-300">
-            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-4 shrink-0 text-center sm:text-left">
-              <div className="text-sm md:text-base font-semibold text-slate-700">
-                Обрано днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
-              </div>
-            </div>
-            <Link
-              href={canProceedToCheckout ? "/checkout" : "#"}
-              onClick={(e) => !canProceedToCheckout && e.preventDefault()}
-              className={`text-center text-sm md:text-base font-bold py-3 px-8 rounded-full shadow-md transition-all active:scale-95 whitespace-nowrap ${
-                canProceedToCheckout 
-                  ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg" 
-                  : "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed"
-              }`}
-            >
-              {canProceedToCheckout ? "Оформити →" : "Оберіть страви"}
-            </Link>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Solid Docked Bottom Bar */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 p-4 z-[99999] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <div className="max-w-6xl mx-auto flex flex-row items-center justify-between gap-4">
+          <span className="text-slate-800 font-semibold text-sm md:text-base whitespace-nowrap">
+            Обрано днів: {completedDaysCount}
+          </span>
+          <Link
+            href={canProceedToCheckout ? "/checkout" : "#"}
+            onClick={(e) => !canProceedToCheckout && e.preventDefault()}
+            className={`w-full sm:w-auto text-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-colors ${
+              !canProceedToCheckout ? "bg-slate-300 cursor-not-allowed" : ""
+            }`}
+          >
+            Оформити замовлення &rarr;
+          </Link>
+        </div>
+      </div>
     </>
   );
 }
