@@ -517,9 +517,9 @@ export default function MenuGridClient({ menuItems }: Props) {
         </div>
       )}
 
-      {/* Fixed Bottom Checkout Button Container */}
-      <div className="fixed bottom-0 left-0 right-0 w-full p-4 md:p-6 pointer-events-none flex justify-center z-[9999]">
-        <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur shadow-[0_-8px_30px_rgba(0,0,0,0.08)] rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-200">
+      {/* Fixed Bottom Checkout Button Container - OUTSIDE ALL CONTAINERS */}
+      <div className="fixed bottom-0 left-0 right-0 z-[99999] pointer-events-none p-4 pb-6 md:p-6 flex justify-center">
+        <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur shadow-[0_-8px_30px_rgba(0,0,0,0.1)] rounded-2xl p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 border border-slate-200">
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0 text-center sm:text-left">
             <div className="text-sm md:text-base font-semibold text-slate-700">
               Обрано днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
