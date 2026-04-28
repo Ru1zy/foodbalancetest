@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { getPackageLimit, isDaySelectable, type PackageType } from "../lib/order-logic";
 import { getMenuRowsForPackage } from "@/lib/menu-for-package";
 import type { Dishes, DishOption, MenuItem } from "@/lib/menu-types";
@@ -187,7 +188,14 @@ function MealSection({
 }
 
 export default function MenuGridClient({ menuItems }: Props) {
+  const [mounted, setMounted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
+
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
   const selectedDatesFromStore = useOrderStore((state) => state.selectedDates);
@@ -384,7 +392,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                     </div>
                   {!selectable && (
                     <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
-                      Вибір цього дня закритий за дедлайном
+                      Вибір этого дня закритий за дедлайном
                     </div>
                   )}
                   {indivSelected && (
@@ -517,27 +525,30 @@ export default function MenuGridClient({ menuItems }: Props) {
         </div>
       )}
 
-      {/* Fixed Bottom Checkout Button Container */}
-      <div className="fixed bottom-6 left-0 right-0 z-[99999] pointer-events-none px-4 flex justify-center">
-        <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-4 border border-slate-200">
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 shrink-0 text-center sm:text-left">
-            <div className="text-sm md:text-base font-semibold text-slate-700">
-              Обрано днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
+      {/* REACT PORTAL: Floating Checkout Button Container */}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <div className="fixed bottom-6 left-0 right-0 z-[99999] pointer-events-none px-4 flex justify-center">
+          <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all duration-300">
+            <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-4 shrink-0 text-center sm:text-left">
+              <div className="text-sm md:text-base font-semibold text-slate-700">
+                Обрано днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
+              </div>
             </div>
+            <Link
+              href={canProceedToCheckout ? "/checkout" : "#"}
+              onClick={(e) => !canProceedToCheckout && e.preventDefault()}
+              className={`text-center text-sm md:text-base font-bold py-3 px-8 rounded-full shadow-md transition-all active:scale-95 whitespace-nowrap ${
+                canProceedToCheckout 
+                  ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg" 
+                  : "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed"
+              }`}
+            >
+              {canProceedToCheckout ? "Оформити →" : "Оберіть страви"}
+            </Link>
           </div>
-          <Link
-            href={canProceedToCheckout ? "/checkout" : "#"}
-            onClick={(e) => !canProceedToCheckout && e.preventDefault()}
-            className={`w-full sm:w-auto text-center text-sm md:text-base font-bold py-3.5 px-8 rounded-xl shadow-md transition-all active:scale-95 whitespace-nowrap ${
-              canProceedToCheckout 
-                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg" 
-                : "bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed"
-            }`}
-          >
-            {canProceedToCheckout ? "Оформити замовлення →" : "Оберіть страви"}
-          </Link>
-        </div>
-      </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 }
