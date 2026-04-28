@@ -518,20 +518,20 @@ export default function MenuGridClient({ menuItems }: Props) {
         </div>
       )}
 
-      {/* Solid Docked Bottom Bar */}
-      <div className="fixed bottom-0 left-0 right-0 w-full bg-white border-t border-slate-200 p-4 z-[999999] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] transform-gpu translate-z-0">
-        <div className="max-w-6xl mx-auto flex flex-row items-center justify-between gap-4">
-          <span className="text-slate-800 font-semibold text-sm md:text-base whitespace-nowrap">
+      {/* Floating Bubble Button */}
+      <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
+        <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
+          <span className="text-slate-800 font-bold text-sm md:text-base whitespace-nowrap">
             Обрано днів: {completedDaysCount}
           </span>
           <Link
             href={canProceedToCheckout ? "/checkout" : "#"}
             onClick={(e) => !canProceedToCheckout && e.preventDefault()}
-            className={`w-full sm:w-auto text-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-colors ${
-              !canProceedToCheckout ? "bg-slate-300 cursor-not-allowed" : ""
+            className={`w-full sm:w-auto text-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md hover:shadow-lg ${
+              !canProceedToCheckout ? "bg-slate-300 shadow-none hover:shadow-none hover:bg-slate-300 text-slate-500 cursor-not-allowed" : ""
             }`}
           >
-            Оформити замовлення &rarr;
+            Оформити &rarr;
           </Link>
         </div>
       </div>
