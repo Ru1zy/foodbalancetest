@@ -518,23 +518,26 @@ export default function MenuGridClient({ menuItems }: Props) {
       )}
 
       {/* Fixed Bottom Checkout Button */}
-      {canProceedToCheckout && (
-        <div className="fixed bottom-10 left-0 right-0 px-4 pointer-events-none flex justify-center z-[100]">
-          <div className="pointer-events-auto bg-white/95 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-200 rounded-full py-3.5 px-6 md:px-8 flex items-center justify-between gap-4 sm:gap-6 w-full max-w-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-2 md:gap-3 shrink-0">
-              <div className="text-sm md:text-base font-semibold text-slate-700">
-                Днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
-              </div>
+      <div className="fixed bottom-6 left-0 right-0 w-full flex justify-center px-4 pointer-events-none z-[9999]">
+        <div className="pointer-events-auto bg-white/95 backdrop-blur-md shadow-[0_12px_40px_rgba(0,0,0,0.15)] border border-slate-200 rounded-full py-3 md:py-3.5 px-6 md:px-8 flex items-center justify-between gap-4 sm:gap-6 w-full max-w-lg transition-all duration-300">
+          <div className="flex items-center gap-2 md:gap-3 shrink-0">
+            <div className="text-sm md:text-base font-semibold text-slate-700">
+              Днів: <span className="text-emerald-600 font-bold">{completedDaysCount}</span>
             </div>
-            <Link
-              href="/checkout"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm md:text-base font-bold py-3 md:py-3.5 px-6 md:px-10 rounded-full shadow-md hover:shadow-lg transition-all active:scale-95 whitespace-nowrap"
-            >
-              Оформити замовлення →
-            </Link>
           </div>
+          <Link
+            href={canProceedToCheckout ? "/checkout" : "#"}
+            onClick={(e) => !canProceedToCheckout && e.preventDefault()}
+            className={`text-sm md:text-base font-bold py-3 md:py-3.5 px-6 md:px-10 rounded-full shadow-md transition-all active:scale-95 whitespace-nowrap ${
+              canProceedToCheckout 
+                ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg" 
+                : "bg-gray-200 text-gray-500 opacity-50 pointer-events-none"
+            }`}
+          >
+            {canProceedToCheckout ? "Оформити замовлення →" : "Оберіть страви"}
+          </Link>
         </div>
-      )}
+      </div>
     </>
   );
 }
