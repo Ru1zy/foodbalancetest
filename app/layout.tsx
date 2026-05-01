@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import GradientOrbs from "@/components/GradientOrbs";
+import ConditionalWrapper from "@/components/ConditionalWrapper";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,11 +45,18 @@ export default function RootLayout({
       <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
         <GradientOrbs />
         <AnimatedBackground />
-        <Header />
+        
+        <ConditionalWrapper>
+          <Header />
+        </ConditionalWrapper>
+
         <main className="flex-grow flex flex-col">
           <TelegramProvider>{children}</TelegramProvider>
         </main>
-        <Footer />
+
+        <ConditionalWrapper>
+          <Footer />
+        </ConditionalWrapper>
       </body>
     </html>
   );

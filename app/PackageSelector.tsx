@@ -37,6 +37,14 @@ export default function PackageSelector({ tariffs }: Props) {
   // Check if we should show "Sushka" folder card
   const hasSushkaFolder = sushkaOptions.length > 0;
 
+  const sushkaPriceRange = useMemo(() => {
+    if (sushkaOptions.length === 0) return null;
+    const prices = sushkaOptions.map(o => o.basePrice);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    return min === max ? `${min} ₴` : `${min}–${max} ₴`;
+  }, [sushkaOptions]);
+
   const handleSelectPackage = (pkg: Tariff) => {
     selectWizardPackage(pkg.name as PackageType);
     setPreviewPkg(null);
@@ -138,7 +146,13 @@ export default function PackageSelector({ tariffs }: Props) {
                 </div>
                 <div className="rounded-2xl bg-gray-50 p-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Ціна</p>
-                  <p className="text-lg font-bold text-emerald-600">{previewPkg.price}</p>
+                  <p className="text-lg font-bold text-emerald-600">
+                    {previewPkg.name === "Indiv" ? (
+                      <span className="font-semibold text-emerald-600">Індивідуально</span>
+                    ) : (
+                      previewPkg.price
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -197,7 +211,13 @@ export default function PackageSelector({ tariffs }: Props) {
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900">{pkg.title}</h3>
                   <p className="mt-2 text-base text-gray-500">{pkg.kcal}</p>
-                  <p className="text-xl font-extrabold text-emerald-600 mt-4">{pkg.price}</p>
+                  <p className="text-xl font-extrabold text-emerald-600 mt-4">
+                    {pkg.name === "Indiv" ? (
+                      <span className="font-semibold text-emerald-600">Індивідуально</span>
+                    ) : (
+                      pkg.price
+                    )}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -228,8 +248,8 @@ export default function PackageSelector({ tariffs }: Props) {
             <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900">Сушка</h3>
-                <p className="mt-2 text-base text-gray-500">≈ 1600–1800 ккал</p>
-                <p className="text-xl font-extrabold text-emerald-600 mt-4">від 500 ₴</p>
+                <p className="mt-2 text-base text-gray-500">Сушка S та Сушка XS</p>
+                <p className="text-xl font-extrabold text-emerald-600 mt-4">{sushkaPriceRange}</p>
               </div>
               <button
                 type="button"
@@ -276,7 +296,13 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="rounded-2xl bg-gray-50 p-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Ціна</p>
-                <p className="text-lg font-bold text-emerald-600">{previewPkg.price}</p>
+                <p className="text-lg font-bold text-emerald-600">
+                  {previewPkg.name === "Indiv" ? (
+                    <span className="font-semibold text-emerald-600">Індивідуально</span>
+                  ) : (
+                    previewPkg.price
+                  )}
+                </p>
               </div>
             </div>
 

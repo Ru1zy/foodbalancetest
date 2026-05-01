@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Phone } from "lucide-react";
 import { FaInstagram, FaTiktok } from "react-icons/fa";
 
@@ -57,14 +56,6 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="border-t border-gray-200 py-6 mt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
           <p>© 2026 Food Balance. Всі права захищені.</p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="hover:text-emerald-600 transition-colors">
-              Політика конфіденційності
-            </Link>
-            <Link href="/terms" className="hover:text-emerald-600 transition-colors">
-              Умови користування
-            </Link>
-          </div>
         </div>
       </div>
     </footer>

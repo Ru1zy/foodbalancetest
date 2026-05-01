@@ -626,6 +626,14 @@ async function formatOrderDishes(
 ): Promise<string> {
   if (!items || typeof items !== "object") return "";
 
+  const CATEGORY_LABELS: Record<string, string> = {
+    breakfast: "Сніданок",
+    lunch: "Обід",
+    dinner: "Вечеря",
+    snack: "Перекус",
+    extra: "Додатково",
+  };
+
   const days = (items as Record<string, unknown>).days;
   if (!Array.isArray(days) || days.length === 0) return "";
 
@@ -638,8 +646,18 @@ async function formatOrderDishes(
       for (const item of day.items) {
         const dishId = item.dishId || "";
         const quantity = item.quantity || 1;
+        
+        const separatorIndex = dishId.lastIndexOf(":");
+        let displayLabel = dishId;
+        if (separatorIndex > 0) {
+          const cat = dishId.slice(0, separatorIndex);
+          const idx = parseInt(dishId.slice(separatorIndex + 1));
+          const label = CATEGORY_LABELS[cat] || cat;
+          displayLabel = `${label} №${idx + 1}`;
+        }
+
         for (let i = 0; i < quantity; i++) {
-          allDishes.push(dishId);
+          allDishes.push(displayLabel);
         }
       }
     }

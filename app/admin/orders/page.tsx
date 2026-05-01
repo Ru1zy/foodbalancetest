@@ -317,10 +317,16 @@ export default async function AdminOrdersPage({
                             </div>
                             <div className="text-xs text-slate-600">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
                             <div className="text-xs text-slate-600">🍴 Прибори: {order.cutlery}</div>
-                            {order.price && (
+                            {order.packageType && (
                               <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">
                                 <span>💰</span>
-                                <span>{order.price} ₴</span>
+                                <span>
+                                  {order.price > 0 
+                                    ? `${order.price} ₴` 
+                                    : order.packageType.toLowerCase().includes("ind") 
+                                      ? "Індивідуально" 
+                                      : "0 ₴"}
+                                </span>
                               </div>
                             )}
                             {order.menuDetails && (

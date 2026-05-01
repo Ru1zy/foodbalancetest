@@ -394,11 +394,12 @@ export default function CheckoutPageImpl({
               Замовлення прийнято
             </p>
             <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950">
-              Дякуємо за замовлення
+              {isIndivPackage(submitted.packageType) ? "Заявку прийнято" : "Дякуємо за замовлення"}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600">
-              Ми вже зберегли ваше замовлення в системі. Найближчим часом менеджер зв&apos;яжеться з вами
-              для підтвердження деталей доставки.
+              {isIndivPackage(submitted.packageType)
+                ? "Вашу заявку прийнято! З вами найближчим часом зв'яжеться оператор для погодження меню та кінцевої вартості."
+                : "Ми вже зберегли ваше замовлення в системі. Найближчим часом менеджер зв'яжеться з вами для підтвердження деталей доставки."}
             </p>
           </div>
 
@@ -414,7 +415,13 @@ export default function CheckoutPageImpl({
             <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Сума</div>
               <div className="mt-2 text-lg font-bold text-slate-900">
-                {submitted.totalPrice > 0 ? `${submitted.totalPrice} ₴` : "—"}
+                {isIndivPackage(submitted.packageType) ? (
+                  "—"
+                ) : submitted.totalPrice > 0 ? (
+                  `${submitted.totalPrice} ₴`
+                ) : (
+                  "—"
+                )}
               </div>
             </div>
           </div>
@@ -488,8 +495,14 @@ export default function CheckoutPageImpl({
               </div>
               <div className="mt-3 flex items-center justify-between gap-3">
                 <span className="text-sm text-slate-300">До сплати</span>
-                <span className="text-3xl font-black text-white">
-                  {orderTotalUah > 0 ? `${orderTotalUah} ₴` : "—"}
+                <span className={`${isIndivPackage(selectedPackageRaw ?? undefined) ? "text-xl" : "text-3xl"} font-black text-white`}>
+                  {isIndivPackage(selectedPackageRaw ?? undefined) ? (
+                    "Індивідуальний розрахунок"
+                  ) : orderTotalUah > 0 ? (
+                    `${orderTotalUah} ₴`
+                  ) : (
+                    "—"
+                  )}
                 </span>
               </div>
               <div className="mt-3 flex items-start justify-between gap-3">
@@ -700,7 +713,11 @@ export default function CheckoutPageImpl({
               <div className="rounded-3xl bg-slate-50 px-5 py-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">До підтвердження: {orderTotalUah} ₴</p>
+                    <p className="text-sm font-semibold text-slate-900">
+                      {isIndivPackage(selectedPackageRaw ?? undefined)
+                        ? "Індивідуальний розрахунок"
+                        : `До підтвердження: ${orderTotalUah} ₴`}
+                    </p>
                     <p className="mt-1 text-sm text-slate-500">
                       Натискаючи кнопку, ви передаєте замовлення менеджеру в обробку.
                     </p>
@@ -714,7 +731,11 @@ export default function CheckoutPageImpl({
                         : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                     }`}
                   >
-                    {isPending ? "Надсилаємо..." : "Підтвердити замовлення"}
+                    {isPending
+                      ? "Надсилаємо..."
+                      : isIndivPackage(selectedPackageRaw ?? undefined)
+                      ? "Надіслати заявку"
+                      : "Підтвердити замовлення"}
                   </button>
                 </div>
               </div>

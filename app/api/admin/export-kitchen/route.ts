@@ -44,6 +44,14 @@ async function parseOrderItems(items: unknown, _orderId: string): Promise<string
 
   const menuById = new Map(menuItems.map((item) => [item.id, item]));
 
+  const CATEGORY_LABELS: Record<string, string> = {
+    breakfast: "Сніданок",
+    lunch: "Обід",
+    dinner: "Вечеря",
+    snack: "Перекус",
+    extra: "Додатково",
+  };
+
   // Parse each day
   for (const day of days) {
     const selections = day.selections || {};
@@ -74,10 +82,19 @@ async function parseOrderItems(items: unknown, _orderId: string): Promise<string
     if (items.length > 0) {
       items.forEach((item: unknown) => {
         if (item && typeof item === "object" && "dishId" in item) {
-          const dishId = (item as { dishId: string; quantity?: number }).dishId;
-          const quantity = (item as { quantity?: number }).quantity || 1;
+          const { dishId, quantity = 1 } = item as { dishId: string; quantity?: number };
+          const separatorIndex = dishId.lastIndexOf(":");
+          
+          let displayLabel = dishId;
+          if (separatorIndex > 0) {
+            const cat = dishId.slice(0, separatorIndex);
+            const idx = parseInt(dishId.slice(separatorIndex + 1));
+            const label = CATEGORY_LABELS[cat] || cat;
+            displayLabel = `${label} №${idx + 1}`;
+          }
+
           for (let i = 0; i < quantity; i++) {
-            parsedItems.push(String(dishId).trim());
+            parsedItems.push(displayLabel.trim());
           }
         }
       });
