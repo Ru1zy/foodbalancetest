@@ -50,6 +50,7 @@ export async function POST(request: Request) {
             inline_keyboard: [[
               { text: "✅ Підтвердити вхід", callback_data: `confirm_${token}` }
             ]]
+
           }
         });
       }
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     // Handle callback button press
     if (update.callback_query?.data?.startsWith("confirm_")) {
       console.log("Callback query received:", update.callback_query.data);
-      const token = update.callback_query.data.replace("confirm_", "");
+      const token = update.callback_query.data.replace("confirm_", "").trim();
       const chatId = String(update.callback_query.from.id);
       const firstName = (update.callback_query.from.first_name || "").trim();
       const lastName = (update.callback_query.from.last_name || "").trim();
