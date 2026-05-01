@@ -168,7 +168,7 @@ function extractCartDays(items: unknown): CartDay[] {
 
       return (
         typeof candidate.dayId === "string" &&
-        candidate.dayId.trim().length > 0 &&
+        (candidate.dayId || "").trim().length > 0 &&
         typeof candidate.selectedCount === "number" &&
         Number.isFinite(candidate.selectedCount) &&
         (hasSelections || hasItems)
@@ -273,12 +273,13 @@ async function formatDays(items: unknown, packageType: PackageType) {
 
 export async function sendOrderNotification(order: TelegramOrder, user: TelegramUser) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+  const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
-  if (!token || !chatId) {
+  if (!token || !adminChatId) {
     throw new Error("Telegram environment variables are not configured.");
   }
 
+  const adminIds = adminChatId.split(",").map((id) => id.trim());
   const daysText = await formatDays(order.items, order.packageType as PackageType);
   const message = [
     "🚨 <b>Нове замовлення!</b>",
@@ -290,21 +291,25 @@ export async function sendOrderNotification(order: TelegramOrder, user: Telegram
     `📅 <b>Дні:</b>\n${daysText}`,
   ].join("\n").replace(/&nbsp;/g, ' ');
 
-  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      chat_id: chatId,
-      parse_mode: "HTML",
-      text: message,
-    }),
-  });
+  const sendPromises = adminIds.map((chatId) =>
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: chatId,
+        parse_mode: "HTML",
+        text: message,
+      }),
+    }).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Telegram sendMessage failed for ${chatId}: ${await response.text()}`);
+      }
+    })
+  );
 
-  if (!response.ok) {
-    throw new Error(`Telegram sendMessage failed with status ${response.status}: ${await response.text()}`);
-  }
+  await Promise.all(sendPromises);
 }
 
 type OrderDetails = {

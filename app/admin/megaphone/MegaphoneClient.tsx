@@ -9,7 +9,7 @@ export default function MegaphoneClient() {
   const [result, setResult] = useState<{ sent: number; message?: string } | null>(null);
 
   const handleSend = async () => {
-    if (!htmlContent.trim()) {
+    if (!(htmlContent || "").trim()) {
       alert("Введіть текст повідомлення");
       return;
     }
@@ -84,9 +84,9 @@ export default function MegaphoneClient() {
       <button
         type="button"
         onClick={handleSend}
-        disabled={isSending || !htmlContent.trim()}
+        disabled={isSending || !(htmlContent || "").trim()}
         className={`w-full rounded-xl px-6 py-3 text-sm font-semibold transition ${
-          isSending || !htmlContent.trim()
+          isSending || !(htmlContent || "").trim()
             ? "cursor-not-allowed bg-gray-200 text-gray-400"
             : "bg-blue-600 text-white hover:bg-blue-700"
         }`}

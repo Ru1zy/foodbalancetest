@@ -17,24 +17,28 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   const [isPolling, setIsPolling] = useState(false);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!authToken || !isPolling) return;
 
     const pollInterval = setInterval(async () => {
       try {
-        console.log("Polling for token:", authToken);
         const response = await fetch("/api/auth/telegram-deeplink", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "check", token: authToken }),
         });
 
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
         const data = await response.json();
-        console.log("Poll response:", data);
 
         if (data.status === "confirmed") {
-          console.log("Auth confirmed! Refreshing...");
           setIsPolling(false);
+          setError(null);
 
           setCustomerProfile({
             address: data.user.address || "",
@@ -49,23 +53,30 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
             username: "",
           });
 
-          // Refresh the page to update Header
           router.refresh();
-
-          if (onSuccess) {
-            onSuccess();
-          }
+          if (onSuccess) onSuccess();
+        } else if (data.status === "expired") {
+          setIsPolling(false);
+          setAuthToken(null);
+          setError("Термін дії посилання вичерпано. Спробуйте ще раз.");
+        } else if (data.status === "error") {
+          setIsPolling(false);
+          setError("Помилка при перевірці статусу. Спробуйте ще раз.");
         }
-      } catch (error) {
-        console.error("Polling error:", error);
+      } catch (err) {
+        console.error("Polling error:", err);
+        // Don't stop polling on network errors, just wait for next tick
       }
     }, 2000);
 
-    // Stop polling after 5 minutes
+    // Stop polling after 2 minutes (standard Telegram UX)
     const timeout = setTimeout(() => {
-      setIsPolling(false);
-      setAuthToken(null);
-    }, 5 * 60 * 1000);
+      if (isPolling) {
+        setIsPolling(false);
+        setAuthToken(null);
+        setError("Час очікування вичерпано. Будь ласка, спробуйте знову.");
+      }
+    }, 2 * 60 * 1000);
 
     return () => {
       clearInterval(pollInterval);
@@ -75,40 +86,46 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
 
   const handleLogin = async () => {
     try {
-      console.log("Generating auth token...");
+      setError(null);
       const response = await fetch("/api/auth/telegram-deeplink", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "generate" }),
       });
 
-      const data = await response.json();
-      const token = data.token;
-      console.log("Generated token:", token);
+      if (!response.ok) throw new Error("Failed to generate token");
 
-      setAuthToken(token);
+      const data = await response.json();
+      setAuthToken(data.token);
       setIsPolling(true);
 
-      // Open bot with deep link
-      const botUrl = `https://t.me/${BOT_USERNAME}?start=${token}`;
-      console.log("Opening bot URL:", botUrl);
+      const botUrl = `https://t.me/${BOT_USERNAME}?start=${data.token}`;
       window.open(botUrl, "_blank");
-    } catch (error) {
-      console.error("Failed to generate auth token:", error);
-      alert("Помилка при генерації токену авторизації");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Не вдалося ініціювати вхід. Перевірте з'єднання.");
     }
   };
 
   return (
-    <div>
-      <h2 className="text-lg font-semibold text-gray-900">Увійти через Telegram</h2>
-      <p className="text-xs text-gray-500 mb-4">
-        Натисніть кнопку нижче, щоб відкрити бота в Telegram і підтвердити вхід.
-      </p>
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">Увійти через Telegram</h2>
+        <p className="text-xs text-gray-500">
+          Ми автоматично підтягнемо ваше ім&apos;я та історію замовлень.
+        </p>
+      </div>
 
       {isPolling && (
-        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-          ⏳ Очікуємо підтвердження в Telegram... Натисніть кнопку в боті.
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800 animate-pulse">
+          ⏳ Очікуємо підтвердження в Telegram...
+          <p className="mt-1 text-xs opacity-80">Перейдіть у бот і натисніть &quot;Підтвердити вхід&quot;</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+          ⚠️ {error}
         </div>
       )}
 
@@ -116,18 +133,20 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
         type="button"
         onClick={handleLogin}
         disabled={isPolling}
-        className={`rounded-xl px-6 py-3 text-sm font-semibold transition ${
+        className={`w-full rounded-2xl px-6 py-4 text-base font-bold shadow-sm transition-all active:scale-95 ${
           isPolling
-            ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-            : "bg-blue-600 text-white hover:bg-blue-700"
+            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md"
         }`}
       >
-        {isPolling ? "Очікування підтвердження..." : "Увійти через Telegram"}
+        {isPolling ? "Очікування..." : "Увійти через Telegram"}
       </button>
 
-      <p className="mt-3 text-xs text-gray-500">
-        Відкриється бот @{BOT_USERNAME} в Telegram. Підтвердіть вхід натиснувши кнопку.
-      </p>
+      {!isPolling && (
+        <p className="text-center text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+          Безпечний вхід через @{BOT_USERNAME}
+        </p>
+      )}
     </div>
   );
 }

@@ -25,11 +25,11 @@ export default function ClientsPageClient({ clients }: Props) {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   const filteredClients = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!(searchQuery || "").trim()) {
       return clients;
     }
 
-    const query = searchQuery.toLowerCase().trim();
+    const query = (searchQuery || "").toLowerCase().trim();
     return clients.filter(
       (client) =>
         client.name.toLowerCase().includes(query) ||

@@ -101,10 +101,10 @@ export default function MenuDishesEditor({ menuId, currentDishes, packageType, d
 
     // Filter out empty variants
     const cleanedDishes: DishesStructure = {
-      breakfast: dishes.breakfast.filter((v) => v.full.trim() || v.short.trim()),
-      lunch: dishes.lunch.filter((v) => v.full.trim() || v.short.trim()),
-      dinner: dishes.dinner.filter((v) => v.full.trim() || v.short.trim()),
-      snack: dishes.snack.filter((v) => v.full.trim() || v.short.trim()),
+      breakfast: dishes.breakfast.filter((v) => (v.full || "").trim() || (v.short || "").trim()),
+      lunch: dishes.lunch.filter((v) => (v.full || "").trim() || (v.short || "").trim()),
+      dinner: dishes.dinner.filter((v) => (v.full || "").trim() || (v.short || "").trim()),
+      snack: dishes.snack.filter((v) => (v.full || "").trim() || (v.short || "").trim()),
     };
 
     startTransition(async () => {

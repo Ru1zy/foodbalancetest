@@ -23,7 +23,7 @@ export function getOrderTotalUah(packageType: PackageType, totalDays: number): n
 
 export function getPackageLimit(packageName?: string): number {
   if (!packageName) return 4;
-  const p = packageName.trim().toLowerCase();
+  const p = String(packageName).trim().toLowerCase();
   if (p.includes("слім") || p.includes("slim") || p.includes("слим")) return 3;
   if (p.includes("sport")) return 5;
   if (p.includes("інд") || p.includes("ind")) return 10;
@@ -34,7 +34,7 @@ export function getPackageLimit(packageName?: string): number {
 
 export function mealSuffix(packageName?: string, mealType?: string): string {
   if (!packageName || !mealType) return "";
-  const p = packageName.trim().toLowerCase();
+  const p = String(packageName).trim().toLowerCase();
   const isActiveOrSport = p.includes("active") || p.includes("sport");
 
   if (isActiveOrSport && (mealType === "lunch" || mealType === "dinner")) {

@@ -63,7 +63,7 @@ export function toIndivDishQuantities(daySelections: DaySelections): IndivDishQu
   return Object.entries(daySelections)
     .filter(
       ([dishId, quantity]) =>
-        dishId.trim().length > 0 && Number.isInteger(quantity) && quantity > 0,
+        (dishId || "").trim().length > 0 && Number.isInteger(quantity) && quantity > 0,
     )
     .map(([dishId, quantity]) => ({
       dishId,

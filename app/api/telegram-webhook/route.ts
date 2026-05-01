@@ -33,19 +33,26 @@ export async function POST(request: Request) {
     console.log("Webhook received:", JSON.stringify(update, null, 2));
 
     // Handle /start command with auth token
-    if (update.message?.text?.startsWith("/start auth_")) {
-      const token = (update.message.text || '').replace("/start ", "").trim();
+    if (update.message?.text?.includes("/start auth_")) {
+      const text = update.message.text || "";
+      const tokenMatch = text.match(/auth_[a-zA-Z0-9_]+/);
+      const token = tokenMatch ? tokenMatch[0] : null;
       const chatId = update.message.chat.id;
 
-      await sendTelegramRequest("sendMessage", {
-        chat_id: chatId,
-        text: "🔐 Підтвердіть вхід на сайт Food Balance\n\nНатисніть кнопку нижче для авторизації.",
-        reply_markup: {
-          inline_keyboard: [[
-            { text: "✅ Підтвердити вхід", callback_data: `confirm_${token}` }
-          ]]
-        }
-      });
+      console.log("Processing /start with token:", { text, token, chatId });
+
+      if (token) {
+        await sendTelegramRequest("sendMessage", {
+          chat_id: chatId,
+          text: "🔐 <b>Підтвердження входу</b>\n\nНатисніть кнопку нижче, щоб увійти на сайт Food Balance.",
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [[
+              { text: "✅ Підтвердити вхід", callback_data: `confirm_${token}` }
+            ]]
+          }
+        });
+      }
 
       return NextResponse.json({ ok: true });
     }
@@ -55,12 +62,13 @@ export async function POST(request: Request) {
       console.log("Callback query received:", update.callback_query.data);
       const token = update.callback_query.data.replace("confirm_", "");
       const chatId = String(update.callback_query.from.id);
-      const userName = [
-        update.callback_query.from.first_name,
-        update.callback_query.from.last_name
-      ].filter(Boolean).join(" ") || update.callback_query.from.username || "Telegram User";
+      const firstName = (update.callback_query.from.first_name || "").trim();
+      const lastName = (update.callback_query.from.last_name || "").trim();
+      const userName = [firstName, lastName].filter(Boolean).join(" ") || 
+                       (update.callback_query.from.username || "").trim() || 
+                       "Telegram User";
 
-      console.log("Confirming auth:", { token, chatId, userName });
+      console.log("Confirming auth in DB:", { token, chatId, userName });
 
       // Save directly to database instead of calling API
       try {

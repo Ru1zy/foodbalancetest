@@ -41,7 +41,7 @@ function buildDeliveryTimeOptions() {
 export const DELIVERY_TIME_OPTIONS = buildDeliveryTimeOptions();
 
 export function normalizeDeliveryTime(value: string) {
-  const normalizedValue = value.trim();
+  const normalizedValue = (value || "").trim();
   return DELIVERY_TIME_OPTIONS.includes(normalizedValue) ? normalizedValue : "";
 }
 
@@ -61,7 +61,7 @@ export function parseCutleryCount(value: FormDataEntryValue | number | null | un
 }
 
 export function normalizePhone(rawPhone: string) {
-  const trimmed = rawPhone.trim();
+  const trimmed = (rawPhone || "").trim();
   const digits = trimmed.replace(/\D/g, "");
 
   if (!digits) {

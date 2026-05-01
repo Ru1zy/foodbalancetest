@@ -24,12 +24,14 @@ export async function getAuthenticatedAdminUser() {
     return null;
   }
 
+  const adminIds = adminChatId.split(",").map((id) => id.trim());
+
   // TEMP LOCALHOST BYPASS:
   // Leave this block enabled only while you are testing `/admin` on localhost
   // without Telegram auth. For the regular production behavior, comment this
   // block back out so the original token verification below is used again.
   if (process.env.NODE_ENV === "development") {
-    return buildLocalDevAdmin(adminChatId);
+    return buildLocalDevAdmin(adminIds[0]);
   }
 
   const cookieStore = await cookies();
@@ -58,7 +60,7 @@ export async function getAuthenticatedAdminUser() {
     },
   });
 
-  if (!user || user.chatId !== adminChatId) {
+  if (!user || !adminIds.includes(String(user.chatId))) {
     return null;
   }
 

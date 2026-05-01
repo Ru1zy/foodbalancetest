@@ -241,7 +241,7 @@ export async function broadcastMessage(htmlContent: string): Promise<{ ok: boole
     };
   }
 
-  if (!htmlContent.trim()) {
+  if (!(htmlContent || "").trim()) {
     return {
       ok: false,
       sent: 0,
@@ -313,7 +313,7 @@ export async function sendDirectMessage(chatId: string, htmlContent: string): Pr
     };
   }
 
-  if (!chatId.trim() || !htmlContent.trim()) {
+  if (!(chatId || "").trim() || !(htmlContent || "").trim()) {
     return {
       ok: false,
       message: "Не вказано отримувача або повідомлення порожнє.",
@@ -812,7 +812,7 @@ export async function exportToKitchenSheet(
     if (existingValues && existingValues.length > 0) {
       // Find first empty cell in column C
       const emptyIndex = existingValues.findIndex(
-        (row) => !row[0] || row[0].toString().trim() === ""
+        (row) => !row[0] || String(row[0]).trim() === ""
       );
 
       if (emptyIndex !== -1) {

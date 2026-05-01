@@ -28,7 +28,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
   };
 
   const handleNotifyTime = async () => {
-    if (!timeWindow.trim()) {
+    if (!(timeWindow || "").trim()) {
       alert("Вкажіть час доставки");
       return;
     }
