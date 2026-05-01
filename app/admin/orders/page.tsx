@@ -321,7 +321,7 @@ export default async function AdminOrdersPage({
                               <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">
                                 <span>💰</span>
                                 <span>
-                                  {order.price > 0 
+                                  {order.price !== null && order.price > 0 
                                     ? `${order.price} ₴` 
                                     : order.packageType.toLowerCase().includes("ind") 
                                       ? "Індивідуально" 
