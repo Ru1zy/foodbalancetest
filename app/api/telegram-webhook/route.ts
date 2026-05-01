@@ -33,27 +33,19 @@ export async function POST(request: Request) {
     console.log("Webhook received:", JSON.stringify(update, null, 2));
 
     // Handle /start command with auth token
-    if (update.message?.text?.includes("/start auth_")) {
-      const text = update.message.text || "";
-      const tokenMatch = text.match(/auth_[a-zA-Z0-9_]+/);
-      const token = tokenMatch ? tokenMatch[0] : null;
+    if (update.message?.text?.startsWith("/start auth_")) {
+      const token = update.message.text.replace("/start ", "").trim();
       const chatId = update.message.chat.id;
 
-      console.log("Processing /start with token:", { text, token, chatId });
-
-      if (token) {
-        await sendTelegramRequest("sendMessage", {
-          chat_id: chatId,
-          text: "🔐 <b>Підтвердження входу</b>\n\nНатисніть кнопку нижче, щоб увійти на сайт Food Balance.",
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [[
-              { text: "✅ Підтвердити вхід", callback_data: `confirm_${token}` }
-            ]]
-
-          }
-        });
-      }
+      await sendTelegramRequest("sendMessage", {
+        chat_id: chatId,
+        text: "🔐 Підтвердіть вхід на сайт FoodBalance\n\nНатисніть кнопку нижче для авторизації.",
+        reply_markup: {
+          inline_keyboard: [[
+            { text: "✅ Підтвердити вхід", callback_data: `confirm_${token}` }
+          ]]
+        }
+      });
 
       return NextResponse.json({ ok: true });
     }
@@ -69,21 +61,23 @@ export async function POST(request: Request) {
                        (update.callback_query.from.username || "").trim() || 
                        "Telegram User";
 
-      console.log("Confirming auth in DB:", { token, chatId, userName });
+      console.log("Confirming auth via endpoint:", { token, chatId, userName });
 
-      // Save directly to database instead of calling API
+      // Notify our auth endpoint to handle user creation/session
       try {
-        await prisma.authToken.create({
-          data: {
+        await fetch(`${new URL(request.url).origin}/api/auth/telegram-deeplink`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "confirm",
             token,
             chatId,
-            userName,
-            expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
-          },
+            userName
+          })
         });
-        console.log("Auth token saved to database");
+        console.log("Auth endpoint notified");
       } catch (error) {
-        console.error("Failed to save auth token:", error);
+        console.error("Failed to notify auth endpoint:", error);
       }
 
       // Answer callback query
@@ -97,7 +91,7 @@ export async function POST(request: Request) {
         await sendTelegramRequest("editMessageText", {
           chat_id: update.callback_query.message.chat.id,
           message_id: update.callback_query.message.message_id,
-          text: "✅ Ви успішно авторизувалися на сайті Food Balance!"
+          text: "✅ Ви успішно авторизувалися на сайті FoodBalance!"
         });
       }
 
