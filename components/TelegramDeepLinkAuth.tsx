@@ -85,25 +85,49 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   }, [authToken, isPolling, setCustomerProfile, router, onSuccess]);
 
   const handleLogin = async () => {
+    // Open window immediately to avoid popup blockers
+    const authWindow = window.open("", "_blank");
+    
     try {
+      console.log("handleLogin started");
       setError(null);
+      
       const response = await fetch("/api/auth/telegram-deeplink", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "generate" }),
       });
 
-      if (!response.ok) throw new Error("Failed to generate token");
+      console.log("Fetch generate response status:", response.status);
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Failed to generate token: ${response.status} ${errText}`);
+      }
 
       const data = await response.json();
+      console.log("Generated token data:", data);
+
+      if (!data.token) {
+        throw new Error("No token returned from server");
+      }
+
       setAuthToken(data.token);
       setIsPolling(true);
 
       const botUrl = `https://t.me/${BOT_USERNAME}?start=${data.token}`;
-      window.open(botUrl, "_blank");
+      console.log("Redirecting to:", botUrl);
+
+      if (authWindow) {
+        authWindow.location.href = botUrl;
+      } else {
+        // Fallback if popup was blocked or failed
+        window.location.href = botUrl;
+      }
     } catch (err) {
-      console.error("Login error:", err);
-      setError("Не вдалося ініціювати вхід. Перевірте з'єднання.");
+      console.error("Login error details:", err);
+      if (authWindow) authWindow.close();
+      setError("Не вдалося ініціювати вхід. Спробуйте ще раз або перевірте налаштування браузера.");
     }
   };
 
