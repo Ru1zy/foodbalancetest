@@ -65,11 +65,9 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
         }
       } catch (err) {
         console.error("Polling error:", err);
-        // Don't stop polling on network errors, just wait for next tick
       }
     }, 2000);
 
-    // Stop polling after 2 minutes (standard Telegram UX)
     const timeout = setTimeout(() => {
       if (isPolling) {
         setIsPolling(false);
@@ -85,49 +83,25 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   }, [authToken, isPolling, setCustomerProfile, router, onSuccess]);
 
   const handleLogin = async () => {
-    // Open window immediately to avoid popup blockers
-    const authWindow = window.open("", "_blank");
-    
     try {
-      console.log("handleLogin started");
       setError(null);
-      
       const response = await fetch("/api/auth/telegram-deeplink", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "generate" }),
       });
 
-      console.log("Fetch generate response status:", response.status);
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Failed to generate token: ${response.status} ${errText}`);
-      }
+      if (!response.ok) throw new Error("Failed to generate token");
 
       const data = await response.json();
-      console.log("Generated token data:", data);
-
-      if (!data.token) {
-        throw new Error("No token returned from server");
-      }
-
       setAuthToken(data.token);
       setIsPolling(true);
 
-      const botUrl = `https://t.me/${BOT_USERNAME}?start=${data.token}`;
-      console.log("Redirecting to:", botUrl);
-
-      if (authWindow) {
-        authWindow.location.href = botUrl;
-      } else {
-        // Fallback if popup was blocked or failed
-        window.location.href = botUrl;
-      }
+      // Try automatic open in new tab
+      window.open(`https://t.me/${BOT_USERNAME}?start=${data.token}`, "_blank", "noopener,noreferrer");
     } catch (err) {
-      console.error("Login error details:", err);
-      if (authWindow) authWindow.close();
-      setError("Не вдалося ініціювати вхід. Спробуйте ще раз або перевірте налаштування браузера.");
+      console.error("Login error:", err);
+      setError("Не вдалося ініціювати вхід. Спробуйте ще раз.");
     }
   };
 
@@ -140,11 +114,30 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
         </p>
       </div>
 
-      {isPolling && (
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800 animate-pulse">
-          ⏳ Очікуємо підтвердження в Telegram...
-          <p className="mt-1 text-xs opacity-80">Перейдіть у бот і натисніть &quot;Підтвердити вхід&quot;</p>
+      {isPolling && authToken ? (
+        <div className="space-y-4">
+          <a
+            href={`https://t.me/${BOT_USERNAME}?start=${authToken}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block w-full text-center bg-[#0088cc] hover:bg-[#0077b5] text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-md active:scale-95"
+          >
+            Відкрити Telegram бота
+          </a>
+          
+          <div className="text-center text-sm text-blue-800 animate-pulse font-medium bg-blue-50 py-3 rounded-xl border border-blue-100">
+            ⏳ Очікуємо підтвердження...
+            <p className="mt-1 text-[10px] opacity-70">Натисніть кнопку в боті після переходу</p>
+          </div>
         </div>
+      ) : (
+        <button
+          type="button"
+          onClick={handleLogin}
+          className="w-full rounded-2xl bg-emerald-600 px-6 py-4 text-base font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-95"
+        >
+          Увійти через Telegram
+        </button>
       )}
 
       {error && (
@@ -153,24 +146,9 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={handleLogin}
-        disabled={isPolling}
-        className={`w-full rounded-2xl px-6 py-4 text-base font-bold shadow-sm transition-all active:scale-95 ${
-          isPolling
-            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-md"
-        }`}
-      >
-        {isPolling ? "Очікування..." : "Увійти через Telegram"}
-      </button>
-
-      {!isPolling && (
-        <p className="text-center text-[10px] text-gray-400 uppercase tracking-widest font-bold">
-          Безпечний вхід через @{BOT_USERNAME}
-        </p>
-      )}
+      <p className="text-center text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+        Безпечний вхід через @{BOT_USERNAME}
+      </p>
     </div>
   );
 }
