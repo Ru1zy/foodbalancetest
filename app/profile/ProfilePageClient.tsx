@@ -251,8 +251,19 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
                       <div className="flex flex-col items-start sm:items-end gap-2">
                         {isIndivPackage(order.packageType) ? (
                           <p className="text-xl font-bold text-emerald-600">Індивідуальний розрахунок</p>
+                        ) : order.balanceDaysUsed > 0 ? (
+                          <div className="flex flex-col items-start sm:items-end">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 mb-1">
+                              Абонемент: {order.balanceDaysUsed}д
+                            </span>
+                            {order.price !== null && order.price > 0 ? (
+                              <p className="text-xl font-bold text-slate-900">Доплата: {order.price} ₴</p>
+                            ) : (
+                              <p className="text-xl font-bold text-emerald-600">Оплачено днями</p>
+                            )}
+                          </div>
                         ) : (
-                          order.price && (
+                          order.price !== null && (
                             <p className="text-xl font-bold text-slate-900">{order.price} ₴</p>
                           )
                         )}

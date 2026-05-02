@@ -242,6 +242,28 @@ export default function CheckoutPageImpl({
     return getOrderTotalUah(pkg, cartData.totalDays);
   }, [cartData.totalDays, pkg]);
 
+  const { balanceDaysToUse, fiatPrice } = useMemo(() => {
+    if (!pkg || availableDays === 0) {
+      return { balanceDaysToUse: 0, fiatPrice: orderTotalUah };
+    }
+    
+    const toUse = Math.min(availableDays, cartData.totalDays);
+    const fiatDays = cartData.totalDays - toUse;
+    
+    let fPrice = 0;
+    if (fiatDays > 0) {
+      if (!pkg.includes("Sushka")) {
+        fPrice = getOrderTotalUah(pkg, fiatDays);
+      } else {
+        // Calculate daily price from the full total for sushka
+        const dailyPrice = cartData.totalDays > 0 ? Math.round(orderTotalUah / cartData.totalDays) : 0;
+        fPrice = dailyPrice * fiatDays;
+      }
+    }
+    
+    return { balanceDaysToUse: toUse, fiatPrice: fPrice };
+  }, [availableDays, cartData.totalDays, orderTotalUah, pkg]);
+
   const deliveryDate = useMemo(
     () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
     [cartData.days, menuDayByItemId],
@@ -308,8 +330,7 @@ export default function CheckoutPageImpl({
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const isUsingBalance = availableDays >= cartData.totalDays && cartData.totalDays > 0;
-    formData.set("paymentMethod", isUsingBalance ? "balance" : "fiat");
+    formData.set("paymentMethod", balanceDaysToUse > 0 ? "balance" : "fiat");
 
     const submittedValues = parseCheckoutFormData(formData);
     const nextFieldErrors = validateCheckoutFormValues(submittedValues);
@@ -381,7 +402,7 @@ export default function CheckoutPageImpl({
         deliveryDateLabel: formatDisplayDate(deliveryDate),
         packageType: cartData.packageType,
         totalDays: cartData.totalDays,
-        totalPrice: orderTotalUah,
+        totalPrice: fiatPrice,
       });
 
       setCustomerProfile({
@@ -515,29 +536,26 @@ export default function CheckoutPageImpl({
                 <span className={`${isIndivPackage(selectedPackageRaw ?? undefined) ? "text-xl" : "text-3xl"} font-black text-white`}>
                   {isIndivPackage(selectedPackageRaw ?? undefined) ? (
                     "Індивідуальний розрахунок"
-                  ) : availableDays >= cartData.totalDays && cartData.totalDays > 0 ? (
+                  ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
                     "0 ₴"
-                  ) : orderTotalUah > 0 ? (
-                    `${orderTotalUah} ₴`
+                  ) : fiatPrice > 0 ? (
+                    `${fiatPrice} ₴`
                   ) : (
                     "—"
                   )}
                 </span>
               </div>
-              {availableDays > 0 && availableDays < cartData.totalDays && (
-                <div className="mt-4 rounded-xl bg-red-500/20 p-3 text-xs font-semibold text-red-200 border border-red-500/30">
-                  На балансі залишилося {availableDays} днів. Зменшіть кількість днів у замовленні або докупіть новий пакет.
+              {availableDays > 0 && balanceDaysToUse > 0 && (
+                <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500/30">
+                  {fiatPrice === 0 
+                    ? `Ви використовуєте свій абонемент. З балансу буде списано ${balanceDaysToUse} дні(в).`
+                    : `Часткова оплата: з балансу буде списано ${balanceDaysToUse} дні(в). Залишок до сплати: ${fiatPrice} ₴.`}
                 </div>
               )}
-              {availableDays >= cartData.totalDays && cartData.totalDays > 0 && (
-                <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500/30">
-                  Ви використовуєте свій абонемент. З балансу буде списано {cartData.totalDays} дні(в).
-                </div>
-              ) }
               <input 
                 type="hidden" 
                 name="paymentMethod" 
-                value={availableDays >= cartData.totalDays && cartData.totalDays > 0 ? "balance" : "fiat"} 
+                value={balanceDaysToUse > 0 ? "balance" : "fiat"} 
               />
               <div className="mt-3 flex items-start justify-between gap-3">
                 <span className="text-sm text-slate-300">Перша доставка</span>
@@ -758,17 +776,19 @@ export default function CheckoutPageImpl({
                   </div>
                   <button
                     type="submit"
-                    disabled={isPending || cartData.totalDays === 0 || (availableDays > 0 && availableDays < cartData.totalDays)}
+                    disabled={isPending || cartData.totalDays === 0}
                     className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition-all duration-200 ease-out active:scale-95 sm:w-full ${
-                      isPending || cartData.totalDays === 0 || (availableDays > 0 && availableDays < cartData.totalDays)
+                      isPending || cartData.totalDays === 0
                         ? "cursor-not-allowed bg-slate-200 text-slate-400"
                         : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                     }`}
                   >
                     {isPending
                       ? "Надсилаємо..."
-                      : availableDays >= cartData.totalDays && cartData.totalDays > 0
-                      ? `Оформити (списати ${cartData.totalDays} дні(в) з балансу)`
+                      : balanceDaysToUse > 0
+                      ? fiatPrice > 0 
+                        ? `Оформити (${balanceDaysToUse} дні з балансу + ${fiatPrice} ₴)`
+                        : `Оформити (списати ${balanceDaysToUse} дні з балансу)`
                       : isIndivPackage(selectedPackageRaw ?? undefined)
                       ? "Надіслати заявку"
                       : "Підтвердити замовлення"}

@@ -72,6 +72,7 @@ model Order {
   cutlery         Int      @default(0)
   notes           String?
   price           Int?
+  balanceDaysUsed Int      @default(0)
   deliveryTime    String?
   deliveryNote    String?
 }

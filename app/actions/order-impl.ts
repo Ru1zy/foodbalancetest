@@ -282,27 +282,41 @@ export async function submitOrder(
       }
     }
 
-    const { order, user } = await prisma.$transaction(async (tx) => {
-      // 1. Balance Verification & Deduction (within transaction)
-      if (paymentMethod === "balance") {
-        if (!userId) {
-          throw new Error("AUTH_REQUIRED_FOR_BALANCE");
-        }
+    // --- Start: Split Payment Calculation ---
+    let balanceDaysToUse = 0;
+    let fiatPrice = totalPrice;
 
-        const balance = await tx.userBalance.findUnique({
-          where: {
-            userId_packageId: {
-              userId,
-              packageId: sanitizedCartData.packageType,
-            },
+    if (userId) {
+      const userBalance = await prisma.userBalance.findUnique({
+        where: {
+          userId_packageId: {
+            userId,
+            packageId: sanitizedCartData.packageType,
           },
-        });
+        },
+      });
 
-        if (!balance || (balance.totalDays - balance.usedDays) < sanitizedCartData.totalDays) {
-          throw new Error("INSUFFICIENT_BALANCE");
+      if (userBalance) {
+        const availableDays = Math.max(0, userBalance.totalDays - userBalance.usedDays);
+        balanceDaysToUse = Math.min(availableDays, sanitizedCartData.totalDays);
+        const fiatDays = sanitizedCartData.totalDays - balanceDaysToUse;
+        
+        if (fiatDays <= 0) {
+          fiatPrice = 0;
+        } else if (!isSushkaPackage) {
+          fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays);
+        } else {
+          // For Sushka, calculate daily price from original total
+          const dailyPrice = Math.round(totalPrice / sanitizedCartData.totalDays);
+          fiatPrice = dailyPrice * fiatDays;
         }
+      }
+    }
+    // --- End: Split Payment Calculation ---
 
-        // Deduct days
+    const { order, user } = await prisma.$transaction(async (tx) => {
+      // 1. Deduct balance if used
+      if (balanceDaysToUse > 0 && userId) {
         await tx.userBalance.update({
           where: {
             userId_packageId: {
@@ -312,14 +326,13 @@ export async function submitOrder(
           },
           data: {
             usedDays: {
-              increment: sanitizedCartData.totalDays,
+              increment: balanceDaysToUse,
             },
           },
         });
       }
 
-      const finalPrice = paymentMethod === "balance" ? 0 : totalPrice;
-      const finalIsPaid = paymentMethod === "balance" ? true : false;
+      const finalIsPaid = fiatPrice === 0;
 
       if (userId) {
         const currentUser = await tx.user.findUnique({
@@ -379,7 +392,8 @@ export async function submitOrder(
               items: sanitizedCartData,
               notes: parsedFormData.comment || null,
               packageType: sanitizedCartData.packageType,
-              price: finalPrice,
+              price: fiatPrice,
+              balanceDaysUsed: balanceDaysToUse,
               isPaid: finalIsPaid,
               status: "new",
               userId,
@@ -388,12 +402,6 @@ export async function submitOrder(
 
           return { order, user };
         }
-      }
-
-      // If no userId but balance payment requested, it should have been caught above.
-      // But for robustness:
-      if (paymentMethod === "balance") {
-        throw new Error("AUTH_REQUIRED_FOR_BALANCE");
       }
 
       const existingUser = await tx.user.findUnique({
@@ -435,7 +443,8 @@ export async function submitOrder(
           items: sanitizedCartData,
           notes: parsedFormData.comment || null,
           packageType: sanitizedCartData.packageType,
-          price: finalPrice,
+          price: fiatPrice,
+          balanceDaysUsed: balanceDaysToUse,
           isPaid: finalIsPaid,
           status: "new",
           userId: user.id,
