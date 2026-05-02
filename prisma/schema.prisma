@@ -23,6 +23,20 @@ model User {
   notes          String?
 
   orders Order[]
+  balances UserBalance[]
+}
+
+model UserBalance {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  packageId   String   // e.g., 'Slim', 'Active', 'Sushka S'
+  totalDays   Int
+  usedDays    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, packageId])
 }
 
 model Menu {
