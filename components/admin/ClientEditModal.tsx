@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateClientInfo, unlinkTelegramAccount } from "@/app/actions/clients";
-import { updateUserBalance } from "@/app/actions/admin-balances";
+import { updateUserBalance, resetUserBalance } from "@/app/actions/admin-balances";
 
 type Client = {
   id: string;
@@ -63,7 +63,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
           if (existing) {
             return prev.map(b => 
               b.packageId === balancePackage 
-                ? { ...b, totalDays: b.totalDays + days } 
+                ? { ...b, totalDays: result.newTotal ?? (b.totalDays + days) } 
                 : b
             );
           } else {
@@ -71,6 +71,21 @@ export default function ClientEditModal({ client, onClose }: Props) {
           }
         });
 
+        router.refresh();
+      } else {
+        setFeedback(result.message || "Помилка");
+      }
+    });
+  };
+
+  const handleResetBalance = (pkgId: string) => {
+    if (!confirm(`Видалити абонемент ${pkgId} для ${client.name}?`)) return;
+
+    startTransition(async () => {
+      const result = await resetUserBalance(client.id, pkgId);
+      if (result.ok) {
+        setFeedback(`✓ Баланс ${pkgId} видалено`);
+        setLocalBalances(prev => prev.filter(b => b.packageId !== pkgId));
         router.refresh();
       } else {
         setFeedback(result.message || "Помилка");
@@ -189,10 +204,22 @@ export default function ClientEditModal({ client, onClose }: Props) {
               <div className="mb-4 space-y-2">
                 {localBalances.map((b) => (
                   <div key={b.packageId} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-emerald-200">
-                    <span className="font-bold text-slate-700">{b.packageId}</span>
-                    <span className="font-black text-emerald-600">
-                      Залишилось: {b.totalDays - b.usedDays} днів
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-700">{b.packageId}</span>
+                      <span className="font-black text-emerald-600">
+                        Залишилось: {b.totalDays - b.usedDays} днів
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleResetBalance(b.packageId)}
+                      disabled={isPending}
+                      className="rounded bg-red-50 p-1.5 text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                      title="Видалити абонемент"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>

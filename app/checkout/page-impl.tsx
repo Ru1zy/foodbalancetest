@@ -308,6 +308,9 @@ export default function CheckoutPageImpl({
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+    const isUsingBalance = availableDays >= cartData.totalDays && cartData.totalDays > 0;
+    formData.set("paymentMethod", isUsingBalance ? "balance" : "fiat");
+
     const submittedValues = parseCheckoutFormData(formData);
     const nextFieldErrors = validateCheckoutFormValues(submittedValues);
 
