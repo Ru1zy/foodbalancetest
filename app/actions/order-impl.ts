@@ -285,6 +285,7 @@ export async function submitOrder(
     // --- Start: Split Payment Calculation ---
     let balanceDaysToUse = 0;
     let fiatPrice = totalPrice;
+    const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
 
     if (userId) {
       const userBalance = await prisma.userBalance.findUnique({
