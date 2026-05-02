@@ -264,6 +264,7 @@ export async function submitOrder(
   }
 
   const resolvedDeliveryDate = submittedDeliveryDate;
+  const paymentMethod = formData.get("paymentMethod") as string | null;
 
   try {
     const cookieStore = await cookies();
@@ -279,6 +280,44 @@ export async function submitOrder(
     }
 
     const { order, user } = await prisma.$transaction(async (tx) => {
+      // 1. Balance Verification (if applicable)
+      if (paymentMethod === "balance") {
+        if (!userId) {
+          throw new Error("AUTH_REQUIRED_FOR_BALANCE");
+        }
+
+        const balance = await tx.userBalance.findUnique({
+          where: {
+            userId_packageId: {
+              userId,
+              packageId: sanitizedCartData.packageType,
+            },
+          },
+        });
+
+        if (!balance || (balance.totalDays - balance.usedDays) < sanitizedCartData.totalDays) {
+          throw new Error("INSUFFICIENT_BALANCE");
+        }
+
+        // Deduct days
+        await tx.userBalance.update({
+          where: {
+            userId_packageId: {
+              userId,
+              packageId: sanitizedCartData.packageType,
+            },
+          },
+          data: {
+            usedDays: {
+              increment: sanitizedCartData.totalDays,
+            },
+          },
+        });
+      }
+
+      const finalPrice = paymentMethod === "balance" ? 0 : totalPrice;
+      const isPaid = paymentMethod === "balance";
+
       if (userId) {
         const currentUser = await tx.user.findUnique({
           where: {
@@ -337,7 +376,8 @@ export async function submitOrder(
               items: sanitizedCartData,
               notes: parsedFormData.comment || null,
               packageType: sanitizedCartData.packageType,
-              price: totalPrice,
+              price: finalPrice,
+              isPaid,
               status: "new",
               userId,
             },
@@ -345,6 +385,12 @@ export async function submitOrder(
 
           return { order, user };
         }
+      }
+
+      // If no userId but balance payment requested, it should have been caught above.
+      // But for robustness:
+      if (paymentMethod === "balance") {
+        throw new Error("AUTH_REQUIRED_FOR_BALANCE");
       }
 
       const existingUser = await tx.user.findUnique({
@@ -386,7 +432,8 @@ export async function submitOrder(
           items: sanitizedCartData,
           notes: parsedFormData.comment || null,
           packageType: sanitizedCartData.packageType,
-          price: totalPrice,
+          price: finalPrice,
+          isPaid,
           status: "new",
           userId: user.id,
         },
@@ -410,13 +457,29 @@ export async function submitOrder(
       userId: user.id,
     };
   } catch (error) {
-    if (error instanceof Error && error.message === "PHONE_IN_USE_BY_TELEGRAM_USER") {
-      return {
-        ok: false,
-        message:
-          "Цей номер вже прив’язаний до іншого Telegram-акаунта. Авторизуйтеся саме в ньому або використайте інший номер.",
-        status: 409,
-      };
+    if (error instanceof Error) {
+      if (error.message === "PHONE_IN_USE_BY_TELEGRAM_USER") {
+        return {
+          ok: false,
+          message:
+            "Цей номер вже прив’язаний до іншого Telegram-акаунта. Авторизуйтеся саме в ньому або використайте інший номер.",
+          status: 409,
+        };
+      }
+      if (error.message === "INSUFFICIENT_BALANCE") {
+        return {
+          ok: false,
+          message: "Недостатньо днів на балансі. Будь ласка, поповніть абонемент.",
+          status: 400,
+        };
+      }
+      if (error.message === "AUTH_REQUIRED_FOR_BALANCE") {
+        return {
+          ok: false,
+          message: "Для оплати з балансу необхідно авторизуватися.",
+          status: 401,
+        };
+      }
     }
 
     console.error("submitOrder failed", error);

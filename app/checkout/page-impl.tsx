@@ -93,9 +93,23 @@ export default function CheckoutPageImpl({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
+  const [availableDays, setAvailableDays] = useState<number>(0);
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
   const normalizedDeliveryTime = normalizeDeliveryTime(customerProfile.deliveryTime);
+
+  useEffect(() => {
+    if (!pkg) return;
+    
+    fetch(`/api/balance?packageId=${pkg}`)
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data.availableDays === 'number') {
+          setAvailableDays(data.availableDays);
+        }
+      })
+      .catch(err => console.error("Balance fetch error:", err));
+  }, [pkg]);
 
   useEffect(() => {
     if (!authenticatedUser || customerProfile.isAuthenticated) {
@@ -498,6 +512,8 @@ export default function CheckoutPageImpl({
                 <span className={`${isIndivPackage(selectedPackageRaw ?? undefined) ? "text-xl" : "text-3xl"} font-black text-white`}>
                   {isIndivPackage(selectedPackageRaw ?? undefined) ? (
                     "Індивідуальний розрахунок"
+                  ) : availableDays >= cartData.totalDays && cartData.totalDays > 0 ? (
+                    "0 ₴"
                   ) : orderTotalUah > 0 ? (
                     `${orderTotalUah} ₴`
                   ) : (
@@ -505,6 +521,19 @@ export default function CheckoutPageImpl({
                   )}
                 </span>
               </div>
+              {availableDays > 0 && availableDays < cartData.totalDays && (
+                <div className="mt-4 rounded-xl bg-red-500/20 p-3 text-xs font-semibold text-red-200 border border-red-500/30">
+                  На балансі залишилося {availableDays} днів. Зменшіть кількість днів у замовленні або докупіть новий пакет.
+                </div>
+              )}
+              {availableDays >= cartData.totalDays && cartData.totalDays > 0 && (
+                <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500/30">
+                  Ви використовуєте свій абонемент. З балансу буде списано {cartData.totalDays} дні(в).
+                </div>
+              ) }
+              {availableDays > 0 && availableDays >= cartData.totalDays && (
+                 <input type="hidden" name="paymentMethod" value="balance" />
+              )}
               <div className="mt-3 flex items-start justify-between gap-3">
                 <span className="text-sm text-slate-300">Перша доставка</span>
                 <span className="text-right text-sm font-semibold text-white">
@@ -724,15 +753,17 @@ export default function CheckoutPageImpl({
                   </div>
                   <button
                     type="submit"
-                    disabled={isPending || cartData.totalDays === 0}
+                    disabled={isPending || cartData.totalDays === 0 || (availableDays > 0 && availableDays < cartData.totalDays)}
                     className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition-all duration-200 ease-out active:scale-95 sm:w-full ${
-                      isPending || cartData.totalDays === 0
+                      isPending || cartData.totalDays === 0 || (availableDays > 0 && availableDays < cartData.totalDays)
                         ? "cursor-not-allowed bg-slate-200 text-slate-400"
                         : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                     }`}
                   >
                     {isPending
                       ? "Надсилаємо..."
+                      : availableDays >= cartData.totalDays && cartData.totalDays > 0
+                      ? `Оформити (списати ${cartData.totalDays} дні(в) з балансу)`
                       : isIndivPackage(selectedPackageRaw ?? undefined)
                       ? "Надіслати заявку"
                       : "Підтвердити замовлення"}
