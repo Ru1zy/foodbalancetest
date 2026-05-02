@@ -33,6 +33,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
   const [isPending, startTransition] = useTransition();
   const [balancePackage, setBalancePackage] = useState("Slim");
   const [balanceDays, setBalanceDays] = useState(14);
+  const [localBalances, setLocalBalances] = useState(client.balances);
 
   const handleSave = () => {
     startTransition(async () => {
@@ -55,6 +56,21 @@ export default function ClientEditModal({ client, onClose }: Props) {
       const result = await updateUserBalance(client.id, balancePackage, days);
       if (result.ok) {
         setFeedback(`✓ Баланс ${balancePackage} оновлено`);
+        
+        // Optimistic update
+        setLocalBalances(prev => {
+          const existing = prev.find(b => b.packageId === balancePackage);
+          if (existing) {
+            return prev.map(b => 
+              b.packageId === balancePackage 
+                ? { ...b, totalDays: b.totalDays + days } 
+                : b
+            );
+          } else {
+            return [...prev, { packageId: balancePackage, totalDays: Math.max(0, days), usedDays: 0 }];
+          }
+        });
+
         router.refresh();
       } else {
         setFeedback(result.message || "Помилка");
@@ -169,9 +185,9 @@ export default function ClientEditModal({ client, onClose }: Props) {
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
             <h3 className="mb-3 text-sm font-bold text-emerald-900 uppercase tracking-wider">Керування балансом</h3>
             
-            {client.balances.length > 0 && (
+            {localBalances.length > 0 && (
               <div className="mb-4 space-y-2">
-                {client.balances.map((b) => (
+                {localBalances.map((b) => (
                   <div key={b.packageId} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-emerald-200">
                     <span className="font-bold text-slate-700">{b.packageId}</span>
                     <span className="font-black text-emerald-600">

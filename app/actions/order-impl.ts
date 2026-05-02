@@ -209,6 +209,7 @@ export async function submitOrder(
   }
 
   const sanitizedCartData = sanitizeCartData(cartData);
+  const paymentMethod = formData.get("paymentMethod") as string | null;
 
   if (sanitizedCartData.totalDays < 1) {
     return {
@@ -218,29 +219,32 @@ export async function submitOrder(
     };
   }
 
-  // For Sushka packages, use the passed totalPrice directly (calculated on client)
-  const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
-  if (!isSushkaPackage) {
-    const expectedPrice = getOrderTotalUah(sanitizedCartData.packageType, sanitizedCartData.totalDays);
-    if (
-      typeof totalPrice !== "number" ||
-      !Number.isInteger(totalPrice) ||
-      totalPrice !== expectedPrice
-    ) {
-      return {
-        ok: false,
-        message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
-        status: 400,
-      };
-    }
-  } else {
-    // For Sushka, just validate that totalPrice is a positive number
-    if (typeof totalPrice !== "number" || !Number.isInteger(totalPrice) || totalPrice < 0) {
-      return {
-        ok: false,
-        message: "Сума замовлення некоректна. Оновіть сторінку та спробуйте ще раз.",
-        status: 400,
-      };
+  // Skip standard price validation if using balance
+  if (paymentMethod !== "balance") {
+    // For Sushka packages, use the passed totalPrice directly (calculated on client)
+    const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
+    if (!isSushkaPackage) {
+      const expectedPrice = getOrderTotalUah(sanitizedCartData.packageType, sanitizedCartData.totalDays);
+      if (
+        typeof totalPrice !== "number" ||
+        !Number.isInteger(totalPrice) ||
+        totalPrice !== expectedPrice
+      ) {
+        return {
+          ok: false,
+          message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
+          status: 400,
+        };
+      }
+    } else {
+      // For Sushka, just validate that totalPrice is a positive number
+      if (typeof totalPrice !== "number" || !Number.isInteger(totalPrice) || totalPrice < 0) {
+        return {
+          ok: false,
+          message: "Сума замовлення некоректна. Оновіть сторінку та спробуйте ще раз.",
+          status: 400,
+        };
+      }
     }
   }
 
@@ -264,7 +268,6 @@ export async function submitOrder(
   }
 
   const resolvedDeliveryDate = submittedDeliveryDate;
-  const paymentMethod = formData.get("paymentMethod") as string | null;
 
   try {
     const cookieStore = await cookies();
@@ -280,7 +283,7 @@ export async function submitOrder(
     }
 
     const { order, user } = await prisma.$transaction(async (tx) => {
-      // 1. Balance Verification (if applicable)
+      // 1. Balance Verification & Deduction (within transaction)
       if (paymentMethod === "balance") {
         if (!userId) {
           throw new Error("AUTH_REQUIRED_FOR_BALANCE");
@@ -316,7 +319,7 @@ export async function submitOrder(
       }
 
       const finalPrice = paymentMethod === "balance" ? 0 : totalPrice;
-      const isPaid = paymentMethod === "balance";
+      const finalIsPaid = paymentMethod === "balance" ? true : false;
 
       if (userId) {
         const currentUser = await tx.user.findUnique({
@@ -377,7 +380,7 @@ export async function submitOrder(
               notes: parsedFormData.comment || null,
               packageType: sanitizedCartData.packageType,
               price: finalPrice,
-              isPaid,
+              isPaid: finalIsPaid,
               status: "new",
               userId,
             },
@@ -433,7 +436,7 @@ export async function submitOrder(
           notes: parsedFormData.comment || null,
           packageType: sanitizedCartData.packageType,
           price: finalPrice,
-          isPaid,
+          isPaid: finalIsPaid,
           status: "new",
           userId: user.id,
         },
