@@ -560,7 +560,7 @@ export async function notifyTodayOrders(dateStr: string) {
             `${order.user.name}: помилка відправки (${response.status})`
           );
         }
-      } catch (error) {
+      } catch {
         skipped++;
         skippedReasons.push(`${order.user.name}: помилка мережі`);
       }

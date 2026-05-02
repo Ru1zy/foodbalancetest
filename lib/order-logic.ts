@@ -208,6 +208,6 @@ export function isDaySelectable(dayOfWeek: number): boolean {
 }
 
 /** Weekday indices 1–7 still open for the current menu week (same rules as `isDaySelectable`). */
-export function getSelectableMenuDayNumbers(): number[] {
+export function getSelectableDays(): number[] {
   return [1, 2, 3, 4, 5, 6, 7].filter((d) => isDaySelectable(d));
 }

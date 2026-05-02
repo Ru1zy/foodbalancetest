@@ -4,7 +4,7 @@ import { google } from "googleapis";
 
 export const runtime = "nodejs";
 
-async function parseOrderItems(items: unknown, _orderId: string): Promise<string[]> {
+async function parseOrderItems(items: unknown): Promise<string[]> {
   if (!items || typeof items !== "object") {
     return [];
   }
@@ -148,7 +148,7 @@ export async function GET(request: Request) {
     // Parse all orders
     const exportData = await Promise.all(
       orders.map(async (order) => {
-        const parsedItems = await parseOrderItems(order.items, order.id);
+        const parsedItems = await parseOrderItems(order.items);
         const dishesString = parsedItems.join("+");
 
         // Get cutlery info

@@ -55,7 +55,7 @@ function formatShortDate(date: Date): string {
   }).format(new Date(date));
 }
 
-export default function ProfilePageClient({ user, orders }: Props) {
+export default function ProfilePageClient({ user, orders, balances }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
