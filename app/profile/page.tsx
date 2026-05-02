@@ -6,6 +6,7 @@ import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay } fro
 import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 import { parseIndivDishId } from "@/lib/order-selection";
+import { getAllTariffs } from "@/app/actions/tariff-impl";
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: "Сніданок",
@@ -222,5 +223,7 @@ export default async function ProfilePage() {
     }))
   );
 
-  return <ProfilePageClient user={user} orders={ordersWithResolvedDishes} balances={activeBalances} />;
+  const tariffs = await getAllTariffs();
+
+  return <ProfilePageClient user={user} orders={ordersWithResolvedDishes} balances={activeBalances} tariffs={tariffs} />;
 }

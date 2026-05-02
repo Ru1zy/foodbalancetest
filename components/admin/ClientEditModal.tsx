@@ -194,6 +194,8 @@ export default function ClientEditModal({ client, onClose }: Props) {
                 onChange={(e) => setBalanceDays(Number(e.target.value))}
                 className="w-20 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
                 placeholder="Дні"
+                min="-100"
+                max="100"
               />
               <button
                 onClick={() => handleUpdateBalance(balanceDays)}

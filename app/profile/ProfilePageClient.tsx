@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { updateUserProfile } from "../actions/profile";
 import { isIndivPackage } from "@/lib/order-selection";
+import SubscriptionOptions from "@/components/SubscriptionOptions";
 
 type User = {
   id: string;
@@ -32,10 +33,17 @@ export type UserBalanceSummary = {
   remainingDays: number;
 };
 
+type Tariff = {
+  id: string;
+  name: string;
+  basePrice: number;
+};
+
 type Props = {
   user: User;
   orders: OrderWithResolvedDishes[];
   balances: UserBalanceSummary[];
+  tariffs: Tariff[];
 };
 
 function formatDate(date: Date): string {
@@ -55,9 +63,10 @@ function formatShortDate(date: Date): string {
   }).format(new Date(date));
 }
 
-export default function ProfilePageClient({ user, orders, balances }: Props) {
+export default function ProfilePageClient({ user, orders, balances, tariffs }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -92,6 +101,31 @@ export default function ProfilePageClient({ user, orders, balances }: Props) {
             </div>
           </div>
         )}
+
+        {/* Purchase Subscription Section */}
+        <div className="mb-8 rounded-2xl border border-blue-100 bg-blue-50 p-5 shadow-sm sm:p-8">
+          <h2 className="mb-6 text-2xl font-bold text-blue-900">Придбати абонемент</h2>
+          
+          <div className="mb-6 flex flex-wrap gap-2">
+            {tariffs.filter(t => t.name !== "Template").map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                  activeTab === t.id
+                    ? "bg-blue-600 text-white shadow-md"
+                    : "bg-white text-blue-600 hover:bg-blue-50"
+                }`}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+
+          {tariffs.find(t => t.id === activeTab) && (
+            <SubscriptionOptions pkg={tariffs.find(t => t.id === activeTab)!} />
+          )}
+        </div>
 
         {/* Settings Section */}
         <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
