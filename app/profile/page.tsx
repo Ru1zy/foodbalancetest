@@ -193,6 +193,17 @@ export default async function ProfilePage() {
     phone: sanitizeTelegramPhone(dbUser.phone),
   };
 
+  const rawBalances = await prisma.userBalance.findMany({
+    where: { userId },
+  });
+
+  const activeBalances = rawBalances
+    .filter((b) => b.totalDays - b.usedDays > 0)
+    .map((b) => ({
+      packageId: b.packageId,
+      remainingDays: b.totalDays - b.usedDays,
+    }));
+
   const rawOrders = await prisma.order.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
@@ -211,5 +222,5 @@ export default async function ProfilePage() {
     }))
   );
 
-  return <ProfilePageClient user={user} orders={ordersWithResolvedDishes} />;
+  return <ProfilePageClient user={user} orders={ordersWithResolvedDishes} balances={activeBalances} />;
 }

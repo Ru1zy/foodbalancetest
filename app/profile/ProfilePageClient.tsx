@@ -27,9 +27,15 @@ export type OrderWithResolvedDishes = {
   resolvedDays: ResolvedDay[];
 };
 
+export type UserBalanceSummary = {
+  packageId: string;
+  remainingDays: number;
+};
+
 type Props = {
   user: User;
   orders: OrderWithResolvedDishes[];
+  balances: UserBalanceSummary[];
 };
 
 function formatDate(date: Date): string {
@@ -71,6 +77,21 @@ export default function ProfilePageClient({ user, orders }: Props) {
         <h1 className="mb-8 text-3xl font-bold text-gray-900 sm:text-4xl">
           Профіль
         </h1>
+
+        {/* Balances Section */}
+        {balances.length > 0 && (
+          <div className="mb-8 rounded-2xl border border-emerald-100 bg-emerald-50 p-5 shadow-sm sm:p-8">
+            <h2 className="mb-6 text-2xl font-bold text-emerald-900">Мої абонементи</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {balances.map((balance) => (
+                <div key={balance.packageId} className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-emerald-200">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-emerald-600 mb-1">{balance.packageId}</div>
+                  <div className="text-2xl font-black text-slate-900">Залишилось: {balance.remainingDays} днів</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Settings Section */}
         <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-8">

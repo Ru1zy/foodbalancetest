@@ -14,6 +14,11 @@ type Client = {
   _count: {
     orders: number;
   };
+  balances: {
+    packageId: string;
+    totalDays: number;
+    usedDays: number;
+  }[];
 };
 
 type Props = {
@@ -91,7 +96,20 @@ export default function ClientsPageClient({ clients }: Props) {
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
                           {client.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className="font-semibold text-slate-900">{client.name}</div>
+                        <div>
+                          <div className="font-semibold text-slate-900">{client.name}</div>
+                          {client.balances.filter(b => b.totalDays - b.usedDays > 0).length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {client.balances
+                                .filter(b => b.totalDays - b.usedDays > 0)
+                                .map(b => (
+                                  <span key={b.packageId} className="inline-flex items-center rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                                    {b.packageId}: {b.totalDays - b.usedDays}д
+                                  </span>
+                                ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-5 sm:px-6">

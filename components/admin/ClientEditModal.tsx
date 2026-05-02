@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { updateClientInfo, unlinkTelegramAccount } from "@/app/actions/clients";
+import { updateUserBalance } from "@/app/actions/admin-balances";
 
 type Client = {
   id: string;
@@ -11,6 +12,11 @@ type Client = {
   address: string | null;
   notes: string | null;
   defaultPackage: string | null;
+  balances: {
+    packageId: string;
+    totalDays: number;
+    usedDays: number;
+  }[];
 };
 
 type Props = {
@@ -23,6 +29,8 @@ export default function ClientEditModal({ client, onClose }: Props) {
   const [notes, setNotes] = useState(client.notes || "");
   const [feedback, setFeedback] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [balancePackage, setBalancePackage] = useState("Slim");
+  const [balanceDays, setBalanceDays] = useState(14);
 
   const handleSave = () => {
     startTransition(async () => {
@@ -35,6 +43,17 @@ export default function ClientEditModal({ client, onClose }: Props) {
         }, 800);
       } else {
         setFeedback(result.message);
+      }
+    });
+  };
+
+  const handleUpdateBalance = (days: number) => {
+    startTransition(async () => {
+      const result = await updateUserBalance(client.id, balancePackage, days);
+      if (result.ok) {
+        setFeedback(`✓ Баланс ${balancePackage} оновлено`);
+      } else {
+        setFeedback(result.message || "Помилка");
       }
     });
   };
@@ -141,6 +160,49 @@ export default function ClientEditModal({ client, onClose }: Props) {
               rows={3}
               placeholder="Додаткова інформація про клієнта..."
             />
+          </div>
+
+          <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+            <h3 className="mb-3 text-sm font-bold text-emerald-900 uppercase tracking-wider">Керування балансом</h3>
+            
+            {client.balances.length > 0 && (
+              <div className="mb-4 space-y-2">
+                {client.balances.map((b) => (
+                  <div key={b.packageId} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-emerald-200">
+                    <span className="font-bold text-slate-700">{b.packageId}</span>
+                    <span className="font-black text-emerald-600">
+                      Залишилось: {b.totalDays - b.usedDays} днів
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={balancePackage}
+                onChange={(e) => setBalancePackage(e.target.value)}
+                className="flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+              >
+                {["Slim", "Balance", "Active", "Sport", "Sushka S", "Sushka XS", "Indiv"].map((p) => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+              <input
+                type="number"
+                value={balanceDays}
+                onChange={(e) => setBalanceDays(Number(e.target.value))}
+                className="w-20 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                placeholder="Дні"
+              />
+              <button
+                onClick={() => handleUpdateBalance(balanceDays)}
+                disabled={isPending}
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Додати дні
+              </button>
+            </div>
           </div>
 
           {feedback && (

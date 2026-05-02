@@ -41,6 +41,13 @@ export default async function AdminClientsPage() {
           orders: true,
         },
       },
+      balances: {
+        select: {
+          packageId: true,
+          totalDays: true,
+          usedDays: true,
+        },
+      },
     },
     orderBy: {
       name: "asc",
