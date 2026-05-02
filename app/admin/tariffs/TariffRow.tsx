@@ -163,8 +163,20 @@ export default function TariffRow({ tariff }: Props) {
       <td className="px-6 py-4 text-sm font-medium text-gray-900">{tariff.name}</td>
       <td className="px-6 py-4 text-sm text-gray-600">{tariff.title}</td>
       <td className="px-6 py-4 text-sm text-gray-600">{tariff.kcal}</td>
-      <td className="px-6 py-4 text-sm text-gray-600">{tariff.price}</td>
-      <td className="px-6 py-4 text-sm text-gray-600">{tariff.basePrice} ₴</td>
+      <td className="px-6 py-4 text-sm text-gray-600">
+        {tariff.name === "Indiv" ? (
+          <span className="font-semibold text-emerald-600">Індивідуально</span>
+        ) : (
+          tariff.price
+        )}
+      </td>
+      <td className="px-6 py-4 text-sm text-gray-600">
+        {tariff.name === "Indiv" ? (
+          <span className="font-semibold text-emerald-600">Індивідуально</span>
+        ) : (
+          `${tariff.basePrice} ₴`
+        )}
+      </td>
       <td className="px-6 py-4">
         <div className="flex gap-2">
           <div className="text-center">

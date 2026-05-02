@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { updateUserProfile } from "../actions/profile";
+import { isIndivPackage } from "@/lib/order-selection";
 
 type User = {
   id: string;
@@ -189,8 +190,12 @@ export default function ProfilePageClient({ user, orders }: Props) {
                         </p>
                       </div>
                       <div className="flex flex-col items-start sm:items-end gap-2">
-                        {order.price && (
-                          <p className="text-xl font-bold text-slate-900">{order.price} ₴</p>
+                        {isIndivPackage(order.packageType) ? (
+                          <p className="text-xl font-bold text-emerald-600">Індивідуальний розрахунок</p>
+                        ) : (
+                          order.price && (
+                            <p className="text-xl font-bold text-slate-900">{order.price} ₴</p>
+                          )
                         )}
                         {order.isPaid && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-800">

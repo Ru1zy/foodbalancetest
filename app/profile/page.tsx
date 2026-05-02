@@ -5,12 +5,14 @@ import prisma from "@/lib/prisma";
 import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay } from "./ProfilePageClient";
 import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { parseIndivDishId } from "@/lib/order-selection";
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: "Сніданок",
   lunch: "Обід",
   dinner: "Вечеря",
   snack: "Перекус",
+  extra: "Додаткова страва",
 };
 
 type OrderDayItemPayload = {
@@ -77,11 +79,38 @@ async function resolveOrderDishes(order: {
     actualDate.setDate(actualDate.getDate() + dayIndex);
 
     // Handle individual package items (Indiv package)
-    if (Array.isArray(day?.items)) {
-      for (const item of day.items) {
-        const dishId = item.dishId || "";
-        const quantity = typeof item.quantity === "number" ? item.quantity : 1;
-        dayDishes.push(`${dishId} (x${quantity})`);
+    if (Array.isArray(day?.items) && day.dayId) {
+      const menu = menuById.get(day.dayId);
+      if (menu) {
+        const dishes =
+          typeof menu.dishes === "string"
+            ? (JSON.parse(menu.dishes) as Record<string, unknown>)
+            : (menu.dishes as Record<string, unknown>);
+
+        for (const item of day.items) {
+          const dishId = item.dishId || "";
+          const quantity = typeof item.quantity === "number" ? item.quantity : 1;
+          const parsed = parseIndivDishId(dishId);
+
+          if (parsed) {
+            const categoryLabel = CATEGORY_LABELS[parsed.category] || parsed.category;
+            const categoryDishes = dishes[parsed.category];
+
+            if (Array.isArray(categoryDishes) && categoryDishes[parsed.index]) {
+              const dish = categoryDishes[parsed.index];
+              const dishName =
+                typeof dish === "object" && dish !== null
+                  ? dish.full || dish.short || dish.name
+                  : dish;
+
+              dayDishes.push(`${categoryLabel}: ${String(dishName).trim()} x${quantity}`);
+            } else {
+              dayDishes.push(`${categoryLabel}: Страва не знайдена x${quantity}`);
+            }
+          } else {
+            dayDishes.push(`${dishId} (x${quantity})`);
+          }
+        }
       }
     }
 
