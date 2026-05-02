@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateClientInfo, unlinkTelegramAccount } from "@/app/actions/clients";
 import { updateUserBalance } from "@/app/actions/admin-balances";
 
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export default function ClientEditModal({ client, onClose }: Props) {
+  const router = useRouter();
   const [address, setAddress] = useState(client.address || "");
   const [notes, setNotes] = useState(client.notes || "");
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -38,6 +40,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
 
       if (result.ok) {
         setFeedback("✓ Збережено");
+        router.refresh();
         setTimeout(() => {
           onClose();
         }, 800);
@@ -52,6 +55,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
       const result = await updateUserBalance(client.id, balancePackage, days);
       if (result.ok) {
         setFeedback(`✓ Баланс ${balancePackage} оновлено`);
+        router.refresh();
       } else {
         setFeedback(result.message || "Помилка");
       }

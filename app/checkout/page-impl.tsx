@@ -531,7 +531,7 @@ export default function CheckoutPageImpl({
                   Ви використовуєте свій абонемент. З балансу буде списано {cartData.totalDays} дні(в).
                 </div>
               ) }
-              {availableDays > 0 && availableDays >= cartData.totalDays && (
+              {availableDays >= cartData.totalDays && cartData.totalDays > 0 && (
                  <input type="hidden" name="paymentMethod" value="balance" />
               )}
               <div className="mt-3 flex items-start justify-between gap-3">

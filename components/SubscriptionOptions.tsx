@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { 
   calculateSubscriptionPrice, 
   getDiscountForPackage, 
@@ -15,15 +16,22 @@ type Pkg = {
 
 type Props = {
   pkg: Pkg;
+  isNewClient?: boolean;
 };
 
-export default function SubscriptionOptions({ pkg }: Props) {
+export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState<number | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const isSushka = pkg.id.toLowerCase().includes("sushka") || pkg.name.toLowerCase().includes("sushka");
-  const durations: PackageDuration[] = isSushka ? [2, 7, 14] : [2, 7, 14, 30];
+  let durations: PackageDuration[] = isSushka ? [2, 7, 14] : [2, 7, 14, 30];
+
+  // Filter out 2-day trial for existing clients
+  if (!isNewClient) {
+    durations = durations.filter(d => d !== 2);
+  }
 
   const handlePurchase = async (duration: PackageDuration) => {
     setLoading(duration);
@@ -37,7 +45,7 @@ export default function SubscriptionOptions({ pkg }: Props) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          packageId: pkg.name, // Using pkg.name as it's the identifier in UserBalance as per task 1 schema
+          packageId: pkg.name,
           duration: duration,
         }),
       });
@@ -48,6 +56,7 @@ export default function SubscriptionOptions({ pkg }: Props) {
       }
 
       setSuccess(`Успішно! Додано ${duration} днів до вашого балансу.`);
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Сталася помилка");
     } finally {

@@ -210,6 +210,10 @@ export default async function ProfilePage() {
     orderBy: { createdAt: "desc" },
   });
 
+  const orderCount = await prisma.order.count({
+    where: { userId },
+  });
+
   // Resolve dish names for all orders
   const ordersWithResolvedDishes: OrderWithResolvedDishes[] = await Promise.all(
     rawOrders.map(async (order) => ({
@@ -225,5 +229,13 @@ export default async function ProfilePage() {
 
   const tariffs = await getAllTariffs();
 
-  return <ProfilePageClient user={user} orders={ordersWithResolvedDishes} balances={activeBalances} tariffs={tariffs} />;
+  return (
+    <ProfilePageClient 
+      user={user} 
+      orders={ordersWithResolvedDishes} 
+      balances={activeBalances} 
+      tariffs={tariffs} 
+      isNewClient={orderCount === 0}
+    />
+  );
 }

@@ -44,6 +44,7 @@ type Props = {
   orders: OrderWithResolvedDishes[];
   balances: UserBalanceSummary[];
   tariffs: Tariff[];
+  isNewClient: boolean;
 };
 
 function formatDate(date: Date): string {
@@ -63,7 +64,7 @@ function formatShortDate(date: Date): string {
   }).format(new Date(date));
 }
 
-export default function ProfilePageClient({ user, orders, balances, tariffs }: Props) {
+export default function ProfilePageClient({ user, orders, balances, tariffs, isNewClient }: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
@@ -123,7 +124,10 @@ export default function ProfilePageClient({ user, orders, balances, tariffs }: P
           </div>
 
           {tariffs.find(t => t.id === activeTab) && (
-            <SubscriptionOptions pkg={tariffs.find(t => t.id === activeTab)!} />
+            <SubscriptionOptions 
+              pkg={tariffs.find(t => t.id === activeTab)!} 
+              isNewClient={isNewClient}
+            />
           )}
         </div>
 
