@@ -222,6 +222,7 @@ export default async function ProfilePage() {
       deliveryDate: order.deliveryDate,
       packageType: order.packageType,
       price: order.price,
+      balanceDaysUsed: order.balanceDaysUsed,
       isPaid: order.isPaid,
       resolvedDays: await resolveOrderDishes(order),
     }))

@@ -24,6 +24,7 @@ export type OrderWithResolvedDishes = {
   deliveryDate: Date;
   packageType: string;
   price: number | null;
+  balanceDaysUsed: number;
   isPaid: boolean;
   resolvedDays: ResolvedDay[];
 };
