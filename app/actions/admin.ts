@@ -818,8 +818,10 @@ export async function exportToKitchenSheet(
     const rows: string[][] = await Promise.all(
       orders.map(async (order) => {
         let formattedDishes = "";
-        const isSushka = order.packageType.toLowerCase().includes("sushka");
-        const isIndiv = order.packageType.toLowerCase().includes("ind");
+        const pkgLower = order.packageType.toLowerCase();
+        const isSushka = pkgLower.includes("sushka");
+        const isIndiv = pkgLower.includes("ind");
+        const isExtendedPlan = pkgLower.includes("active") || pkgLower.includes("sport");
         
         if (isSushka) {
           // Format Sushka dishes
@@ -828,7 +830,7 @@ export async function exportToKitchenSheet(
             try {
               const dishes = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]>;
               const names: string[] = [];
-              const isXS = order.packageType.toLowerCase().includes("xs");
+              const isXS = pkgLower.includes("xs");
               
               ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
                 if (isXS && cat === 'snack') return;
@@ -854,8 +856,14 @@ export async function exportToKitchenSheet(
               const names: string[] = [];
               ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
                 const d = dishes[cat]?.[0];
-                const name = typeof d === "object" ? d.short || d.full : d;
-                if (name) names.push(String(name).trim());
+                let dishName = typeof d === "object" ? d.short || d.full : d;
+                if (dishName) {
+                  dishName = String(dishName).trim();
+                  if (isExtendedPlan && ['lunch', 'dinner'].includes(cat)) {
+                    if (!dishName.includes('(1,5)')) dishName += " (1,5)";
+                  }
+                  names.push(dishName);
+                }
               });
               formattedDishes = names.join(" + ");
             } catch {
@@ -868,16 +876,31 @@ export async function exportToKitchenSheet(
           }
         }
 
+        // Calculate daily price
+        // If balanceDaysUsed > 0, we assume this specific day could be from balance.
+        // The most reliable way is to check if price is 0 (fully balance) 
+        // OR calculate the unit price if it was a paid order.
+        let dailyPrice = "0";
+        if (order.price && order.price > 0) {
+          // Get total days in this order from JSON items if available, or assume at least 1
+          let totalDaysInOrder = 1;
+          if (order.items && typeof order.items === "object") {
+             const daysArr = (order.items as any).days;
+             if (Array.isArray(daysArr)) totalDaysInOrder = daysArr.length;
+          }
+          dailyPrice = Math.round(order.price / totalDaysInOrder).toString();
+        }
+
         return [
           order.user.name || "", // C
-          order.user.phone || "", // D
+          order.user.phone ? `'${order.user.phone}` : "", // D (Add apostrophe to preserve 0)
           order.user.address || "", // E
           order.user.chatId || "", // F
           order.packageType || "", // G
           formattedDishes || "Меню не знайдено", // H
           order.cutlery ? `${order.cutlery} шт` : "0 шт", // I
           order.deliveryNote || "", // J
-          order.price ? order.price.toString() : "", // K
+          dailyPrice, // K
         ];
       })
     );
