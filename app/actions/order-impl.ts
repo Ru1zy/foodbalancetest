@@ -45,7 +45,7 @@ export type SubmitOrderResult =
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   // CRITICAL: Calculate server-side package limit - NEVER trust client's packageLimit
-  const serverPackageLimit = getPackageLimit(cartData.packageType);
+  const serverPackageLimit = getPackageLimit(cartData.packageType).limit;
 
   // Validate that client-provided limit matches server calculation
   if (cartData.packageLimit !== serverPackageLimit) {

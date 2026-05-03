@@ -52,11 +52,14 @@ export function isDaySelectionComplete(selectedCount: number, packageType?: stri
     return false;
   }
 
-  if (isIndivPackage(packageType)) {
-    return selectedCount >= 1;
+  const { limit, exact } = getPackageLimit(packageType);
+
+  if (exact) {
+    return selectedCount === limit;
   }
 
-  return selectedCount === getPackageLimit(packageType);
+  // Non-exact (like Indiv) requires at least 1 and up to the limit
+  return selectedCount >= 1 && selectedCount <= limit;
 }
 
 export function toIndivDishQuantities(daySelections: DaySelections): IndivDishQuantity[] {

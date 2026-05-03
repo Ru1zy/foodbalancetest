@@ -143,7 +143,7 @@ export const useOrderStore = create<OrderStore>()(
 
   incrementDish: (dayId, dishId) =>
     set((state) => {
-      const packageLimit = getPackageLimit(state.selectedPackage ?? undefined);
+      const { limit: packageLimit } = getPackageLimit(state.selectedPackage ?? undefined);
       const isIndiv = state.selectedPackage?.toLowerCase().includes("інд") ||
                       state.selectedPackage?.toLowerCase().includes("ind");
 

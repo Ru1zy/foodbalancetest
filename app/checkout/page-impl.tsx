@@ -90,7 +90,7 @@ export default function CheckoutPageImpl({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<"balance" | "cash">("balance");
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
 
@@ -161,13 +161,13 @@ export default function CheckoutPageImpl({
     setCustomerProfile({ phone: "" });
   }, [customerProfile.phone, setCustomerProfile]);
 
-  const packageLimit = getPackageLimit(pkg ?? undefined);
+  const packageLimitInfo = getPackageLimit(pkg ?? undefined);
 
   const cartData = useMemo<OrderCartData>(() => {
     if (!pkg) {
       return {
         days: [],
-        packageLimit: getPackageLimit(),
+        packageLimit: getPackageLimit().limit,
         packageType: "Slim",
         totalDays: 0,
       };
@@ -207,11 +207,10 @@ export default function CheckoutPageImpl({
 
       return {
         days,
-        packageLimit,
+        packageLimit: packageLimitInfo.limit,
         packageType: pkg,
         totalDays: days.length,
-      };
-    }
+      };    }
 
     const days = Object.entries(selections)
       .map(([dayId, daySelections]) => {
@@ -235,11 +234,11 @@ export default function CheckoutPageImpl({
 
     return {
       days,
-      packageLimit,
+      packageLimit: packageLimitInfo.limit,
       packageType: pkg,
       totalDays: days.length,
     };
-  }, [packageLimit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay]);
+  }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay]);
 
   const orderTotalUah = useMemo(() => {
     if (!pkg) {
@@ -258,7 +257,7 @@ export default function CheckoutPageImpl({
   }, [cartData.totalDays, pkg]);
 
   const { balanceDaysToUse, fiatPrice } = useMemo(() => {
-    if (!pkg || availableDays === 0 || paymentMethod === "cash") {
+    if (!pkg || availableDays === 0) {
       return { balanceDaysToUse: 0, fiatPrice: orderTotalUah };
     }
     
@@ -277,7 +276,7 @@ export default function CheckoutPageImpl({
     }
     
     return { balanceDaysToUse: toUse, fiatPrice: fPrice };
-  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, paymentMethod]);
+  }, [availableDays, cartData.totalDays, orderTotalUah, pkg]);
 
   const deliveryDate = useMemo(
     () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
@@ -358,7 +357,7 @@ export default function CheckoutPageImpl({
         if (!day.items) return;
         const totalQuantity = day.items.reduce((sum, item) => sum + item.quantity, 0);
         if (totalQuantity < 1 || totalQuantity > 10) return;
-      } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit) {
+      } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit.limit) {
         return;
       }
     }
@@ -378,6 +377,13 @@ export default function CheckoutPageImpl({
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
+
+      // Override paymentMethod based on fiatPrice
+      if (fiatPrice === 0) {
+        formData.set("paymentMethod", "balance");
+      } else {
+        formData.set("paymentMethod", paymentMethod);
+      }
 
       const result = await submitOrder(formData, cartData, deliveryDate, orderTotalUah);
       if (!result.ok) {
@@ -544,7 +550,7 @@ export default function CheckoutPageImpl({
               <input 
                 type="hidden" 
                 name="paymentMethod" 
-                value={paymentMethod} 
+                value={fiatPrice === 0 ? "balance" : paymentMethod} 
               />
               <div className="mt-3 flex items-start justify-between gap-3">
                 <span className="text-sm text-slate-300">Перша доставка</span>
@@ -630,47 +636,64 @@ export default function CheckoutPageImpl({
 
             <div className="mb-8 rounded-[2rem] border border-slate-200 bg-slate-50 p-6">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
-              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("balance")}
-                  disabled={availableDays === 0}
-                  className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
-                    paymentMethod === "balance"
-                      ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  } ${availableDays === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  <div className="text-left">
-                    <div className="font-bold text-slate-900">Оплата з балансу</div>
-                    <div className="text-xs text-slate-500">Доступно: {availableDays} дн.</div>
+              
+              {fiatPrice === 0 ? (
+                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                      <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                  <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                    paymentMethod === "balance" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
-                  }`}>
-                    {paymentMethod === "balance" && <div className="h-2 w-2 rounded-full bg-white" />}
-                  </div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("cash")}
-                  className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
-                    paymentMethod === "cash"
-                      ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
-                      : "border-slate-200 bg-white hover:border-slate-300"
-                  }`}
-                >
-                  <div className="text-left">
-                    <div className="font-bold text-slate-900">Готівкою</div>
-                    <div className="text-xs text-slate-500">При отриманні</div>
-                  </div>
-                  <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                    paymentMethod === "cash" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
-                  }`}>
-                    {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white" />}
-                  </div>
-                </button>
-              </div>
+                  <div className="font-bold text-emerald-900">Повністю оплачено з абонемента</div>
+                </div>
+              ) : (
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("card")}
+                    className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+                      paymentMethod === "card"
+                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold text-slate-900">Карткою онлайн</div>
+                      <div className="text-xs text-slate-500">Apple Pay, Google Pay, Visa/MC</div>
+                    </div>
+                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
+                      paymentMethod === "card" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
+                    }`}>
+                      {paymentMethod === "card" && <div className="h-2 w-2 rounded-full bg-white" />}
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethod("cash")}
+                    className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+                      paymentMethod === "cash"
+                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
+                        : "border-slate-200 bg-white hover:border-slate-300"
+                    }`}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold text-slate-900">Готівкою</div>
+                      <div className="text-xs text-slate-500">При отриманні кур&apos;єру</div>
+                    </div>
+                    <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
+                      paymentMethod === "cash" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
+                    }`}>
+                      {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white" />}
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {balanceDaysToUse > 0 && fiatPrice > 0 && (
+                <p className="mt-3 px-1 text-xs text-slate-500">
+                  * Частина замовлення ({balanceDaysToUse} дн.) буде списана з вашого абонемента автоматично.
+                </p>
+              )}
             </div>
 
             {feedback && (

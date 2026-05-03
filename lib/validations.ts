@@ -6,7 +6,7 @@ export const checkoutSchema = z.object({
   address: z.string().min(5, "Введіть повну адресу доставки"),
   comment: z.string(),
   cutlery: z.number().int().min(0).max(10),
-  paymentMethod: z.enum(["balance", "cash", "fiat"]),
+  paymentMethod: z.enum(["balance", "card", "cash", "fiat"]),
 });
 
 export type CheckoutSchema = z.infer<typeof checkoutSchema>;

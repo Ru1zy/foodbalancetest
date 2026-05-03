@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { getPackageLimit, isDaySelectable, type PackageType } from "../lib/order-logic";
+import { getPackageLimit, isDaySelectable, type PackageType, type PackageLimitInfo } from "../lib/order-logic";
 import { getMenuRowsForPackage } from "@/lib/menu-for-package";
 import type { Dishes, DishOption, MenuItem } from "@/lib/menu-types";
 import { parsePackageType } from "@/lib/package-coerce";
@@ -46,7 +46,7 @@ type MealSectionProps = {
   pkg: PackageType | null;
   isSushka: boolean;
   indivSelected: boolean;
-  packageLimit: number;
+  packageLimit: PackageLimitInfo;
   selections: Record<string, Record<string, number>>;
   progressByDay: Record<string, { selectedCount: number; isComplete: boolean }>;
   incrementDish: (dayId: string, dishId: string) => void;
@@ -111,7 +111,7 @@ function MealSection({
           if (indivSelected) {
             const dishId = buildIndivDishId(category, idx);
             const quantity = selections[itemId]?.[dishId] ?? 0;
-            const isAtLimit = daySelectedCount >= packageLimit;
+            const isAtLimit = daySelectedCount >= packageLimit.limit;
 
             return (
               <div
@@ -230,7 +230,7 @@ export default function MenuGridClient({ menuItems }: Props) {
     // For Sushka packages, the menu is fixed - auto-complete all days
     if (isSushka) {
       for (const item of sorted) {
-        progress[item.id] = { selectedCount: packageLimit, isComplete: true };
+        progress[item.id] = { selectedCount: packageLimit.limit, isComplete: true };
         completed += 1;
       }
       return {
@@ -390,7 +390,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                   )}
                   {indivSelected && (
                     <div className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
-                      Для Indiv обирайте будь-які страви від 1 до {packageLimit} на день.
+                      Для Indiv обирайте будь-які страви від 1 до {packageLimit.limit} на день.
                     </div>
                   )}
 
@@ -484,7 +484,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                       <p className="text-sm font-semibold text-emerald-600">День зібрано ✓</p>
                     ) : (
                       <p className="text-sm font-semibold text-gray-600">
-                        Обрано {dayProgress.selectedCount} з {packageLimit}
+                        Обрано {dayProgress.selectedCount} з {packageLimit.limit}
                       </p>
                     )}
                   </div>

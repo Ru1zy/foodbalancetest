@@ -21,15 +21,20 @@ export function getOrderTotalUah(packageType: PackageType, totalDays: number): n
   return totalDays * unit;
 }
 
-export function getPackageLimit(packageName?: string): number {
-  if (!packageName) return 4;
+export type PackageLimitInfo = {
+  limit: number;
+  exact: boolean;
+};
+
+export function getPackageLimit(packageName?: string): PackageLimitInfo {
+  if (!packageName) return { limit: 4, exact: true };
   const p = String(packageName).trim().toLowerCase();
-  if (p.includes("слім") || p.includes("slim") || p.includes("слим")) return 3;
-  if (p.includes("sport")) return 5;
-  if (p.includes("інд") || p.includes("ind")) return 10;
-  if (p.includes("sushka xs")) return 3;
-  if (p.includes("sushka s")) return 4;
-  return 4;
+  if (p.includes("слім") || p.includes("slim") || p.includes("слим")) return { limit: 3, exact: true };
+  if (p.includes("sport")) return { limit: 5, exact: true };
+  if (p.includes("інд") || p.includes("ind")) return { limit: 10, exact: false };
+  if (p.includes("sushka xs")) return { limit: 3, exact: true };
+  if (p.includes("sushka s")) return { limit: 4, exact: true };
+  return { limit: 4, exact: true };
 }
 
 export function mealSuffix(packageName?: string, mealType?: string): string {
