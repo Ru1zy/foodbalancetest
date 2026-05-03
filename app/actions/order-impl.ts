@@ -23,6 +23,7 @@ export type OrderCartDay = {
   items?: IndivDishQuantity[];
   selectedCount: number;
   selections?: StandardSelections;
+  isCustomMode?: boolean;
 };
 
 export type OrderCartData = {
@@ -46,7 +47,7 @@ export type SubmitOrderResult =
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   // CRITICAL: Calculate server-side package limit - NEVER trust client's packageLimit
-  const serverPackageLimit = getPackageLimit(cartData.packageType).limit;
+  const { limit: serverPackageLimit, exact } = getPackageLimit(cartData.packageType);
 
   // Validate that client-provided limit matches server calculation
   if (cartData.packageLimit !== serverPackageLimit) {
@@ -94,7 +95,9 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
           return false;
         }
 
-        if (indivPackage) {
+        const isCustom = indivPackage || day.isCustomMode;
+
+        if (isCustom) {
           if (!Array.isArray(day.items)) {
             return false;
           }
@@ -105,15 +108,22 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
               typeof item.dishId === "string" &&
               (item.dishId || '').trim().length > 0 &&
               Number.isInteger(item.quantity) &&
-              item.quantity > 0 &&
-              item.quantity <= 3, // Max 3 of same dish for Indiv
+              item.quantity > 0,
           );
 
           const totalQuantity = normalizedItems.reduce((sum, item) => sum + item.quantity, 0);
 
-          // For Indiv: min 1, max 10 total dishes per day
-          if (totalQuantity < 1 || totalQuantity > 10) {
-            return false;
+          // Validation logic based on 'exact' flag
+          if (exact) {
+            if (totalQuantity !== serverPackageLimit) return false;
+          } else {
+            // Non-exact (Indiv): min 1, max serverPackageLimit
+            if (totalQuantity < 1 || totalQuantity > serverPackageLimit) return false;
+          }
+
+          // Max 3 of same dish for Indiv or Custom
+          if (normalizedItems.some(item => item.quantity > 3)) {
+             return false;
           }
 
           return day.selectedCount === totalQuantity;
@@ -134,9 +144,11 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
 
   return {
     days: days.map((day) => {
-      if (indivPackage) {
+      const isCustom = indivPackage || day.isCustomMode;
+      if (isCustom) {
         return {
           dayId: day.dayId,
+          isCustomMode: day.isCustomMode,
           items: (day.items ?? [])
             .filter(
               (item) =>

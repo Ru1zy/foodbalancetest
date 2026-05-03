@@ -163,6 +163,8 @@ export default function CheckoutPageImpl({
 
   const packageLimitInfo = getPackageLimit(pkg ?? undefined);
 
+  const isCustomMode = useOrderStore((state) => state.isCustomMode);
+
   const cartData = useMemo<OrderCartData>(() => {
     if (!pkg) {
       return {
@@ -210,15 +212,18 @@ export default function CheckoutPageImpl({
         packageLimit: packageLimitInfo.limit,
         packageType: pkg,
         totalDays: days.length,
-      };    }
+      };
+    }
 
     const days = Object.entries(selections)
       .map(([dayId, daySelections]) => {
         const selectedCount = getDaySelectedCount(daySelections, pkg);
+        const isCustom = isIndivPackage(selectedPackageRaw ?? undefined) || isCustomMode;
 
-        if (isIndivPackage(selectedPackageRaw ?? undefined)) {
+        if (isCustom) {
           return {
             dayId,
+            isCustomMode: isCustomMode,
             items: toIndivDishQuantities(daySelections),
             selectedCount,
           };
@@ -238,7 +243,7 @@ export default function CheckoutPageImpl({
       packageType: pkg,
       totalDays: days.length,
     };
-  }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay]);
+  }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay, isCustomMode]);
 
   const orderTotalUah = useMemo(() => {
     if (!pkg) {

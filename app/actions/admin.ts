@@ -655,29 +655,48 @@ async function formatOrderDishes(
 
   const allDishes: string[] = [];
 
-  // Handle individual package items (Indiv package)
-  if (Array.isArray(day.items)) {
+  // Handle individual/custom items
+  if (Array.isArray(day.items) && day.items.length > 0) {
+    const menu = menuById.get(day.dayId);
+    const menuDishes = menu ? (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]> : null;
+
     for (const item of day.items) {
       const dishId = item.dishId || "";
       const quantity = item.quantity || 1;
       
       const separatorIndex = dishId.lastIndexOf(":");
-      let displayLabel = dishId;
-      if (separatorIndex > 0) {
+      let dishName = dishId;
+
+      if (separatorIndex > 0 && menuDishes) {
         const cat = dishId.slice(0, separatorIndex);
         const idx = parseInt(dishId.slice(separatorIndex + 1));
-        const label = CATEGORY_LABELS[cat] || cat;
-        displayLabel = `${label} №${idx + 1}`;
+        const categoryDishes = menuDishes[cat];
+        
+        if (Array.isArray(categoryDishes) && categoryDishes[idx]) {
+          const dish = categoryDishes[idx];
+          dishName = (typeof dish === "object" && dish !== null) ? dish.short || dish.full || dish.name || dishName : dishName;
+        } else {
+          const label = CATEGORY_LABELS[cat] || cat;
+          dishName = `${label} №${idx + 1}`;
+        }
       }
 
-      for (let i = 0; i < quantity; i++) {
-        allDishes.push(displayLabel);
+      if (dishName) {
+        dishName = String(dishName).trim();
+        // Add portion indicator for Active/Sport plans
+        if (['Active', 'Sport'].some(p => packageType.includes(p)) && (dishId.includes('lunch') || dishId.includes('dinner'))) {
+          if (!dishName.includes('(1,5)')) dishName += " (1,5)";
+        }
+        
+        for (let i = 0; i < quantity; i++) {
+          allDishes.push(dishName);
+        }
       }
     }
   }
 
-  // Handle standard package selections
-  if (day.selections && typeof day.selections === "object" && day.dayId) {
+  // Handle standard package selections (if items was empty)
+  if (allDishes.length === 0 && day.selections && typeof day.selections === "object" && day.dayId) {
     const menu = menuById.get(day.dayId);
     if (menu) {
       try {
@@ -740,10 +759,11 @@ export async function exportToKitchenSheet(
     });
     const sheets = google.sheets({ version: "v4", auth });
 
+    // Fetch orders matching Admin UI logic (non-cancelled)
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: { gte: dateRange.start, lte: dateRange.end },
-        isPaid: true,
+        status: { not: "cancelled" },
       },
       include: { user: true },
     });
