@@ -21,7 +21,7 @@ type Props = {
 
 export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) {
   const router = useRouter();
-  const [loading, setLoading] = useState<number | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +34,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
   }
 
   const handlePurchase = async (duration: PackageDuration) => {
-    setLoading(duration);
+    setIsProcessing(true);
     setError(null);
     setSuccess(null);
 
@@ -56,11 +56,11 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
       }
 
       setSuccess(`Успішно! Додано ${duration} днів до вашого балансу.`);
-      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Сталася помилка");
     } finally {
-      setLoading(null);
+      setIsProcessing(false);
+      router.refresh();
     }
   };
 
@@ -114,11 +114,11 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
 
               <button
                 type="button"
-                disabled={loading !== null}
+                disabled={isProcessing}
                 onClick={() => handlePurchase(duration)}
                 className="mt-auto w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50"
               >
-                {loading === duration ? "Обробка..." : "Придбати абонемент"}
+                {isProcessing ? "Обробка..." : "Придбати абонемент"}
               </button>
             </div>
           );

@@ -74,3 +74,31 @@ export async function unlinkTelegramAccount(
     };
   }
 }
+
+export async function deleteClient(
+  userId: string
+): Promise<UpdateClientResult> {
+  const adminUser = await getAuthenticatedAdminUser();
+
+  if (!adminUser) {
+    return {
+      ok: false,
+      message: "Доступ заборонено. Увійдіть як адміністратор.",
+    };
+  }
+
+  try {
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    revalidatePath("/admin/clients");
+    return { ok: true };
+  } catch (error) {
+    console.error("deleteClient failed", error);
+    return {
+      ok: false,
+      message: "Не вдалося видалити клієнта.",
+    };
+  }
+}

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { updateClientInfo, unlinkTelegramAccount } from "@/app/actions/clients";
+import { updateClientInfo, unlinkTelegramAccount, deleteClient } from "@/app/actions/clients";
 import { updateUserBalance, resetUserBalance } from "@/app/actions/admin-balances";
 
 type Client = {
@@ -103,6 +103,26 @@ export default function ClientEditModal({ client, onClose }: Props) {
 
       if (result.ok) {
         setFeedback("✓ Telegram відв'язано");
+        setTimeout(() => {
+          onClose();
+        }, 800);
+      } else {
+        setFeedback(result.message);
+      }
+    });
+  };
+
+  const handleDeleteClient = () => {
+    if (!confirm(`Ви впевнені, що хочете видалити клієнта ${client.name}? Усі його замовлення та баланси будуть знищені назавжди.`)) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await deleteClient(client.id);
+
+      if (result.ok) {
+        setFeedback("✓ Клієнта видалено");
+        router.refresh();
         setTimeout(() => {
           onClose();
         }, 800);
@@ -266,9 +286,18 @@ export default function ClientEditModal({ client, onClose }: Props) {
 
           <div className="flex gap-3 border-t border-gray-200 pt-4">
             <button
+              onClick={handleDeleteClient}
+              disabled={isPending}
+              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+              title="Повне видалення клієнта та всієї його історії"
+            >
+              Видалити
+            </button>
+            <div className="flex-1" />
+            <button
               onClick={handleSave}
               disabled={isPending}
-              className="flex-1 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-xl bg-blue-600 py-3 px-8 text-sm font-bold text-white shadow-sm transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending ? "Збереження..." : "Зберегти зміни"}
             </button>

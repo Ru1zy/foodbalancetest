@@ -29,6 +29,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Некоректні дані запиту" }, { status: 400 });
     }
 
+    // Trial period validation: only for new clients (no balance history)
+    if (duration === 2) {
+      const existingBalance = await prisma.userBalance.findFirst({
+        where: { userId }
+      });
+      
+      if (existingBalance) {
+        return NextResponse.json(
+          { error: "Пробний період доступний лише один раз для нових клієнтів." }, 
+          { status: 403 }
+        );
+      }
+    }
+
     const updatedBalance = await prisma.userBalance.upsert({
       where: {
         userId_packageId: {

@@ -29,7 +29,7 @@ model User {
 model UserBalance {
   id          String   @id @default(uuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   packageId   String   // e.g., 'Slim', 'Active', 'Sushka S'
   totalDays   Int
   usedDays    Int      @default(0)
@@ -61,7 +61,7 @@ model Tariff {
 model Order {
   id              String   @id @default(uuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id])
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime @default(now())
   deliveryDate    DateTime
   deliveryAddress String?
