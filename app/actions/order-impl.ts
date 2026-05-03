@@ -14,6 +14,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
+import { syncClientToSheet } from "@/lib/googleSheets";
 
 export type StandardSelections = Record<string, number>;
 
@@ -471,6 +472,21 @@ export async function submitOrder(
 
     revalidatePath("/");
     revalidatePath("/admin/orders");
+
+    // Background sync to Google Sheets (non-blocking)
+    try {
+      syncClientToSheet({
+        name: user.name,
+        phone: user.phone || validatedData.phone,
+        address: user.address || validatedData.address,
+        chatId: user.chatId,
+        packageType: sanitizedCartData.packageType,
+        cutlery: Number(user.defaultCutlery || validatedData.cutlery),
+        notes: user.notes || validatedData.comment || "",
+      });
+    } catch (sheetError) {
+      console.error("Google Sheets sync failed:", sheetError);
+    }
 
     return {
       ok: true,
