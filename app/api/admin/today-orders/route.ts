@@ -13,23 +13,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse date in DD.MM.YYYY format
-    const [day, month, year] = dateStr.split(".");
-    const targetDate = new Date(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day)
-    );
-    targetDate.setHours(0, 0, 0, 0);
+    // Parse date in DD.MM format
+    const match = dateStr.match(/^(\d{1,2})\.(\d{1,2})$/);
+    if (!match) {
+      return NextResponse.json(
+        { error: "Invalid date format. Use DD.MM" },
+        { status: 400 }
+      );
+    }
 
-    const nextDay = new Date(targetDate);
-    nextDay.setDate(nextDay.getDate() + 1);
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+
+    // Get current year in Kyiv timezone
+    const currentYear = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'Europe/Kyiv'
+    }).split('-')[0];
+
+    const dateRangeStr = `${currentYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const targetDate = new Date(`${dateRangeStr}T00:00:00.000+03:00`);
+    const nextDay = new Date(`${dateRangeStr}T23:59:59.999+03:00`);
 
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
           gte: targetDate,
-          lt: nextDay,
+          lte: nextDay,
         },
         status: { not: "cancelled" },
       },

@@ -474,24 +474,21 @@ export async function updateOrderDeliveryInfo(
 
 export async function notifyTodayOrders(dateStr: string) {
   try {
-    // Parse date in DD.MM.YYYY format
-    const [day, month, year] = dateStr.split(".");
-    const targetDate = new Date(
-      parseInt(year),
-      parseInt(month) - 1,
-      parseInt(day)
-    );
-    targetDate.setHours(0, 0, 0, 0);
-
-    const nextDay = new Date(targetDate);
-    nextDay.setDate(nextDay.getDate() + 1);
+    // Parse target date DD.MM
+    const dateRange = parseTargetDate(dateStr);
+    if (!dateRange) {
+      return {
+        ok: false,
+        message: "Некоректний формат дати. Використовуйте DD.MM",
+      };
+    }
 
     // Fetch all paid orders for the target date with user data
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
-          gte: targetDate,
-          lt: nextDay,
+          gte: dateRange.start,
+          lte: dateRange.end,
         },
         isPaid: true,
         status: { not: "cancelled" },
@@ -614,15 +611,27 @@ function parseTargetDate(targetDateStr: string): { start: Date; end: Date } | nu
   return { start, end };
 }
 
+interface Dish {
+  short?: string;
+  full?: string;
+  name?: string;
+}
+
+interface OrderDay {
+  dayOfWeek: number;
+  dayId: string;
+  items?: Array<{ dishId: string; quantity: number }>;
+  selections?: Record<string, number>;
+}
+
 /**
- * Format dishes from order items into a single string.
- * Resolves dish indices to actual names from Menu records.
- * Adds portion indicators for Active/Sport Active plans.
+ * Format dishes from order items into a single string for a specific date.
  */
 async function formatOrderDishes(
   items: unknown,
   menuById: Map<string, { dishes: unknown }>,
-  packageType: string
+  packageType: string,
+  targetDayOfWeek: number // 1-7
 ): Promise<string> {
   if (!items || typeof items !== "object") return "";
 
@@ -637,62 +646,53 @@ async function formatOrderDishes(
   const days = (items as Record<string, unknown>).days;
   if (!Array.isArray(days) || days.length === 0) return "";
 
-  // Collect all dish names from all days
+  // Find the specific day in the order items
+  const day = (days as OrderDay[]).find((d) => 
+    d && Number(d.dayOfWeek) === targetDayOfWeek
+  );
+  
+  if (!day) return "";
+
   const allDishes: string[] = [];
 
-  for (const day of days) {
-    // Handle individual package items (Indiv package)
-    if (Array.isArray(day.items)) {
-      for (const item of day.items) {
-        const dishId = item.dishId || "";
-        const quantity = item.quantity || 1;
-        
-        const separatorIndex = dishId.lastIndexOf(":");
-        let displayLabel = dishId;
-        if (separatorIndex > 0) {
-          const cat = dishId.slice(0, separatorIndex);
-          const idx = parseInt(dishId.slice(separatorIndex + 1));
-          const label = CATEGORY_LABELS[cat] || cat;
-          displayLabel = `${label} №${idx + 1}`;
-        }
+  // Handle individual package items (Indiv package)
+  if (Array.isArray(day.items)) {
+    for (const item of day.items) {
+      const dishId = item.dishId || "";
+      const quantity = item.quantity || 1;
+      
+      const separatorIndex = dishId.lastIndexOf(":");
+      let displayLabel = dishId;
+      if (separatorIndex > 0) {
+        const cat = dishId.slice(0, separatorIndex);
+        const idx = parseInt(dishId.slice(separatorIndex + 1));
+        const label = CATEGORY_LABELS[cat] || cat;
+        displayLabel = `${label} №${idx + 1}`;
+      }
 
-        for (let i = 0; i < quantity; i++) {
-          allDishes.push(displayLabel);
-        }
+      for (let i = 0; i < quantity; i++) {
+        allDishes.push(displayLabel);
       }
     }
+  }
 
-    // Handle standard package selections
-    if (day.selections && typeof day.selections === "object" && day.dayId) {
-      const menu = menuById.get(day.dayId);
+  // Handle standard package selections
+  if (day.selections && typeof day.selections === "object" && day.dayId) {
+    const menu = menuById.get(day.dayId);
+    if (menu) {
+      const dishes = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]>;
 
-      if (!menu) {
-        continue; // Skip if menu not found
-      }
-
-      const dishes = typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes;
-
-      // Extract all selected dish names
       Object.entries(day.selections).forEach(([category, selectionIndex]) => {
         const categoryDishes = dishes[category];
-
         if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
           const dish = categoryDishes[selectionIndex];
-          let dishName =
-            typeof dish === "object" && dish !== null
-              ? dish.short || dish.full || dish.name
-              : dish;
+          let dishName = typeof dish === "object" && dish !== null ? dish.short || dish.full || dish.name : dish;
 
           if (dishName) {
             dishName = String(dishName).trim();
-
-            // Add portion indicator for Active/Sport Active plans
-            if (['Active', 'Sport Active'].includes(packageType) && ['lunch', 'dinner'].includes(category)) {
-              if (!dishName.includes('(1,5)')) {
-                dishName += " (1,5)";
-              }
+            if (['Active', 'Sport', 'Active Active', 'Sport Active'].some(p => packageType.includes(p)) && ['lunch', 'dinner'].includes(category)) {
+              if (!dishName.includes('(1,5)')) dishName += " (1,5)";
             }
-
             allDishes.push(dishName);
           }
         }
@@ -704,195 +704,141 @@ async function formatOrderDishes(
 }
 
 /**
- * Export orders to Google Sheets with strict template compliance.
- *
- * Algorithm:
- * 1. Authenticate with Google Sheets API
- * 2. Fetch orders for target date (allow re-export)
- * 3. Fetch Menu records to resolve dish names
- * 4. Calculate first empty row (data starts at row 5)
- * 5. Format each order as a 9-column row (C through K)
- * 6. Update the sheet using update API (not append)
- * 7. Mark orders as exported (AFTER successful API call)
+ * Export orders to Google Sheets with date-specific filtering and Sushka fix.
  */
 export async function exportToKitchenSheet(
   targetDateStr: string
 ): Promise<ExportToKitchenSheetResult> {
   const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) return { ok: false, message: "Недостатньо прав для експорту." };
 
-  if (!adminUser) {
-    return {
-      ok: false,
-      message: "Недостатньо прав для експорту.",
-    };
-  }
-
-  // Validate environment variables
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
   const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
   const sheetId = process.env.EXTERNAL_SHEET_ID;
 
   if (!clientEmail || !privateKey || !sheetId) {
-    return {
-      ok: false,
-      message: "Не налаштовано Google Sheets API. Перевірте змінні оточення.",
-    };
+    return { ok: false, message: "Не налаштовано Google Sheets API." };
   }
 
-  // Parse target date
   const dateRange = parseTargetDate(targetDateStr);
-  if (!dateRange) {
-    return {
-      ok: false,
-      message: "Некоректний формат дати. Використовуйте формат DD.MM (наприклад, 23.02).",
-    };
-  }
+  if (!dateRange) return { ok: false, message: "Некоректний формат дати DD.MM" };
+
+  // Calculate day of week (1-7) for the target date in Kyiv
+  const kyivDate = new Date(dateRange.start.getTime());
+  let targetDayOfWeek = kyivDate.getDay(); // 0 (Sun) - 6 (Sat)
+  targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
   try {
-    // Authenticate with Google Sheets API
     const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
+      credentials: { client_email: clientEmail, private_key: privateKey },
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
-
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Fetch orders for the target date (allow re-export)
     const orders = await prisma.order.findMany({
       where: {
-        deliveryDate: {
-          gte: dateRange.start,
-          lte: dateRange.end,
-        },
+        deliveryDate: { gte: dateRange.start, lte: dateRange.end },
+        isPaid: true,
       },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            phone: true,
-            address: true,
-            chatId: true,
-          },
-        },
-      },
+      include: { user: true },
     });
 
-    if (orders.length === 0) {
-      return {
-        ok: false,
-        message: `Не знайдено замовлень для експорту на ${targetDateStr}.`,
-      };
-    }
+    if (orders.length === 0) return { ok: false, message: `Не знайдено замовлень на ${targetDateStr}.` };
 
-    // Collect all unique dayIds from all orders to fetch menus efficiently
+    // Fetch all relevant Menu records
     const dayIds = new Set<string>();
     for (const order of orders) {
       if (order.items && typeof order.items === "object") {
-        const days = (order.items as Record<string, unknown>).days;
+        const days = (order.items as unknown as Record<string, OrderDay[]>).days;
         if (Array.isArray(days)) {
-          for (const day of days) {
-            if (day && typeof day === "object" && "dayId" in day && typeof day.dayId === "string") {
-              dayIds.add(day.dayId);
-            }
-          }
+          days.forEach((d) => d?.dayId && dayIds.add(d.dayId));
         }
       }
     }
 
-    // Fetch all relevant Menu records in one query (avoid N+1)
-    const menus = await prisma.menu.findMany({
+    // Sushka Fix: Also fetch menus for Sushka package type for this day
+    const sushkaMenus = await prisma.menu.findMany({
       where: {
-        id: {
-          in: Array.from(dayIds),
-        },
+        dayOfWeek: targetDayOfWeek,
+        packageType: "Sushka"
       },
-      select: {
-        id: true,
-        dishes: true,
-      },
+      select: { id: true, dishes: true }
     });
 
-    const menuById = new Map(menus.map((menu) => [menu.id, menu]));
+    const menus = await prisma.menu.findMany({
+      where: { id: { in: Array.from(dayIds) } },
+      select: { id: true, dishes: true },
+    });
 
-    // Calculate first empty row (data starts at row 5)
+    const menuById = new Map([...menus, ...sushkaMenus].map((m) => [m.id, m]));
+    const sushkaMenu = sushkaMenus[0];
+
     const existingDataResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
-      range: `'${targetDateStr}'!C5:C200`,
+      range: `'${targetDateStr}'!C5:C300`,
     });
 
     let firstEmptyRow = 5;
     const existingValues = existingDataResponse.data.values;
-
     if (existingValues && existingValues.length > 0) {
-      // Find first empty cell in column C
-      const emptyIndex = existingValues.findIndex(
-        (row) => !row[0] || String(row[0]).trim() === ""
-      );
-
-      if (emptyIndex !== -1) {
-        // Found an empty gap
-        firstEmptyRow = 5 + emptyIndex;
-      } else {
-        // All rows filled, append after last row
-        firstEmptyRow = 5 + existingValues.length;
-      }
+      const emptyIndex = existingValues.findIndex((row) => !row[0] || String(row[0]).trim() === "");
+      firstEmptyRow = 5 + (emptyIndex !== -1 ? emptyIndex : existingValues.length);
     }
 
-    // Format orders into rows (columns C-K: 9 columns)
     const rows: string[][] = await Promise.all(
       orders.map(async (order) => {
-        const formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType);
+        let formattedDishes = "";
+        
+        if (order.packageType.toLowerCase().includes("sushka")) {
+          // Format Sushka dishes using the sushkaMenu for this day
+          if (sushkaMenu) {
+            const dishes = typeof sushkaMenu.dishes === "string" ? JSON.parse(sushkaMenu.dishes) : sushkaMenu.dishes;
+            const names: string[] = [];
+            const isXS = order.packageType.toLowerCase().includes("xs");
+            
+            ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
+              if (isXS && cat === 'snack') return;
+              const d = dishes[cat]?.[0];
+              const name = typeof d === "object" ? d.short || d.full : d;
+              if (name) names.push(String(name).trim());
+            });
+            formattedDishes = names.join(" + ");
+          } else {
+            formattedDishes = "Меню Sushka не знайдено";
+          }
+        } else {
+          formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, targetDayOfWeek);
+        }
 
         return [
-          order.user.name || "", // C: ПІБ
-          order.user.phone || "", // D: Телефон
-          order.user.address || "", // E: Адреса
-          order.user.chatId || "", // F: Chat ID
-          order.packageType || "", // G: Раціон
-          formattedDishes || "Меню не знайдено", // H: Страви
-          order.cutlery ? `${order.cutlery} шт` : "0 шт", // I: Прибори
-          order.deliveryNote || "", // J: Нотатка адміна
-          order.price ? order.price.toString() : "", // K: Ціна
+          order.user.name || "", // C
+          order.user.phone || "", // D
+          order.user.address || "", // E
+          order.user.chatId || "", // F
+          order.packageType || "", // G
+          formattedDishes || "Меню не знайдено", // H
+          order.cutlery ? `${order.cutlery} шт` : "0 шт", // I
+          order.deliveryNote || "", // J
+          order.price ? order.price.toString() : "", // K
         ];
       })
     );
 
-    // Update the sheet (not append)
     await sheets.spreadsheets.values.update({
       spreadsheetId: sheetId,
       range: `'${targetDateStr}'!C${firstEmptyRow}`,
       valueInputOption: "USER_ENTERED",
-      requestBody: {
-        values: rows,
-      },
+      requestBody: { values: rows },
     });
 
-    // Mark orders as exported (AFTER successful Google API call)
     await prisma.order.updateMany({
-      where: {
-        id: {
-          in: orders.map((o) => o.id),
-        },
-      },
-      data: {
-        status: "Передано в учёт",
-      },
+      where: { id: { in: orders.map((o) => o.id) } },
+      data: { status: "Передано в учёт" },
     });
 
-    console.log(`Exported ${orders.length} orders to Google Sheets at row ${firstEmptyRow}`);
-
-    return {
-      ok: true,
-      exported: orders.length,
-    };
-  } catch {
-    return {
-      ok: false,
-      message: "Не вдалося експортувати в Google Sheets.",
-    };
+    return { ok: true, exported: orders.length };
+  } catch (error) {
+    console.error("Export error:", error);
+    return { ok: false, message: "Помилка експорту." };
   }
 }

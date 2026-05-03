@@ -198,9 +198,12 @@ export default function MenuGridClient({ menuItems }: Props) {
   const decrementDish = useOrderStore((state) => state.decrementDish);
   const setPackage = useOrderStore((state) => state.setPackage);
   const setSelection = useOrderStore((state) => state.setSelection);
+  const isCustomMode = useOrderStore((state) => state.isCustomMode);
+  const toggleCustomMode = useOrderStore((state) => state.toggleCustomMode);
 
   const pkg = parsePackageType(selectedPackageRaw);
-  const indivSelected = isIndivPackage(selectedPackageRaw ?? undefined);
+  const isIndiv = isIndivPackage(selectedPackageRaw ?? undefined);
+  const indivSelected = isIndiv || isCustomMode;
   const isSushka = pkg?.includes("Sushka") ?? false;
 
   const filtered = useMemo(() => {
@@ -383,6 +386,17 @@ export default function MenuGridClient({ menuItems }: Props) {
                         {selectedPackageRaw ?? "—"}
                       </span>
                     </div>
+
+                    {!isIndiv && !isSushka && (
+                      <button
+                        type="button"
+                        onClick={() => toggleCustomMode(!isCustomMode)}
+                        className="mb-4 w-full rounded-xl border-2 border-dashed border-emerald-200 py-2 text-sm font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
+                      >
+                        {isCustomMode ? "Повернутися до стандарту" : "Індивідуальна збірка"}
+                      </button>
+                    )}
+
                   {!selectable && (
                     <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
                       Вибір этого дня закритий за дедлайном

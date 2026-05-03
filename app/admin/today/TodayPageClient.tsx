@@ -39,13 +39,16 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
 
   const handleDateChange = (newDate: string) => {
     setSelectedDate(newDate);
-    startTransition(async () => {
-      const response = await fetch(`/api/admin/today-orders?date=${newDate}`);
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data.orders);
-      }
-    });
+    // Only fetch if format matches DD.MM
+    if (/^\d{1,2}\.\d{1,2}$/.test(newDate)) {
+      startTransition(async () => {
+        const response = await fetch(`/api/admin/today-orders?date=${newDate}`);
+        if (response.ok) {
+          const data = await response.json();
+          setOrders(data.orders);
+        }
+      });
+    }
   };
 
   const handleFieldUpdate = (
@@ -99,18 +102,13 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
       }
     });
   };
+const handleExportToKitchen = () => {
+  setNotifyMessage(null);
+  startTransition(async () => {
+    const result = await exportToKitchenSheet(selectedDate);
 
-  const handleExportToKitchen = () => {
-    setNotifyMessage(null);
-    startTransition(async () => {
-      // Format date to DD.MM
-      const [day, month] = selectedDate.split('.');
-      const formattedDate = `${day}.${month}`;
-
-      const result = await exportToKitchenSheet(formattedDate);
-
-      if (result.ok) {
-        setNotifyMessage({
+    if (result.ok) {
+      setNotifyMessage({
           type: "success",
           text: `✓ Успішно експортовано ${result.exported} замовлень в Google Sheets!`,
         });
@@ -137,14 +135,14 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-2">
               <label htmlFor="date-picker" className="text-sm font-semibold text-gray-700">
-                Дата доставки (формат: ДД.МM.РРРР):
+                Дата доставки (формат: ДД.МM):
               </label>
               <input
                 id="date-picker"
                 type="text"
                 value={selectedDate}
                 onChange={(e) => handleDateChange(e.target.value)}
-                placeholder="19.04.2026"
+                placeholder="19.04"
                 className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
               />
             </div>

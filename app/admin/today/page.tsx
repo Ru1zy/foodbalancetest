@@ -5,10 +5,11 @@ import TodayPageClient from "./TodayPageClient";
 
 async function getTodayOrders(dateStr: string) {
   try {
-    // Parse date in DD.MM.YYYY format
-    const [day, month, year] = dateStr.split(".");
+    // Parse date in DD.MM format
+    const [day, month] = dateStr.split(".");
+    const currentYear = new Date().getFullYear();
     const targetDate = new Date(
-      parseInt(year),
+      currentYear,
       parseInt(month) - 1,
       parseInt(day)
     );
@@ -48,12 +49,11 @@ export default async function TodayPage() {
     redirect("/");
   }
 
-  // Default to today in DD.MM.YYYY format
+  // Default to today in DD.MM format
   const today = new Date();
   const day = String(today.getDate()).padStart(2, "0");
   const month = String(today.getMonth() + 1).padStart(2, "0");
-  const year = today.getFullYear();
-  const defaultDate = `${day}.${month}.${year}`;
+  const defaultDate = `${day}.${month}`;
 
   const orders = await getTodayOrders(defaultDate);
 
