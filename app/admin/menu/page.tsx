@@ -1,4 +1,5 @@
 import { getAllMenuItems } from "@/app/actions/menu-impl";
+import { MenuItem } from "@/lib/menu-types";
 import MenuPhotoUpload from "./MenuPhotoUpload";
 import MenuDishesEditor from "./MenuDishesEditor";
 
@@ -45,7 +46,7 @@ export default async function AdminMenuPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {menuItems.map((item) => (
+                {menuItems.map((item: MenuItem) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       {dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`}
@@ -56,7 +57,7 @@ export default async function AdminMenuPage() {
                     <td className="px-6 py-4">
                       <MenuPhotoUpload
                         menuId={item.id}
-                        currentPhotoUrl={item.photoUrl}
+                        currentPhotoUrl={item.photoUrl || null}
                       />
                     </td>
                     <td className="px-6 py-4">

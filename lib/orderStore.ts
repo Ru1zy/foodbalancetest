@@ -29,6 +29,7 @@ export type CustomerProfile = {
 
 export interface OrderStore {
   customerProfile: CustomerProfile;
+  isCustomMode: boolean;
   /** Wizard / menu tariff id; `null` until the user completes step 1. */
   selectedPackage: string | null;
   /** Weekday indices as strings `"1"`…`"7"` (menu week days). */
@@ -43,9 +44,11 @@ export interface OrderStore {
   setPackage: (packageType: PackageType) => void;
   /** Step 1 → 2: set tariff; clears selections & dates only if tariff changed. */
   selectWizardPackage: (packageType: string) => void;
+  toggleCustomMode: (value: boolean) => void;
   setStep: (step: number) => void;
   setSelectedDates: (dates: string[]) => void;
   resetWizard: () => void;
+  hardReset: () => void;
   setSelection: (dayId: string, category: string, dishIndex: number) => void;
   clearSelections: () => void;
   clearDaySelections: (dayId: string) => void;
@@ -75,6 +78,7 @@ export const useOrderStore = create<OrderStore>()(
         userId: "",
         username: "",
       },
+      isCustomMode: false,
       selectedPackage: null,
       selectedDates: [],
       step: 1,
@@ -116,6 +120,12 @@ export const useOrderStore = create<OrderStore>()(
       };
     }),
 
+  toggleCustomMode: (value) =>
+    set(() => ({
+      isCustomMode: value,
+      selections: {},
+    })),
+
   setStep: (step) => set({ step }),
 
   setSelectedDates: (dates) =>
@@ -128,6 +138,17 @@ export const useOrderStore = create<OrderStore>()(
       step: 1,
       selectedPackage: null,
       selectedDates: [],
+      isCustomMode: false,
+    }),
+
+  hardReset: () =>
+    set({
+      step: 1,
+      selectedPackage: null,
+      selectedDates: [],
+      isCustomMode: false,
+      selections: {},
+      cartItems: [],
     }),
 
   setSelection: (dayId, category, dishIndex) =>
