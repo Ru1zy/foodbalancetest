@@ -71,7 +71,7 @@ export async function syncClientToSheet(profileData: ClientProfileSyncData): Pro
     let foundRowIndex = -1;
 
     for (let i = 0; i < rows.length; i++) {
-      const rowPhone = String(rows[i][2] || "").replace(/\D/g, "");
+      const rowPhone = normalizePhoneForLegacy(String(rows[i][2] || ""));
       if (rowPhone === normalizedPhone) {
         foundRowIndex = i + 1; // 1-based index for Sheets
         break;

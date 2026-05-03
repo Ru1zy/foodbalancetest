@@ -227,24 +227,32 @@ async function formatDays(items: unknown, packageType: PackageType) {
     .map((day, index) => {
       const menu = menuById.get(day.dayId);
       const dayName = DAY_NAMES[menu?.dayOfWeek ?? 0] || `День ${index + 1}`;
-      const dishes = isIndivPackage(packageType)
+      
+      const isCustomOrIndiv = isIndivPackage(packageType) || (day.items && day.items.length > 0);
+
+      const dishes = isCustomOrIndiv
         ? (day.items ?? []).flatMap((item) => {
-            const parsedDishId = parseIndivDishId(item.dishId);
+            const dishId = item.dishId || "";
+            const quantity = item.quantity || 1;
+            const separatorIndex = dishId.lastIndexOf(":");
+            
+            let dishName = dishId;
+            let categoryLabel = "";
 
-            if (!parsedDishId) {
-              return [`&nbsp;&nbsp;• Невідомий вибір (${escapeHtml(item.dishId)}) x${item.quantity}`];
+            if (separatorIndex > 0) {
+              const cat = dishId.slice(0, separatorIndex);
+              const idx = parseInt(dishId.slice(separatorIndex + 1));
+              categoryLabel = CATEGORY_LABELS[cat] || cat;
+              
+              const selectedDish = menu?.dishes[cat as keyof Dishes]?.[idx];
+              if (selectedDish) {
+                dishName = selectedDish.full;
+              } else {
+                dishName = `${categoryLabel} №${idx + 1}`;
+              }
             }
 
-            const selectedDish = menu?.dishes[parsedDishId.category as keyof Dishes]?.[parsedDishId.index];
-            const label = CATEGORY_LABELS[parsedDishId.category] || parsedDishId.category;
-
-            if (!selectedDish) {
-              return [
-                `&nbsp;&nbsp;• <b>${escapeHtml(label)}:</b> Невідомий вибір (#${parsedDishId.index + 1}) x${item.quantity}`,
-              ];
-            }
-
-            return [`&nbsp;&nbsp;• <b>${escapeHtml(label)}:</b> ${escapeHtml(selectedDish.full)} x${item.quantity}`];
+            return [`&nbsp;&nbsp;• ${categoryLabel ? `<b>${escapeHtml(categoryLabel)}:</b> ` : ""}${escapeHtml(dishName)} (x${quantity})`];
           })
         : CATEGORY_ORDER.flatMap((category) => {
             const selectedIndex = day.selections?.[category];

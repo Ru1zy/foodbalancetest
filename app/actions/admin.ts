@@ -747,9 +747,11 @@ export async function exportToKitchenSheet(
   const dateRange = parseTargetDate(targetDateStr);
   if (!dateRange) return { ok: false, message: "Некоректний формат дати DD.MM" };
 
-  // Calculate day of week (1-7) for the target date in Kyiv
-  const kyivDate = new Date(dateRange.start.getTime());
-  let targetDayOfWeek = kyivDate.getDay(); // 0 (Sun) - 6 (Sat)
+  // CRITICAL: Determine day of week strictly from the TARGET date, not today.
+  // Use UTC to avoid timezone shifts during getDay().
+  const startDay = dateRange.start;
+  let targetDayOfWeek = startDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
+  // Convert 0 -> 7 (Sunday)
   targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
   try {
@@ -759,7 +761,7 @@ export async function exportToKitchenSheet(
     });
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Fetch orders matching Admin UI logic (non-cancelled)
+    // Fetch all non-cancelled orders matching Admin UI logic
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: { gte: dateRange.start, lte: dateRange.end },
@@ -815,6 +817,7 @@ export async function exportToKitchenSheet(
       orders.map(async (order) => {
         let formattedDishes = "";
         const isSushka = order.packageType.toLowerCase().includes("sushka");
+        const isIndiv = order.packageType.toLowerCase().includes("ind");
         
         if (isSushka) {
           // Format Sushka dishes
@@ -842,8 +845,8 @@ export async function exportToKitchenSheet(
           // Try to format from order items
           formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, targetDayOfWeek);
           
-          // Fallback to Template menu if empty and not an Indiv package
-          if (!formattedDishes && !order.packageType.toLowerCase().includes("ind") && templateMenu) {
+          // Fallback to Template menu if empty and NOT an Indiv package
+          if (!formattedDishes && !isIndiv && templateMenu) {
             try {
               const dishes = (typeof templateMenu.dishes === "string" ? JSON.parse(templateMenu.dishes) : templateMenu.dishes) as Record<string, Dish[]>;
               const names: string[] = [];
@@ -856,6 +859,10 @@ export async function exportToKitchenSheet(
             } catch {
               // Ignore fallback errors
             }
+          }
+
+          if (!formattedDishes && isIndiv) {
+            formattedDishes = "Пусто (Indiv)";
           }
         }
 
