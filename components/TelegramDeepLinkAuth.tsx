@@ -43,7 +43,6 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           setCustomerProfile({
             address: data.user.address || "",
             chatId: data.user.chatId || "",
-            deliveryTime: "",
             name: data.user.name || "",
             phone: sanitizeTelegramPhone(data.user.phone),
             userId: data.user.userId || "",

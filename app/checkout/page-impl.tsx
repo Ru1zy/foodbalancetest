@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { type FormEvent, useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
 import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
 import {
@@ -14,8 +16,6 @@ import {
 import {
   formatDisplayDate,
   formatScheduleDayLabel,
-  parseCheckoutFormData,
-  validateCheckoutFormValues,
 } from "@/lib/checkout";
 import {
   getDaySelectedCount,
@@ -26,13 +26,12 @@ import {
 import { parsePackageType } from "@/lib/package-coerce";
 import { useOrderStore } from "@/lib/orderStore";
 import { isTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { checkoutSchema, type CheckoutSchema } from "@/lib/validations";
 
 type FeedbackState = {
   message: string;
   tone: "error" | "success";
 };
-
-type FieldErrors = Partial<Record<"address" | "cart" | "name" | "phone", string>>;
 
 type SubmittedState = {
   deliveryDateLabel: string | null;
@@ -89,12 +88,39 @@ export default function CheckoutPageImpl({
   const setSelectedDates = useOrderStore((state) => state.setSelectedDates);
   const pkg = parsePackageType(selectedPackageRaw);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"balance" | "cash">("balance");
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
+
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CheckoutSchema>({
+    resolver: zodResolver(checkoutSchema),
+    defaultValues: {
+      name: customerProfile.name,
+      phone: normalizedPhone,
+      address: customerProfile.address,
+      comment: customerProfile.notes || "",
+      cutlery: customerProfile.cutlery,
+      paymentMethod: "balance",
+    },
+  });
+
+  useEffect(() => {
+    reset({
+      name: customerProfile.name,
+      phone: normalizedPhone,
+      address: customerProfile.address,
+      comment: customerProfile.notes || "",
+      cutlery: customerProfile.cutlery,
+      paymentMethod,
+    });
+  }, [customerProfile, normalizedPhone, paymentMethod, reset]);
 
   useEffect(() => {
     if (!pkg) return;
@@ -314,58 +340,29 @@ export default function CheckoutPageImpl({
     clearDaySelections(day.dayId);
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const formData = new FormData(event.currentTarget);
-    formData.set("paymentMethod", paymentMethod);
-
-    const submittedValues = parseCheckoutFormData(formData);
-    const nextFieldErrors = validateCheckoutFormValues(submittedValues);
-
+  const onValidSubmit = (data: CheckoutSchema) => {
     if (!pkg) {
-      nextFieldErrors.cart = "Спочатку оберіть тариф і збережіть кошик на сторінці меню.";
-    } else if (cartData.totalDays === 0) {
-      nextFieldErrors.cart = pkg.includes("Sushka")
-        ? "Для Сушки оберіть хоча б один день доставки."
-        : "Додайте хоча б один повністю зібраний день до замовлення.";
-    } else {
-      const indivPackage = isIndivPackage(selectedPackageRaw ?? undefined);
-      const serverPackageLimit = getPackageLimit(pkg);
-
-      for (const day of cartData.days) {
-        if (indivPackage) {
-          if (!day.items) {
-            nextFieldErrors.cart = "Для тарифу Indiv перевірте склад кожного дня.";
-            break;
-          }
-
-          const totalQuantity = day.items.reduce((sum, item) => sum + item.quantity, 0);
-          if (totalQuantity < 1 || totalQuantity > 10) {
-            nextFieldErrors.cart = "Для тарифу Indiv кожен день повинен містити від 1 до 10 страв.";
-            break;
-          }
-
-          const hasInvalidQuantity = day.items.some((item) => item.quantity > 3);
-          if (hasInvalidQuantity) {
-            nextFieldErrors.cart = "Для тарифу Indiv максимум 3 однакові страви на день.";
-            break;
-          }
-        } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit) {
-          nextFieldErrors.cart =
-            `Для тарифу ${pkg} кожен день повинен містити рівно ${serverPackageLimit} страв.`;
-          break;
-        }
-      }
+      setFeedback({ message: "Спочатку оберіть тариф.", tone: "error" });
+      return;
     }
-
-    if (Object.keys(nextFieldErrors).length > 0) {
-      setFieldErrors(nextFieldErrors);
-      setFeedback(null);
+    if (cartData.totalDays === 0) {
+      setFeedback({ message: "Додайте хоча б один день до замовлення.", tone: "error" });
       return;
     }
 
-    setFieldErrors({});
+    const indivPackage = isIndivPackage(selectedPackageRaw ?? undefined);
+    const serverPackageLimit = getPackageLimit(pkg);
+
+    for (const day of cartData.days) {
+      if (indivPackage) {
+        if (!day.items) return;
+        const totalQuantity = day.items.reduce((sum, item) => sum + item.quantity, 0);
+        if (totalQuantity < 1 || totalQuantity > 10) return;
+      } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit) {
+        return;
+      }
+    }
+
     setFeedback(null);
 
     startTransition(async () => {
@@ -376,6 +373,11 @@ export default function CheckoutPageImpl({
         });
         return;
       }
+
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, String(value));
+      });
 
       const result = await submitOrder(formData, cartData, deliveryDate, orderTotalUah);
       if (!result.ok) {
@@ -394,11 +396,11 @@ export default function CheckoutPageImpl({
       });
 
       setCustomerProfile({
-        address: submittedValues.address,
-        cutlery: submittedValues.cutlery,
-        name: submittedValues.name,
-        notes: submittedValues.comment,
-        phone: submittedValues.phone,
+        address: data.address,
+        cutlery: data.cutlery,
+        name: data.name,
+        notes: data.comment,
+        phone: data.phone,
         userId: result.userId,
       });
 
@@ -683,54 +685,44 @@ export default function CheckoutPageImpl({
               </div>
             )}
 
-            {fieldErrors.cart && (
-              <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                {fieldErrors.cart}
-              </div>
-            )}
-
-            <form key={formKey} className="space-y-6" onSubmit={handleSubmit}>
+            <form key={formKey} className="space-y-6" onSubmit={handleFormSubmit(onValidSubmit)}>
               <div className="grid gap-4 md:grid-cols-2 md:gap-5">
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-900">Ім&apos;я</span>
                   <input
-                    aria-invalid={fieldErrors.name ? "true" : "false"}
+                    {...register("name")}
+                    aria-invalid={errors.name ? "true" : "false"}
                     autoComplete="name"
                     className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
-                      fieldErrors.name
+                      errors.name
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                         : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
                     }`}
-                    defaultValue={customerProfile.name ?? ""}
-                    name="name"
                     placeholder="Як до вас звертатися"
-                    required
                     type="text"
                   />
-                  {fieldErrors.name && (
-                    <span className="mt-2 block text-sm text-red-600">{fieldErrors.name}</span>
+                  {errors.name && (
+                    <span className="mt-2 block text-sm text-red-600">{errors.name.message}</span>
                   )}
                 </label>
 
                 <label className="block">
                   <span className="mb-2 block text-sm font-semibold text-slate-900">Телефон</span>
                   <input
-                    aria-invalid={fieldErrors.phone ? "true" : "false"}
+                    {...register("phone")}
+                    aria-invalid={errors.phone ? "true" : "false"}
                     autoComplete="tel"
                     className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
-                      fieldErrors.phone
+                      errors.phone
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                         : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
                     }`}
-                    defaultValue={normalizedPhone}
                     inputMode="tel"
-                    name="phone"
-                    placeholder="+380..."
-                    required
+                    placeholder="0501234567"
                     type="tel"
                   />
-                  {fieldErrors.phone && (
-                    <span className="mt-2 block text-sm text-red-600">{fieldErrors.phone}</span>
+                  {errors.phone && (
+                    <span className="mt-2 block text-sm text-red-600">{errors.phone.message}</span>
                   )}
                 </label>
               </div>
@@ -738,21 +730,19 @@ export default function CheckoutPageImpl({
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-900">Адреса доставки</span>
                 <textarea
-                  aria-invalid={fieldErrors.address ? "true" : "false"}
+                  {...register("address")}
+                  aria-invalid={errors.address ? "true" : "false"}
                   autoComplete="street-address"
                   className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
-                    fieldErrors.address
+                    errors.address
                       ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                       : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
                   }`}
-                  defaultValue={customerProfile.address ?? ""}
-                  name="address"
                   placeholder="Вулиця, будинок, квартира, під’їзд, орієнтир"
-                  required
                   rows={3}
                 />
-                {fieldErrors.address && (
-                  <span className="mt-2 block text-sm text-red-600">{fieldErrors.address}</span>
+                {errors.address && (
+                  <span className="mt-2 block text-sm text-red-600">{errors.address.message}</span>
                 )}
               </label>
 
@@ -762,9 +752,8 @@ export default function CheckoutPageImpl({
                     Кількість приборів
                   </span>
                   <select
+                    {...register("cutlery", { valueAsNumber: true })}
                     className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                    defaultValue={String(customerProfile.cutlery ?? 0)}
-                    name="cutlery"
                   >
                     {CUTLERY_OPTIONS.map((value) => (
                       <option key={value} value={value}>
@@ -778,9 +767,8 @@ export default function CheckoutPageImpl({
               <label className="block">
                 <span className="mb-2 block text-sm font-semibold text-slate-900">Коментар до замовлення</span>
                 <textarea
+                  {...register("comment")}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                  defaultValue={customerProfile.notes ?? ""}
-                  name="comment"
                   placeholder="Побажання, деталі для курʼєра або зручний орієнтир"
                   rows={4}
                 />

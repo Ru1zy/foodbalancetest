@@ -69,7 +69,6 @@ export default function TelegramProvider({ children }: PropsWithChildren) {
           address: result.user.address ?? "",
           chatId: result.user.chatId ?? "",
           cutlery: result.user.cutlery ?? 0,
-          deliveryTime: "",
           isAuthenticated: true,
           name: result.user.name ?? "",
           notes: result.user.notes ?? "",

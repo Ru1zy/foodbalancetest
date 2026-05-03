@@ -13,6 +13,7 @@ import { kyivCalendarDateKey, parseCheckoutFormData, validateCheckoutFormValues 
 import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
+import { checkoutSchema } from "@/lib/validations";
 
 export type StandardSelections = Record<string, number>;
 
@@ -193,23 +194,30 @@ export async function submitOrder(
   deliveryDate: Date | string,
   totalPrice: number,
 ): Promise<SubmitOrderResult> {
-  const parsedFormData = parseCheckoutFormData(formData);
-  const validationErrors = validateCheckoutFormValues(parsedFormData);
+  // --- Server-side validation using Zod ---
+  const rawData = {
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    address: formData.get("address"),
+    comment: formData.get("comment"),
+    cutlery: Number(formData.get("cutlery") ?? 0),
+    paymentMethod: formData.get("paymentMethod"),
+  };
 
-  if (validationErrors.name || validationErrors.phone || validationErrors.address) {
+  const validation = checkoutSchema.safeParse(rawData);
+
+  if (!validation.success) {
+    const errorMsg = validation.error.issues[0]?.message || "Помилка валідації даних";
     return {
       ok: false,
-      message:
-        validationErrors.name ||
-        validationErrors.phone ||
-        validationErrors.address ||
-        "Перевірте дані замовлення.",
+      message: errorMsg,
       status: 400,
     };
   }
 
+  const validatedData = validation.data;
   const sanitizedCartData = sanitizeCartData(cartData);
-  const paymentMethod = formData.get("paymentMethod") as string | null;
+  const paymentMethod = validatedData.paymentMethod;
 
   if (sanitizedCartData.totalDays < 1) {
     return {
@@ -343,7 +351,7 @@ export async function submitOrder(
         if (currentUser) {
           const existingUser = await tx.user.findUnique({
             where: {
-              phone: parsedFormData.phone,
+              phone: validatedData.phone,
             },
           });
 
@@ -373,23 +381,23 @@ export async function submitOrder(
               id: userId,
             },
             data: {
-              address: parsedFormData.address || null,
-              defaultCutlery: String(parsedFormData.cutlery),
+              address: validatedData.address || null,
+              defaultCutlery: String(validatedData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
-              name: parsedFormData.name,
-              notes: parsedFormData.comment || null,
-              phone: parsedFormData.phone,
-            },
-          });
+              name: validatedData.name,
+              notes: validatedData.comment || null,
+              phone: validatedData.phone,
+              },
+              });
 
           const order = await tx.order.create({
             data: {
-              deliveryAddress: parsedFormData.address || null,
+              deliveryAddress: validatedData.address || null,
               deliveryDate: resolvedDeliveryDate,
               deliveryTime: null,
-              cutlery: parsedFormData.cutlery,
+              cutlery: validatedData.cutlery,
               items: sanitizedCartData,
-              notes: parsedFormData.comment || null,
+              notes: validatedData.comment || null,
               packageType: sanitizedCartData.packageType,
               price: fiatPrice,
               balanceDaysUsed: balanceDaysToUse,
@@ -406,7 +414,7 @@ export async function submitOrder(
 
       const existingUser = await tx.user.findUnique({
         where: {
-          phone: parsedFormData.phone,
+          phone: validatedData.phone,
         },
       });
 
@@ -416,32 +424,32 @@ export async function submitOrder(
               id: existingUser.id,
             },
             data: {
-              address: parsedFormData.address || null,
-              defaultCutlery: String(parsedFormData.cutlery),
+              address: validatedData.address || null,
+              defaultCutlery: String(validatedData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
-              name: parsedFormData.name,
-              notes: parsedFormData.comment || null,
+              name: validatedData.name,
+              notes: validatedData.comment || null,
             },
           })
         : await tx.user.create({
             data: {
-              address: parsedFormData.address || null,
-              defaultCutlery: String(parsedFormData.cutlery),
+              address: validatedData.address || null,
+              defaultCutlery: String(validatedData.cutlery),
               defaultPackage: sanitizedCartData.packageType,
-              name: parsedFormData.name,
-              notes: parsedFormData.comment || null,
-              phone: parsedFormData.phone,
-            },
-          });
+              name: validatedData.name,
+              notes: validatedData.comment || null,
+              phone: validatedData.phone,
+              },
+              });
 
       const order = await tx.order.create({
         data: {
-          deliveryAddress: parsedFormData.address || null,
+          deliveryAddress: validatedData.address || null,
           deliveryDate: resolvedDeliveryDate,
           deliveryTime: null,
-          cutlery: parsedFormData.cutlery,
+          cutlery: validatedData.cutlery,
           items: sanitizedCartData,
-          notes: parsedFormData.comment || null,
+          notes: validatedData.comment || null,
           packageType: sanitizedCartData.packageType,
           price: fiatPrice,
           balanceDaysUsed: balanceDaysToUse,
