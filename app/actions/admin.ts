@@ -680,23 +680,28 @@ async function formatOrderDishes(
   if (day.selections && typeof day.selections === "object" && day.dayId) {
     const menu = menuById.get(day.dayId);
     if (menu) {
-      const dishes = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]>;
+      try {
+        const dishes = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]>;
 
-      Object.entries(day.selections).forEach(([category, selectionIndex]) => {
-        const categoryDishes = dishes[category];
-        if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
-          const dish = categoryDishes[selectionIndex];
-          let dishName = typeof dish === "object" && dish !== null ? dish.short || dish.full || dish.name : dish;
+        Object.entries(day.selections).forEach(([category, selectionIndex]) => {
+          const categoryDishes = dishes[category];
+          if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
+            const dish = categoryDishes[selectionIndex];
+            let dishName = typeof dish === "object" && dish !== null ? dish.short || dish.full || dish.name : dish;
 
-          if (dishName) {
-            dishName = String(dishName).trim();
-            if (['Active', 'Sport', 'Active Active', 'Sport Active'].some(p => packageType.includes(p)) && ['lunch', 'dinner'].includes(category)) {
-              if (!dishName.includes('(1,5)')) dishName += " (1,5)";
+            if (dishName) {
+              dishName = String(dishName).trim();
+              const isExtendedPlan = ['Active', 'Sport'].some(p => packageType.includes(p));
+              if (isExtendedPlan && ['lunch', 'dinner'].includes(category)) {
+                if (!dishName.includes('(1,5)')) dishName += " (1,5)";
+              }
+              allDishes.push(dishName);
             }
-            allDishes.push(dishName);
           }
-        }
-      });
+        });
+      } catch (e) {
+        console.error("Error formatting standard dishes", e);
+      }
     }
   }
 
@@ -756,22 +761,23 @@ export async function exportToKitchenSheet(
       }
     }
 
-    // Sushka Fix: Also fetch menus for Sushka package type for this day
-    const sushkaMenus = await prisma.menu.findMany({
+    // Fetch fallback menus for this day (Template and Sushka)
+    const dayMenus = await prisma.menu.findMany({
       where: {
         dayOfWeek: targetDayOfWeek,
-        packageType: "Sushka"
+        packageType: { in: ["Template", "Sushka"] }
       },
-      select: { id: true, dishes: true }
+      select: { id: true, dishes: true, packageType: true }
     });
 
     const menus = await prisma.menu.findMany({
       where: { id: { in: Array.from(dayIds) } },
-      select: { id: true, dishes: true },
+      select: { id: true, dishes: true, packageType: true },
     });
 
-    const menuById = new Map([...menus, ...sushkaMenus].map((m) => [m.id, m]));
-    const sushkaMenu = sushkaMenus[0];
+    const menuById = new Map([...menus, ...dayMenus].map((m) => [m.id, m]));
+    const templateMenu = dayMenus.find(m => m.packageType === "Template");
+    const sushkaMenu = dayMenus.find(m => m.packageType === "Sushka");
 
     const existingDataResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -788,26 +794,49 @@ export async function exportToKitchenSheet(
     const rows: string[][] = await Promise.all(
       orders.map(async (order) => {
         let formattedDishes = "";
+        const isSushka = order.packageType.toLowerCase().includes("sushka");
         
-        if (order.packageType.toLowerCase().includes("sushka")) {
-          // Format Sushka dishes using the sushkaMenu for this day
-          if (sushkaMenu) {
-            const dishes = typeof sushkaMenu.dishes === "string" ? JSON.parse(sushkaMenu.dishes) : sushkaMenu.dishes;
-            const names: string[] = [];
-            const isXS = order.packageType.toLowerCase().includes("xs");
-            
-            ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
-              if (isXS && cat === 'snack') return;
-              const d = dishes[cat]?.[0];
-              const name = typeof d === "object" ? d.short || d.full : d;
-              if (name) names.push(String(name).trim());
-            });
-            formattedDishes = names.join(" + ");
+        if (isSushka) {
+          // Format Sushka dishes
+          const menu = sushkaMenu;
+          if (menu) {
+            try {
+              const dishes = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]>;
+              const names: string[] = [];
+              const isXS = order.packageType.toLowerCase().includes("xs");
+              
+              ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
+                if (isXS && cat === 'snack') return;
+                const d = dishes[cat]?.[0];
+                const name = typeof d === "object" ? d.short || d.full : d;
+                if (name) names.push(String(name).trim());
+              });
+              formattedDishes = names.join(" + ");
+            } catch {
+              formattedDishes = "Помилка парсингу меню Sushka";
+            }
           } else {
             formattedDishes = "Меню Sushka не знайдено";
           }
         } else {
+          // Try to format from order items
           formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, targetDayOfWeek);
+          
+          // Fallback to Template menu if empty and not an Indiv package
+          if (!formattedDishes && !order.packageType.toLowerCase().includes("ind") && templateMenu) {
+            try {
+              const dishes = (typeof templateMenu.dishes === "string" ? JSON.parse(templateMenu.dishes) : templateMenu.dishes) as Record<string, Dish[]>;
+              const names: string[] = [];
+              ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
+                const d = dishes[cat]?.[0];
+                const name = typeof d === "object" ? d.short || d.full : d;
+                if (name) names.push(String(name).trim());
+              });
+              formattedDishes = names.join(" + ");
+            } catch {
+              // Ignore fallback errors
+            }
+          }
         }
 
         return [

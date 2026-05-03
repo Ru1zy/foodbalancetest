@@ -33,18 +33,15 @@ export function parseIndivDishId(dishId: string) {
   return { category, index };
 }
 
-export function getIndivDaySelectedCount(daySelections: DaySelections) {
-  return Object.values(daySelections).reduce((sum, quantity) => {
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      return sum;
-    }
-
-    return sum + quantity;
-  }, 0);
-}
-
 export function getDaySelectedCount(daySelections: DaySelections, packageType: PackageType) {
-  return isIndivPackage(packageType) ? getIndivDaySelectedCount(daySelections) : Object.keys(daySelections).length;
+  const isCustomOrIndiv = isIndivPackage(packageType) || Object.keys(daySelections).some(k => k.includes(':'));
+  
+  if (isCustomOrIndiv) {
+    return Object.values(daySelections).reduce((sum, q) => sum + (q > 0 ? q : 0), 0);
+  }
+  
+  // Standard mode: count categories that have a valid index (>= 0)
+  return Object.values(daySelections).filter(v => v !== null && v !== undefined && v >= 0).length;
 }
 
 export function isDaySelectionComplete(selectedCount: number, packageType?: string) {

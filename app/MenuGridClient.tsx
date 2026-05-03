@@ -404,7 +404,9 @@ export default function MenuGridClient({ menuItems }: Props) {
                   )}
                   {indivSelected && (
                     <div className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
-                      Для Indiv обирайте будь-які страви від 1 до {packageLimit.limit} на день.
+                      {packageLimit.exact 
+                        ? `Оберіть рівно ${packageLimit.limit} страв на день.` 
+                        : `Оберіть від 1 до ${packageLimit.limit} страв на день.`}
                     </div>
                   )}
 
