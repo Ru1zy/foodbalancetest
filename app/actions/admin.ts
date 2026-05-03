@@ -747,11 +747,13 @@ export async function exportToKitchenSheet(
   const dateRange = parseTargetDate(targetDateStr);
   if (!dateRange) return { ok: false, message: "Некоректний формат дати DD.MM" };
 
-  // CRITICAL: Determine day of week strictly from the TARGET date, not today.
-  // Use UTC to avoid timezone shifts during getDay().
+  // CRITICAL: Determine day of week strictly from the TARGET date.
+  // We add 12 hours to the start of the day to ensure getUTCDay() 
+  // returns the correct day regardless of the +03:00 offset.
   const startDay = dateRange.start;
-  let targetDayOfWeek = startDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
-  // Convert 0 -> 7 (Sunday)
+  const midDay = new Date(startDay.getTime() + 12 * 60 * 60 * 1000);
+  let targetDayOfWeek = midDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
+  // Convert 0 (Sun) -> 7 (Sun) to match 1 (Mon) - 7 (Sun) convention
   targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
   try {
