@@ -75,6 +75,7 @@ model Order {
   balanceDaysUsed Int      @default(0)
   deliveryTime    String?
   deliveryNote    String?
+  paymentMethod   String   @default("balance")
 }
 
 model AuthToken {

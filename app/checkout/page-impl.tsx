@@ -12,10 +12,8 @@ import {
   PACKAGE_PRICES,
 } from "@/lib/order-logic";
 import {
-  DELIVERY_TIME_OPTIONS,
   formatDisplayDate,
   formatScheduleDayLabel,
-  normalizeDeliveryTime,
   parseCheckoutFormData,
   validateCheckoutFormValues,
 } from "@/lib/checkout";
@@ -94,9 +92,9 @@ export default function CheckoutPageImpl({
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<"balance" | "cash">("balance");
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
-  const normalizedDeliveryTime = normalizeDeliveryTime(customerProfile.deliveryTime);
 
   useEffect(() => {
     if (!pkg) return;
@@ -119,7 +117,6 @@ export default function CheckoutPageImpl({
     setCustomerProfile({
       address: authenticatedUser.address || "",
       cutlery: authenticatedUser.defaultCutlery || 0,
-      deliveryTime: "",
       isAuthenticated: true,
       name: authenticatedUser.name,
       phone: authenticatedUser.phone || "",
@@ -137,14 +134,6 @@ export default function CheckoutPageImpl({
 
     setCustomerProfile({ phone: "" });
   }, [customerProfile.phone, setCustomerProfile]);
-
-  useEffect(() => {
-    if (customerProfile.deliveryTime === normalizedDeliveryTime) {
-      return;
-    }
-
-    setCustomerProfile({ deliveryTime: normalizedDeliveryTime });
-  }, [customerProfile.deliveryTime, normalizedDeliveryTime, setCustomerProfile]);
 
   const packageLimit = getPackageLimit(pkg ?? undefined);
 
@@ -243,7 +232,7 @@ export default function CheckoutPageImpl({
   }, [cartData.totalDays, pkg]);
 
   const { balanceDaysToUse, fiatPrice } = useMemo(() => {
-    if (!pkg || availableDays === 0) {
+    if (!pkg || availableDays === 0 || paymentMethod === "cash") {
       return { balanceDaysToUse: 0, fiatPrice: orderTotalUah };
     }
     
@@ -262,7 +251,7 @@ export default function CheckoutPageImpl({
     }
     
     return { balanceDaysToUse: toUse, fiatPrice: fPrice };
-  }, [availableDays, cartData.totalDays, orderTotalUah, pkg]);
+  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, paymentMethod]);
 
   const deliveryDate = useMemo(
     () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
@@ -311,7 +300,6 @@ export default function CheckoutPageImpl({
         customerProfile.phone,
         customerProfile.address,
         customerProfile.cutlery,
-        customerProfile.deliveryTime,
         customerProfile.notes,
       ].join("|"),
     [customerProfile],
@@ -330,7 +318,7 @@ export default function CheckoutPageImpl({
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    formData.set("paymentMethod", balanceDaysToUse > 0 ? "balance" : "fiat");
+    formData.set("paymentMethod", paymentMethod);
 
     const submittedValues = parseCheckoutFormData(formData);
     const nextFieldErrors = validateCheckoutFormValues(submittedValues);
@@ -408,7 +396,6 @@ export default function CheckoutPageImpl({
       setCustomerProfile({
         address: submittedValues.address,
         cutlery: submittedValues.cutlery,
-        deliveryTime: submittedValues.deliveryTime,
         name: submittedValues.name,
         notes: submittedValues.comment,
         phone: submittedValues.phone,
@@ -555,7 +542,7 @@ export default function CheckoutPageImpl({
               <input 
                 type="hidden" 
                 name="paymentMethod" 
-                value={balanceDaysToUse > 0 ? "balance" : "fiat"} 
+                value={paymentMethod} 
               />
               <div className="mt-3 flex items-start justify-between gap-3">
                 <span className="text-sm text-slate-300">Перша доставка</span>
@@ -619,15 +606,70 @@ export default function CheckoutPageImpl({
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">Куди і кому доставляти</h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Telegram-авторизація необов&apos;язкова, але допоможе швидше підтягнути ваші дані.
+                Telegram-авторизація допоможе швидше підтягнути ваші дані та отримати доступ до абонементів.
               </p>
             </div>
 
             {!customerProfile.isAuthenticated && (
-              <div className="mb-6 rounded-3xl border border-dashed border-emerald-200 bg-emerald-50 px-5 py-5">
-                <TelegramDeepLinkAuth />
+              <div className="mb-8 rounded-[2rem] border-2 border-red-200 bg-red-50 p-6 shadow-sm">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-red-900">Увага! Ви не авторизовані</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-red-700">
+                      Щоб отримати знижки на пакети та доступ до абонементів, будь ласка, авторизуйтесь через Telegram.
+                    </p>
+                  </div>
+                  <div className="shrink-0">
+                    <TelegramDeepLinkAuth />
+                  </div>
+                </div>
               </div>
             )}
+
+            <div className="mb-8 rounded-[2rem] border border-slate-200 bg-slate-50 p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("balance")}
+                  disabled={availableDays === 0}
+                  className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+                    paymentMethod === "balance"
+                      ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  } ${availableDays === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <div className="text-left">
+                    <div className="font-bold text-slate-900">Оплата з балансу</div>
+                    <div className="text-xs text-slate-500">Доступно: {availableDays} дн.</div>
+                  </div>
+                  <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
+                    paymentMethod === "balance" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
+                  }`}>
+                    {paymentMethod === "balance" && <div className="h-2 w-2 rounded-full bg-white" />}
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("cash")}
+                  className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+                    paymentMethod === "cash"
+                      ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
+                      : "border-slate-200 bg-white hover:border-slate-300"
+                  }`}
+                >
+                  <div className="text-left">
+                    <div className="font-bold text-slate-900">Готівкою</div>
+                    <div className="text-xs text-slate-500">При отриманні</div>
+                  </div>
+                  <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
+                    paymentMethod === "cash" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
+                  }`}>
+                    {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white" />}
+                  </div>
+                </button>
+              </div>
+            </div>
 
             {feedback && (
               <div
@@ -727,24 +769,6 @@ export default function CheckoutPageImpl({
                     {CUTLERY_OPTIONS.map((value) => (
                       <option key={value} value={value}>
                         {value}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-slate-900">
-                    Бажаний час доставки
-                  </span>
-                  <select
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                    defaultValue={normalizedDeliveryTime}
-                    name="deliveryTime"
-                  >
-                    <option value="">Не вказано</option>
-                    {DELIVERY_TIME_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
                       </option>
                     ))}
                   </select>

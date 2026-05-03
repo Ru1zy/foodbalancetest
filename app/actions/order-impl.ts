@@ -287,7 +287,7 @@ export async function submitOrder(
     let fiatPrice = totalPrice;
     const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
 
-    if (userId) {
+    if (userId && paymentMethod !== "cash") {
       const userBalance = await prisma.userBalance.findUnique({
         where: {
           userId_packageId: {
@@ -317,7 +317,7 @@ export async function submitOrder(
 
     const { order, user } = await prisma.$transaction(async (tx) => {
       // 1. Deduct balance if used
-      if (balanceDaysToUse > 0 && userId) {
+      if (balanceDaysToUse > 0 && userId && paymentMethod !== "cash") {
         await tx.userBalance.update({
           where: {
             userId_packageId: {
@@ -332,8 +332,6 @@ export async function submitOrder(
           },
         });
       }
-
-      const finalIsPaid = fiatPrice === 0;
 
       if (userId) {
         const currentUser = await tx.user.findUnique({
@@ -388,14 +386,15 @@ export async function submitOrder(
             data: {
               deliveryAddress: parsedFormData.address || null,
               deliveryDate: resolvedDeliveryDate,
-              deliveryTime: parsedFormData.deliveryTime || null,
+              deliveryTime: null,
               cutlery: parsedFormData.cutlery,
               items: sanitizedCartData,
               notes: parsedFormData.comment || null,
               packageType: sanitizedCartData.packageType,
               price: fiatPrice,
               balanceDaysUsed: balanceDaysToUse,
-              isPaid: finalIsPaid,
+              isPaid: paymentMethod === "cash" ? false : fiatPrice === 0,
+              paymentMethod: paymentMethod || "balance",
               status: "new",
               userId,
             },
@@ -439,14 +438,15 @@ export async function submitOrder(
         data: {
           deliveryAddress: parsedFormData.address || null,
           deliveryDate: resolvedDeliveryDate,
-          deliveryTime: parsedFormData.deliveryTime || null,
+          deliveryTime: null,
           cutlery: parsedFormData.cutlery,
           items: sanitizedCartData,
           notes: parsedFormData.comment || null,
           packageType: sanitizedCartData.packageType,
           price: fiatPrice,
           balanceDaysUsed: balanceDaysToUse,
-          isPaid: finalIsPaid,
+          isPaid: paymentMethod === "cash" ? false : fiatPrice === 0,
+          paymentMethod: paymentMethod || "balance",
           status: "new",
           userId: user.id,
         },

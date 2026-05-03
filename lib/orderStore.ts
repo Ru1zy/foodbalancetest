@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PackageType } from "@/lib/order-logic";
 import { getPackageLimit } from "@/lib/order-logic";
-import { normalizeDeliveryTime } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 export type Selections = Record<string, Record<string, number>>;
@@ -20,7 +19,6 @@ export type CustomerProfile = {
   address: string;
   chatId: string;
   cutlery: number;
-  deliveryTime: string;
   isAuthenticated: boolean;
   name: string;
   notes: string;
@@ -70,7 +68,6 @@ export const useOrderStore = create<OrderStore>()(
         address: "",
         chatId: "",
         cutlery: 0,
-        deliveryTime: "",
         isAuthenticated: false,
         name: "",
         notes: "",
@@ -89,10 +86,6 @@ export const useOrderStore = create<OrderStore>()(
       const nextProfile = {
         ...profile,
       };
-
-      if ("deliveryTime" in nextProfile) {
-        nextProfile.deliveryTime = normalizeDeliveryTime(String(nextProfile.deliveryTime ?? ""));
-      }
 
       if ("phone" in nextProfile) {
         nextProfile.phone = sanitizeTelegramPhone(nextProfile.phone);
