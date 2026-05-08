@@ -109,19 +109,21 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
           <h2 className="mb-6 text-2xl font-bold text-blue-900">Придбати абонемент</h2>
           
           <div className="mb-6 flex flex-wrap gap-2">
-            {tariffs.filter(t => t.name !== "Template").map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
-                className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
-                  activeTab === t.id
-                    ? "bg-blue-600 text-white shadow-md"
-                    : "bg-white text-blue-600 hover:bg-blue-50"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
+            {tariffs
+              .filter(t => t.name !== "Template" && !t.name.toLowerCase().includes("indiv"))
+              .map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`rounded-lg px-4 py-2 text-sm font-bold transition ${
+                    activeTab === t.id
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "bg-white text-blue-600 hover:bg-blue-50"
+                  }`}
+                >
+                  {t.name}
+                </button>
+              ))}
           </div>
 
           {tariffs.find(t => t.id === activeTab) && (
