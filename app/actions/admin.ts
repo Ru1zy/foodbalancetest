@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
+import { normalizePhoneForLegacy } from "@/lib/googleSheets";
 
 // ============================================================================
 // TYPES
@@ -629,9 +630,9 @@ interface OrderDay {
  */
 async function formatOrderDishes(
   items: unknown,
-  menuById: Map<string, { dishes: unknown }>,
+  menuById: Map<string, { dishes: unknown; dayOfWeek?: number }>,
   packageType: string,
-  targetDayOfWeek: number // 1-7
+  targetDate: Date
 ): Promise<string> {
   if (!items || typeof items !== "object") return "";
 
@@ -646,16 +647,48 @@ async function formatOrderDishes(
   const days = (items as Record<string, unknown>).days;
   if (!Array.isArray(days) || days.length === 0) return "";
 
-  // Find the specific day in the order items
-  const day = (days as OrderDay[]).find((d) => 
-    d && Number(d.dayOfWeek) === targetDayOfWeek
-  );
-  
+  // Precise mathematical date comparison (Kyiv timezone)
+  const kyivFormat = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Kiev',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric'
+  });
+  const targetParts = kyivFormat.formatToParts(targetDate);
+  const targetYear = parseInt(targetParts.find(p => p.type === 'year')!.value);
+  const targetMonth = parseInt(targetParts.find(p => p.type === 'month')!.value) - 1;
+  const targetDay = parseInt(targetParts.find(p => p.type === 'day')!.value);
+
+  // Find the specific day in the order items by precise date matching
+  const day = (days as OrderDay[]).find((d) => {
+    if (!d || !d.dayId) return false;
+
+    // Try parsing dayId as a date (e.g., "2024-05-05")
+    const dDate = new Date(d.dayId);
+    if (!isNaN(dDate.getTime())) {
+      // Use UTC components for dDate if it's a date-only string like YYYY-MM-DD
+      return dDate.getUTCFullYear() === targetYear &&
+             dDate.getUTCMonth() === targetMonth &&
+             dDate.getUTCDate() === targetDay;
+    }
+
+    // Fallback: Match by dayOfWeek if dayId is a UUID
+    const menu = menuById.get(d.dayId);
+    if (menu && typeof menu.dayOfWeek === 'number') {
+      const startDay = targetDate;
+      const midDay = new Date(startDay.getTime() + 12 * 60 * 60 * 1000);
+      let targetDOW = midDay.getUTCDay();
+      targetDOW = targetDOW === 0 ? 7 : targetDOW;
+      return menu.dayOfWeek === targetDOW;
+    }
+
+    return false;
+  });
+
   if (!day) return "";
 
   const allDishes: string[] = [];
-
-  // Handle individual/custom items
+  // Handle individual/custom items (Indiv or Custom Mode)
   if (Array.isArray(day.items) && day.items.length > 0) {
     const menu = menuById.get(day.dayId);
     const menuDishes = menu ? (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]> : null;
@@ -688,9 +721,8 @@ async function formatOrderDishes(
           if (!dishName.includes('(1,5)')) dishName += " (1,5)";
         }
         
-        for (let i = 0; i < quantity; i++) {
-          allDishes.push(dishName);
-        }
+        // Task 3: Use (xN) format for custom items
+        allDishes.push(`${dishName} (x${quantity})`);
       }
     }
   }
@@ -702,8 +734,14 @@ async function formatOrderDishes(
       try {
         const dishes = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, Dish[]>;
 
-        Object.entries(day.selections).forEach(([category, selectionIndex]) => {
+        // Task 1: Strict Category Filtering for 'Slim'
+        const isSlim = packageType.toLowerCase() === 'slim';
+        const allowedCategories = isSlim ? ['breakfast', 'lunch', 'dinner'] : ['breakfast', 'lunch', 'snack', 'dinner'];
+
+        allowedCategories.forEach(category => {
+          const selectionIndex = (day.selections as Record<string, number>)[category];
           const categoryDishes = dishes[category];
+          
           if (Array.isArray(categoryDishes) && typeof selectionIndex === "number" && categoryDishes[selectionIndex]) {
             const dish = categoryDishes[selectionIndex];
             let dishName = typeof dish === "object" && dish !== null ? dish.short || dish.full || dish.name : dish;
@@ -847,14 +885,17 @@ export async function exportToKitchenSheet(
           }
         } else {
           // Try to format from order items
-          formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, targetDayOfWeek);
+          formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, startDay);
           
           // Fallback to Template menu if empty and NOT an Indiv package
           if (!formattedDishes && !isIndiv && templateMenu) {
             try {
               const dishes = (typeof templateMenu.dishes === "string" ? JSON.parse(templateMenu.dishes) : templateMenu.dishes) as Record<string, Dish[]>;
               const names: string[] = [];
-              ['breakfast', 'lunch', 'dinner', 'snack'].forEach(cat => {
+              const isSlim = order.packageType.toLowerCase() === 'slim';
+              const allowedCategories = isSlim ? ['breakfast', 'lunch', 'dinner'] : ['breakfast', 'lunch', 'snack', 'dinner'];
+
+              allowedCategories.forEach(cat => {
                 const d = dishes[cat]?.[0];
                 let dishName = typeof d === "object" ? d.short || d.full : d;
                 if (dishName) {
@@ -891,9 +932,12 @@ export async function exportToKitchenSheet(
           dailyPrice = Math.round(order.price / totalDaysInOrder).toString();
         }
 
+        const cleanPhone = normalizePhoneForLegacy(order.user.phone || "");
+        const sheetPhone = cleanPhone ? "'" + cleanPhone : "";
+
         return [
           order.user.name || "", // C
-          order.user.phone ? `'${order.user.phone}` : "", // D (Add apostrophe to preserve 0)
+          sheetPhone, // D (Add apostrophe to preserve 0)
           order.user.address || "", // E
           order.user.chatId || "", // F
           order.packageType || "", // G
