@@ -632,7 +632,8 @@ async function formatOrderDishes(
   items: unknown,
   menuById: Map<string, { dishes: unknown; dayOfWeek?: number }>,
   packageType: string,
-  targetDate: Date
+  targetDate: Date,
+  startDate: Date
 ): Promise<string> {
   if (!items || typeof items !== "object") return "";
 
@@ -647,43 +648,20 @@ async function formatOrderDishes(
   const days = (items as Record<string, unknown>).days;
   if (!Array.isArray(days) || days.length === 0) return "";
 
-  // Precise mathematical date comparison (Kyiv timezone)
-  const kyivFormat = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Kiev',
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric'
-  });
-  const targetParts = kyivFormat.formatToParts(targetDate);
-  const targetYear = parseInt(targetParts.find(p => p.type === 'year')!.value);
-  const targetMonth = parseInt(targetParts.find(p => p.type === 'month')!.value) - 1;
-  const targetDay = parseInt(targetParts.find(p => p.type === 'day')!.value);
+  // Task 2: Bruteforce Indiv/Custom Mode Date Matching via Index
+  // Normalize to Kyiv calendar dates to avoid off-by-one errors from UTC shifts
+  const kyivISO = { timeZone: 'Europe/Kiev', year: 'numeric', month: '2-digit', day: '2-digit' } as const;
+  const startStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(new Date(startDate));
+  const targetStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(new Date(targetDate));
+  
+  const s = new Date(startStr);
+  const t = new Date(targetStr);
+  const dayIndex = Math.floor((t.getTime() - s.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Find the specific day in the order items by precise date matching
-  const day = (days as OrderDay[]).find((d) => {
-    if (!d || !d.dayId) return false;
-
-    // Try parsing dayId as a date (e.g., "2024-05-05")
-    const dDate = new Date(d.dayId);
-    if (!isNaN(dDate.getTime())) {
-      // Use UTC components for dDate if it's a date-only string like YYYY-MM-DD
-      return dDate.getUTCFullYear() === targetYear &&
-             dDate.getUTCMonth() === targetMonth &&
-             dDate.getUTCDate() === targetDay;
-    }
-
-    // Fallback: Match by dayOfWeek if dayId is a UUID
-    const menu = menuById.get(d.dayId);
-    if (menu && typeof menu.dayOfWeek === 'number') {
-      const startDay = targetDate;
-      const midDay = new Date(startDay.getTime() + 12 * 60 * 60 * 1000);
-      let targetDOW = midDay.getUTCDay();
-      targetDOW = targetDOW === 0 ? 7 : targetDOW;
-      return menu.dayOfWeek === targetDOW;
-    }
-
-    return false;
-  });
+  let day: OrderDay | null = null;
+  if (dayIndex >= 0 && dayIndex < days.length) {
+    day = (days as OrderDay[])[dayIndex];
+  }
 
   if (!day) return "";
 
@@ -786,12 +764,9 @@ export async function exportToKitchenSheet(
   if (!dateRange) return { ok: false, message: "Некоректний формат дати DD.MM" };
 
   // CRITICAL: Determine day of week strictly from the TARGET date.
-  // We add 12 hours to the start of the day to ensure getUTCDay() 
-  // returns the correct day regardless of the +03:00 offset.
   const startDay = dateRange.start;
   const midDay = new Date(startDay.getTime() + 12 * 60 * 60 * 1000);
   let targetDayOfWeek = midDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
-  // Convert 0 (Sun) -> 7 (Sun) to match 1 (Mon) - 7 (Sun) convention
   targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
   try {
@@ -801,13 +776,30 @@ export async function exportToKitchenSheet(
     });
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Fetch all non-cancelled orders matching Admin UI logic
-    const orders = await prisma.order.findMany({
+    // Task 2: Find all active orders that might cover the target date
+    const allActiveOrders = await prisma.order.findMany({
       where: {
-        deliveryDate: { gte: dateRange.start, lte: dateRange.end },
-        status: { not: "cancelled" },
+        deliveryDate: { lte: dateRange.end },
+        status: { notIn: ["cancelled", "archived"] },
       },
       include: { user: true },
+    });
+
+    const kyivISO = { timeZone: 'Europe/Kiev', year: 'numeric', month: '2-digit', day: '2-digit' } as const;
+    const targetStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(dateRange.start);
+    const t = new Date(targetStr);
+
+    // Filter orders to only those that actually have a delivery on targetDate
+    const orders = allActiveOrders.filter(order => {
+      if (!order.items || typeof order.items !== "object") return false;
+      const days = (order.items as any).days;
+      if (!Array.isArray(days)) return false;
+
+      const startStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(new Date(order.deliveryDate));
+      const s = new Date(startStr);
+      const dayIndex = Math.floor((t.getTime() - s.getTime()) / (1000 * 60 * 60 * 24));
+
+      return dayIndex >= 0 && dayIndex < days.length;
     });
 
     if (orders.length === 0) return { ok: false, message: `Не знайдено замовлень на ${targetDateStr}.` };
@@ -885,7 +877,7 @@ export async function exportToKitchenSheet(
           }
         } else {
           // Try to format from order items
-          formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, startDay);
+          formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, startDay, order.deliveryDate);
           
           // Fallback to Template menu if empty and NOT an Indiv package
           if (!formattedDishes && !isIndiv && templateMenu) {
@@ -917,20 +909,17 @@ export async function exportToKitchenSheet(
           }
         }
 
-        // Calculate daily price
-        // If balanceDaysUsed > 0, we assume this specific day could be from balance.
-        // The most reliable way is to check if price is 0 (fully balance) 
-        // OR calculate the unit price if it was a paid order.
-        let dailyPrice = "0";
-        if (order.price && order.price > 0) {
-          // Get total days in this order from JSON items if available, or assume at least 1
-          let totalDaysInOrder = 1;
-          if (order.items && typeof order.items === "object") {
-             const daysArr = (order.items as any).days;
-             if (Array.isArray(daysArr)) totalDaysInOrder = daysArr.length;
-          }
-          dailyPrice = Math.round(order.price / totalDaysInOrder).toString();
+        // Task 1: Fix Daily Price Calculation (Divide by daysCount)
+        let daysCount = 1;
+        if (order.items && typeof order.items === "object") {
+          const daysArr = (order.items as any).days;
+          if (Array.isArray(daysArr)) daysCount = daysArr.length;
         }
+        
+        const totalPrice = order.price || 0;
+        const dailyPrice = totalPrice === 0 
+          ? "0" 
+          : Math.round(totalPrice / daysCount).toString();
 
         const cleanPhone = normalizePhoneForLegacy(order.user.phone || "");
         const sheetPhone = cleanPhone ? "'" + cleanPhone : "";
@@ -967,3 +956,4 @@ export async function exportToKitchenSheet(
     return { ok: false, message: "Помилка експорту." };
   }
 }
+
