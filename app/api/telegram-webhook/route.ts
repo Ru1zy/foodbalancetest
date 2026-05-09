@@ -97,22 +97,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    // Handle other commands (fallback to website)
-    if (update.message?.text?.startsWith("/")) {
-      const chatId = update.message.chat.id;
-      const command = update.message.text.split(" ")[0];
-
-      await sendTelegramRequest("sendMessage", {
-        chat_id: chatId,
-        text: `Команда ${command} тепер доступна на сайті!\n\n🌐 Перейдіть на foodbalancetest.vercel.app для замовлення.`,
-        reply_markup: {
-          inline_keyboard: [[
-            { text: "🌐 Відкрити сайт", url: "https://foodbalancetest.vercel.app" }
-          ]]
-        }
-      });
-
-      return NextResponse.json({ ok: true });
+    // --- ПРОКСИ ДЛЯ GAS ---
+    // Если это не логин, пересылаем весь запрос в старый GAS скрипт
+    const GAS_WEBAPP_URL = process.env.GAS_WEBAPP_URL;
+    
+    if (GAS_WEBAPP_URL) {
+      try {
+        await fetch(GAS_WEBAPP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(update) // Отправляем оригинальный payload
+        });
+        console.log("Успешно переслано в GAS");
+      } catch (err) {
+        console.error("Ошибка пересылки в GAS:", err);
+      }
+    } else {
+      console.error("Не задан GAS_WEBAPP_URL в переменных окружения!");
     }
 
     return NextResponse.json({ ok: true });
