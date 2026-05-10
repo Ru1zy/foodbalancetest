@@ -190,7 +190,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="1234"
                 maxLength={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-bold tracking-widest focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 required
                 disabled={loading}
                 autoFocus
@@ -220,7 +220,7 @@ export default function OnboardingPage() {
                 className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-xl transition-all"
                 disabled={loading}
               >
-                Назад
+                Використати інший номер
               </button>
             </div>
           </form>

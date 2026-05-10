@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import CheckoutPageImpl from "./page-impl";
@@ -24,6 +25,11 @@ export default async function CheckoutPage() {
           },
         });
         if (dbUser) {
+          // Prevent onboarding bypass: redirect if phone is placeholder
+          if (dbUser.phone.startsWith("google_")) {
+            redirect("/onboarding");
+          }
+
           user = {
             name: dbUser.name,
             phone: sanitizeTelegramPhone(dbUser.phone),

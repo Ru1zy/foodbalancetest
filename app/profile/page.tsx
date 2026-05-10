@@ -188,6 +188,11 @@ export default async function ProfilePage() {
     redirect("/");
   }
 
+  // Prevent onboarding bypass: redirect if phone is placeholder
+  if (dbUser.phone.startsWith("google_")) {
+    redirect("/onboarding");
+  }
+
   const user = {
     ...dbUser,
     defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),

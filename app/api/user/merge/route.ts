@@ -110,17 +110,8 @@ export async function POST(request: Request) {
     }
 
     // Perform account merge in transaction
+    // CRITICAL: Delete temp user FIRST to free up unique constraints (email, googleId)
     await prisma.$transaction(async (tx) => {
-      // Copy Google data to old user
-      await tx.user.update({
-        where: { id: oldUser.id },
-        data: {
-          email: currentUser.email,
-          googleId: currentUser.googleId,
-          avatarUrl: currentUser.avatarUrl,
-        },
-      });
-
       // Transfer orders from current user to old user (if any)
       await tx.order.updateMany({
         where: { userId: currentUser.id },
@@ -165,12 +156,22 @@ export async function POST(request: Request) {
         }
       }
 
-      // Delete current user (placeholder Google user)
+      // Step 1: DELETE current user (placeholder) to free unique constraints
       await tx.user.delete({
         where: { id: currentUser.id },
       });
 
-      // Delete OTP token
+      // Step 2: UPDATE old user with Google data (now constraints are free)
+      await tx.user.update({
+        where: { id: oldUser.id },
+        data: {
+          email: currentUser.email,
+          googleId: currentUser.googleId,
+          avatarUrl: currentUser.avatarUrl,
+        },
+      });
+
+      // Step 3: Delete OTP token
       await tx.mergeToken.delete({
         where: { phone: normalizedPhone },
       });

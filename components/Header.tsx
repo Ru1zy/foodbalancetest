@@ -3,12 +3,33 @@ import Link from "next/link";
 import TelegramAuthButton from "./TelegramAuthButton";
 import LogoutButton from "./LogoutButton";
 import Logo from "./Logo";
+import prisma from "@/lib/prisma";
+import { verifyAuthToken } from "@/lib/auth-token";
 
 export default async function Header() {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
   const isAuthenticated = !!token;
+  let needsOnboarding = false;
+
+  // Check if user needs onboarding (has google_ placeholder phone)
+  if (token) {
+    try {
+      const userId = await verifyAuthToken(token);
+      if (userId) {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { phone: true },
+        });
+        if (user && user.phone.startsWith("google_")) {
+          needsOnboarding = true;
+        }
+      }
+    } catch {
+      // Invalid token, ignore
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
@@ -19,14 +40,25 @@ export default async function Header() {
           <nav className="flex items-center gap-4">
             {isAuthenticated ? (
               <>
-                <Link
-                  href="/profile"
-                  className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                >
-                  <span>👤</span>
-                  <span className="hidden sm:inline">Профіль</span>
-                </Link>
-                <LogoutButton />
+                {needsOnboarding ? (
+                  // User needs onboarding - show only logout
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm text-gray-500">Завершіть реєстрацію</span>
+                    <LogoutButton />
+                  </div>
+                ) : (
+                  // Normal authenticated user
+                  <>
+                    <Link
+                      href="/profile"
+                      className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-gray-900 border border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    >
+                      <span>👤</span>
+                      <span className="hidden sm:inline">Профіль</span>
+                    </Link>
+                    <LogoutButton />
+                  </>
+                )}
               </>
             ) : (
               <TelegramAuthButton />
