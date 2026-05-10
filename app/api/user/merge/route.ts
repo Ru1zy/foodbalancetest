@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { verifyAuthToken, createAuthToken, AUTH_TOKEN_MAX_AGE } from "@/lib/auth-token";
-import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { normalizePhone } from "@/lib/phone-utils";
 
 export const runtime = "nodejs";
 
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = (await request.json()) as MergeRequest;
-    const normalizedPhone = sanitizeTelegramPhone(body.phone);
+    const normalizedPhone = normalizePhone(body.phone);
     const code = body.code?.trim();
 
     if (!normalizedPhone || !code) {

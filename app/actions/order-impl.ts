@@ -16,6 +16,7 @@ import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
 import { syncClientToSheet } from "@/lib/googleSheets";
 import { isGooglePlaceholderPhone } from "@/lib/google-auth";
+import { normalizePhone } from "@/lib/phone-utils";
 
 export type StandardSelections = Record<string, number>;
 
@@ -211,7 +212,7 @@ export async function submitOrder(
   // --- Server-side validation using Zod ---
   const rawData = {
     name: formData.get("name"),
-    phone: formData.get("phone"),
+    phone: normalizePhone(formData.get("phone") as string || ""),
     address: formData.get("address"),
     comment: formData.get("comment"),
     cutlery: Number(formData.get("cutlery") ?? 0),

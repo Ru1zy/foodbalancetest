@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
+import { normalizePhone } from "@/lib/phone-utils";
 
 export async function updateUserProfile(formData: FormData) {
   const cookieStore = await cookies();
@@ -37,7 +38,7 @@ export async function updateUserProfile(formData: FormData) {
     where: { id: userId },
     data: {
       name: (name || '').trim(),
-      phone: (phone || '').trim() || undefined,
+      phone: phone ? normalizePhone(phone) : undefined,
       address: (address || '').trim() || undefined,
       defaultCutlery: String(cutlery),
     },

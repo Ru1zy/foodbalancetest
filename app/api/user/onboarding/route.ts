@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth-token";
-import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { normalizePhone } from "@/lib/phone-utils";
 import { generateOTPCode, sendTelegramOTP } from "@/lib/telegram-otp";
 
 export const runtime = "nodejs";
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
     // Parse request body
     const body = (await request.json()) as OnboardingRequest;
-    const normalizedPhone = sanitizeTelegramPhone(body.phone);
+    const normalizedPhone = normalizePhone(body.phone);
 
     if (!normalizedPhone || normalizedPhone.length < 10) {
       return NextResponse.json(
