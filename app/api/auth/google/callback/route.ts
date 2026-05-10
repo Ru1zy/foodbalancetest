@@ -73,9 +73,10 @@ export async function GET(request: Request) {
       secure: process.env.NODE_ENV === "production",
     });
 
-    // Redirect to profile
-    const profileUrl = new URL("/profile", request.url);
-    return NextResponse.redirect(profileUrl);
+    // Redirect based on phone status
+    const redirectPath = user.phone.startsWith("google_") ? "/onboarding" : "/profile";
+    const redirectUrl = new URL(redirectPath, request.url);
+    return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error("Google OAuth callback failed:", error);
     return NextResponse.redirect(new URL("/?error=google_auth_failed", request.url));
