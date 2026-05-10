@@ -15,6 +15,7 @@ import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
 import { syncClientToSheet } from "@/lib/googleSheets";
+import { isGooglePlaceholderPhone } from "@/lib/google-auth";
 
 export type StandardSelections = Record<string, number>;
 
@@ -300,6 +301,25 @@ export async function submitOrder(
         userId = await verifyAuthToken(authToken);
       } catch (authError) {
         console.error("submitOrder auth token verification failed", authError);
+      }
+    }
+
+    // Check if user has Google placeholder phone and needs to provide real phone
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { phone: true },
+      });
+
+      if (user && isGooglePlaceholderPhone(user.phone)) {
+        // Validate that the submitted phone is not a placeholder
+        if (isGooglePlaceholderPhone(validatedData.phone)) {
+          return {
+            ok: false,
+            message: "Будь ласка, введіть дійсний номер телефону для оформлення замовлення.",
+            status: 400,
+          };
+        }
       }
     }
 
