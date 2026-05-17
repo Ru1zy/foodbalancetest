@@ -9,9 +9,7 @@ import {
   Calendar, 
   ChevronDown, 
   ChevronUp, 
-  RefreshCw, 
-  Clock, 
-  CheckCircle2, 
+  RefreshCw,
   AlertCircle,
   ForkKnife,
   Settings,
@@ -85,30 +83,6 @@ function formatShortDate(date: Date): string {
 function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const getStatusInfo = (status: string | undefined, isPaid: boolean) => {
-    if (status === "delivered" || status === "archived") {
-      return { 
-        label: "Доставлено", 
-        classes: "bg-gray-100 text-gray-700 border-gray-200", 
-        icon: <CheckCircle2 className="w-3 h-3" /> 
-      };
-    }
-    if (isPaid) {
-      return { 
-        label: "Оплачено", 
-        classes: "bg-emerald-100 text-emerald-700 border-emerald-200", 
-        icon: <CheckCircle2 className="w-3 h-3" /> 
-      };
-    }
-    return { 
-      label: "Очікує оплати", 
-      classes: "bg-amber-100 text-amber-700 border-amber-200", 
-      icon: <Clock className="w-3 h-3" /> 
-    };
-  };
-
-  const statusInfo = getStatusInfo(order.status, order.isPaid);
-
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
       {/* Card Header */}
@@ -128,11 +102,6 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
-            <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${statusInfo.classes}`}>
-              {statusInfo.icon}
-              {statusInfo.label}
-            </span>
-            
             <div className="text-right">
               {isIndivPackage(order.packageType) ? (
                 <p className="text-sm font-bold text-emerald-600">Індивідуальний розрахунок</p>
@@ -173,14 +142,6 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
                 <span>Деталі меню</span>
               </>
             )}
-          </button>
-          
-          <button
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-700 transition hover:bg-gray-50 hover:border-gray-300"
-            onClick={() => alert("Повтор замовлення у розробці")}
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Повторити</span>
           </button>
         </div>
       </div>

@@ -9,12 +9,12 @@ import {
   getPackageLimit,
   PackageType,
 } from "@/lib/order-logic";
-import { kyivCalendarDateKey, parseCheckoutFormData, validateCheckoutFormValues } from "@/lib/checkout";
+import { kyivCalendarDateKey } from "@/lib/checkout";
 import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
-import { syncClientToSheet } from "@/lib/googleSheets";
+import { syncClientToSheet, appendOrderToSheet } from "@/lib/googleSheets";
 import { isGooglePlaceholderPhone } from "@/lib/google-auth";
 import { normalizePhone } from "@/lib/phone-utils";
 
@@ -517,6 +517,8 @@ export async function submitOrder(
         cutlery: Number(user.defaultCutlery || validatedData.cutlery),
         notes: user.notes || validatedData.comment || "",
       });
+      
+      appendOrderToSheet(order, user);
     } catch (sheetError) {
       console.error("Google Sheets sync failed:", sheetError);
     }

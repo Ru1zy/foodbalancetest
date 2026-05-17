@@ -792,7 +792,7 @@ export async function exportToKitchenSheet(
     // Filter orders to only those that actually have a delivery on targetDate
     const orders = allActiveOrders.filter(order => {
       if (!order.items || typeof order.items !== "object") return false;
-      const days = (order.items as any).days;
+      const days = (order.items as unknown as Record<string, unknown[]>).days;
       if (!Array.isArray(days)) return false;
 
       const startStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(new Date(order.deliveryDate));
@@ -949,22 +949,27 @@ export async function exportToKitchenSheet(
     });
 
     return { ok: true, exported: orders.length };
-  } catch (error: any) {
-    console.error("Export error:", error);
+  } catch (error) {
+    const err = error as { 
+      response?: { data?: { error?: { message?: string } } }; 
+      message?: string; 
+      code?: number;
+    };
+    console.error("Export error:", err);
 
     // Task 2: Specific Error Reporting for Google Sheets
-    const errorBody = error.response?.data?.error?.message || error.message || "";
+    const errorBody = err.response?.data?.error?.message || err.message || "";
 
     if (
       errorBody.includes("requested entity was not found") ||
       errorBody.includes("Worksheet not found") ||
       errorBody.includes("Unable to parse range") ||
-      error.code === 400
+      err.code === 400
     ) {
       return { ok: false, message: "Вкладка для цієї дати не знайдена в Google Таблиці." };
-    } else if (error.code === 403 || error.code === 401) {
+    } else if (err.code === 403 || err.code === 401) {
       return { ok: false, message: "Помилка авторизації Google Sheets. Перевірте доступ сервісного акаунта." };
-    } else if (error.code === 404) {
+    } else if (err.code === 404) {
       return { ok: false, message: "Google Таблицю не знайдено. Перевірте EXTERNAL_SHEET_ID." };
     }
 
