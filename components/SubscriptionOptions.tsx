@@ -104,8 +104,8 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
               
               <div className="mb-4">
                 <span className="font-bold text-red-600">{totalDiscounted} грн</span>
-                {" "}замість{" "}
-                <s className="text-gray-500">{totalOriginal} грн</s>
+                {" "}<span className="text-gray-600 font-medium">замість</span>{" "}
+                <s className="text-gray-400">{totalOriginal} грн</s>
               </div>
 
               <div className="mb-6 text-sm font-semibold text-gray-600">

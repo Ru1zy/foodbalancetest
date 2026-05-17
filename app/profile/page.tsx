@@ -229,6 +229,7 @@ export default async function ProfilePage() {
       price: order.price,
       balanceDaysUsed: order.balanceDaysUsed,
       isPaid: order.isPaid,
+      status: order.status,
       resolvedDays: await resolveOrderDishes(order),
     }))
   );

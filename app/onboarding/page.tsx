@@ -85,6 +85,7 @@ export default function OnboardingPage() {
       }
 
       if (data.success) {
+        router.refresh();
         router.push("/profile");
       }
     } catch (error) {
