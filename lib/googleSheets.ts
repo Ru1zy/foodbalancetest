@@ -215,7 +215,7 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
 
       rows.push([
         phoneCell, // A: Phone
-        order.userId, // B: UserId
+        user.chatId || "", // B: Telegram Chat ID (Legacy: Chat id)
         creationDateStr, // C: CreationDate
         weekStartStr, // D: WeekStart
         formatCrmDate(deliveryDate), // E: DeliveryDate
