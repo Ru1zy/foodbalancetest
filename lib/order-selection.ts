@@ -8,8 +8,14 @@ export type IndivDishQuantity = {
 };
 
 export function isIndivPackage(packageType?: string): packageType is PackageType {
-  const normalized = packageType?.trim().toLowerCase();
-  return normalized === "indiv" || normalized === "індив" || normalized === "индив";
+  const normalized = (packageType || "").trim().toLowerCase();
+  return (
+    normalized === "indiv" ||
+    normalized === "індив" ||
+    normalized === "индив" ||
+    normalized.includes("інд") ||
+    normalized.includes("ind")
+  );
 }
 
 export function buildIndivDishId(category: string, index: number) {
@@ -37,6 +43,7 @@ export function getDaySelectedCount(daySelections: DaySelections, packageType: P
   const isCustomOrIndiv = isIndivPackage(packageType) || Object.keys(daySelections).some(k => k.includes(':'));
   
   if (isCustomOrIndiv) {
+    // Sum total quantities of all items (can be same dish multiple times)
     return Object.values(daySelections).reduce((sum, q) => sum + (q > 0 ? q : 0), 0);
   }
   

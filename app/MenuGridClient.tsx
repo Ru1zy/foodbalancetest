@@ -188,6 +188,7 @@ function MealSection({
 
 export default function MenuGridClient({ menuItems }: Props) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
 
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
@@ -200,6 +201,8 @@ export default function MenuGridClient({ menuItems }: Props) {
   const setSelection = useOrderStore((state) => state.setSelection);
   const isCustomMode = useOrderStore((state) => state.isCustomMode);
   const toggleCustomMode = useOrderStore((state) => state.toggleCustomMode);
+
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
 
   const pkg = parsePackageType(selectedPackageRaw);
   const isIndiv = isIndivPackage(selectedPackageRaw ?? undefined);
@@ -310,13 +313,15 @@ export default function MenuGridClient({ menuItems }: Props) {
     );
   }
 
+  const currentDayItem = sorted[activeDayIndex];
+  const isLastDay = activeDayIndex === sorted.length - 1;
   const canProceedToCheckout = wizardFilterActive ? allWizardDaysComplete : completedDaysCount > 0;
 
   return (
     <>
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-32 md:pb-40">
         {step === 3 && (
-          <div className="mb-4 flex justify-center">
+          <div className="mb-4 flex flex-col items-center gap-4">
             <button
               type="button"
               onClick={() => setStep(2)}
@@ -324,6 +329,18 @@ export default function MenuGridClient({ menuItems }: Props) {
             >
               ← Назад до вибору днів
             </button>
+            {sorted.length > 1 && (
+              <div className="flex items-center gap-2">
+                {sorted.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`h-2 w-2 rounded-full transition-all ${
+                      idx === activeDayIndex ? "w-6 bg-emerald-500" : "bg-gray-200"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -353,57 +370,56 @@ export default function MenuGridClient({ menuItems }: Props) {
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
-          <div className="flex flex-wrap justify-center items-start gap-6 w-full max-w-6xl mx-auto">
-            {sorted.map((item) => {
-              const day = dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`;
-              const { dishes } = item;
-              const selectable = isDaySelectable(item.dayOfWeek);
-              const dayProgress = progressByDay[item.id] ?? { selectedCount: 0, isComplete: false };
+          <div className="flex flex-col items-center gap-6 w-full max-w-6xl mx-auto">
+            {currentDayItem && (
+              <div
+                key={currentDayItem.id}
+                className={`w-full max-w-2xl group flex flex-col bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 ease-out ${
+                  isDaySelectable(currentDayItem.dayOfWeek) ? "hover:shadow-md" : "opacity-50"
+                }`}
+              >
+                {currentDayItem.photoUrl && (
+                  <div
+                    className="relative h-64 w-full overflow-hidden bg-gray-50 cursor-pointer"
+                    onClick={() => {
+                      setZoomedImage(currentDayItem.photoUrl || null);
+                      setZoomScale(1);
+                    }}
+                  >
+                    <img
+                      src={currentDayItem.photoUrl}
+                      alt={`${dayNames[currentDayItem.dayOfWeek]} menu`}
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                )}
+                <div className="p-6 sm:p-8">
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-2 border-b border-gray-50 pb-4">
+                    <h3 className="break-words text-2xl font-black text-gray-900 sm:text-3xl">
+                      {dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`}
+                    </h3>
+                    <span className="rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700">
+                      {selectedPackageRaw ?? "—"}
+                    </span>
+                  </div>
 
-              return (
-                <div
-                  key={item.id}
-                  className={`w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] max-w-md group flex flex-col bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-[0.99] ${
-                    selectable ? "hover:shadow-md" : "opacity-50"
-                  }`}
-                >
-                  {item.photoUrl && (
-                    <div
-                      className="relative h-48 w-full overflow-hidden bg-gray-100 cursor-pointer"
-                      onClick={() => setZoomedImage(item.photoUrl || null)}
+                  {!isIndiv && !isSushka && (
+                    <button
+                      type="button"
+                      onClick={() => toggleCustomMode(!isCustomMode)}
+                      className="mb-6 w-full rounded-2xl border-2 border-dashed border-emerald-200 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
                     >
-                      <img
-                        src={item.photoUrl}
-                        alt={`${day} menu`}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
+                      {isCustomMode ? "Повернутися до стандарту" : "Індивідуальна збірка"}
+                    </button>
                   )}
-                  <div className="p-4 sm:p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-gray-50 pb-3">
-                      <h3 className="break-words text-lg font-bold text-gray-900 sm:text-xl">{day}</h3>
-                      <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-bold uppercase text-gray-500">
-                        {selectedPackageRaw ?? "—"}
-                      </span>
-                    </div>
 
-                    {!isIndiv && !isSushka && (
-                      <button
-                        type="button"
-                        onClick={() => toggleCustomMode(!isCustomMode)}
-                        className="mb-4 w-full rounded-xl border-2 border-dashed border-emerald-200 py-2 text-sm font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
-                      >
-                        {isCustomMode ? "Повернутися до стандарту" : "Індивідуальна збірка"}
-                      </button>
-                    )}
-
-                  {!selectable && (
-                    <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600">
+                  {!isDaySelectable(currentDayItem.dayOfWeek) && (
+                    <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
                       Вибір этого дня закритий за дедлайном
                     </div>
                   )}
                   {indivSelected && (
-                    <div className="mb-3 rounded-lg bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
+                    <div className="mb-4 rounded-xl bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700">
                       {packageLimit.exact 
                         ? `Оберіть рівно ${packageLimit.limit} страв на день.` 
                         : `Оберіть від 1 до ${packageLimit.limit} страв на день.`}
@@ -412,11 +428,11 @@ export default function MenuGridClient({ menuItems }: Props) {
 
                   <div className="flex-grow">
                     <MealSection
-                      itemId={item.id}
+                      itemId={currentDayItem.id}
                       category="breakfast"
                       title="Сніданок"
-                      options={dishes.breakfast}
-                      disabled={!selectable}
+                      options={currentDayItem.dishes.breakfast}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -428,11 +444,11 @@ export default function MenuGridClient({ menuItems }: Props) {
                       setSelection={setSelection}
                     />
                     <MealSection
-                      itemId={item.id}
+                      itemId={currentDayItem.id}
                       category="lunch"
                       title="Обід"
-                      options={dishes.lunch}
-                      disabled={!selectable}
+                      options={currentDayItem.dishes.lunch}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -444,11 +460,11 @@ export default function MenuGridClient({ menuItems }: Props) {
                       setSelection={setSelection}
                     />
                     <MealSection
-                      itemId={item.id}
+                      itemId={currentDayItem.id}
                       category="dinner"
                       title="Вечеря"
-                      options={dishes.dinner}
-                      disabled={!selectable}
+                      options={currentDayItem.dishes.dinner}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -461,11 +477,11 @@ export default function MenuGridClient({ menuItems }: Props) {
                     />
                     {!(isSushka && pkg === "Sushka XS") && (
                       <MealSection
-                        itemId={item.id}
+                        itemId={currentDayItem.id}
                         category="snack"
                         title="Перекус"
-                        options={dishes.snack}
-                        disabled={!selectable}
+                        options={currentDayItem.dishes.snack}
+                        disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
                         pkg={pkg}
                         isSushka={isSushka}
                         indivSelected={indivSelected}
@@ -478,11 +494,11 @@ export default function MenuGridClient({ menuItems }: Props) {
                       />
                     )}
                     <MealSection
-                      itemId={item.id}
+                      itemId={currentDayItem.id}
                       category="extra"
                       title="Додаткова страва (Sport)"
-                      options={dishes.extra}
-                      disabled={!selectable}
+                      options={currentDayItem.dishes.extra}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -495,35 +511,87 @@ export default function MenuGridClient({ menuItems }: Props) {
                     />
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-3 border-t border-gray-200 pt-3 sm:flex-row sm:items-center sm:justify-between">
-                    {dayProgress.isComplete ? (
-                      <p className="text-sm font-semibold text-emerald-600">День зібрано ✓</p>
-                    ) : (
-                      <p className="text-sm font-semibold text-gray-600">
-                        Обрано {dayProgress.selectedCount} з {packageLimit.limit}
-                      </p>
-                    )}
-                  </div>
+                  <div className="mt-6 flex flex-col gap-4 border-t border-gray-100 pt-6">
+                    <div className="flex items-center justify-between">
+                      {progressByDay[currentDayItem.id]?.isComplete ? (
+                        <p className="text-base font-bold text-emerald-600">День зібрано ✓</p>
+                      ) : (
+                        <p className="text-base font-bold text-gray-600">
+                          Обрано {progressByDay[currentDayItem.id]?.selectedCount || 0} з {packageLimit.limit}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-4">
+                      <button
+                        type="button"
+                        disabled={activeDayIndex === 0}
+                        onClick={() => setActiveDayIndex(prev => prev - 1)}
+                        className="flex-1 rounded-2xl border border-gray-200 bg-white py-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-30 active:scale-95"
+                      >
+                        ← Назад
+                      </button>
+                      {!isLastDay ? (
+                        <button
+                          type="button"
+                          onClick={() => setActiveDayIndex(prev => prev + 1)}
+                          className="flex-1 rounded-2xl bg-emerald-600 py-4 text-sm font-bold text-white transition hover:bg-emerald-700 active:scale-95"
+                        >
+                          Наступний день →
+                        </button>
+                      ) : (
+                        <div className="flex-1" />
+                      )}
+                    </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 cursor-zoom-out"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
           onClick={() => setZoomedImage(null)}
         >
-          <img
-            src={zoomedImage}
-            alt="Day menu details"
-            className="max-w-full max-h-full object-contain rounded-lg border border-gray-200"
-          />
+          <div className="relative w-full h-full flex items-center justify-center overflow-auto">
+            <img
+              src={zoomedImage}
+              alt="Day menu details"
+              style={{ transform: `scale(${zoomScale})` }}
+              className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomScale(prev => Math.max(0.5, prev - 0.25));
+              }}
+              className="text-white hover:text-emerald-400 p-2 transition-colors"
+              title="Zoom Out"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <span className="text-white font-mono text-sm w-12 text-center">{Math.round(zoomScale * 100)}%</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setZoomScale(prev => Math.min(3, prev + 0.25));
+              }}
+              className="text-white hover:text-emerald-400 p-2 transition-colors"
+              title="Zoom In"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+          </div>
+
           <button
-            className="absolute top-6 right-6 text-gray-100 text-4xl leading-none hover:text-gray-300"
+            className="absolute top-6 right-6 h-12 w-12 flex items-center justify-center rounded-full bg-white/10 text-white text-3xl hover:bg-white/20 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setZoomedImage(null);
@@ -535,22 +603,24 @@ export default function MenuGridClient({ menuItems }: Props) {
       )}
 
       {/* Floating Bubble Button */}
-      <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
-        <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
-          <span className="text-slate-800 font-bold text-sm md:text-base whitespace-nowrap">
-            Обрано днів: {completedDaysCount}
-          </span>
-          <Link
-            href={canProceedToCheckout ? "/checkout" : "#"}
-            onClick={(e) => !canProceedToCheckout && e.preventDefault()}
-            className={`w-full sm:w-auto text-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md hover:shadow-lg ${
-              !canProceedToCheckout ? "bg-slate-300 shadow-none hover:shadow-none hover:bg-slate-300 text-slate-500 cursor-not-allowed" : ""
-            }`}
-          >
-            Оформити &rarr;
-          </Link>
+      {(!wizardFilterActive || isLastDay) && (
+        <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
+          <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
+            <span className="text-slate-800 font-bold text-sm md:text-base whitespace-nowrap">
+              Обрано днів: {completedDaysCount}
+            </span>
+            <Link
+              href={canProceedToCheckout ? "/checkout" : "#"}
+              onClick={(e) => !canProceedToCheckout && e.preventDefault()}
+              className={`w-full sm:w-auto text-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md hover:shadow-lg ${
+                !canProceedToCheckout ? "bg-slate-300 shadow-none hover:shadow-none hover:bg-slate-300 text-slate-500 cursor-not-allowed" : ""
+              }`}
+            >
+              Оформити &rarr;
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

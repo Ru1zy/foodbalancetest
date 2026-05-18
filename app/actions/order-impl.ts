@@ -123,8 +123,8 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
             if (totalQuantity < 1 || totalQuantity > serverPackageLimit) return false;
           }
 
-          // Max 3 of same dish for Indiv or Custom
-          if (normalizedItems.some(item => item.quantity > 3)) {
+          // Max 3 of same dish only for Indiv package
+          if (indivPackage && normalizedItems.some(item => item.quantity > 3)) {
              return false;
           }
 

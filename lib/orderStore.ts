@@ -174,20 +174,20 @@ export const useOrderStore = create<OrderStore>()(
       // Calculate total dishes for this day
       const totalDishesInDay = Object.values(daySelections).reduce((sum, qty) => sum + qty, 0);
 
-      // For "Indiv" package
-      if (isIndiv) {
+      // For all other packages: total must equal package limit exactly
+      if (!isIndiv) {
+        if (totalDishesInDay >= packageLimit) {
+          return state; // Prevent increment, limit reached
+        }
+      } else {
+        // For "Indiv" package
         // Max 10 total dishes per day
         if (totalDishesInDay >= 10) {
           return state; // Prevent increment, max total reached
         }
-        // Max 3 of the same dish
+        // Max 3 of the same dish (specific to Indiv)
         if (currentQuantity >= 3) {
           return state; // Prevent increment, max per dish reached
-        }
-      } else {
-        // For all other packages: total must equal package limit exactly
-        if (totalDishesInDay >= packageLimit) {
-          return state; // Prevent increment, limit reached
         }
       }
 

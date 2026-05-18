@@ -25,17 +25,33 @@ export default function PackageSelector({ tariffs }: Props) {
   const [showSushkaOptions, setShowSushkaOptions] = useState(false);
   const [previewPkg, setPreviewPkg] = useState<Tariff | null>(null);
 
-  // Separate tariffs into main packages and Sushka options
-  const mainPackages = useMemo(() => {
-    return tariffs.filter(t => !t.name.includes("Sushka"));
-  }, [tariffs]);
+  // Sorting and reconstruction logic
+  const { sortedMainItems, sushkaOptions } = useMemo(() => {
+    const standards = tariffs.filter(t => ["Slim", "Balance", "Active", "Sport"].includes(t.name));
+    const sushkas = tariffs.filter(t => t.name.includes("Sushka"));
+    const indivs = tariffs.filter(t => t.name.includes("Indiv"));
+    
+    // 1. Sort standard packages by basePrice
+    standards.sort((a, b) => a.basePrice - b.basePrice);
 
-  const sushkaOptions = useMemo(() => {
-    return tariffs.filter(t => t.name === "Sushka XS" || t.name === "Sushka S");
-  }, [tariffs]);
+    // 2. Reconstruct the array
+    const result: (Tariff | { type: "sushka-folder" })[] = [...standards];
+    
+    // Insert "Sushka" at exact index 4 (5th position)
+    if (sushkas.length > 0) {
+      result.splice(4, 0, { type: "sushka-folder" });
+    }
+    
+    // Insert "Indiv" at exact index 5 (6th position)
+    if (indivs.length > 0) {
+      result.splice(5, 0, ...indivs);
+    }
 
-  // Check if we should show "Sushka" folder card
-  const hasSushkaFolder = sushkaOptions.length > 0;
+    return { 
+      sortedMainItems: result, 
+      sushkaOptions: sushkas 
+    };
+  }, [tariffs]);
 
   const sushkaPriceRange = useMemo(() => {
     if (sushkaOptions.length === 0) return null;
@@ -186,7 +202,41 @@ export default function PackageSelector({ tariffs }: Props) {
     >
       <h2 className="mb-10 text-3xl font-black text-gray-900 text-center">Оберіть тариф</h2>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {mainPackages.map((pkg) => {
+        {sortedMainItems.map((item) => {
+          if ("type" in item && item.type === "sushka-folder") {
+            return (
+              <div
+                key="sushka-folder"
+                className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+                  selectedPackage?.includes("Sushka") ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100 shadow-sm"
+                }`}
+              >
+                <div className="relative h-56 w-full overflow-hidden bg-gray-50">
+                  <img 
+                    src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800" 
+                    alt="Sushka program" 
+                    className="aspect-video h-full w-full object-cover rounded-xl mb-4"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900">Сушка</h3>
+                    <p className="mt-2 text-base text-gray-500">Сушка S та Сушка XS</p>
+                    <p className="text-xl font-extrabold text-emerald-600 mt-4">{sushkaPriceRange}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSushkaOptions(true)}
+                    className="mt-auto w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700"
+                  >
+                    Обрати
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          const pkg = item as Tariff;
           const active = selectedPackage === pkg.name;
           return (
             <div
@@ -230,37 +280,6 @@ export default function PackageSelector({ tariffs }: Props) {
             </div>
           );
         })}
-
-        {/* Sushka folder card */}
-        {hasSushkaFolder && (
-          <div
-            className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
-              selectedPackage?.includes("Sushka") ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100 shadow-sm"
-            }`}
-          >
-            <div className="relative h-56 w-full overflow-hidden bg-gray-50">
-              <img 
-                src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800" 
-                alt="Sushka program" 
-                className="aspect-video h-full w-full object-cover rounded-xl mb-4"
-              />
-            </div>
-            <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900">Сушка</h3>
-                <p className="mt-2 text-base text-gray-500">Сушка S та Сушка XS</p>
-                <p className="text-xl font-extrabold text-emerald-600 mt-4">{sushkaPriceRange}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSushkaOptions(true)}
-                className="mt-auto w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700"
-              >
-                Обрати
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Preview Modal */}
