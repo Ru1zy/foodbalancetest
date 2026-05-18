@@ -85,7 +85,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
                 <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
                   100%
                 </div>
-                <div className="text-sm text-gray-500 font-medium">Свіжі продукты</div>
+                <div className="text-sm text-gray-500 font-medium">Свіжі продукти</div>
               </div>
             </div>
           </div>
