@@ -1,7 +1,7 @@
 import { google } from "googleapis";
 import prisma from "./prisma";
 import { parseIndivDishId } from "./order-selection";
-import { Order, User } from "@prisma/client";
+import { Menu, Order, User } from "@prisma/client";
 import { OrderCartData } from "@/app/actions/order-impl";
 
 /**
@@ -166,7 +166,7 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
     const menus = await prisma.menu.findMany({
       where: { id: { in: dayIds } },
     });
-    const menuById = new Map(menus.map((m) => [m.id, m]));
+    const menuById = new Map(menus.map((m: Menu) => [m.id, m]));
 
     // 2. Prepare rows
     const rows: string[][] = [];

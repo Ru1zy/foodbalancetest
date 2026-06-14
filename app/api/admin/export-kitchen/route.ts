@@ -3,6 +3,11 @@ import prisma from "@/lib/prisma";
 import { google } from "googleapis";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { kyivDayRangeUtc } from "@/lib/order-logic";
+import type { Prisma } from "@prisma/client";
+
+type KitchenOrderWithUser = Prisma.OrderGetPayload<{
+  include: { user: { select: { name: true; phone: true; address: true; chatId: true } } };
+}>;
 
 export const runtime = "nodejs";
 
@@ -44,7 +49,7 @@ async function parseOrderItems(items: unknown): Promise<string[]> {
     },
   });
 
-  const menuById = new Map(menuItems.map((item) => [item.id, item]));
+  const menuById = new Map(menuItems.map((item: { id: string; dishes: Prisma.JsonValue }) => [item.id, item]));
 
   const CATEGORY_LABELS: Record<string, string> = {
     breakfast: "Сніданок",
@@ -163,7 +168,7 @@ export async function GET(request: Request) {
 
     // Parse all orders
     const exportData = await Promise.all(
-      orders.map(async (order) => {
+      orders.map(async (order: KitchenOrderWithUser) => {
         const parsedItems = await parseOrderItems(order.items);
         const dishesString = parsedItems.join("+");
 

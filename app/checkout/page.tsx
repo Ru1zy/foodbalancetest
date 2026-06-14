@@ -47,7 +47,7 @@ export default async function CheckoutPage() {
     select: { id: true, dayOfWeek: true, packageType: true },
   });
   const menuDayByItemId: Record<string, number> = Object.fromEntries(
-    menuRows.map((m) => [m.id, m.dayOfWeek]),
+    menuRows.map((m: { id: string; dayOfWeek: number }) => [m.id, m.dayOfWeek]),
   );
 
   const sushkaMenuIdByDay: Record<number, string> = {};

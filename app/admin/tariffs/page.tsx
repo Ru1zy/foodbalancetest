@@ -43,7 +43,7 @@ export default async function TariffsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {tariffs.map((tariff) => (
+                {tariffs.map((tariff: Awaited<ReturnType<typeof getAllTariffs>>[number]) => (
                   <TariffRow key={tariff.id} tariff={tariff} />
                 ))}
               </tbody>

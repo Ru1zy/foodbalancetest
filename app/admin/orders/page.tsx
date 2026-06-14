@@ -4,6 +4,11 @@ import OrderActionButtons from "@/components/admin/OrderActionButtons";
 import KitchenExport from "./KitchenExport";
 import ArchiveOrdersButton from "@/components/admin/ArchiveOrdersButton";
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
+
+type AdminOrderWithUser = Prisma.OrderGetPayload<{
+  include: { user: { select: { address: true; chatId: true; name: true; phone: true } } };
+}>;
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { getOrderStatusClasses, getOrderStatusLabel } from "@/lib/order-status";
 
@@ -116,7 +121,7 @@ async function parseOrderMenuDetails(items: unknown, orderId: string, deliveryDa
     },
   });
 
-  const menuById = new Map(menuItems.map((item) => [item.id, item]));
+  const menuById = new Map(menuItems.map((item: { id: string; dishes: Prisma.JsonValue; dayOfWeek: number }) => [item.id, item]));
 
   const details = days.map((day: unknown, index: number) => {
     if (!day || typeof day !== "object") return "";
@@ -224,7 +229,7 @@ export default async function AdminOrdersPage({
 
   // Fetch menu details for all orders
   const ordersWithMenuDetails = await Promise.all(
-    orders.map(async (order) => ({
+    orders.map(async (order: AdminOrderWithUser) => ({
       ...order,
       menuDetails: await parseOrderMenuDetails(order.items, order.id, order.deliveryDate),
     }))

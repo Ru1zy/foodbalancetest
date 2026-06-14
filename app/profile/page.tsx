@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
+import type { Order, Prisma, UserBalance } from "@prisma/client";
 import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay } from "./ProfilePageClient";
 import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
@@ -66,7 +67,7 @@ async function resolveOrderDishes(order: {
     },
   });
 
-  const menuById = new Map(menus.map((menu) => [menu.id, menu]));
+  const menuById = new Map(menus.map((menu: { id: string; dishes: Prisma.JsonValue }) => [menu.id, menu]));
 
   // Resolve dish names per day
   const resolvedDays: ResolvedDay[] = [];
@@ -204,8 +205,8 @@ export default async function ProfilePage() {
   });
 
   const activeBalances = rawBalances
-    .filter((b) => b.totalDays - b.usedDays > 0)
-    .map((b) => ({
+    .filter((b: UserBalance) => b.totalDays - b.usedDays > 0)
+    .map((b: UserBalance) => ({
       packageId: b.packageId,
       remainingDays: b.totalDays - b.usedDays,
     }));
@@ -221,7 +222,7 @@ export default async function ProfilePage() {
 
   // Resolve dish names for all orders
   const ordersWithResolvedDishes: OrderWithResolvedDishes[] = await Promise.all(
-    rawOrders.map(async (order) => ({
+    rawOrders.map(async (order: Order) => ({
       id: order.id,
       createdAt: order.createdAt,
       deliveryDate: order.deliveryDate,
