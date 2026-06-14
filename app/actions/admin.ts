@@ -304,56 +304,6 @@ export async function broadcastMessage(htmlContent: string): Promise<{ ok: boole
   }
 }
 
-export async function sendDirectMessage(chatId: string, htmlContent: string): Promise<ConfirmPaymentResult> {
-  const adminUser = await getAuthenticatedAdminUser();
-
-  if (!adminUser) {
-    return {
-      ok: false,
-      message: "Недостатньо прав для відправки повідомлення.",
-    };
-  }
-
-  if (!(chatId || "").trim() || !(htmlContent || "").trim()) {
-    return {
-      ok: false,
-      message: "Не вказано отримувача або повідомлення порожнє.",
-    };
-  }
-
-  try {
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: htmlContent,
-        parse_mode: "HTML",
-      }),
-    });
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        message: "Не вдалося відправити повідомлення через Telegram API.",
-      };
-    }
-
-    return {
-      ok: true,
-    };
-  } catch (error) {
-    console.error("sendDirectMessage failed", error);
-
-    return {
-      ok: false,
-      message: "Не вдалося відправити повідомлення.",
-    };
-  }
-}
-
 // ============================================================================
 // ARCHIVE ORDERS
 // ============================================================================
