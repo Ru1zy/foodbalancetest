@@ -28,6 +28,24 @@ async function sendTelegramRequest(method: string, body: Record<string, unknown>
 
 export async function POST(request: Request) {
   try {
+    // Authenticate the webhook: Telegram echoes the secret configured via
+    // setWebhook(secret_token=...) in this header. Reject anything that doesn't
+    // match so nobody who merely knows the URL can forge confirm_<token> events
+    // or spam the GAS proxy.
+    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const headerToken = request.headers.get("x-telegram-bot-api-secret-token");
+      if (headerToken !== webhookSecret) {
+        console.warn("Telegram webhook rejected: invalid secret token");
+        return NextResponse.json({ ok: false }, { status: 401 });
+      }
+    } else {
+      console.warn(
+        "TELEGRAM_WEBHOOK_SECRET is not set — webhook is UNAUTHENTICATED. " +
+          "Set it and re-register the webhook with the same secret_token.",
+      );
+    }
+
     const update: TelegramUpdate = await request.json();
     console.log("Webhook received:", JSON.stringify(update, null, 2));
 

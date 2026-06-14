@@ -107,6 +107,10 @@ export default function CheckoutPageImpl({
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
+  // Stable idempotency key for this checkout session — prevents duplicate orders
+  // and double balance charges on network retries / double clicks. Regenerated
+  // after a successful submit so the next order gets a fresh key.
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
 
   const {
     register,
@@ -481,7 +485,7 @@ export default function CheckoutPageImpl({
         });
       }
 
-      const result = await submitOrders(formData, items);
+      const result = await submitOrders(formData, items, idempotencyKey);
       if (!result.ok) {
         setFeedback({
           message: result.message,
@@ -520,6 +524,8 @@ export default function CheckoutPageImpl({
       clearSelections();
       resetWizard();
       clearCart();
+      // Fresh key for any subsequent order in this session.
+      setIdempotencyKey(crypto.randomUUID());
     });
   };
 

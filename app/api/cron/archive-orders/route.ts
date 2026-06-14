@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 
 /**
  * Vercel Cron Job endpoint for automatic order archiving.
@@ -30,13 +31,14 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Get today's midnight in Kyiv timezone
-    const todayString = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Kiev' });
-    const todayMidnightKyiv = new Date(`${todayString}T00:00:00.000+03:00`);
+    // Start of today's Kyiv calendar day as a real UTC instant (DST-aware).
+    // No hardcoded +03:00 — that is wrong in winter (Kyiv is +02:00) and would
+    // shift the archive boundary by an hour. Runs correctly on Vercel's UTC.
+    const { year, month, day } = kyivTodayParts();
+    const todayMidnightKyiv = kyivDayRangeUtc(year, month, day).start;
 
-    // Get date 7 days ago
-    const sevenDaysAgo = new Date(todayMidnightKyiv);
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Cutoff for abandoned-cart cleanup: 7 calendar days earlier.
+    const sevenDaysAgo = new Date(todayMidnightKyiv.getTime() - 7 * 24 * 60 * 60 * 1000);
 
     // Find orders to archive: past delivery date, paid or delivered/processed
     const ordersToArchive = await prisma.order.findMany({

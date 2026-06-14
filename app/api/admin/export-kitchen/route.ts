@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { google } from "googleapis";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { kyivDayRangeUtc } from "@/lib/order-logic";
 
 export const runtime = "nodejs";
 
@@ -120,12 +121,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Date parameter required" }, { status: 400 });
     }
 
-    // Parse date and get start/end of day
-    const startDate = new Date(date);
-    startDate.setHours(0, 0, 0, 0);
-
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
+    // `date` is the Kyiv delivery day as YYYY-MM-DD. Build the same DST-aware
+    // Kyiv calendar-day window as /api/admin/today-orders so both endpoints
+    // resolve to the *identical* set of orders regardless of server timezone
+    // (Vercel runs UTC) and across the +02:00/+03:00 DST switch.
+    const dateMatch = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (!dateMatch) {
+      return NextResponse.json(
+        { error: "Invalid date format. Use YYYY-MM-DD" },
+        { status: 400 }
+      );
+    }
+    const exportYear = parseInt(dateMatch[1], 10);
+    const exportMonth = parseInt(dateMatch[2], 10);
+    const exportDay = parseInt(dateMatch[3], 10);
+    const { start: startDate, end: endDate } = kyivDayRangeUtc(exportYear, exportMonth, exportDay);
 
     // Fetch paid orders for the date
     const orders = await prisma.order.findMany({
@@ -202,11 +212,9 @@ export async function GET(request: Request) {
 
         const sheets = google.sheets({ version: "v4", auth });
 
-        // Format date as DD.MM for sheet name
-        const sheetName = new Date(date).toLocaleDateString("uk-UA", {
-          day: "2-digit",
-          month: "2-digit",
-        });
+        // Format date as DD.MM for sheet name (derived from the parsed Kyiv
+        // calendar date, not a TZ-dependent Date parse).
+        const sheetName = `${String(exportDay).padStart(2, "0")}.${String(exportMonth).padStart(2, "0")}`;
 
         // Prepare rows for Google Sheets
         const rows = exportData.map((row) => [
