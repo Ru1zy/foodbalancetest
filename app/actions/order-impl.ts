@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import type { Order, Prisma, User } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
   earliestMenuDeliveryDateFromCartDays,
@@ -67,12 +68,31 @@ export type SubmitOrdersResult =
       message: string;
       ok: false;
       status: number;
-      /** Orders that were successfully created before the failure (best effort). */
+      /**
+       * Orders persisted before the failure. The batch is fully transactional,
+       * so this is always 0 — either every order commits or none do.
+       */
       createdCount: number;
     };
 
 /** Hard ceiling on copies of a single package (mirrors orderStore). */
 const MAX_CART_ITEM_QUANTITY = 50;
+
+/** The validated checkout payload (output of the zod schema). */
+type CheckoutData = ReturnType<typeof checkoutSchema.parse>;
+
+/**
+ * A fully validated, DB-ready order. Everything in here has already passed
+ * validation and the (read-only) delivery-date / menu checks, so persisting it
+ * only requires the write queries inside the transaction.
+ */
+type PreparedOrder = {
+  validatedData: CheckoutData;
+  sanitizedCartData: OrderCartData;
+  resolvedDeliveryDate: Date;
+  paymentMethod: CheckoutData["paymentMethod"];
+  totalPrice: number;
+};
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   // CRITICAL: Calculate server-side package limit - NEVER trust client's packageLimit
@@ -230,16 +250,69 @@ function normalizeDeliveryDateInput(value: Date | string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-export async function submitOrder(
+/** Resolve the authenticated user once from the auth cookie (read-only). */
+async function resolveAuthenticatedUserId(): Promise<string | null> {
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get("auth_token")?.value;
+  if (!authToken) {
+    return null;
+  }
+
+  try {
+    return await verifyAuthToken(authToken);
+  } catch (authError) {
+    console.error("auth token verification failed", authError);
+    return null;
+  }
+}
+
+/**
+ * If the authenticated user currently has a Google placeholder phone, the
+ * checkout form must supply a real phone number. Read-only validation.
+ */
+async function assertRealPhoneIfRequired(
+  userId: string | null,
+  submittedPhone: string,
+): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
+  if (!userId) {
+    return { ok: true };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { phone: true },
+  });
+
+  if (user && isGooglePlaceholderPhone(user.phone) && isGooglePlaceholderPhone(submittedPhone)) {
+    return {
+      ok: false,
+      message: "Будь ласка, введіть дійсний номер телефону для оформлення замовлення.",
+      status: 400,
+    };
+  }
+
+  return { ok: true };
+}
+
+/**
+ * Validate a single checkout payload and resolve everything that requires only
+ * read access (zod validation, cart sanitisation, price check, delivery-date
+ * resolution). No writes happen here, so a failure leaves the DB untouched —
+ * which is what lets the batch be all-or-nothing.
+ */
+async function prepareOrderForSubmission(
   formData: FormData,
   cartData: OrderCartData,
   deliveryDate: Date | string,
   totalPrice: number,
-): Promise<SubmitOrderResult> {
+): Promise<
+  | { ok: true; prepared: PreparedOrder }
+  | { ok: false; message: string; status: number }
+> {
   // --- Server-side validation using Zod ---
   const rawData = {
     name: formData.get("name"),
-    phone: normalizePhone(formData.get("phone") as string || ""),
+    phone: normalizePhone((formData.get("phone") as string) || ""),
     address: formData.get("address"),
     comment: formData.get("comment"),
     cutlery: Number(formData.get("cutlery") ?? 0),
@@ -250,16 +323,23 @@ export async function submitOrder(
 
   if (!validation.success) {
     const errorMsg = validation.error.issues[0]?.message || "Помилка валідації даних";
-    return {
-      ok: false,
-      message: errorMsg,
-      status: 400,
-    };
+    return { ok: false, message: errorMsg, status: 400 };
   }
 
   const validatedData = validation.data;
-  const sanitizedCartData = sanitizeCartData(cartData);
   const paymentMethod = validatedData.paymentMethod;
+
+  let sanitizedCartData: OrderCartData;
+  try {
+    sanitizedCartData = sanitizeCartData(cartData);
+  } catch (error) {
+    console.error("sanitizeCartData failed", error);
+    return {
+      ok: false,
+      message: "Дані кошика некоректні. Оновіть сторінку та спробуйте ще раз.",
+      status: 400,
+    };
+  }
 
   if (sanitizedCartData.totalDays < 1) {
     return {
@@ -317,191 +397,132 @@ export async function submitOrder(
     };
   }
 
-  const resolvedDeliveryDate = submittedDeliveryDate;
+  return {
+    ok: true,
+    prepared: {
+      validatedData,
+      sanitizedCartData,
+      resolvedDeliveryDate: submittedDeliveryDate,
+      paymentMethod,
+      totalPrice,
+    },
+  };
+}
 
-  try {
-    const cookieStore = await cookies();
-    const authToken = cookieStore.get("auth_token")?.value;
-    let userId: string | null = null;
+/**
+ * Persist ONE prepared order using the supplied transaction client. This must
+ * only ever run inside a `prisma.$transaction` callback — it performs all the
+ * writes (balance deduction, user upsert, order create) but no external I/O.
+ *
+ * Balance is read and deducted inside the transaction so that, when several
+ * orders for the same package are created in a single batch, each order sees
+ * the days already consumed by the previous ones.
+ */
+async function persistOrderInTransaction(
+  tx: Prisma.TransactionClient,
+  prepared: PreparedOrder,
+  userId: string | null,
+): Promise<{ order: Order; user: User }> {
+  const { validatedData, sanitizedCartData, resolvedDeliveryDate, paymentMethod, totalPrice } = prepared;
+  const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
 
-    if (authToken) {
-      try {
-        userId = await verifyAuthToken(authToken);
-      } catch (authError) {
-        console.error("submitOrder auth token verification failed", authError);
-      }
-    }
+  // --- Start: Split Payment Calculation (inside the transaction) ---
+  let balanceDaysToUse = 0;
+  let fiatPrice = totalPrice;
 
-    // Check if user has Google placeholder phone and needs to provide real phone
-    if (userId) {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { phone: true },
-      });
-
-      if (user && isGooglePlaceholderPhone(user.phone)) {
-        // Validate that the submitted phone is not a placeholder
-        if (isGooglePlaceholderPhone(validatedData.phone)) {
-          return {
-            ok: false,
-            message: "Будь ласка, введіть дійсний номер телефону для оформлення замовлення.",
-            status: 400,
-          };
-        }
-      }
-    }
-
-    // --- Start: Split Payment Calculation ---
-    let balanceDaysToUse = 0;
-    let fiatPrice = totalPrice;
-    const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
-
-    if (userId && paymentMethod !== "cash") {
-      const userBalance = await prisma.userBalance.findUnique({
-        where: {
-          userId_packageId: {
-            userId,
-            packageId: sanitizedCartData.packageType,
-          },
+  if (userId && paymentMethod !== "cash") {
+    const userBalance = await tx.userBalance.findUnique({
+      where: {
+        userId_packageId: {
+          userId,
+          packageId: sanitizedCartData.packageType,
         },
-      });
+      },
+    });
 
-      if (userBalance) {
-        const availableDays = Math.max(0, userBalance.totalDays - userBalance.usedDays);
-        balanceDaysToUse = Math.min(availableDays, sanitizedCartData.totalDays);
-        const fiatDays = sanitizedCartData.totalDays - balanceDaysToUse;
-        
-        if (fiatDays <= 0) {
-          fiatPrice = 0;
-        } else if (!isSushkaPackage) {
-          fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays);
-        } else {
-          // For Sushka, calculate daily price from original total
-          const dailyPrice = Math.round(totalPrice / sanitizedCartData.totalDays);
-          fiatPrice = dailyPrice * fiatDays;
-        }
+    if (userBalance) {
+      const availableDays = Math.max(0, userBalance.totalDays - userBalance.usedDays);
+      balanceDaysToUse = Math.min(availableDays, sanitizedCartData.totalDays);
+      const fiatDays = sanitizedCartData.totalDays - balanceDaysToUse;
+
+      if (fiatDays <= 0) {
+        fiatPrice = 0;
+      } else if (!isSushkaPackage) {
+        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays);
+      } else {
+        // For Sushka, calculate daily price from original total
+        const dailyPrice = Math.round(totalPrice / sanitizedCartData.totalDays);
+        fiatPrice = dailyPrice * fiatDays;
       }
     }
-    // --- End: Split Payment Calculation ---
+  }
+  // --- End: Split Payment Calculation ---
 
-    const { order, user } = await prisma.$transaction(async (tx) => {
-      // 1. Deduct balance if used
-      if (balanceDaysToUse > 0 && userId && paymentMethod !== "cash") {
-        await tx.userBalance.update({
-          where: {
-            userId_packageId: {
-              userId,
-              packageId: sanitizedCartData.packageType,
-            },
-          },
-          data: {
-            usedDays: {
-              increment: balanceDaysToUse,
-            },
-          },
-        });
-      }
+  // 1. Deduct balance if used
+  if (balanceDaysToUse > 0 && userId && paymentMethod !== "cash") {
+    await tx.userBalance.update({
+      where: {
+        userId_packageId: {
+          userId,
+          packageId: sanitizedCartData.packageType,
+        },
+      },
+      data: {
+        usedDays: {
+          increment: balanceDaysToUse,
+        },
+      },
+    });
+  }
 
-      if (userId) {
-        const currentUser = await tx.user.findUnique({
-          where: {
-            id: userId,
-          },
-        });
+  if (userId) {
+    const currentUser = await tx.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
 
-        if (currentUser) {
-          const existingUser = await tx.user.findUnique({
-            where: {
-              phone: validatedData.phone,
-            },
-          });
-
-          if (existingUser && existingUser.id !== userId) {
-            if (existingUser.chatId) {
-              throw new Error("PHONE_IN_USE_BY_TELEGRAM_USER");
-            }
-
-            await tx.order.updateMany({
-              where: {
-                userId: existingUser.id,
-              },
-              data: {
-                userId,
-              },
-            });
-
-            await tx.user.delete({
-              where: {
-                id: existingUser.id,
-              },
-            });
-          }
-
-          const user = await tx.user.update({
-            where: {
-              id: userId,
-            },
-            data: {
-              address: validatedData.address || null,
-              defaultCutlery: String(validatedData.cutlery),
-              defaultPackage: sanitizedCartData.packageType,
-              name: validatedData.name,
-              notes: validatedData.comment || null,
-              phone: validatedData.phone,
-              },
-              });
-
-          const order = await tx.order.create({
-            data: {
-              deliveryAddress: validatedData.address || null,
-              deliveryDate: resolvedDeliveryDate,
-              deliveryTime: null,
-              cutlery: validatedData.cutlery,
-              items: sanitizedCartData,
-              notes: validatedData.comment || null,
-              packageType: sanitizedCartData.packageType,
-              price: fiatPrice,
-              balanceDaysUsed: balanceDaysToUse,
-              isPaid: paymentMethod === "cash" ? false : fiatPrice === 0,
-              paymentMethod: paymentMethod || "balance",
-              status: "new",
-              userId,
-            },
-          });
-
-          return { order, user };
-        }
-      }
-
+    if (currentUser) {
       const existingUser = await tx.user.findUnique({
         where: {
           phone: validatedData.phone,
         },
       });
 
-      const user = existingUser
-        ? await tx.user.update({
-            where: {
-              id: existingUser.id,
-            },
-            data: {
-              address: validatedData.address || null,
-              defaultCutlery: String(validatedData.cutlery),
-              defaultPackage: sanitizedCartData.packageType,
-              name: validatedData.name,
-              notes: validatedData.comment || null,
-            },
-          })
-        : await tx.user.create({
-            data: {
-              address: validatedData.address || null,
-              defaultCutlery: String(validatedData.cutlery),
-              defaultPackage: sanitizedCartData.packageType,
-              name: validatedData.name,
-              notes: validatedData.comment || null,
-              phone: validatedData.phone,
-              },
-              });
+      if (existingUser && existingUser.id !== userId) {
+        if (existingUser.chatId) {
+          throw new Error("PHONE_IN_USE_BY_TELEGRAM_USER");
+        }
+
+        await tx.order.updateMany({
+          where: {
+            userId: existingUser.id,
+          },
+          data: {
+            userId,
+          },
+        });
+
+        await tx.user.delete({
+          where: {
+            id: existingUser.id,
+          },
+        });
+      }
+
+      const user = await tx.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          address: validatedData.address || null,
+          defaultCutlery: String(validatedData.cutlery),
+          defaultPackage: sanitizedCartData.packageType,
+          name: validatedData.name,
+          notes: validatedData.comment || null,
+          phone: validatedData.phone,
+        },
+      });
 
       const order = await tx.order.create({
         data: {
@@ -517,38 +538,164 @@ export async function submitOrder(
           isPaid: paymentMethod === "cash" ? false : fiatPrice === 0,
           paymentMethod: paymentMethod || "balance",
           status: "new",
-          userId: user.id,
+          userId,
         },
       });
 
       return { order, user };
+    }
+  }
+
+  const existingUser = await tx.user.findUnique({
+    where: {
+      phone: validatedData.phone,
+    },
+  });
+
+  const user = existingUser
+    ? await tx.user.update({
+        where: {
+          id: existingUser.id,
+        },
+        data: {
+          address: validatedData.address || null,
+          defaultCutlery: String(validatedData.cutlery),
+          defaultPackage: sanitizedCartData.packageType,
+          name: validatedData.name,
+          notes: validatedData.comment || null,
+        },
+      })
+    : await tx.user.create({
+        data: {
+          address: validatedData.address || null,
+          defaultCutlery: String(validatedData.cutlery),
+          defaultPackage: sanitizedCartData.packageType,
+          name: validatedData.name,
+          notes: validatedData.comment || null,
+          phone: validatedData.phone,
+        },
+      });
+
+  const order = await tx.order.create({
+    data: {
+      deliveryAddress: validatedData.address || null,
+      deliveryDate: resolvedDeliveryDate,
+      deliveryTime: null,
+      cutlery: validatedData.cutlery,
+      items: sanitizedCartData,
+      notes: validatedData.comment || null,
+      packageType: sanitizedCartData.packageType,
+      price: fiatPrice,
+      balanceDaysUsed: balanceDaysToUse,
+      isPaid: paymentMethod === "cash" ? false : fiatPrice === 0,
+      paymentMethod: paymentMethod || "balance",
+      status: "new",
+      userId: user.id,
+    },
+  });
+
+  return { order, user };
+}
+
+/**
+ * Fire the external side-effects for a committed order. MUST run AFTER the
+ * Prisma transaction has committed — these calls (Telegram, Google Sheets) are
+ * not part of the DB transaction and their failures never roll back an order.
+ */
+async function dispatchOrderSideEffects(
+  order: Order,
+  user: User,
+  validatedData: CheckoutData,
+  sanitizedCartData: OrderCartData,
+): Promise<void> {
+  try {
+    await sendOrderNotification(order, user);
+  } catch (telegramError) {
+    console.error("sendOrderNotification failed", telegramError);
+  }
+
+  // Background sync to Google Sheets (non-blocking)
+  try {
+    syncClientToSheet({
+      name: user.name,
+      phone: user.phone || validatedData.phone,
+      address: user.address || validatedData.address,
+      chatId: user.chatId,
+      packageType: sanitizedCartData.packageType,
+      cutlery: Number(user.defaultCutlery || validatedData.cutlery),
+      notes: user.notes || validatedData.comment || "",
     });
 
-    try {
-      await sendOrderNotification(order, user);
-    } catch (telegramError) {
-      console.error("sendOrderNotification failed", telegramError);
+    appendOrderToSheet(order, user);
+  } catch (sheetError) {
+    console.error("Google Sheets sync failed:", sheetError);
+  }
+}
+
+/** Map a thrown order error to a user-facing message + HTTP status. */
+function mapOrderError(error: unknown): { message: string; status: number } {
+  if (error instanceof Error) {
+    if (error.message === "PHONE_IN_USE_BY_TELEGRAM_USER") {
+      return {
+        message:
+          "Цей номер вже прив’язаний до іншого Telegram-акаунта. Авторизуйтеся саме в ньому або використайте інший номер.",
+        status: 409,
+      };
     }
+    if (error.message === "INSUFFICIENT_BALANCE") {
+      return {
+        message: "Недостатньо днів на балансі. Будь ласка, поповніть абонемент.",
+        status: 400,
+      };
+    }
+    if (error.message === "AUTH_REQUIRED_FOR_BALANCE") {
+      return {
+        message: "Для оплати з балансу необхідно авторизуватися.",
+        status: 401,
+      };
+    }
+  }
+
+  console.error("submit order failed", error);
+
+  return {
+    message: "Не вдалося оформити замовлення. Спробуйте ще раз.",
+    status: 500,
+  };
+}
+
+export async function submitOrder(
+  formData: FormData,
+  cartData: OrderCartData,
+  deliveryDate: Date | string,
+  totalPrice: number,
+): Promise<SubmitOrderResult> {
+  const preparation = await prepareOrderForSubmission(formData, cartData, deliveryDate, totalPrice);
+  if (!preparation.ok) {
+    return { ok: false, message: preparation.message, status: preparation.status };
+  }
+
+  const { prepared } = preparation;
+
+  try {
+    const userId = await resolveAuthenticatedUserId();
+
+    // Check if user has Google placeholder phone and needs to provide real phone
+    const phoneCheck = await assertRealPhoneIfRequired(userId, prepared.validatedData.phone);
+    if (!phoneCheck.ok) {
+      return { ok: false, message: phoneCheck.message, status: phoneCheck.status };
+    }
+
+    // Atomic DB write.
+    const { order, user } = await prisma.$transaction((tx) =>
+      persistOrderInTransaction(tx, prepared, userId),
+    );
 
     revalidatePath("/");
     revalidatePath("/admin/orders");
 
-    // Background sync to Google Sheets (non-blocking)
-    try {
-      syncClientToSheet({
-        name: user.name,
-        phone: user.phone || validatedData.phone,
-        address: user.address || validatedData.address,
-        chatId: user.chatId,
-        packageType: sanitizedCartData.packageType,
-        cutlery: Number(user.defaultCutlery || validatedData.cutlery),
-        notes: user.notes || validatedData.comment || "",
-      });
-      
-      appendOrderToSheet(order, user);
-    } catch (sheetError) {
-      console.error("Google Sheets sync failed:", sheetError);
-    }
+    // Side-effects run only after the transaction has committed.
+    await dispatchOrderSideEffects(order, user, prepared.validatedData, prepared.sanitizedCartData);
 
     return {
       ok: true,
@@ -556,54 +703,27 @@ export async function submitOrder(
       userId: user.id,
     };
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.message === "PHONE_IN_USE_BY_TELEGRAM_USER") {
-        return {
-          ok: false,
-          message:
-            "Цей номер вже прив’язаний до іншого Telegram-акаунта. Авторизуйтеся саме в ньому або використайте інший номер.",
-          status: 409,
-        };
-      }
-      if (error.message === "INSUFFICIENT_BALANCE") {
-        return {
-          ok: false,
-          message: "Недостатньо днів на балансі. Будь ласка, поповніть абонемент.",
-          status: 400,
-        };
-      }
-      if (error.message === "AUTH_REQUIRED_FOR_BALANCE") {
-        return {
-          ok: false,
-          message: "Для оплати з балансу необхідно авторизуватися.",
-          status: 401,
-        };
-      }
-    }
-
-    console.error("submitOrder failed", error);
-
-    return {
-      ok: false,
-      message: "Не вдалося оформити замовлення. Спробуйте ще раз.",
-      status: 500,
-    };
+    const mapped = mapOrderError(error);
+    return { ok: false, message: mapped.message, status: mapped.status };
   }
 }
 
 /**
- * Multi-order checkout entry point.
+ * Multi-order checkout entry point — fully transactional.
  *
  * Accepts the multi-package cart, "unrolls" each item's quantity into N
- * identical orders, and creates them one by one through the existing,
- * fully-validated `submitOrder` pipeline. Because every unrolled copy goes
- * through the exact same single-order path, the Prisma schema, balance logic
- * and Google Sheets sync stay untouched — the backend simply receives an array
- * of individual orders.
+ * identical orders, then:
  *
- * Orders are created sequentially. If one fails, creation stops and the number
- * of orders already persisted is reported (each individual order is atomic, but
- * the batch as a whole is not transactional).
+ *   1. Validates every order up-front (read-only). If a single order is
+ *      invalid the whole batch is rejected before anything is written.
+ *   2. Persists ALL orders inside a single `prisma.$transaction`. It is an
+ *      all-or-nothing operation: if any insert throws, the transaction rolls
+ *      back and not a single order is created (no partial fulfillment — a hard
+ *      requirement for the LiqPay payment flow).
+ *   3. Only after the transaction commits does it fire the external
+ *      side-effects (Telegram notifications, Google Sheets export) — these are
+ *      deliberately kept OUT of the Prisma transaction and run in parallel, so
+ *      a failed notification can never roll back a paid order.
  */
 export async function submitOrders(
   formData: FormData,
@@ -645,34 +765,83 @@ export async function submitOrders(
     }
   }
 
-  const orderIds: string[] = [];
-  let userId = "";
+  try {
+    // Resolve auth once for the whole batch (same customer for every order).
+    const userId = await resolveAuthenticatedUserId();
 
-  for (const order of unrolled) {
-    const result = await submitOrder(
-      formData,
-      order.cartData,
-      order.deliveryDate,
-      order.unitPrice,
-    );
+    // 1) Validate & prepare EVERY order before any write. A single invalid
+    //    order aborts the whole batch with nothing persisted.
+    const prepared: PreparedOrder[] = [];
+    for (const order of unrolled) {
+      const preparation = await prepareOrderForSubmission(
+        formData,
+        order.cartData,
+        order.deliveryDate,
+        order.unitPrice,
+      );
 
-    if (!result.ok) {
+      if (!preparation.ok) {
+        return {
+          ok: false,
+          message: preparation.message,
+          status: preparation.status,
+          createdCount: 0,
+        };
+      }
+
+      prepared.push(preparation.prepared);
+    }
+
+    // Phone validation once (the customer is identical across the batch).
+    const phoneCheck = await assertRealPhoneIfRequired(userId, prepared[0].validatedData.phone);
+    if (!phoneCheck.ok) {
       return {
         ok: false,
-        message: result.message,
-        status: result.status,
-        createdCount: orderIds.length,
+        message: phoneCheck.message,
+        status: phoneCheck.status,
+        createdCount: 0,
       };
     }
 
-    orderIds.push(result.orderId);
-    userId = result.userId;
-  }
+    // 2) Persist ALL orders atomically. If any insert throws, Prisma rolls the
+    //    entire batch back → zero orders created.
+    const results = await prisma.$transaction(
+      async (tx) => {
+        const created: Array<{ order: Order; user: User; prepared: PreparedOrder }> = [];
+        for (const p of prepared) {
+          const { order, user } = await persistOrderInTransaction(tx, p, userId);
+          created.push({ order, user, prepared: p });
+        }
+        return created;
+      },
+      { maxWait: 10000, timeout: 30000 },
+    );
 
-  return {
-    ok: true,
-    orderIds,
-    orderCount: orderIds.length,
-    userId,
-  };
+    // 3) Transaction committed — now fire external side-effects OUTSIDE the
+    //    transaction, in parallel. Failures here never undo a persisted order.
+    revalidatePath("/");
+    revalidatePath("/admin/orders");
+
+    await Promise.allSettled(
+      results.map((r) =>
+        dispatchOrderSideEffects(r.order, r.user, r.prepared.validatedData, r.prepared.sanitizedCartData),
+      ),
+    );
+
+    return {
+      ok: true,
+      orderIds: results.map((r) => r.order.id),
+      orderCount: results.length,
+      userId: results[results.length - 1]?.user.id ?? "",
+    };
+  } catch (error) {
+    // Any failure inside the transaction rolls everything back → 0 created.
+    const mapped = mapOrderError(error);
+    return {
+      ok: false,
+      message: mapped.message,
+      status: mapped.status,
+      createdCount: 0,
+    };
+  }
 }
