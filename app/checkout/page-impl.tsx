@@ -24,6 +24,7 @@ import {
 } from "@/lib/checkout";
 import {
   getDaySelectedCount,
+  hasIndivSelections,
   isDaySelectionComplete,
   isIndivPackage,
   toIndivDishQuantities,
@@ -181,7 +182,7 @@ export default function CheckoutPageImpl({
 
   const packageLimitInfo = getPackageLimit(pkg ?? undefined);
 
-  const isCustomMode = useOrderStore((state) => state.isCustomMode);
+  const customModeDays = useOrderStore((state) => state.customModeDays);
 
   const cartData = useMemo<OrderCartData>(() => {
     if (!pkg) {
@@ -236,12 +237,17 @@ export default function CheckoutPageImpl({
     const days = Object.entries(selections)
       .map(([dayId, daySelections]) => {
         const selectedCount = getDaySelectedCount(daySelections, pkg);
-        const isCustom = isIndivPackage(selectedPackageRaw ?? undefined) || isCustomMode;
+        // Custom mode is resolved PER DAY: Indiv tariff, this day's explicit
+        // toggle, or portion-shaped selection keys all mark the day individual.
+        const isCustom =
+          isIndivPackage(selectedPackageRaw ?? undefined) ||
+          !!customModeDays[dayId] ||
+          hasIndivSelections(daySelections);
 
         if (isCustom) {
           return {
             dayId,
-            isCustomMode: isCustomMode,
+            isCustomMode: true,
             items: toIndivDishQuantities(daySelections),
             selectedCount,
           };
@@ -261,7 +267,7 @@ export default function CheckoutPageImpl({
       packageType: pkg,
       totalDays: days.length,
     };
-  }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay, isCustomMode]);
+  }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay, customModeDays]);
 
   const orderTotalUah = useMemo(() => {
     if (!pkg) {

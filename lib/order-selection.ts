@@ -22,6 +22,17 @@ export function buildIndivDishId(category: string, index: number) {
   return `${category}:${index}`;
 }
 
+/**
+ * True when a day's selection map holds individually-assembled portions
+ * (keys shaped like `category:index`) rather than standard one-per-category
+ * picks (keys shaped like `category`). This is the ground-truth signal of a
+ * day being in "Individual Selection" mode, derived purely from the data that
+ * actually exists for THAT day — so it can never leak across days.
+ */
+export function hasIndivSelections(daySelections: DaySelections): boolean {
+  return Object.keys(daySelections).some((key) => key.includes(":"));
+}
+
 export function parseIndivDishId(dishId: string) {
   const separatorIndex = dishId.lastIndexOf(":");
 
@@ -40,15 +51,20 @@ export function parseIndivDishId(dishId: string) {
 }
 
 export function getDaySelectedCount(daySelections: DaySelections, packageType: PackageType) {
-  const isCustomOrIndiv = isIndivPackage(packageType) || Object.keys(daySelections).some(k => k.includes(':'));
-  
+  // A day counts as individual/custom when the package itself is Indiv OR the
+  // day's own selection keys are portion-shaped (`category:index`). Both checks
+  // are scoped to a single day, so one day's mode never affects another's.
+  const isCustomOrIndiv = isIndivPackage(packageType) || hasIndivSelections(daySelections);
+
   if (isCustomOrIndiv) {
-    // Sum total quantities of all items (can be same dish multiple times)
+    // Individual mode: validity is the SUM OF PORTION QUANTITIES, never the
+    // number of distinct dishes. Selecting 4 portions of a single dish must
+    // count as 4 (not 1). Negative/zero entries are ignored defensively.
     return Object.values(daySelections).reduce((sum, q) => sum + (q > 0 ? q : 0), 0);
   }
-  
-  // Standard mode: count categories that have a valid index (>= 0)
-  return Object.values(daySelections).filter(v => v !== null && v !== undefined && v >= 0).length;
+
+  // Standard mode: one pick per category — count categories with a valid index.
+  return Object.values(daySelections).filter((v) => v !== null && v !== undefined && v >= 0).length;
 }
 
 export function isDaySelectionComplete(selectedCount: number, packageType?: string) {
