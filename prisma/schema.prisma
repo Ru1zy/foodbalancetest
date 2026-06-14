@@ -79,6 +79,23 @@ model Order {
   deliveryTime    String?
   deliveryNote    String?
   paymentMethod   String   @default("balance")
+
+  @@index([deliveryDate, status])
+  @@index([userId])
+}
+
+/// Idempotency guard for checkout submissions. The client sends a stable key
+/// per checkout session; the unique constraint makes a retried/duplicated
+/// submit (network retry, double-click, function replay) a no-op instead of a
+/// second set of orders + double balance deduction.
+model CheckoutIdempotency {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  userId    String?
+  orderIds  String[] @default([])
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model AuthToken {

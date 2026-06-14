@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,14 +32,12 @@ export async function GET(request: NextRequest) {
     const day = parseInt(match[1], 10);
     const month = parseInt(match[2], 10);
 
-    // Get current year in Kyiv timezone
-    const currentYear = new Date().toLocaleDateString('en-CA', {
-      timeZone: 'Europe/Kyiv'
-    }).split('-')[0];
+    // Current year in the Kyiv calendar (the DD.MM input is implicitly "this year").
+    const { year } = kyivTodayParts();
 
-    const dateRangeStr = `${currentYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const targetDate = new Date(`${dateRangeStr}T00:00:00.000+03:00`);
-    const nextDay = new Date(`${dateRangeStr}T23:59:59.999+03:00`);
+    // DST-aware Kyiv calendar-day window in real UTC instants — correct on
+    // Vercel's UTC runtime and across the +02:00/+03:00 switch.
+    const { start: targetDate, end: nextDay } = kyivDayRangeUtc(year, month, day);
 
     const orders = await prisma.order.findMany({
       where: {

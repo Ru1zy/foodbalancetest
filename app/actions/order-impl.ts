@@ -428,6 +428,7 @@ async function persistOrderInTransaction(
 
   // --- Start: Split Payment Calculation (inside the transaction) ---
   let balanceDaysToUse = 0;
+  let balanceTotalDays = 0;
   let fiatPrice = totalPrice;
 
   if (userId && paymentMethod !== "cash") {
@@ -441,6 +442,7 @@ async function persistOrderInTransaction(
     });
 
     if (userBalance) {
+      balanceTotalDays = userBalance.totalDays;
       const availableDays = Math.max(0, userBalance.totalDays - userBalance.usedDays);
       balanceDaysToUse = Math.min(availableDays, sanitizedCartData.totalDays);
       const fiatDays = sanitizedCartData.totalDays - balanceDaysToUse;
@@ -455,17 +457,30 @@ async function persistOrderInTransaction(
         fiatPrice = dailyPrice * fiatDays;
       }
     }
+
+    // When the customer explicitly pays from their subscription balance, it
+    // MUST cover the whole order. Do NOT silently fall back to a partly-unpaid
+    // fiat order — abort the transaction so nothing is created.
+    if (paymentMethod === "balance" && balanceDaysToUse < sanitizedCartData.totalDays) {
+      throw new Error("INSUFFICIENT_BALANCE");
+    }
   }
   // --- End: Split Payment Calculation ---
 
-  // 1. Deduct balance if used
+  // 1. Deduct balance if used — atomic and race-safe.
   if (balanceDaysToUse > 0 && userId && paymentMethod !== "cash") {
-    await tx.userBalance.update({
+    // Conditional update: succeeds only while there are still enough unused days
+    // at the moment of the write (usedDays + balanceDaysToUse <= totalDays). The
+    // row-level lock serialises concurrent submits, so two tabs / a double click
+    // / a webhook replay can never push usedDays past totalDays or drive the
+    // balance negative. count !== 1 ⇒ the days were consumed concurrently ⇒
+    // abort the whole transaction (INSUFFICIENT_BALANCE) rather than over-deduct
+    // or silently create a fiat order.
+    const deduction = await tx.userBalance.updateMany({
       where: {
-        userId_packageId: {
-          userId,
-          packageId: sanitizedCartData.packageType,
-        },
+        userId,
+        packageId: sanitizedCartData.packageType,
+        usedDays: { lte: balanceTotalDays - balanceDaysToUse },
       },
       data: {
         usedDays: {
@@ -473,6 +488,10 @@ async function persistOrderInTransaction(
         },
       },
     });
+
+    if (deduction.count !== 1) {
+      throw new Error("INSUFFICIENT_BALANCE");
+    }
   }
 
   if (userId) {
@@ -728,6 +747,7 @@ export async function submitOrder(
 export async function submitOrders(
   formData: FormData,
   items: CartOrderInput[],
+  idempotencyKey?: string,
 ): Promise<SubmitOrdersResult> {
   if (!Array.isArray(items) || items.length === 0) {
     return {
@@ -807,11 +827,37 @@ export async function submitOrders(
     //    entire batch back → zero orders created.
     const results = await prisma.$transaction(
       async (tx) => {
+        // Idempotency guard: claim the key first. A duplicate submit (network
+        // retry, double click, function replay) hits the unique constraint and
+        // is rejected before any order is created or balance is touched.
+        if (idempotencyKey) {
+          try {
+            await tx.checkoutIdempotency.create({
+              data: { key: idempotencyKey, userId },
+            });
+          } catch (err) {
+            if ((err as { code?: string } | null)?.code === "P2002") {
+              throw new Error("DUPLICATE_SUBMISSION");
+            }
+            throw err;
+          }
+        }
+
         const created: Array<{ order: Order; user: User; prepared: PreparedOrder }> = [];
         for (const p of prepared) {
           const { order, user } = await persistOrderInTransaction(tx, p, userId);
           created.push({ order, user, prepared: p });
         }
+
+        // Record the resulting order ids so a later retry of the SAME key can be
+        // answered with the original result instead of creating duplicates.
+        if (idempotencyKey) {
+          await tx.checkoutIdempotency.update({
+            where: { key: idempotencyKey },
+            data: { orderIds: created.map((c) => c.order.id) },
+          });
+        }
+
         return created;
       },
       { maxWait: 10000, timeout: 30000 },
@@ -835,7 +881,33 @@ export async function submitOrders(
       userId: results[results.length - 1]?.user.id ?? "",
     };
   } catch (error) {
-    // Any failure inside the transaction rolls everything back → 0 created.
+    // Duplicate submission for an already-used idempotency key. The original
+    // request already created (or is creating) the orders — never duplicate.
+    if (error instanceof Error && error.message === "DUPLICATE_SUBMISSION" && idempotencyKey) {
+      const existing = await prisma.checkoutIdempotency.findUnique({
+        where: { key: idempotencyKey },
+      });
+
+      // First request already committed → replay its result as success.
+      if (existing && existing.orderIds.length > 0) {
+        return {
+          ok: true,
+          orderIds: existing.orderIds,
+          orderCount: existing.orderIds.length,
+          userId: existing.userId ?? "",
+        };
+      }
+
+      // First request is still in flight (key claimed, orders not committed yet).
+      return {
+        ok: false,
+        message: "Замовлення вже обробляється. Зачекайте кілька секунд і не надсилайте його повторно.",
+        status: 409,
+        createdCount: 0,
+      };
+    }
+
+    // Any other failure inside the transaction rolls everything back → 0 created.
     const mapped = mapOrderError(error);
     return {
       ok: false,

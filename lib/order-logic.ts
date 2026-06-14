@@ -95,6 +95,59 @@ function constructUTCFromKyiv(parts: { year: number; month: number; day: number;
   return new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour ?? 0, parts.minute ?? 0, parts.second ?? 0, 0));
 }
 
+/**
+ * Real UTC offset (in minutes) of Europe/Kyiv at the given instant, DST-aware.
+ * Positive = Kyiv is ahead of UTC (e.g. +120 in winter, +180 in summer).
+ */
+function kyivUtcOffsetMinutes(at: Date): number {
+  // Kyiv wall-clock for `at`, reinterpreted as if it were UTC, minus the real
+  // instant = the offset. Uses the IANA database via Intl, so DST is handled.
+  return (constructUTCFromKyiv(getKyivParts(at)).getTime() - at.getTime()) / 60000;
+}
+
+/**
+ * Convert a Europe/Kyiv wall-clock date/time into the real UTC instant it maps
+ * to, DST-aware. Never hardcode a `+03:00`/`+02:00` offset — Ukraine switches
+ * between them, so a literal offset is wrong for half the year.
+ */
+export function kyivWallClockToUtc(
+  year: number,
+  month: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+  second = 0,
+  ms = 0,
+): Date {
+  // First guess: treat the wall clock as UTC, then correct by the offset at
+  // that guessed instant. A single refinement handles the DST-transition edge
+  // where the offset at the guess differs from the offset at the result.
+  const guessUtcMs = Date.UTC(year, month - 1, day, hour, minute, second, ms);
+  const guess = new Date(guessUtcMs);
+  const offset1 = kyivUtcOffsetMinutes(guess);
+  const candidate = new Date(guessUtcMs - offset1 * 60000);
+  const offset2 = kyivUtcOffsetMinutes(candidate);
+  return offset2 === offset1 ? candidate : new Date(guessUtcMs - offset2 * 60000);
+}
+
+/**
+ * The [start, end] real-UTC instants that bound a single Europe/Kyiv calendar
+ * day (Y-M-D). Use these for `deliveryDate` range queries so that day windows
+ * are correct on any server timezone (e.g. Vercel's UTC) and across DST.
+ */
+export function kyivDayRangeUtc(year: number, month: number, day: number): { start: Date; end: Date } {
+  return {
+    start: kyivWallClockToUtc(year, month, day, 0, 0, 0, 0),
+    end: kyivWallClockToUtc(year, month, day, 23, 59, 59, 999),
+  };
+}
+
+/** Current Europe/Kyiv calendar date (year/month/day), DST-aware. */
+export function kyivTodayParts(reference: Date = new Date()): { year: number; month: number; day: number } {
+  const parts = getKyivParts(reference);
+  return { year: parts.year, month: parts.month, day: parts.day };
+}
+
 // TODO: REMOVE FOR PRODUCTION
 // Temporary bypass for testing - allows ordering any time
 export const NEXT_WEEK_OPEN = true;
