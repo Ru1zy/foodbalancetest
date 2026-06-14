@@ -37,7 +37,7 @@ export default function RootLayout({
       lang="uk"
       className={`${comfortaa.variable} h-full antialiased`}
     >
-      <body className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <body className="flex min-h-[100dvh] flex-col bg-slate-50 text-slate-900">
         <GradientOrbs />
         <AnimatedBackground />
         

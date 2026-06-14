@@ -144,7 +144,7 @@ export default function MenuDishesEditor({ menuId, currentDishes, packageType, d
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-sm"
+          className="relative w-full max-w-5xl max-h-[90dvh] overflow-y-auto rounded-2xl bg-white shadow-sm"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}

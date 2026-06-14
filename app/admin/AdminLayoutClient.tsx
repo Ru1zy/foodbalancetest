@@ -16,7 +16,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-[100dvh] bg-gray-50">
       {/* Desktop Sidebar */}
       <aside className="hidden w-72 border-r border-gray-200 bg-white lg:block shadow-sm">
         <div className="flex h-full flex-col">

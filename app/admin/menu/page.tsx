@@ -17,7 +17,7 @@ export default async function AdminMenuPage() {
   const menuItems = await getAllMenuItems();
 
   return (
-    <main className="min-h-screen bg-gray-50 p-6">
+    <main className="min-h-[100dvh] bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Управління меню</h1>
