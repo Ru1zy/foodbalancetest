@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { verifyAuthToken, createAuthToken, AUTH_TOKEN_MAX_AGE } from "@/lib/auth-token";
 import { normalizePhone } from "@/lib/phone-utils";
 
@@ -111,7 +112,7 @@ export async function POST(request: Request) {
 
     // Perform account merge in transaction
     // CRITICAL: Delete temp user FIRST to free up unique constraints (email, googleId)
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Transfer orders from current user to old user (if any)
       await tx.order.updateMany({
         where: { userId: currentUser.id },

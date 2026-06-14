@@ -63,7 +63,7 @@ export async function GET(request: Request) {
     const archivedResult = await prisma.order.updateMany({
       where: {
         id: {
-          in: ordersToArchive.map(o => o.id),
+          in: ordersToArchive.map((o: { id: string }) => o.id),
         },
       },
       data: {

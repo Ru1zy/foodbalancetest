@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import type { Menu } from "@prisma/client";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
 import {
   isIndivPackage,
@@ -203,7 +204,7 @@ async function formatDays(items: unknown, packageType: PackageType) {
   });
 
   const menuById = new Map(
-    menuItems.map((item) => [
+    menuItems.map((item: Pick<Menu, "id" | "dayOfWeek" | "dishes" | "packageType">) => [
       item.id,
       transformMenuForPackage(
         {

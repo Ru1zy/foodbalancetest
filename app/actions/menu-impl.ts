@@ -1,6 +1,7 @@
 "use server";
 
 import prisma from "@/lib/prisma";
+import type { Menu } from "@prisma/client";
 import { type MenuItem } from "@/lib/menu-types";
 
 export type JsonValue =
@@ -22,7 +23,7 @@ export async function getMenuItems(selectedPackage: string | null): Promise<Menu
       },
     });
 
-    return menuItems.map((item) => ({
+    return menuItems.map((item: Menu) => ({
       id: item.id,
       dayOfWeek: item.dayOfWeek || 0,
       packageType: (item.packageType as string) || "Standard",
@@ -40,7 +41,7 @@ export async function getAllMenuItems(): Promise<MenuItem[]> {
     const menuItems = await prisma.menu.findMany({
       orderBy: [{ packageType: "asc" }, { dayOfWeek: "asc" }],
     });
-    return menuItems.map((item) => ({
+    return menuItems.map((item: Menu) => ({
       id: item.id,
       dayOfWeek: item.dayOfWeek || 0,
       packageType: item.packageType,

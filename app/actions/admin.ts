@@ -7,6 +7,12 @@ import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
 import { normalizePhoneForLegacy } from "@/lib/googleSheets";
+import type { Prisma } from "@prisma/client";
+
+// Explicit shapes so callbacks over Prisma results never collapse to implicit
+// `any` if the generated client isn't fully typed at build time (Vercel).
+type ActiveOrderWithUser = Prisma.OrderGetPayload<{ include: { user: true } }>;
+type MenuSelection = { id: string; dishes: Prisma.JsonValue; packageType: string };
 
 // ============================================================================
 // TYPES
@@ -359,7 +365,7 @@ export async function archiveOldOrders(): Promise<ArchiveOrdersResult> {
     const archivedResult = await prisma.order.updateMany({
       where: {
         id: {
-          in: ordersToArchive.map((o: any) => o.id),
+          in: ordersToArchive.map((o: { id: string }) => o.id),
         },
       },
       data: {
@@ -740,7 +746,7 @@ export async function exportToKitchenSheet(
     const t = new Date(targetStr);
 
     // Filter orders to only those that actually have a delivery on targetDate
-    const orders = allActiveOrders.filter(order => {
+    const orders = allActiveOrders.filter((order: ActiveOrderWithUser) => {
       if (!order.items || typeof order.items !== "object") return false;
       const days = (order.items as unknown as Record<string, unknown[]>).days;
       if (!Array.isArray(days)) return false;
@@ -779,9 +785,9 @@ export async function exportToKitchenSheet(
       select: { id: true, dishes: true, packageType: true },
     });
 
-    const menuById = new Map([...menus, ...dayMenus].map((m) => [m.id, m]));
-    const templateMenu = dayMenus.find(m => m.packageType === "Template");
-    const sushkaMenu = dayMenus.find(m => m.packageType === "Sushka");
+    const menuById = new Map([...menus, ...dayMenus].map((m: MenuSelection) => [m.id, m]));
+    const templateMenu = dayMenus.find((m: MenuSelection) => m.packageType === "Template");
+    const sushkaMenu = dayMenus.find((m: MenuSelection) => m.packageType === "Sushka");
 
     const existingDataResponse = await sheets.spreadsheets.values.get({
       spreadsheetId: sheetId,
@@ -796,7 +802,7 @@ export async function exportToKitchenSheet(
     }
 
     const rows: string[][] = await Promise.all(
-      orders.map(async (order) => {
+      orders.map(async (order: ActiveOrderWithUser) => {
         let formattedDishes = "";
         const pkgLower = order.packageType.toLowerCase();
         const isSushka = pkgLower.includes("sushka");
@@ -894,7 +900,7 @@ export async function exportToKitchenSheet(
     });
 
     await prisma.order.updateMany({
-      where: { id: { in: orders.map((o) => o.id) } },
+      where: { id: { in: orders.map((o: { id: string }) => o.id) } },
       data: { status: "Передано в учёт" },
     });
 

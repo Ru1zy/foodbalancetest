@@ -241,7 +241,7 @@ async function resolveServerDeliveryDate(sanitizedCartData: OrderCartData): Prom
     return null;
   }
 
-  const menuDayByItemId = Object.fromEntries(rows.map((r) => [r.id, r.dayOfWeek]));
+  const menuDayByItemId = Object.fromEntries(rows.map((r: { id: string; dayOfWeek: number }) => [r.id, r.dayOfWeek]));
   return earliestMenuDeliveryDateFromCartDays(sanitizedCartData.days, menuDayByItemId, new Date());
 }
 
@@ -706,7 +706,7 @@ export async function submitOrder(
     }
 
     // Atomic DB write.
-    const { order, user } = await prisma.$transaction((tx) =>
+    const { order, user } = await prisma.$transaction((tx: Prisma.TransactionClient) =>
       persistOrderInTransaction(tx, prepared, userId),
     );
 
@@ -826,7 +826,7 @@ export async function submitOrders(
     // 2) Persist ALL orders atomically. If any insert throws, Prisma rolls the
     //    entire batch back → zero orders created.
     const results = await prisma.$transaction(
-      async (tx) => {
+      async (tx: Prisma.TransactionClient) => {
         // Idempotency guard: claim the key first. A duplicate submit (network
         // retry, double click, function replay) hits the unique constraint and
         // is rejected before any order is created or balance is touched.
@@ -869,14 +869,14 @@ export async function submitOrders(
     revalidatePath("/admin/orders");
 
     await Promise.allSettled(
-      results.map((r) =>
+      results.map((r: { order: Order; user: User; prepared: PreparedOrder }) =>
         dispatchOrderSideEffects(r.order, r.user, r.prepared.validatedData, r.prepared.sanitizedCartData),
       ),
     );
 
     return {
       ok: true,
-      orderIds: results.map((r) => r.order.id),
+      orderIds: results.map((r: { order: Order; user: User; prepared: PreparedOrder }) => r.order.id),
       orderCount: results.length,
       userId: results[results.length - 1]?.user.id ?? "",
     };
