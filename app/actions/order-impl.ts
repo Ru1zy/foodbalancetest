@@ -47,6 +47,33 @@ export type SubmitOrderResult =
       status: number;
     };
 
+/** One assembled package coming from the multi-order cart. */
+export type CartOrderInput = {
+  cartData: OrderCartData;
+  deliveryDate: Date | string;
+  unitPrice: number;
+  /** How many identical copies of this package to create. */
+  quantity: number;
+};
+
+export type SubmitOrdersResult =
+  | {
+      ok: true;
+      orderIds: string[];
+      orderCount: number;
+      userId: string;
+    }
+  | {
+      message: string;
+      ok: false;
+      status: number;
+      /** Orders that were successfully created before the failure (best effort). */
+      createdCount: number;
+    };
+
+/** Hard ceiling on copies of a single package (mirrors orderStore). */
+const MAX_CART_ITEM_QUANTITY = 50;
+
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   // CRITICAL: Calculate server-side package limit - NEVER trust client's packageLimit
   const { limit: serverPackageLimit, exact } = getPackageLimit(cartData.packageType);
@@ -562,4 +589,90 @@ export async function submitOrder(
       status: 500,
     };
   }
+}
+
+/**
+ * Multi-order checkout entry point.
+ *
+ * Accepts the multi-package cart, "unrolls" each item's quantity into N
+ * identical orders, and creates them one by one through the existing,
+ * fully-validated `submitOrder` pipeline. Because every unrolled copy goes
+ * through the exact same single-order path, the Prisma schema, balance logic
+ * and Google Sheets sync stay untouched — the backend simply receives an array
+ * of individual orders.
+ *
+ * Orders are created sequentially. If one fails, creation stops and the number
+ * of orders already persisted is reported (each individual order is atomic, but
+ * the batch as a whole is not transactional).
+ */
+export async function submitOrders(
+  formData: FormData,
+  items: CartOrderInput[],
+): Promise<SubmitOrdersResult> {
+  if (!Array.isArray(items) || items.length === 0) {
+    return {
+      ok: false,
+      message: "Кошик порожній. Додайте хоча б один раціон.",
+      status: 400,
+      createdCount: 0,
+    };
+  }
+
+  // Unroll quantity: a cart item with quantity 2 becomes two identical orders.
+  const unrolled: Array<{ cartData: OrderCartData; deliveryDate: Date | string; unitPrice: number }> = [];
+  for (const item of items) {
+    if (!item || typeof item !== "object" || !item.cartData) {
+      return {
+        ok: false,
+        message: "Некоректні дані кошика. Оновіть сторінку та спробуйте ще раз.",
+        status: 400,
+        createdCount: 0,
+      };
+    }
+
+    const rawQuantity = Number(item.quantity);
+    const quantity =
+      Number.isInteger(rawQuantity) && rawQuantity > 0
+        ? Math.min(rawQuantity, MAX_CART_ITEM_QUANTITY)
+        : 1;
+
+    for (let copy = 0; copy < quantity; copy += 1) {
+      unrolled.push({
+        cartData: item.cartData,
+        deliveryDate: item.deliveryDate,
+        unitPrice: item.unitPrice,
+      });
+    }
+  }
+
+  const orderIds: string[] = [];
+  let userId = "";
+
+  for (const order of unrolled) {
+    const result = await submitOrder(
+      formData,
+      order.cartData,
+      order.deliveryDate,
+      order.unitPrice,
+    );
+
+    if (!result.ok) {
+      return {
+        ok: false,
+        message: result.message,
+        status: result.status,
+        createdCount: orderIds.length,
+      };
+    }
+
+    orderIds.push(result.orderId);
+    userId = result.userId;
+  }
+
+  return {
+    ok: true,
+    orderIds,
+    orderCount: orderIds.length,
+    userId,
+  };
 }

@@ -3,16 +3,38 @@ import { persist } from "zustand/middleware";
 import type { PackageType } from "@/lib/order-logic";
 import { getPackageLimit } from "@/lib/order-logic";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import type { OrderCartData } from "@/app/actions/order-impl";
 
 export type Selections = Record<string, Record<string, number>>;
 
+/**
+ * A fully assembled package in the multi-order cart.
+ *
+ * Each CartItem is a complete snapshot of one wizard run (one package + its
+ * days/selections) ready to be submitted as a single order. `quantity` lets the
+ * customer order N identical copies of the same assembled package; on submit the
+ * quantity is "unrolled" into N separate orders server-side (see submitOrders),
+ * so neither the Prisma schema nor the Google Sheets logic has to change.
+ */
 export type CartItem = {
+  /** Stable client-side id for this cart line. */
   id: string;
-  date: string;
-  planType: PackageType;
-  dishes: Array<{ dishId: string; quantity: number }>;
-  selections?: Record<string, number>;
-  price: number | null;
+  /** Tariff/package type, e.g. "Balance". */
+  packageType: PackageType;
+  /** Human-readable label shown in the cart UI. */
+  packageLabel: string;
+  /** Full payload submitted to the server for ONE copy of this package. */
+  cartData: OrderCartData;
+  /** Earliest delivery date for this package, ISO string. */
+  deliveryDate: string;
+  /** Gross price for ONE copy of this package (all of its days). */
+  unitPrice: number;
+  /** Number of selected days inside this package. */
+  dayCount: number;
+  /** Display labels for the selected days. */
+  dayLabels: string[];
+  /** How many identical copies of this package to order. Default 1. */
+  quantity: number;
 };
 
 export type CustomerProfile = {
@@ -54,9 +76,14 @@ export interface OrderStore {
   clearDaySelections: (dayId: string) => void;
   addCartItem: (item: CartItem) => void;
   removeCartItem: (itemId: string) => void;
+  incrementQuantity: (cartItemId: string) => void;
+  decrementQuantity: (cartItemId: string) => void;
   clearCart: () => void;
   getCartTotal: () => number;
 }
+
+/** Hard ceiling on copies of a single package to avoid runaway order loops. */
+const MAX_CART_ITEM_QUANTITY = 50;
 
 function normalizeSelectedDateStrings(dates: string[]): string[] {
   return [...new Set(dates.map((s) => String(s).trim()))]
@@ -257,12 +284,39 @@ export const useOrderStore = create<OrderStore>()(
 
   addCartItem: (item) =>
     set((state) => ({
-      cartItems: [...state.cartItems, item],
+      cartItems: [
+        ...state.cartItems,
+        {
+          ...item,
+          quantity:
+            Number.isInteger(item.quantity) && item.quantity > 0
+              ? Math.min(item.quantity, MAX_CART_ITEM_QUANTITY)
+              : 1,
+        },
+      ],
     })),
 
   removeCartItem: (itemId) =>
     set((state) => ({
       cartItems: state.cartItems.filter((item) => item.id !== itemId),
+    })),
+
+  incrementQuantity: (cartItemId) =>
+    set((state) => ({
+      cartItems: state.cartItems.map((item) =>
+        item.id === cartItemId
+          ? { ...item, quantity: Math.min(item.quantity + 1, MAX_CART_ITEM_QUANTITY) }
+          : item,
+      ),
+    })),
+
+  decrementQuantity: (cartItemId) =>
+    set((state) => ({
+      cartItems: state.cartItems.map((item) =>
+        item.id === cartItemId
+          ? { ...item, quantity: Math.max(1, item.quantity - 1) }
+          : item,
+      ),
     })),
 
   clearCart: () =>
@@ -272,7 +326,10 @@ export const useOrderStore = create<OrderStore>()(
 
   getCartTotal: () => {
     const state = get();
-    return state.cartItems.reduce((total, item) => total + (item.price || 0), 0);
+    return state.cartItems.reduce(
+      (total, item) => total + (item.unitPrice || 0) * (item.quantity || 1),
+      0,
+    );
   },
 }),
     {

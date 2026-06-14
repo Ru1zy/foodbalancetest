@@ -1,11 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
-import { submitOrder, type OrderCartData } from "@/app/actions/order-impl";
+import {
+  submitOrders,
+  type CartOrderInput,
+  type OrderCartData,
+} from "@/app/actions/order-impl";
 import {
   dateForMenuDayOfWeek,
   earliestMenuDeliveryDateFromCartDays,
@@ -24,7 +29,7 @@ import {
   toIndivDishQuantities,
 } from "@/lib/order-selection";
 import { parsePackageType } from "@/lib/package-coerce";
-import { useOrderStore } from "@/lib/orderStore";
+import { useOrderStore, type CartItem } from "@/lib/orderStore";
 import { isTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
 import { checkoutSchema, type CheckoutSchema } from "@/lib/validations";
 
@@ -38,6 +43,8 @@ type SubmittedState = {
   packageType: string;
   totalDays: number;
   totalPrice: number;
+  /** Number of orders created in this checkout (>= 1). */
+  orderCount: number;
 };
 
 type AuthenticatedUser = {
@@ -77,6 +84,7 @@ export default function CheckoutPageImpl({
   menuDayByItemId,
   sushkaMenuIdByDay,
 }: Props) {
+  const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
   const selectedDates = useOrderStore((state) => state.selectedDates);
@@ -86,6 +94,12 @@ export default function CheckoutPageImpl({
   const resetWizard = useOrderStore((state) => state.resetWizard);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
   const setSelectedDates = useOrderStore((state) => state.setSelectedDates);
+  const cartItems = useOrderStore((state) => state.cartItems);
+  const addCartItem = useOrderStore((state) => state.addCartItem);
+  const removeCartItem = useOrderStore((state) => state.removeCartItem);
+  const incrementQuantity = useOrderStore((state) => state.incrementQuantity);
+  const decrementQuantity = useOrderStore((state) => state.decrementQuantity);
+  const clearCart = useOrderStore((state) => state.clearCart);
   const pkg = parsePackageType(selectedPackageRaw);
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
@@ -335,6 +349,68 @@ export default function CheckoutPageImpl({
     [customerProfile],
   );
 
+  // ── Multi-order cart derived state ───────────────────────────────────────
+  const isIndivCurrent = isIndivPackage(selectedPackageRaw ?? undefined);
+  const currentDraftValid = Boolean(pkg) && cartData.totalDays > 0;
+
+  /** Sum of fiat subtotals for added cart packages (Indiv items are operator-priced → excluded). */
+  const cartFiatTotal = useMemo(
+    () =>
+      cartItems.reduce(
+        (sum, item) =>
+          sum + (isIndivPackage(item.packageType) ? 0 : item.unitPrice * item.quantity),
+        0,
+      ),
+    [cartItems],
+  );
+
+  const hasIndivInCart = useMemo(
+    () => cartItems.some((item) => isIndivPackage(item.packageType)),
+    [cartItems],
+  );
+
+  const cartCopiesCount = useMemo(
+    () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
+    [cartItems],
+  );
+
+  /** Gross total across the current draft + all added packages (excludes Indiv). */
+  const grandGrossTotal =
+    (isIndivCurrent ? 0 : currentDraftValid ? orderTotalUah : 0) + cartFiatTotal;
+
+  /** Snapshot the current wizard draft as a ready-to-submit cart item. */
+  const buildDraftCartItem = (): CartItem | null => {
+    if (!pkg || cartData.totalDays === 0 || !deliveryDate) {
+      return null;
+    }
+    return {
+      id: `${pkg}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      packageType: pkg,
+      packageLabel: selectedPackageRaw ?? pkg,
+      cartData,
+      deliveryDate: deliveryDate.toISOString(),
+      unitPrice: orderTotalUah,
+      dayCount: cartData.totalDays,
+      dayLabels: summaryDays.map((day) => `${day.dayName} (${day.scheduleLabel})`),
+      quantity: 1,
+    };
+  };
+
+  /**
+   * "Add another package": commit the current draft into the cart (so it is not
+   * lost), then reset the wizard and return to its start. The cart itself is
+   * persisted in the store and is intentionally NOT cleared.
+   */
+  const handleAddAnotherPackage = () => {
+    const draft = buildDraftCartItem();
+    if (draft) {
+      addCartItem(draft);
+    }
+    clearSelections();
+    resetWizard();
+    router.push("/");
+  };
+
   const handleRemoveDay = (day: SummaryDay) => {
     if (cartData.packageType.includes("Sushka")) {
       setSelectedDates(selectedDates.filter((value) => Number(value) !== day.dayOfWeek));
@@ -345,31 +421,29 @@ export default function CheckoutPageImpl({
   };
 
   const onValidSubmit = (data: CheckoutSchema) => {
-    if (!pkg) {
-      setFeedback({ message: "Спочатку оберіть тариф.", tone: "error" });
-      return;
-    }
-    if (cartData.totalDays === 0) {
-      setFeedback({ message: "Додайте хоча б один день до замовлення.", tone: "error" });
+    const hasDraft = currentDraftValid;
+    const hasCartItems = cartItems.length > 0;
+
+    if (!hasDraft && !hasCartItems) {
+      setFeedback({ message: "Додайте хоча б один раціон до замовлення.", tone: "error" });
       return;
     }
 
-    const indivPackage = isIndivPackage(selectedPackageRaw ?? undefined);
-    const serverPackageLimit = getPackageLimit(pkg);
+    // Validate the current draft (if present) the same way as before.
+    if (hasDraft && pkg) {
+      const indivPackage = isIndivPackage(selectedPackageRaw ?? undefined);
+      const serverPackageLimit = getPackageLimit(pkg);
 
-    for (const day of cartData.days) {
-      if (indivPackage) {
-        if (!day.items) return;
-        const totalQuantity = day.items.reduce((sum, item) => sum + item.quantity, 0);
-        if (totalQuantity < 1 || totalQuantity > 10) return;
-      } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit.limit) {
-        return;
+      for (const day of cartData.days) {
+        if (indivPackage) {
+          if (!day.items) return;
+          const totalQuantity = day.items.reduce((sum, item) => sum + item.quantity, 0);
+          if (totalQuantity < 1 || totalQuantity > 10) return;
+        } else if (!pkg.includes("Sushka") && day.selectedCount !== serverPackageLimit.limit) {
+          return;
+        }
       }
-    }
 
-    setFeedback(null);
-
-    startTransition(async () => {
       if (!deliveryDate) {
         setFeedback({
           message: "Не вдалося визначити дату доставки за вибраними днями.",
@@ -377,20 +451,37 @@ export default function CheckoutPageImpl({
         });
         return;
       }
+    }
 
+    setFeedback(null);
+
+    startTransition(async () => {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
+      // The server applies balance per individual order, so always pass the
+      // user's chosen fiat method; balance-covered orders resolve to 0 ₴ there.
+      formData.set("paymentMethod", paymentMethod);
 
-      // Override paymentMethod based on fiatPrice
-      if (fiatPrice === 0) {
-        formData.set("paymentMethod", "balance");
-      } else {
-        formData.set("paymentMethod", paymentMethod);
+      // Build the order list: previously added packages + the current draft.
+      const items: CartOrderInput[] = cartItems.map((item) => ({
+        cartData: item.cartData,
+        deliveryDate: item.deliveryDate,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+      }));
+
+      if (hasDraft && deliveryDate) {
+        items.push({
+          cartData,
+          deliveryDate: deliveryDate.toISOString(),
+          unitPrice: orderTotalUah,
+          quantity: 1,
+        });
       }
 
-      const result = await submitOrder(formData, cartData, deliveryDate, orderTotalUah);
+      const result = await submitOrders(formData, items);
       if (!result.ok) {
         setFeedback({
           message: result.message,
@@ -399,11 +490,22 @@ export default function CheckoutPageImpl({
         return;
       }
 
+      const totalDays =
+        cartItems.reduce((sum, item) => sum + item.dayCount * item.quantity, 0) +
+        (hasDraft ? cartData.totalDays : 0);
+
+      const firstDeliveryLabel = deliveryDate
+        ? formatDisplayDate(deliveryDate)
+        : cartItems[0]
+        ? formatDisplayDate(new Date(cartItems[0].deliveryDate))
+        : null;
+
       setSubmitted({
-        deliveryDateLabel: formatDisplayDate(deliveryDate),
-        packageType: cartData.packageType,
-        totalDays: cartData.totalDays,
-        totalPrice: fiatPrice,
+        deliveryDateLabel: firstDeliveryLabel,
+        packageType: result.orderCount > 1 ? "Декілька раціонів" : cartData.packageType,
+        totalDays,
+        totalPrice: grandGrossTotal,
+        orderCount: result.orderCount,
       });
 
       setCustomerProfile({
@@ -417,6 +519,7 @@ export default function CheckoutPageImpl({
 
       clearSelections();
       resetWizard();
+      clearCart();
     });
   };
 
@@ -463,6 +566,12 @@ export default function CheckoutPageImpl({
               </div>
             </div>
           </div>
+
+          {submitted.orderCount > 1 && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-700">
+              Створено замовлень: <span className="font-semibold">{submitted.orderCount}</span>.
+            </div>
+          )}
 
           {submitted.deliveryDateLabel && (
             <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
@@ -565,10 +674,108 @@ export default function CheckoutPageImpl({
               </div>
             </div>
 
+            {cartItems.length > 0 && (
+              <div className="mt-6">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Додані раціони
+                  </h3>
+                  <span className="text-xs font-medium text-slate-500">
+                    {cartItems.length} поз. · {cartCopiesCount} шт.
+                  </span>
+                </div>
+
+                <ul className="space-y-3">
+                  {cartItems.map((item) => {
+                    const itemIndiv = isIndivPackage(item.packageType);
+                    return (
+                      <li
+                        key={item.id}
+                        className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="break-words text-sm font-bold text-slate-900">
+                              {item.packageLabel}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {item.dayCount} {item.dayCount === 1 ? "день" : "дн."}
+                              {item.dayLabels.length > 0 && (
+                                <span className="break-words"> · {item.dayLabels.join(", ")}</span>
+                              )}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeCartItem(item.id)}
+                            className="inline-flex shrink-0 items-center self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 active:scale-95"
+                          >
+                            Видалити
+                          </button>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => decrementQuantity(item.id)}
+                              disabled={item.quantity <= 1}
+                              aria-label="Зменшити кількість"
+                              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-bold text-slate-700 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+                            >
+                              −
+                            </button>
+                            <span className="min-w-8 text-center text-base font-black text-slate-900">
+                              {item.quantity}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => incrementQuantity(item.id)}
+                              aria-label="Збільшити кількість"
+                              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-bold text-emerald-600 transition hover:border-emerald-300 active:scale-95"
+                            >
+                              +
+                            </button>
+                          </div>
+                          <div className="text-right text-sm font-bold text-slate-900">
+                            {itemIndiv
+                              ? "Індивідуально"
+                              : `${item.unitPrice * item.quantity} ₴`}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleAddAnotherPackage}
+              className="mt-6 w-full rounded-2xl border-2 border-dashed border-emerald-300 py-3.5 text-sm font-bold text-emerald-600 transition hover:bg-emerald-50 active:scale-95"
+            >
+              + Додати ще один раціон
+            </button>
+
+            {(cartItems.length > 0 || (currentDraftValid && grandGrossTotal > 0)) && (
+              <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-100 px-5 py-4">
+                <span className="text-sm font-semibold text-slate-600">Разом за всі раціони</span>
+                <span className="text-xl font-black text-slate-950">
+                  {grandGrossTotal > 0 ? `${grandGrossTotal} ₴` : "—"}
+                  {(hasIndivInCart || isIndivCurrent) && (
+                    <span className="ml-1 align-middle text-xs font-medium text-slate-500">
+                      + інд.
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
+
             <div className="mt-6">
               <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                  Обрані дні
+                  {currentDraftValid ? "Поточний раціон" : "Обрані дні"}
                 </h3>
                 {summaryDays.length > 0 && (
                   <span className="text-xs font-medium text-slate-500">{summaryDays.length} позицій</span>
@@ -806,7 +1013,13 @@ export default function CheckoutPageImpl({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
-                      {isIndivPackage(selectedPackageRaw ?? undefined)
+                      {cartItems.length > 0
+                        ? grandGrossTotal > 0
+                          ? `До підтвердження: ${grandGrossTotal} ₴${
+                              hasIndivInCart || isIndivCurrent ? " + інд." : ""
+                            }`
+                          : "Індивідуальний розрахунок"
+                        : isIndivPackage(selectedPackageRaw ?? undefined)
                         ? "Індивідуальний розрахунок"
                         : `До підтвердження: ${orderTotalUah} ₴`}
                     </p>
@@ -816,17 +1029,19 @@ export default function CheckoutPageImpl({
                   </div>
                   <button
                     type="submit"
-                    disabled={isPending || cartData.totalDays === 0}
+                    disabled={isPending || (cartData.totalDays === 0 && cartItems.length === 0)}
                     className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition-all duration-200 ease-out active:scale-95 sm:w-full ${
-                      isPending || cartData.totalDays === 0
+                      isPending || (cartData.totalDays === 0 && cartItems.length === 0)
                         ? "cursor-not-allowed bg-slate-200 text-slate-400"
                         : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
                     }`}
                   >
                     {isPending
                       ? "Надсилаємо..."
+                      : cartItems.length > 0
+                      ? "Підтвердити замовлення"
                       : balanceDaysToUse > 0
-                      ? fiatPrice > 0 
+                      ? fiatPrice > 0
                         ? `Оформити (${balanceDaysToUse} дні з балансу + ${fiatPrice} ₴)`
                         : `Оформити (списати ${balanceDaysToUse} дні з балансу)`
                       : isIndivPackage(selectedPackageRaw ?? undefined)
