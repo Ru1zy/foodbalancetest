@@ -163,10 +163,53 @@ export function earliestMenuDeliveryDateFromCartDays(
   return earliestDeliveryDateFromDayOfWeeks(weeks, reference);
 }
 
+export function getDeadlineForDay(target: Date): Date {
+  const targetKyiv = getKyivParts(target);
+  let deadlineDay = targetKyiv.day;
+  let deadlineHour = 14;
+
+  if (targetKyiv.weekday === 1) {
+    deadlineDay = targetKyiv.day - 2;
+    deadlineHour = 23;
+  } else if (targetKyiv.weekday === 6) {
+    deadlineDay = targetKyiv.day - 2;
+    deadlineHour = 14;
+  } else if (targetKyiv.weekday === 0) {
+    deadlineDay = targetKyiv.day - 3;
+    deadlineHour = 14;
+  } else {
+    deadlineDay = targetKyiv.day - 2;
+    deadlineHour = 14;
+  }
+
+  const deadlineKyiv = constructUTCFromKyiv({
+    year: targetKyiv.year,
+    month: targetKyiv.month,
+    day: deadlineDay,
+    hour: deadlineHour,
+    minute: 0,
+    second: 0,
+  });
+
+  return deadlineKyiv;
+}
+
 export function isDaySelectable(dayOfWeek: number): boolean {
   // TODO: REMOVE FOR PRODUCTION
   // Temporary bypass for testing - all days are selectable
   return true;
+
+  // Original time-based validation logic (commented out for testing):
+  // if (!dayOfWeek || dayOfWeek < 1 || dayOfWeek > 7) return false;
+  //
+  // const nowKyivParts = getKyivParts(new Date());
+  // const nowKyiv = constructUTCFromKyiv(nowKyivParts);
+  //
+  // const targetMonday = getTargetMonday(nowKyivParts);
+  // const targetDate = getTargetDate(dayOfWeek, targetMonday);
+  //
+  // const deadline = getDeadlineForDay(targetDate);
+  // return nowKyiv.getTime() < deadline.getTime();
 }
 
 /** Weekday indices 1–7 still open for the current menu week (same rules as `isDaySelectable`). */
