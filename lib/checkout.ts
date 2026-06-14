@@ -2,16 +2,6 @@ export const MAX_CUTLERY_COUNT = 4;
 const MIN_PHONE_DIGITS = 10;
 const MAX_PHONE_DIGITS = 15;
 
-export type CheckoutFormValues = {
-  address: string;
-  comment: string;
-  cutlery: number;
-  name: string;
-  phone: string;
-};
-
-export type CheckoutFieldErrors = Partial<Record<"address" | "cart" | "name" | "phone", string>>;
-
 export function clampCutleryCount(value: number) {
   return Math.min(MAX_CUTLERY_COUNT, Math.max(0, value));
 }
@@ -71,32 +61,4 @@ export function kyivCalendarDateKey(d: Date): string {
     month: "2-digit",
     day: "2-digit",
   }).format(d);
-}
-
-export function parseCheckoutFormData(formData: FormData): CheckoutFormValues {
-  return {
-    address: String(formData.get("address") || "").trim(),
-    comment: String(formData.get("comment") || "").trim(),
-    cutlery: parseCutleryCount(formData.get("cutlery")),
-    name: String(formData.get("name") || "").trim(),
-    phone: normalizePhone(String(formData.get("phone") || "")),
-  };
-}
-
-export function validateCheckoutFormValues(values: CheckoutFormValues): CheckoutFieldErrors {
-  const errors: CheckoutFieldErrors = {};
-
-  if (!values.name) {
-    errors.name = "Вкажіть ім'я.";
-  }
-
-  if (!hasValidPhoneNumber(values.phone)) {
-    errors.phone = "Вкажіть коректний номер телефону.";
-  }
-
-  if (!values.address) {
-    errors.address = "Вкажіть адресу доставки.";
-  }
-
-  return errors;
 }

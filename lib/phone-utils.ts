@@ -38,10 +38,3 @@ export function normalizePhone(phone: string): string {
   // Return digits as fallback if it doesn't match expected patterns
   return digits || phone;
 }
-
-/**
- * Validates if a phone number matches the normalized 10-digit Ukrainian format.
- */
-export function isValidNormalizedPhone(phone: string): boolean {
-  return /^[0]\d{9}$/.test(phone);
-}

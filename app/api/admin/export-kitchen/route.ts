@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { google } from "googleapis";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 
@@ -106,6 +107,11 @@ async function parseOrderItems(items: unknown): Promise<string[]> {
 
 export async function GET(request: Request) {
   try {
+    const adminUser = await getAuthenticatedAdminUser();
+    if (!adminUser) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
     const format = searchParams.get("format") || "csv"; // csv or sheets
