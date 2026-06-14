@@ -5,7 +5,7 @@ export default async function TariffsPage() {
   const tariffs = await getAllTariffs();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-[100dvh] bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Управління тарифами</h1>

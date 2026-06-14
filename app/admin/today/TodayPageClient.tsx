@@ -122,7 +122,7 @@ const handleExportToKitchen = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-[100dvh] bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">

@@ -174,7 +174,7 @@ export default async function AdminOrdersPage({
 
   if (!adminUser) {
     return (
-      <main className="min-h-screen bg-gray-100 px-4 py-8 text-gray-800 sm:px-6">
+      <main className="min-h-[100dvh] bg-gray-100 px-4 py-8 text-gray-800 sm:px-6">
         <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-200">
           <h1 className="text-2xl font-bold text-gray-900">Доступ заборонено</h1>
           <p className="mt-3 text-sm text-gray-600">Увійдіть як адміністратор, щоб переглянути замовлення.</p>
@@ -231,7 +231,7 @@ export default async function AdminOrdersPage({
   );
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 sm:px-6">
+    <main className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 sm:px-6">
       <section className="mx-auto w-full px-6">
         <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>

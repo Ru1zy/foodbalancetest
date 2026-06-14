@@ -9,7 +9,7 @@ export default function TelegramAuthButton() {
   if (showAuth) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div className="relative max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl">
           <button
             onClick={() => setShowAuth(false)}
             className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"

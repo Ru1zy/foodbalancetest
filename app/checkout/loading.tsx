@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-gray-50 px-4 py-10 sm:px-6 md:px-8">
+    <main className="min-h-[100dvh] bg-gray-50 px-4 py-10 sm:px-6 md:px-8">
       <section className="mx-auto max-w-6xl animate-pulse">
         <div className="h-5 w-40 rounded-full bg-slate-200" />
         <div className="mt-5 h-6 w-24 rounded-full bg-slate-200" />

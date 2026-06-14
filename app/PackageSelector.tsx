@@ -91,7 +91,7 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{option.title}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 break-words line-clamp-2">{option.title}</h3>
                   <p className="mt-2 text-base text-gray-500">{option.kcal}</p>
                   <p className="text-xl font-extrabold text-emerald-600 mt-4">{option.price}</p>
                 </div>
@@ -136,17 +136,17 @@ export default function PackageSelector({ tariffs }: Props) {
             onClick={() => setPreviewPkg(null)}
           >
             <div
-              className="relative w-full max-w-2xl rounded-[2rem] bg-white p-8 shadow-xl"
+              className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white p-8 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="mb-6 text-3xl font-bold text-gray-900">{previewPkg.title}</h2>
+              <h2 className="mb-6 text-3xl font-bold text-gray-900 break-words">{previewPkg.title}</h2>
 
               {previewPkg.imageUrl ? (
                 <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50">
                   <img
                     src={previewPkg.imageUrl}
                     alt={previewPkg.title}
-                    className="w-full max-h-[50vh] object-contain"
+                    className="w-full max-h-[50dvh] object-contain"
                   />
                 </div>
               ) : (
@@ -259,7 +259,7 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900">{pkg.title}</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 break-words line-clamp-2">{pkg.title}</h3>
                   <p className="mt-2 text-base text-gray-500">{pkg.kcal}</p>
                   <p className="text-xl font-extrabold text-emerald-600 mt-4">
                     {pkg.name === "Indiv" ? (
@@ -289,17 +289,17 @@ export default function PackageSelector({ tariffs }: Props) {
           onClick={() => setPreviewPkg(null)}
         >
           <div
-            className="relative w-full max-w-2xl rounded-[2rem] bg-white p-8 shadow-xl"
+            className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white p-8 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-6 text-3xl font-bold text-gray-900">{previewPkg.title}</h2>
+            <h2 className="mb-6 text-3xl font-bold text-gray-900 break-words">{previewPkg.title}</h2>
 
             {previewPkg.imageUrl ? (
               <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50">
                 <img
                   src={previewPkg.imageUrl}
                   alt={previewPkg.title}
-                  className="w-full max-h-[50vh] object-contain"
+                  className="w-full max-h-[50dvh] object-contain"
                 />
               </div>
             ) : (

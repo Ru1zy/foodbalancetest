@@ -422,7 +422,7 @@ export default function CheckoutPageImpl({
 
   if (submitted) {
     return (
-      <main className="min-h-screen bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
+      <main className="min-h-[100dvh] bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
       <section className="mx-auto max-w-3xl rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm sm:p-10">
           <div className="text-center">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl text-emerald-600">
@@ -490,7 +490,7 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="flex-1 flex flex-col min-h-screen bg-slate-50/50 px-4 py-10 text-slate-900 md:px-8">
+    <main className="flex-1 flex flex-col min-h-[100dvh] bg-slate-50/50 px-4 py-10 text-slate-900 md:px-8">
       <section className="flex-grow mx-auto w-full max-w-6xl pb-20">
         <Link
           href="/"

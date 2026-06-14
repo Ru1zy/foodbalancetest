@@ -193,7 +193,7 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 sm:p-8">
+    <div className="min-h-[100dvh] bg-slate-50/50 p-4 sm:p-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-10">
           <h1 className="text-4xl font-black text-gray-900 tracking-tight">
