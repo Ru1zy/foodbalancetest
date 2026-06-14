@@ -199,14 +199,13 @@ export default function MenuGridClient({ menuItems }: Props) {
   const decrementDish = useOrderStore((state) => state.decrementDish);
   const setPackage = useOrderStore((state) => state.setPackage);
   const setSelection = useOrderStore((state) => state.setSelection);
-  const isCustomMode = useOrderStore((state) => state.isCustomMode);
+  const customModeDays = useOrderStore((state) => state.customModeDays);
   const toggleCustomMode = useOrderStore((state) => state.toggleCustomMode);
 
   const [activeDayIndex, setActiveDayIndex] = useState(0);
 
   const pkg = parsePackageType(selectedPackageRaw);
   const isIndiv = isIndivPackage(selectedPackageRaw ?? undefined);
-  const indivSelected = isIndiv || isCustomMode;
   const isSushka = pkg?.includes("Sushka") ?? false;
 
   const filtered = useMemo(() => {
@@ -317,6 +316,14 @@ export default function MenuGridClient({ menuItems }: Props) {
   const isLastDay = activeDayIndex === sorted.length - 1;
   const canProceedToCheckout = wizardFilterActive ? allWizardDaysComplete : completedDaysCount > 0;
 
+  // Individual Selection is decided PER DAY: an Indiv tariff forces it for every
+  // day, otherwise it follows this day's own toggle. Never a global flag.
+  const currentDayCustom = currentDayItem ? !!customModeDays[currentDayItem.id] : false;
+  const indivSelected = isIndiv || currentDayCustom;
+  const currentDayComplete = currentDayItem
+    ? (progressByDay[currentDayItem.id]?.isComplete ?? false)
+    : false;
+
   return (
     <>
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-32 md:pb-40">
@@ -406,10 +413,10 @@ export default function MenuGridClient({ menuItems }: Props) {
                   {!isIndiv && !isSushka && (
                     <button
                       type="button"
-                      onClick={() => toggleCustomMode(!isCustomMode)}
+                      onClick={() => toggleCustomMode(currentDayItem.id, !currentDayCustom)}
                       className="mb-6 w-full rounded-2xl border-2 border-dashed border-emerald-200 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
                     >
-                      {isCustomMode ? "Повернутися до стандарту" : "Індивідуальна збірка"}
+                      {currentDayCustom ? "Повернутися до стандарту" : "Індивідуальна збірка"}
                     </button>
                   )}
 
@@ -534,8 +541,16 @@ export default function MenuGridClient({ menuItems }: Props) {
                       {!isLastDay ? (
                         <button
                           type="button"
-                          onClick={() => setActiveDayIndex(prev => prev + 1)}
-                          className="flex-1 rounded-2xl bg-emerald-600 py-4 text-sm font-bold text-white transition hover:bg-emerald-700 active:scale-95"
+                          disabled={!currentDayComplete}
+                          onClick={() => {
+                            if (!currentDayComplete) return;
+                            setActiveDayIndex(prev => prev + 1);
+                          }}
+                          className={`flex-1 rounded-2xl py-4 text-sm font-bold text-white transition active:scale-95 ${
+                            currentDayComplete
+                              ? "bg-emerald-600 hover:bg-emerald-700"
+                              : "cursor-not-allowed bg-slate-300 text-slate-500"
+                          }`}
                         >
                           Наступний день →
                         </button>

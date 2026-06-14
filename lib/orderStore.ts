@@ -51,7 +51,12 @@ export type CustomerProfile = {
 
 export interface OrderStore {
   customerProfile: CustomerProfile;
-  isCustomMode: boolean;
+  /**
+   * Per-day "Individual Selection" flags, keyed by the day's menu item id.
+   * Replaces the old single global `isCustomMode` boolean which leaked the
+   * Standard↔Individual toggle (and cleared selections) across every day.
+   */
+  customModeDays: Record<string, boolean>;
   /** Wizard / menu tariff id; `null` until the user completes step 1. */
   selectedPackage: string | null;
   /** Weekday indices as strings `"1"`…`"7"` (menu week days). */
@@ -66,7 +71,8 @@ export interface OrderStore {
   setPackage: (packageType: PackageType) => void;
   /** Step 1 → 2: set tariff; clears selections & dates only if tariff changed. */
   selectWizardPackage: (packageType: string) => void;
-  toggleCustomMode: (value: boolean) => void;
+  /** Toggle Individual Selection for ONE day; only that day's selections clear. */
+  toggleCustomMode: (dayId: string, value: boolean) => void;
   setStep: (step: number) => void;
   setSelectedDates: (dates: string[]) => void;
   resetWizard: () => void;
@@ -105,7 +111,7 @@ export const useOrderStore = create<OrderStore>()(
         userId: "",
         username: "",
       },
-      isCustomMode: false,
+      customModeDays: {},
       selectedPackage: null,
       selectedDates: [],
       step: 1,
@@ -134,6 +140,7 @@ export const useOrderStore = create<OrderStore>()(
     set(() => ({
       selectedPackage: packageType,
       selections: {},
+      customModeDays: {},
     })),
 
   selectWizardPackage: (packageType) =>
@@ -143,15 +150,24 @@ export const useOrderStore = create<OrderStore>()(
         selectedPackage: packageType,
         selections: pkgChanged ? {} : state.selections,
         selectedDates: pkgChanged ? [] : state.selectedDates,
+        customModeDays: pkgChanged ? {} : state.customModeDays,
         step: 2,
       };
     }),
 
-  toggleCustomMode: (value) =>
-    set(() => ({
-      isCustomMode: value,
-      selections: {},
-    })),
+  toggleCustomMode: (dayId, value) =>
+    set((state) => {
+      // Flip Individual Selection for THIS day only. Switching a day's mode
+      // wipes only that day's picks (Standard picks and Individual portions are
+      // shaped differently), never any sibling day's selections.
+      const nextCustomModeDays = { ...state.customModeDays, [dayId]: value };
+      const nextSelections = { ...state.selections };
+      delete nextSelections[dayId];
+      return {
+        customModeDays: nextCustomModeDays,
+        selections: nextSelections,
+      };
+    }),
 
   setStep: (step) => set({ step }),
 
@@ -165,7 +181,7 @@ export const useOrderStore = create<OrderStore>()(
       step: 1,
       selectedPackage: null,
       selectedDates: [],
-      isCustomMode: false,
+      customModeDays: {},
     }),
 
   hardReset: () =>
@@ -173,7 +189,7 @@ export const useOrderStore = create<OrderStore>()(
       step: 1,
       selectedPackage: null,
       selectedDates: [],
-      isCustomMode: false,
+      customModeDays: {},
       selections: {},
       cartItems: [],
     }),
