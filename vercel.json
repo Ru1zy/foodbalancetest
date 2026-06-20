@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/archive-orders",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/check-next-month-sheet",
+      "schedule": "0 9 25-31 * *"
+    }
+  ]
+}

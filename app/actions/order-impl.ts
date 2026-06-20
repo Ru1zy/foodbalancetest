@@ -15,7 +15,8 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
-import { syncClientToSheet, appendOrderToSheet } from "@/lib/googleSheets";
+import { syncClientToSheet } from "@/lib/googleSheets";
+import { orderHasMissingSheetConfig, syncOrderToMonthlySheets } from "@/lib/monthlySheets";
 import { isGooglePlaceholderPhone } from "@/lib/google-auth";
 import { normalizePhone } from "@/lib/phone-utils";
 
@@ -627,13 +628,32 @@ async function dispatchOrderSideEffects(
   validatedData: CheckoutData,
   sanitizedCartData: OrderCartData,
 ): Promise<void> {
+  // REACTIVE FAILSAFE: detect up-front whether the target month's spreadsheet
+  // is configured. If it is missing the order has ALREADY been persisted in
+  // Prisma (this runs post-commit), so we must NOT fail anything — we instead
+  // flag the Telegram notification so the admin enters it manually.
+  let sheetMissing = false;
   try {
-    await sendOrderNotification(order, user);
+    sheetMissing = await orderHasMissingSheetConfig(order);
+  } catch (configError) {
+    console.error("orderHasMissingSheetConfig failed", configError);
+  }
+
+  try {
+    await sendOrderNotification(
+      order,
+      user,
+      sheetMissing
+        ? { warningPrefix: "[🔴 ТАБЛИЦА НЕ НАЙДЕНА - ВНЕСТИ ВРУЧНУЮ]" }
+        : {},
+    );
   } catch (telegramError) {
     console.error("sendOrderNotification failed", telegramError);
   }
 
-  // Background sync to Google Sheets (non-blocking)
+  // Background sync to Google Sheets (non-blocking). Each helper swallows its
+  // own errors so a Sheets/Telegram outage can never roll back a persisted
+  // order or break the customer checkout.
   try {
     syncClientToSheet({
       name: user.name,
@@ -645,7 +665,9 @@ async function dispatchOrderSideEffects(
       notes: user.notes || validatedData.comment || "",
     });
 
-    appendOrderToSheet(order, user);
+    // Real-time month-keyed export (dynamic DD.MM tabs). Months without a
+    // configured spreadsheet are skipped here — the warning above covers them.
+    await syncOrderToMonthlySheets(order, user);
   } catch (sheetError) {
     console.error("Google Sheets sync failed:", sheetError);
   }
