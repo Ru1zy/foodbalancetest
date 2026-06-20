@@ -54,10 +54,10 @@ next-env.d.ts
 
 # documentation and legacy files
 *.md
+!README.md
 legacy_bot_logic.js
 AGENTS.md
 CLAUDE.md
-README.md
 TELEGRAM_AUTH_HISTORY.md
 TEST_INSTRUCTIONS.md
 build-output.txt
