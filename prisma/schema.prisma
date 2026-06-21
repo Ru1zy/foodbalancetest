@@ -98,6 +98,21 @@ model CheckoutIdempotency {
   @@index([createdAt])
 }
 
+/// Maps a calendar month (`MM.YYYY`, e.g. `03.2026`) to the Google Spreadsheet
+/// that receives that month's real-time order export. Lets the admin roll the
+/// export forward month-to-month by adding one row, with no code changes. A
+/// missing row for an upcoming month is detected by the proactive cron alert
+/// and never fails a customer checkout (orders fall back to a manual-entry
+/// Telegram warning instead).
+model SheetConfig {
+  id            String   @id @default(uuid())
+  monthKey      String   @unique // "MM.YYYY", e.g. "03.2026"
+  spreadsheetId String
+  label         String?  // optional human note, e.g. "Березень 2026"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model AuthToken {
   id        String   @id @default(uuid())
   token     String   @unique

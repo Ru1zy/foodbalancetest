@@ -279,7 +279,21 @@ async function formatDays(items: unknown, packageType: PackageType) {
     .join("\n");
 }
 
-export async function sendOrderNotification(order: TelegramOrder, user: TelegramUser) {
+export type OrderNotificationOptions = {
+  /**
+   * When set, this banner is prepended to the notification (and a copy is sent
+   * as a separate high-visibility first line). Used by the Sheets-export
+   * fallback to flag "[🔴 ТАБЛИЦА НЕ НАЙДЕНА - ВНЕСТИ ВРУЧНУЮ]" when the target
+   * month's spreadsheet is not configured, so the order is entered manually.
+   */
+  warningPrefix?: string;
+};
+
+export async function sendOrderNotification(
+  order: TelegramOrder,
+  user: TelegramUser,
+  options: OrderNotificationOptions = {},
+) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
@@ -289,7 +303,10 @@ export async function sendOrderNotification(order: TelegramOrder, user: Telegram
 
   const adminIds = adminChatId.split(",").map((id) => id.trim());
   const daysText = await formatDays(order.items, order.packageType as PackageType);
-  const message = [
+  const warningBanner = options.warningPrefix
+    ? `<b>${escapeHtml(options.warningPrefix)}</b>\n\n`
+    : "";
+  const message = warningBanner + [
     "🚨 <b>Нове замовлення!</b>",
     `👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone)})`,
     `📦 <b>Пакет:</b> ${escapeHtml(order.packageType)}`,
@@ -318,6 +335,45 @@ export async function sendOrderNotification(order: TelegramOrder, user: Telegram
   );
 
   await Promise.all(sendPromises);
+}
+
+/**
+ * Send a plain HTML alert to every configured admin chat. Used by the proactive
+ * cron failsafe to warn that an upcoming month's spreadsheet is not configured.
+ * Returns the number of chats successfully notified.
+ */
+export async function sendAdminAlert(text: string): Promise<number> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+
+  if (!token || !adminChatId) {
+    console.error("sendAdminAlert: Telegram environment variables are not configured.");
+    return 0;
+  }
+
+  const adminIds = adminChatId.split(",").map((id) => id.trim()).filter(Boolean);
+  let delivered = 0;
+
+  await Promise.all(
+    adminIds.map(async (chatId) => {
+      try {
+        const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, parse_mode: "HTML", text }),
+        });
+        if (response.ok) {
+          delivered += 1;
+        } else {
+          console.error(`sendAdminAlert failed for ${chatId}: ${await response.text()}`);
+        }
+      } catch (error) {
+        console.error(`sendAdminAlert error for ${chatId}:`, error);
+      }
+    }),
+  );
+
+  return delivered;
 }
 
 type OrderDetails = {
