@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/admin/clients", label: "Клієнти (CRM)", icon: "👥" },
   { href: "/admin/menu", label: "Меню", icon: "🍽️" },
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
+  { href: "/admin/settings/sheets", label: "Таблиці", icon: "📊" },
 ];
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
