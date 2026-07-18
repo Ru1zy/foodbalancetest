@@ -708,9 +708,9 @@ function mapOrderError(error: unknown): { message: string; status: number } {
 async function assertTelegramIfRequired(
   userId: string | null,
   paymentMethod: string,
-  packageType: string,
+
 ): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
-  const needsTelegram = paymentMethod === "balance" || isIndivPackage(packageType);
+  const needsTelegram = paymentMethod === "balance";
   if (!needsTelegram) return { ok: true };
   if (!userId) return { ok: false, message: "Для цієї опції необхідно авторизуватися через Telegram.", status: 401 };
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { chatId: true } });
@@ -742,7 +742,7 @@ export async function submitOrder(
   try {
     const userId = await resolveAuthenticatedUserId();
 
-    const telegramCheck = await assertTelegramIfRequired(userId, prepared.paymentMethod, prepared.sanitizedCartData.packageType);
+    const telegramCheck = await assertTelegramIfRequired(userId, prepared.paymentMethod);
     if (!telegramCheck.ok) return { ok: false, message: telegramCheck.message, status: telegramCheck.status };
 
     // Check if user has Google placeholder phone and needs to provide real phone
@@ -860,7 +860,7 @@ export async function submitOrders(
 
     // Telegram gate — same check for every order in the batch (same customer).
     if (prepared.length > 0) {
-      const tg = await assertTelegramIfRequired(userId, prepared[0].paymentMethod, prepared[0].sanitizedCartData.packageType);
+      const tg = await assertTelegramIfRequired(userId, prepared[0].paymentMethod);
       if (!tg.ok) return { ok: false, message: tg.message, status: tg.status, createdCount: 0 };
     }
 

@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   const { action, token, chatId, userName } = payload;
 
   if (action === "generate") {
-    return NextResponse.json({ token: randomUUID() }, { headers: responseHeaders });
+    return NextResponse.json({ token: `auth_${randomUUID()}` }, { headers: responseHeaders });
   }
 
   if (action === "confirm" && token && chatId) {
