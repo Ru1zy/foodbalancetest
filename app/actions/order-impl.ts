@@ -705,6 +705,27 @@ function mapOrderError(error: unknown): { message: string; status: number } {
   };
 }
 
+async function assertTelegramIfRequired(
+  userId: string | null,
+  paymentMethod: string,
+  packageType: string,
+): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
+  const needsTelegram = paymentMethod === "balance" || isIndivPackage(packageType);
+  if (!needsTelegram) return { ok: true };
+  if (!userId) return { ok: false, message: "Для цієї опції необхідно авторизуватися через Telegram.", status: 401 };
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { chatId: true } });
+  if (!user?.chatId) {
+    return {
+      ok: false,
+      message: paymentMethod === "balance"
+        ? "Для оплати з балансу необхідно прив'язати Telegram-акаунт."
+        : "Пакет Individual доступний лише для користувачів з прив'язаним Telegram.",
+      status: 403,
+    };
+  }
+  return { ok: true };
+}
+
 export async function submitOrder(
   formData: FormData,
   cartData: OrderCartData,
@@ -720,6 +741,9 @@ export async function submitOrder(
 
   try {
     const userId = await resolveAuthenticatedUserId();
+
+    const telegramCheck = await assertTelegramIfRequired(userId, prepared.paymentMethod, prepared.sanitizedCartData.packageType);
+    if (!telegramCheck.ok) return { ok: false, message: telegramCheck.message, status: telegramCheck.status };
 
     // Check if user has Google placeholder phone and needs to provide real phone
     const phoneCheck = await assertRealPhoneIfRequired(userId, prepared.validatedData.phone);
@@ -832,6 +856,12 @@ export async function submitOrders(
       }
 
       prepared.push(preparation.prepared);
+    }
+
+    // Telegram gate — same check for every order in the batch (same customer).
+    if (prepared.length > 0) {
+      const tg = await assertTelegramIfRequired(userId, prepared[0].paymentMethod, prepared[0].sanitizedCartData.packageType);
+      if (!tg.ok) return { ok: false, message: tg.message, status: tg.status, createdCount: 0 };
     }
 
     // Phone validation once (the customer is identical across the batch).

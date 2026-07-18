@@ -1,15 +1,21 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { AUTH_TOKEN_MAX_AGE, createAuthToken } from "@/lib/auth-token";
 import { buildTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
-export const runtime = "nodejs";
+const responseHeaders = {
+  "Cache-Control": "no-store, max-age=0, must-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+};
 
 export async function POST(request: Request) {
-  let payload;
+  let payload: { action?: string; token?: string; chatId?: string; userName?: string };
   try {
     payload = await request.json();
   } catch {
@@ -18,28 +24,22 @@ export async function POST(request: Request) {
 
   const { action, token, chatId, userName } = payload;
 
-  const responseHeaders = {
-    "Cache-Control": "no-store, max-age=0, must-revalidate",
-    "Pragma": "no-cache",
-    "Expires": "0",
-  };
-
-  // Generate new auth token
   if (action === "generate") {
-    const authToken = `auth_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    return NextResponse.json({ token: authToken }, { headers: responseHeaders });
+    return NextResponse.json({ token: randomUUID() }, { headers: responseHeaders });
   }
 
-  // Confirm auth (called by bot webhook)
   if (action === "confirm" && token && chatId) {
-    const nextToken = String(token).trim();
+    const cleanToken = String(token).trim();
+    const cleanChatId = String(chatId).trim();
     try {
+      await prisma.user.updateMany({ where: { chatId: cleanChatId }, data: { chatId: null } });
+      await prisma.authToken.deleteMany({ where: { chatId: cleanChatId } });
       await prisma.authToken.create({
         data: {
-          token: nextToken,
-          chatId: String(chatId),
+          token: cleanToken,
+          chatId: cleanChatId,
           userName: userName || "Telegram User",
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000),
         },
       });
       return NextResponse.json({ ok: true }, { headers: responseHeaders });
@@ -49,25 +49,15 @@ export async function POST(request: Request) {
     }
   }
 
-  // Check auth status (polling from frontend)
   if (action === "check" && token) {
-    const nextToken = String(token).trim();
+    const cleanToken = String(token).trim();
     try {
-      const authData = await prisma.authToken.findUnique({
-        where: { token: nextToken },
-      });
-
-      if (!authData) {
-        return NextResponse.json({ status: "pending" }, { headers: responseHeaders });
-      }
-
-      // Check if expired
+      const authData = await prisma.authToken.findUnique({ where: { token: cleanToken } });
+      if (!authData) return NextResponse.json({ status: "pending" }, { headers: responseHeaders });
       if (authData.expiresAt < new Date()) {
-        await prisma.authToken.delete({ where: { token: nextToken } });
+        await prisma.authToken.delete({ where: { token: cleanToken } });
         return NextResponse.json({ status: "expired" }, { headers: responseHeaders });
       }
-
-      // Auth confirmed, create user and session
       const user = await prisma.user.upsert({
         where: { chatId: authData.chatId },
         update: { name: authData.userName },
@@ -77,10 +67,8 @@ export async function POST(request: Request) {
           phone: buildTelegramPlaceholderPhone(authData.chatId),
         },
       });
-
       const sessionToken = await createAuthToken(user.id);
       const cookieStore = await cookies();
-
       cookieStore.set("auth_token", sessionToken, {
         httpOnly: true,
         maxAge: AUTH_TOKEN_MAX_AGE,
@@ -88,10 +76,7 @@ export async function POST(request: Request) {
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       });
-
-      // Delete used token
-      await prisma.authToken.delete({ where: { token: nextToken } });
-
+      await prisma.authToken.delete({ where: { token: cleanToken } });
       return NextResponse.json({
         status: "confirmed",
         user: {
@@ -99,7 +84,7 @@ export async function POST(request: Request) {
           name: user.name,
           phone: sanitizeTelegramPhone(user.phone),
           userId: user.id,
-        }
+        },
       }, { headers: responseHeaders });
     } catch (error) {
       console.error("Failed to check auth status:", error);
