@@ -708,7 +708,6 @@ function mapOrderError(error: unknown): { message: string; status: number } {
 async function assertTelegramIfRequired(
   userId: string | null,
   paymentMethod: string,
-
 ): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
   const needsTelegram = paymentMethod === "balance";
   if (!needsTelegram) return { ok: true };
@@ -717,9 +716,7 @@ async function assertTelegramIfRequired(
   if (!user?.chatId) {
     return {
       ok: false,
-      message: paymentMethod === "balance"
-        ? "Для оплати з балансу необхідно прив'язати Telegram-акаунт."
-        : "Пакет Individual доступний лише для користувачів з прив'язаним Telegram.",
+      message: "Для оплати з балансу необхідно прив'язати Telegram-акаунт.",
       status: 403,
     };
   }
