@@ -123,6 +123,20 @@ async function parseOrderMenuDetails(items: unknown, orderId: string, deliveryDa
 
   const menuById = new Map(menuItems.map((item: { id: string; dishes: Prisma.JsonValue; dayOfWeek: number }) => [item.id, item]));
 
+  // `deliveryDate` is the calendar date of the EARLIEST selected day (smallest
+  // `dayOfWeek` in the single menu week). Each day's real date is therefore
+  // `deliveryDate + (dayOfWeek - minDayOfWeek)`. A sequential `+ index` offset
+  // is wrong for non-consecutive day picks (e.g. Mon + Wed + Fri).
+  const selectedDaysOfWeek = days
+    .map((day: unknown) => {
+      if (day && typeof day === "object" && "dayId" in day) {
+        return menuById.get((day as { dayId?: string }).dayId || "")?.dayOfWeek;
+      }
+      return undefined;
+    })
+    .filter((n: unknown): n is number => typeof n === "number");
+  const minDayOfWeek = selectedDaysOfWeek.length > 0 ? Math.min(...selectedDaysOfWeek) : 1;
+
   const details = days.map((day: unknown, index: number) => {
     if (!day || typeof day !== "object") return "";
 
@@ -132,9 +146,12 @@ async function parseOrderMenuDetails(items: unknown, orderId: string, deliveryDa
     const items = dayObj.items || [];
     const menu = menuById.get(dayObj.dayId || "");
 
-    // Calculate actual date for this day
+    // Calculate actual date for this day from its weekday (fallback to the
+    // sequential index only when the menu row / dayOfWeek is unavailable).
+    const dayOfWeek = menu?.dayOfWeek;
+    const dateOffset = typeof dayOfWeek === "number" ? dayOfWeek - minDayOfWeek : index;
     const actualDate = new Date(deliveryDate);
-    actualDate.setDate(actualDate.getDate() + index);
+    actualDate.setDate(actualDate.getDate() + dateOffset);
     const dateStr = `${String(actualDate.getDate()).padStart(2, '0')}.${String(actualDate.getMonth() + 1).padStart(2, '0')}`;
 
     let dayDetails = `День ${dayNum} (${dateStr}):\n`;
