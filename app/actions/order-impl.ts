@@ -572,6 +572,15 @@ async function persistOrderInTransaction(
     },
   });
 
+  // A guest checkout (userId === null) must NOT be able to take over a phone
+  // that already belongs to a registered Telegram account. Without this guard a
+  // guest could overwrite a real client's profile (name, address, …) and attach
+  // their order to that account simply by entering the client's phone number.
+  // Mirrors the same protection in the authenticated branch above.
+  if (existingUser && existingUser.chatId) {
+    throw new Error("PHONE_IN_USE_BY_TELEGRAM_USER");
+  }
+
   const user = existingUser
     ? await tx.user.update({
         where: {
