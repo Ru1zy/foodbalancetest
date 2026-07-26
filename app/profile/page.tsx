@@ -64,10 +64,23 @@ async function resolveOrderDishes(order: {
     select: {
       id: true,
       dishes: true,
+      dayOfWeek: true,
     },
   });
 
-  const menuById = new Map(menus.map((menu: { id: string; dishes: Prisma.JsonValue }) => [menu.id, menu]));
+  const menuById = new Map(
+    menus.map((menu: { id: string; dishes: Prisma.JsonValue; dayOfWeek: number }) => [menu.id, menu]),
+  );
+
+  // `order.deliveryDate` is the calendar date of the EARLIEST selected day, i.e.
+  // the day with the smallest `dayOfWeek` in the (single) menu week. Every day's
+  // real date is therefore `deliveryDate + (dayOfWeek - minDayOfWeek)`. Using a
+  // sequential `+ index` offset is wrong whenever days are non-consecutive
+  // (e.g. Mon + Wed + Fri) — it would render Mon/Tue/Wed instead.
+  const selectedDaysOfWeek = days
+    .map((day) => (day?.dayId ? menuById.get(day.dayId)?.dayOfWeek : undefined))
+    .filter((n): n is number => typeof n === "number");
+  const minDayOfWeek = selectedDaysOfWeek.length > 0 ? Math.min(...selectedDaysOfWeek) : 1;
 
   // Resolve dish names per day
   const resolvedDays: ResolvedDay[] = [];
@@ -76,9 +89,12 @@ async function resolveOrderDishes(order: {
     const day = days[dayIndex];
     const dayDishes: string[] = [];
 
-    // Calculate actual date for this day
+    // Calculate actual date for this day from its weekday (fallback to the
+    // sequential index only when the menu row / dayOfWeek is unavailable).
+    const dayOfWeek = day?.dayId ? menuById.get(day.dayId)?.dayOfWeek : undefined;
+    const dateOffset = typeof dayOfWeek === "number" ? dayOfWeek - minDayOfWeek : dayIndex;
     const actualDate = new Date(order.deliveryDate);
-    actualDate.setDate(actualDate.getDate() + dayIndex);
+    actualDate.setDate(actualDate.getDate() + dateOffset);
 
     // Handle individual package items (Indiv package)
     if (Array.isArray(day?.items) && day.dayId) {
