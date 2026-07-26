@@ -103,7 +103,12 @@ npm run dev            # http://localhost:3000
 | `GOOGLE_REDIRECT_URI` | Google OAuth callback URL |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service account for Sheets access |
 | `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Target spreadsheets |
-| `GAS_WEBAPP_URL` | Google Apps Script web app endpoint |
+| `GAS_WEBAPP_URL` | Google Apps Script web app endpoint (optional) |
+| `S3_ENDPOINT` | S3-compatible storage endpoint (Supabase/R2/B2/MinIO) |
+| `S3_BUCKET` | Bucket name for uploaded images |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | Storage credentials |
+| `S3_PUBLIC_BASE_URL` | Public URL prefix used to build returned file URLs |
+| `S3_REGION` / `S3_FORCE_PATH_STYLE` | Optional: default `auto` / `true` |
 
 ### Deployment (Vercel)
 
@@ -112,6 +117,18 @@ npm run dev            # http://localhost:3000
 3. Run `npx prisma db push` against the production database.
 4. Copy `vercel.json.example` → `vercel.json` to enable the nightly archive cron.
 5. Register the Telegram webhook with the `TELEGRAM_WEBHOOK_SECRET` as `secret_token`.
+
+### Deployment (Railway)
+
+1. Deploy from GitHub; add a Railway PostgreSQL and reference it as `DATABASE_URL`.
+2. Add all environment variables, including the `S3_*` object-storage vars
+   (Vercel Blob is not available off Vercel — see `lib/storage.ts`).
+3. Run `npx prisma db push` against the Railway database.
+4. Crons: `vercel.json` does not run on Railway. Use the included
+   `.github/workflows/cron.yml` (GitHub Actions) — set repo secrets
+   `APP_BASE_URL` and `CRON_SECRET`.
+5. Point the Google OAuth redirect URI (`/api/auth/google/callback`) and the
+   Telegram webhook (`/api/telegram-webhook`) at the new domain.
 
 ### Project structure
 

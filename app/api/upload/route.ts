@@ -1,6 +1,6 @@
-import { put } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { getStorageEnv, uploadPublicObject } from "@/lib/storage";
 
 // Only admins may upload, and only images up to MAX_UPLOAD_BYTES.
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -17,6 +17,14 @@ export async function POST(request: NextRequest) {
     const adminUser = await getAuthenticatedAdminUser();
     if (!adminUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Fail fast with a clear message if storage isn't configured yet.
+    if (!getStorageEnv()) {
+      return NextResponse.json(
+        { error: "Storage is not configured on the server." },
+        { status: 503 }
+      );
     }
 
     const formData = await request.formData();
@@ -43,19 +51,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Prepend timestamp and sanitize filename to avoid duplicates
-    const uniqueFilename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-
-    // Upload to Vercel Blob with public access
-    const blob = await put(uniqueFilename, file, {
-      access: "public",
-      addRandomSuffix: true,
-    });
+    // Upload to the configured S3-compatible bucket (Supabase/R2/B2/MinIO).
+    const uploaded = await uploadPublicObject(file, { prefix: "uploads" });
 
     return NextResponse.json({
-      url: blob.url,
-      pathname: blob.pathname,
-      contentType: blob.contentType,
+      url: uploaded.url,
+      pathname: uploaded.pathname,
+      contentType: uploaded.contentType,
     });
   } catch (error) {
     console.error("Upload error:", error);
