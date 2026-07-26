@@ -1,0 +1,67 @@
+# ⚠️ MOVE THIS FILE TO .github/workflows/cron.yml TO ACTIVATE IT.
+# It lives in deploy/ only because the CI bot lacks permission to push files
+# under .github/workflows/. Copy it to .github/workflows/cron.yml via the
+# GitHub UI (Add file) or a local commit, then set repo secrets APP_BASE_URL
+# and CRON_SECRET.
+#
+name: Scheduled cron jobs
+
+# Replaces Vercel Cron (vercel.json) after migrating off Vercel.
+# Hits the app's existing /api/cron/* endpoints on a schedule, authenticated
+# with the CRON_SECRET bearer token.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   APP_BASE_URL  e.g. https://foodbalance.example.com  (no trailing slash)
+#   CRON_SECRET   same value as the app's CRON_SECRET env var
+#
+# Schedules are in UTC (same as the previous Vercel crons).
+
+on:
+  schedule:
+    # Daily 02:00 UTC — archive past orders / clean abandoned carts.
+    - cron: "0 2 * * *"
+    # Daily 09:00 UTC on days 25-31 — warn if next month's Sheet is missing.
+    - cron: "0 9 25-31 * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which job to run manually"
+        required: true
+        default: "archive-orders"
+        type: choice
+        options:
+          - archive-orders
+          - check-next-month-sheet
+
+jobs:
+  archive-orders:
+    # Runs on the 02:00 schedule and on manual dispatch when chosen.
+    if: >-
+      github.event.schedule == '0 2 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.job == 'archive-orders')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call archive-orders
+        run: |
+          curl -fsS --retry 3 --retry-delay 10 -X GET \
+            "${APP_BASE_URL%/}/api/cron/archive-orders" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+  check-next-month-sheet:
+    # Runs on the 09:00 (25-31) schedule and on manual dispatch when chosen.
+    if: >-
+      github.event.schedule == '0 9 25-31 * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.job == 'check-next-month-sheet')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call check-next-month-sheet
+        run: |
+          curl -fsS --retry 3 --retry-delay 10 -X GET \
+            "${APP_BASE_URL%/}/api/cron/check-next-month-sheet" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
