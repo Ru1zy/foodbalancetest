@@ -15,7 +15,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
-import { syncClientToSheet } from "@/lib/googleSheets";
+import { syncClientToSheet, appendOrderToSheet } from "@/lib/googleSheets";
 import { orderHasMissingSheetConfig, syncOrderToMonthlySheets } from "@/lib/monthlySheets";
 import { isGooglePlaceholderPhone } from "@/lib/google-auth";
 import { normalizePhone } from "@/lib/phone-utils";
@@ -673,6 +673,9 @@ async function dispatchOrderSideEffects(
       cutlery: Number(user.defaultCutlery || validatedData.cutlery),
       notes: user.notes || validatedData.comment || "",
     });
+
+    // Append to the global "Orders" tab (all orders, all months).
+    appendOrderToSheet(order, user);
 
     // Real-time month-keyed export (dynamic DD.MM tabs). Months without a
     // configured spreadsheet are skipped here — the warning above covers them.
