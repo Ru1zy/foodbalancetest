@@ -11,12 +11,36 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const error = searchParams.get("error");
 
+  const configuredCallback = process.env.GOOGLE_REDIRECT_URI;
+  if (!configuredCallback) {
+    console.error("GOOGLE_REDIRECT_URI is not configured");
+    return NextResponse.json(
+      { message: "Google OAuth is not configured", ok: false },
+      { status: 500 },
+    );
+  }
+
+  let publicOrigin: string;
+  try {
+    publicOrigin = new URL(configuredCallback).origin;
+  } catch {
+    console.error("GOOGLE_REDIRECT_URI is not a valid URL");
+    return NextResponse.json(
+      { message: "Google OAuth is not configured", ok: false },
+      { status: 500 },
+    );
+  }
+
+  const redirectTo = (path: string) => new URL(path, publicOrigin);
+
   if (error) {
-    return NextResponse.redirect(new URL(`/?error=google_oauth_${error}`, request.url));
+    const errorUrl = redirectTo("/");
+    errorUrl.searchParams.set("error", `google_oauth_${error}`);
+    return NextResponse.redirect(errorUrl);
   }
 
   if (!code) {
-    return NextResponse.redirect(new URL("/?error=missing_code", request.url));
+    return NextResponse.redirect(redirectTo("/?error=missing_code"));
   }
 
   try {
@@ -24,7 +48,7 @@ export async function GET(request: Request) {
     const googleUser = await getGoogleUserFromCode(code);
 
     if (!googleUser.email || !googleUser.sub) {
-      return NextResponse.redirect(new URL("/?error=invalid_google_user", request.url));
+      return NextResponse.redirect(redirectTo("/?error=invalid_google_user"));
     }
 
     // Upsert user: find by googleId OR email
@@ -75,10 +99,10 @@ export async function GET(request: Request) {
 
     // Redirect based on phone status
     const redirectPath = user.phone.startsWith("google_") ? "/onboarding" : "/profile";
-    const redirectUrl = new URL(redirectPath, request.url);
+    const redirectUrl = redirectTo(redirectPath);
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error("Google OAuth callback failed:", error);
-    return NextResponse.redirect(new URL("/?error=google_auth_failed", request.url));
+    return NextResponse.redirect(redirectTo("/?error=google_auth_failed"));
   }
 }
