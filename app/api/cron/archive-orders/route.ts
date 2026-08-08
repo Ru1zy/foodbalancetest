@@ -15,15 +15,22 @@ import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
  *
  * This runs daily at 2 AM UTC (5 AM Kyiv time in summer, 4 AM in winter).
  *
- * Authorization: Vercel Cron requests include a special header.
- * For additional security, you can check process.env.CRON_SECRET.
+ * Authorization: requires the CRON_SECRET bearer token.
  */
 export async function GET(request: Request) {
-  // Verify this is a legitimate Vercel Cron request
+  // Fail closed: a missing deployment secret must never make this endpoint public.
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    console.error("CRON_SECRET is not configured");
+    return NextResponse.json(
+      { error: "Cron endpoint is not configured" },
+      { status: 503 }
+    );
+  }
+
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json(
       { error: "Unauthorized" },
       { status: 401 }

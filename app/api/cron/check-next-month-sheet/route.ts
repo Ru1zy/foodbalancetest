@@ -21,14 +21,22 @@ import { kyivTodayParts } from "@/lib/order-logic";
  * BEFORE the first order of that month arrives — preventing the manual-entry
  * fallback from ever kicking in.
  *
- * Authorization: protected by the optional CRON_SECRET bearer token, same as
- * the archive-orders cron.
+ * Authorization: requires the CRON_SECRET bearer token, same as the
+ * archive-orders cron.
  */
 export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    console.error("CRON_SECRET is not configured");
+    return NextResponse.json(
+      { error: "Cron endpoint is not configured" },
+      { status: 503 }
+    );
+  }
+
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

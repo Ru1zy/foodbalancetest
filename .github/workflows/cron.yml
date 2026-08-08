@@ -1,9 +1,3 @@
-# ⚠️ MOVE THIS FILE TO .github/workflows/cron.yml TO ACTIVATE IT.
-# It lives in deploy/ only because the CI bot lacks permission to push files
-# under .github/workflows/. Copy it to .github/workflows/cron.yml via the
-# GitHub UI (Add file) or a local commit, then set repo secrets APP_BASE_URL
-# and CRON_SECRET.
-#
 name: Scheduled cron jobs
 
 # Replaces Vercel Cron (vercel.json) after migrating off Vercel.
@@ -43,6 +37,9 @@ jobs:
     steps:
       - name: Call archive-orders
         run: |
+          set -euo pipefail
+          : "${APP_BASE_URL:?Repository secret APP_BASE_URL is not configured}"
+          : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
           curl -fsS --retry 3 --retry-delay 10 -X GET \
             "${APP_BASE_URL%/}/api/cron/archive-orders" \
             -H "Authorization: Bearer ${CRON_SECRET}"
@@ -59,6 +56,9 @@ jobs:
     steps:
       - name: Call check-next-month-sheet
         run: |
+          set -euo pipefail
+          : "${APP_BASE_URL:?Repository secret APP_BASE_URL is not configured}"
+          : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
           curl -fsS --retry 3 --retry-delay 10 -X GET \
             "${APP_BASE_URL%/}/api/cron/check-next-month-sheet" \
             -H "Authorization: Bearer ${CRON_SECRET}"
