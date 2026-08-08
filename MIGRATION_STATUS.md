@@ -45,6 +45,10 @@ private keys, database URLs, or other secret values in this file.
 - [x] Google callback redirects use the public origin from
   `GOOGLE_REDIRECT_URI` instead of Railway's internal `localhost:8080` origin;
   the deployed missing-code redirect was verified on 2026-08-08.
+- [x] Google OAuth was tested with a new Google user on Railway and reached the
+  onboarding phone step successfully.
+- [x] The onboarding phone input now explicitly uses a white background and
+  black text/caret so browser theme defaults cannot make it unreadable.
 - [x] Basic read-only load check: 100/100 successful requests, concurrency 10,
   p50 about 109 ms and p95 about 364 ms.
 - [x] Railway usage reviewed. Nearly all current cost is baseline application
@@ -53,8 +57,13 @@ private keys, database URLs, or other secret values in this file.
 
 ### Required before cutover
 
-- [ ] Retest Google OAuth in an incognito window. Expected result: a new user
-  reaches `/onboarding`; an existing completed user reaches `/profile`.
+- [ ] Retest Google OAuth with an existing completed user. Expected result:
+  the user reaches `/profile` without onboarding.
+- [ ] Investigate the tested onboarding phone conflict before changing account
+  linking: Railway finds an existing user with that normalized phone but with
+  `chatId = null`. Compare that record with current Neon during the final sync;
+  the Railway database is an earlier snapshot. Do not auto-merge accounts from
+  a typed phone number without proof of ownership.
 - [ ] Test Telegram login/deep-link flow without changing its implementation.
 - [ ] Test an authenticated admin login.
 - [ ] Test S3 image upload from the admin menu page and verify the resulting
