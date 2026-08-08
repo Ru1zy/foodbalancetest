@@ -42,6 +42,9 @@ private keys, database URLs, or other secret values in this file.
 - [x] Cron workflow manually executed successfully on commit `7a6f8ff`.
 - [x] Cron endpoints changed to fail closed when `CRON_SECRET` is absent.
 - [x] Railway Google callback URI added to the existing Google OAuth web client.
+- [x] Google callback redirects use the public origin from
+  `GOOGLE_REDIRECT_URI` instead of Railway's internal `localhost:8080` origin;
+  the deployed missing-code redirect was verified on 2026-08-08.
 - [x] Basic read-only load check: 100/100 successful requests, concurrency 10,
   p50 about 109 ms and p95 about 364 ms.
 - [x] Railway usage reviewed. Nearly all current cost is baseline application
@@ -250,4 +253,3 @@ private keys, database URLs, or other secret values in this file.
   test.
 - [ ] Treat the Telegram bot as a separate migration. Do not rotate or move the
   working bot merely because Google ownership changes.
-
