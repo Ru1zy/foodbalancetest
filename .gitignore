@@ -1,79 +1,99 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-node_modules
-/node_modules
+# Dependencies and package-manager state
+/node_modules/
 /.pnp
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+/.yarn/*
+!/.yarn/patches
+!/.yarn/plugins
+!/.yarn/releases
+!/.yarn/versions
 
-# testing
-/coverage
-
-# next.js
-.next
+# Next.js and production builds
 /.next/
 /out/
+/build/
+/.turbo/
+/.cache/
 
-# production
-build
-/build
+# Generated code and compiler caches
+/app/generated/prisma/
+/prisma/generated/
+next-env.d.ts
+*.tsbuildinfo
+.eslintcache
 
-# misc
-.DS_Store
+# Test and browser-runner output
+/coverage/
+/test-results/
+/playwright-report/
+/blob-report/
+
+# Local environments and Python tooling
+/.venv/
+/venv/
+__pycache__/
+.pytest_cache/
+
+# Environment files. Keep the placeholder-only template in Git.
+.env*
+!.env.example
+
+# Credentials and database dumps
 *.pem
-Thumbs.db
-*.swp
-*.swo
-*~
+*.key
+*.p12
+*.pfx
+*.dump
+*.backup
+*.bak
+*.sqlite
+*.sqlite3
+service-account*.json
+*credentials*.json
 
-# debug
+# Hosting-provider local state
+/.vercel/
+/.railway/
+
+# Logs and temporary output
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env
-.env.*
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/app/generated/prisma
-/prisma/generated
-
-# documentation and legacy files
-*.md
-!README.md
-legacy_bot_logic.js
-AGENTS.md
-CLAUDE.md
-TELEGRAM_AUTH_HISTORY.md
-TEST_INSTRUCTIONS.md
 build-output.txt
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+/tmp/
+/temp/
 
-# Claude Code configuration
-.claude/
-
-# IDE
-.vscode/
-.idea/
-*.sublime-*
-.fleet/
-
-# OS
+# OS and IDE files
 .DS_Store
 Thumbs.db
-scripts/remote-smoke.mjs
-scripts/remote-smoke.spec.js
-test-results/.last-run.json
+/.vscode/
+/.idea/
+*.sublime-*
+/.fleet/
+
+# Local agent/session material. These files can contain machine-specific or
+# conversation-specific context and should not be published.
+/.claude/
+/AGENTS.md
+/AI_CONTEXT.md
+/CLAUDE.md
+/CLAUDE_SETUP.md
+/SESSION_HISTORY.md
+/TELEGRAM_AUTH_HISTORY.md
+/TEST_INSTRUCTIONS.md
+
+# Local/legacy reference material pending a separate content review.
+/docs/
+/viktor_media/
+/legacy_bot_logic.js
+
+# One-off smoke-test artifacts created during migration verification.
+/scripts/remote-smoke.mjs
+/scripts/remote-smoke.spec.js
