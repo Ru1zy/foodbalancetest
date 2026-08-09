@@ -64,6 +64,10 @@ private keys, database URLs, or other secret values in this file.
 - [x] The Neon user detached by the legacy deep-link handler during staging was
   safely relinked to the original account with its 11 orders. The empty
   technical duplicate was retained for later reviewed cleanup.
+- [x] After the hardened Railway Telegram login was verified, its temporary
+  placeholder profile was safely detached and the Telegram `chatId` was moved
+  to the established Railway snapshot account with 11 orders. No user row or
+  order was deleted; the empty placeholder remains for reviewed cleanup.
 - [x] Basic read-only load check: 100/100 successful requests, concurrency 10,
   p50 about 109 ms and p95 about 364 ms.
 - [x] Railway usage reviewed. Nearly all current cost is baseline application
@@ -74,11 +78,13 @@ private keys, database URLs, or other secret values in this file.
 
 - [ ] Retest Google OAuth with an existing completed user. Expected result:
   the user reaches `/profile` without onboarding.
-- [ ] Investigate the tested onboarding phone conflict before changing account
+- [x] Investigate the tested onboarding phone conflict before changing account
   linking: Railway finds an existing user with that normalized phone but with
   `chatId = null`. Compare that record with current Neon during the final sync;
   the Railway database is an earlier snapshot. Do not auto-merge accounts from
-  a typed phone number without proof of ownership.
+  a typed phone number without proof of ownership. The conflicting Neon and
+  Railway records were identified and repaired without phone-based auto-merge;
+  the final full database sync is still required before cutover.
 - [x] Retest Telegram login/deep-link flow after the hardened fix is deployed.
   The 2026-08-09 staging test could not complete because the bot webhook still
   targeted Vercel/Neon while the browser polled Railway/PostgreSQL. The old
