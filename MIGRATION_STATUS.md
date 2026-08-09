@@ -55,6 +55,15 @@ private keys, database URLs, or other secret values in this file.
 - [x] Authenticated checkout no longer auto-merges accounts solely by a typed
   phone number. The unsafe path could delete the older user and cascade-delete
   balances; phone collisions now fail without changing either account.
+- [x] Telegram deep-link authentication was hardened and deployed: public
+  confirmation was removed, existing users are no longer detached from their
+  `chatId`, and the webhook fails closed without `TELEGRAM_WEBHOOK_SECRET`.
+- [x] The FoodDevTest webhook was moved from Vercel to Railway with a Telegram
+  secret token on 2026-08-09. Telegram reported the Railway host, zero pending
+  updates, and no delivery error after registration.
+- [x] The Neon user detached by the legacy deep-link handler during staging was
+  safely relinked to the original account with its 11 orders. The empty
+  technical duplicate was retained for later reviewed cleanup.
 - [x] Basic read-only load check: 100/100 successful requests, concurrency 10,
   p50 about 109 ms and p95 about 364 ms.
 - [x] Railway usage reviewed. Nearly all current cost is baseline application
@@ -70,12 +79,13 @@ private keys, database URLs, or other secret values in this file.
   `chatId = null`. Compare that record with current Neon during the final sync;
   the Railway database is an earlier snapshot. Do not auto-merge accounts from
   a typed phone number without proof of ownership.
-- [ ] Retest Telegram login/deep-link flow after the hardened fix is deployed.
+- [x] Retest Telegram login/deep-link flow after the hardened fix is deployed.
   The 2026-08-09 staging test could not complete because the bot webhook still
   targeted Vercel/Neon while the browser polled Railway/PostgreSQL. The old
   confirmation endpoint also detached an existing user's `chatId` and trusted
   public confirmation requests; the local fix removes both behaviours and
-  requires `TELEGRAM_WEBHOOK_SECRET` to fail closed.
+  requires `TELEGRAM_WEBHOOK_SECRET` to fail closed. The repeated test reached
+  `/profile` successfully after the webhook was moved to Railway.
 - [ ] Test an authenticated admin login.
 - [ ] Test S3 image upload from the admin menu page and verify the resulting
   public URL.

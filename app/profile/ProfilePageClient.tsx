@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { updateUserProfile } from "../actions/profile";
 import { isIndivPackage } from "@/lib/order-selection";
 import SubscriptionOptions from "@/components/SubscriptionOptions";
@@ -176,19 +177,32 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
 }
 
 export default function ProfilePageClient({ user, orders, balances, tariffs, isNewClient }: Props) {
+  const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    setIsSaving(true);
+    setError(null);
+
     try {
-      await updateUserProfile(formData);
+      const result = await updateUserProfile(formData);
+      if (!result.ok) {
+        setError(result.message);
+        return;
+      }
+
       setIsEditing(false);
-      setError(null);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Update failed");
+      console.error("Profile update failed:", err);
+      setError("Не вдалося зберегти зміни. Спробуйте ще раз пізніше.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -341,9 +355,10 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
               <div className="sm:col-span-2 mt-2">
                 <button
                   type="submit"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 sm:w-auto active:scale-95"
+                  disabled={isSaving}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto active:scale-95"
                 >
-                  <span>Зберегти зміни</span>
+                  <span>{isSaving ? "Збереження..." : "Зберегти зміни"}</span>
                 </button>
               </div>
             </form>
