@@ -76,6 +76,9 @@ private keys, database URLs, or other secret values in this file.
 - [x] Added `INFRASTRUCTURE_INVENTORY.md` with service ownership aliases,
   credential locations, recovery expectations, and a gradual ownership-transfer
   checklist. It intentionally contains no live secrets or private identifiers.
+- [x] Added a database-aware `/api/health` endpoint and Railway config-as-code
+  healthcheck so a new deployment must prove that Next.js and PostgreSQL are
+  reachable before Railway switches traffic.
 
 ### Required before cutover
 
@@ -113,13 +116,14 @@ private keys, database URLs, or other secret values in this file.
   mapping. After an August test workbook and `_Template` were configured, a
   second order created/populated the `11.08` day tab with the expected client,
   package, dishes, comment, and price.
-- [ ] Deploy and verify admin-owned Google Drive automation. The implementation
-  uses a separate `drive.file` OAuth client, encrypts its refresh token in
-  PostgreSQL, creates a formatted master workbook, provisions the next month on
-  connect/day 20, recovers by Drive app metadata, and keeps a manual admin
-  button as fallback. Before deployment: apply the new Prisma model, add the
-  four `GOOGLE_DRIVE_*` Railway variables, enable Drive API, and register the
-  exact admin callback URI. Customer Google login remains untouched.
+- [x] Deploy the admin-owned Google Drive automation code and apply the
+  `GoogleDriveConnection` model to Railway PostgreSQL. Railway is running commit
+  `123890e`; the new table was verified directly and is empty until OAuth is
+  connected. Customer Google login remains untouched.
+- [ ] Activate and verify Google Drive automation: create the separate
+  `drive.file` OAuth client, add the four `GOOGLE_DRIVE_*` variables plus
+  `APP_BASE_URL`, authorize the admin account, verify folder/template/next-month
+  creation, and manually run the GitHub Actions check.
 - [ ] Verify admin pages: orders, today, clients, menu, tariffs, and Sheets
   settings.
 - [ ] Implement external logical PostgreSQL backups. Railway built-in volume
@@ -163,6 +167,13 @@ private keys, database URLs, or other secret values in this file.
   Tuesday in Sheets.
 - New monthly rows trim accidental whitespace from single-line fields and
   auto-resize their row while retaining template-defined column widths/wrapping.
+- Monthly rows now use the Sheets append operation instead of a
+  count-then-update race, and concurrent creation of the same `DD.MM` tab
+  recovers cleanly. Global CRM/monthly writes are awaited concurrently after
+  the database commit so Railway cannot suspend unfinished export promises.
+- Global CRM `Orders` delivery dates now use the actual selected menu weekdays
+  and Kyiv calendar time; non-consecutive picks no longer collapse into
+  consecutive dates there either.
 - User balances already use `UserBalance(packageId, totalDays, usedDays)`.
 - The profile already displays remaining days per package.
 

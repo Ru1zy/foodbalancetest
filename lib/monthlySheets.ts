@@ -15,8 +15,8 @@ import type { OrderCartData, OrderCartDay } from "@/app/actions/order-impl";
  * starting at row 5, columns B–K.
  *
  * This module is the autonomous replacement for the manual batch process and
- * is designed to be fired as a non-blocking side-effect AFTER an order has been
- * persisted — a missing month config (admin forgot to add next month) never
+ * runs as a post-commit side-effect AFTER an order has been persisted — a
+ * missing month config (admin forgot to add next month) never
  * fails the customer checkout; it is surfaced via the Telegram warning prefix
  * and the proactive cron alert instead.
  */
@@ -220,11 +220,11 @@ function singleLineCell(value: string | null | undefined): string {
   return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** Build columns B–K for one order/day (B sequence number filled in later). */
-function buildRow(order: Order, user: User, orderDay: OrderDay, sequence: number): string[] {
+/** Build columns B–K for one order/day. Column B derives its number from the appended row. */
+function buildRow(order: Order, user: User, orderDay: OrderDay): string[] {
   const normalizedPhone = normalizePhoneForLegacy(user.phone || "");
   return [
-    String(sequence), // B: Sequential order number for the day
+    "=ROW()-4", // B: Race-safe sequential number for data rows starting at row 5
     singleLineCell(user.name), // C: User Name
     `'${normalizedPhone}`, // D: Phone (apostrophe keeps the leading zero)
     singleLineCell(order.deliveryAddress || user.address), // E: Address
@@ -328,22 +328,40 @@ async function ensureDayTab(
     return null;
   }
 
-  const batchResponse = await sheets.spreadsheets.batchUpdate({
-    spreadsheetId,
-    requestBody: {
-      requests: [
-        {
-          duplicateSheet: {
-            sourceSheetId: template.properties.sheetId,
-            newSheetName: tabName,
-          },
+  let batchResponse: sheets_v4.Schema$BatchUpdateSpreadsheetResponse;
+  try {
+    batchResponse = (
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              duplicateSheet: {
+                sourceSheetId: template.properties.sheetId,
+                newSheetName: tabName,
+              },
+            },
+          ],
         },
-      ],
-    },
-  });
+      })
+    ).data;
+  } catch (error) {
+    // Two checkouts can discover a missing day tab at the same time. If the
+    // other request created it first, recover that tab instead of dropping this
+    // order's export because Google rejected the duplicate title.
+    const refreshed = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: "sheets.properties(sheetId,title)",
+    });
+    const createdByPeer = refreshed.data.sheets?.find(
+      (sheet) => sheet.properties?.title === tabName,
+    )?.properties?.sheetId;
+    if (createdByPeer != null) return createdByPeer;
+    throw error;
+  }
 
   const newSheetId =
-    batchResponse.data.replies?.[0]?.duplicateSheet?.properties?.sheetId ?? null;
+    batchResponse.replies?.[0]?.duplicateSheet?.properties?.sheetId ?? null;
 
   // Stamp the localized date into B2 of the freshly created tab.
   await sheets.spreadsheets.values.update({
@@ -356,19 +374,11 @@ async function ensureDayTab(
   return newSheetId;
 }
 
-/** Count existing data rows (from row 5) in column B of a tab. */
-async function countDataRows(
-  sheets: sheets_v4.Sheets,
-  spreadsheetId: string,
-  tabName: string,
-): Promise<number> {
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${tabName}!${FIRST_COL}${DATA_START_ROW}:${FIRST_COL}`,
-  });
-  const rows = response.data.values || [];
-  // Trailing empty cells are trimmed by the API, so length === filled rows.
-  return rows.filter((r: unknown[]) => r && String(r[0] ?? "").trim().length > 0).length;
+function appendedRowNumber(updatedRange: string | null | undefined): number | null {
+  const match = updatedRange?.match(/![A-Z]+(\d+):[A-Z]+\d+$/);
+  if (!match) return null;
+  const row = Number(match[1]);
+  return Number.isInteger(row) && row >= DATA_START_ROW ? row : null;
 }
 
 /**
@@ -412,41 +422,47 @@ export async function syncOrderToMonthlySheets(order: Order, user: User): Promis
           );
           if (sheetId == null) continue;
 
-          const existingRows = await countDataRows(sheets, spreadsheetId, day.tabName);
-          const sequence = existingRows + 1;
-          const targetRow = DATA_START_ROW + existingRows;
-          const row = buildRow(order, user, day, sequence);
+          const row = buildRow(order, user, day);
 
-          await sheets.spreadsheets.values.update({
+          // `append` asks Sheets to resolve the next table row server-side. The
+          // former count-then-update sequence allowed simultaneous checkouts to
+          // choose the same row and overwrite one another.
+          const appendResponse = await sheets.spreadsheets.values.append({
             spreadsheetId,
-            range: `${day.tabName}!${FIRST_COL}${targetRow}:${LAST_COL}${targetRow}`,
+            range: `${day.tabName}!${FIRST_COL}4:${LAST_COL}`,
             valueInputOption: "USER_ENTERED",
+            insertDataOption: "OVERWRITE",
             requestBody: { values: [row] },
           });
+          const targetRow = appendedRowNumber(
+            appendResponse.data.updates?.updatedRange,
+          );
 
           // The day tab inherits column widths + wrapping from `_Template`.
           // Resize only the row that was just written so long dishes/comments
           // remain readable without expanding columns across the whole screen.
-          await sheets.spreadsheets.batchUpdate({
-            spreadsheetId,
-            requestBody: {
-              requests: [
-                {
-                  autoResizeDimensions: {
-                    dimensions: {
-                      sheetId,
-                      dimension: "ROWS",
-                      startIndex: targetRow - 1,
-                      endIndex: targetRow,
+          if (targetRow != null) {
+            await sheets.spreadsheets.batchUpdate({
+              spreadsheetId,
+              requestBody: {
+                requests: [
+                  {
+                    autoResizeDimensions: {
+                      dimensions: {
+                        sheetId,
+                        dimension: "ROWS",
+                        startIndex: targetRow - 1,
+                        endIndex: targetRow,
+                      },
                     },
                   },
-                },
-              ],
-            },
-          });
+                ],
+              },
+            });
+          }
 
           console.log(
-            `syncOrderToMonthlySheets: order ${order.id} → ${monthKey}/${day.tabName} row ${targetRow} (#${sequence}).`,
+            `syncOrderToMonthlySheets: order ${order.id} → ${monthKey}/${day.tabName} row ${targetRow ?? "appended"}.`,
           );
         } catch (dayError) {
           console.error(

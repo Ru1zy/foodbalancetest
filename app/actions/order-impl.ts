@@ -647,26 +647,27 @@ async function dispatchOrderSideEffects(
     console.error("sendOrderNotification failed", telegramError);
   }
 
-  // Background sync to Google Sheets (non-blocking). Each helper swallows its
-  // own errors so a Sheets/Telegram outage can never roll back a persisted
-  // order or break the customer checkout.
+  // Await all post-commit exports so the server cannot suspend the request
+  // while the global CRM writes are still in flight. They run concurrently and
+  // each helper swallows its own errors, so an outage still cannot roll back the
+  // already-persisted order.
   try {
-    syncClientToSheet({
-      name: user.name,
-      phone: user.phone || validatedData.phone,
-      address: user.address || validatedData.address,
-      chatId: user.chatId,
-      packageType: sanitizedCartData.packageType,
-      cutlery: Number(user.defaultCutlery || validatedData.cutlery),
-      notes: user.notes || validatedData.comment || "",
-    });
-
-    // Append to the global "Orders" tab (all orders, all months).
-    appendOrderToSheet(order, user);
-
-    // Real-time month-keyed export (dynamic DD.MM tabs). Months without a
-    // configured spreadsheet are skipped here — the warning above covers them.
-    await syncOrderToMonthlySheets(order, user);
+    await Promise.all([
+      syncClientToSheet({
+        name: user.name,
+        phone: user.phone || validatedData.phone,
+        address: user.address || validatedData.address,
+        chatId: user.chatId,
+        packageType: sanitizedCartData.packageType,
+        cutlery: Number(user.defaultCutlery || validatedData.cutlery),
+        notes: user.notes || validatedData.comment || "",
+      }),
+      // Append to the global "Orders" tab (all orders, all months).
+      appendOrderToSheet(order, user),
+      // Real-time month-keyed export (dynamic DD.MM tabs). Months without a
+      // configured spreadsheet are skipped here — the warning above covers them.
+      syncOrderToMonthlySheets(order, user),
+    ]);
   } catch (sheetError) {
     console.error("Google Sheets sync failed:", sheetError);
   }

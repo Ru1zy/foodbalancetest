@@ -3,15 +3,7 @@ import prisma from "@/lib/prisma";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 
 /**
- * Vercel Cron Job endpoint for automatic order archiving.
- *
- * Setup in vercel.json:
- * {
- *   "crons": [{
- *     "path": "/api/cron/archive-orders",
- *     "schedule": "0 2 * * *"
- *   }]
- * }
+ * GitHub Actions cron endpoint for automatic order archiving.
  *
  * This runs daily at 2 AM UTC (5 AM Kyiv time in summer, 4 AM in winter).
  *
@@ -40,7 +32,8 @@ export async function GET(request: Request) {
   try {
     // Start of today's Kyiv calendar day as a real UTC instant (DST-aware).
     // No hardcoded +03:00 — that is wrong in winter (Kyiv is +02:00) and would
-    // shift the archive boundary by an hour. Runs correctly on Vercel's UTC.
+    // shift the archive boundary by an hour. This stays correct regardless of
+    // the Railway container's local timezone.
     const { year, month, day } = kyivTodayParts();
     const todayMidnightKyiv = kyivDayRangeUtc(year, month, day).start;
 

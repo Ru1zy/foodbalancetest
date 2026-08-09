@@ -116,18 +116,44 @@ export async function syncClientToSheet(profileData: ClientProfileSyncData): Pro
 
 const UKRAINIAN_DAYS = ["Нд", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
 
-function formatCrmDate(date: Date): string {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const dayOfWeek = UKRAINIAN_DAYS[date.getDay()];
-  return `${day}.${month} (${dayOfWeek})`;
+type Ymd = { year: number; month: number; day: number };
+
+function kyivYmd(date: Date): Ymd {
+  const key = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+  const [year, month, day] = key.split("-").map(Number);
+  return { year, month, day };
 }
 
-function getMondayOfDate(date: Date): Date {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  return new Date(d.setDate(diff));
+function addCalendarDays(base: Ymd, days: number): Ymd {
+  const date = new Date(Date.UTC(base.year, base.month - 1, base.day, 12));
+  date.setUTCDate(date.getUTCDate() + days);
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  };
+}
+
+function formatCrmYmd({ year, month, day }: Ymd): string {
+  const weekday = new Date(Date.UTC(year, month - 1, day, 12)).getUTCDay();
+  return `${String(day).padStart(2, "0")}.${String(month).padStart(2, "0")} (${UKRAINIAN_DAYS[weekday]})`;
+}
+
+function formatCrmDate(date: Date): string {
+  return formatCrmYmd(kyivYmd(date));
+}
+
+function getMondayYmd(date: Date): Ymd {
+  const ymd = kyivYmd(date);
+  const weekday = new Date(
+    Date.UTC(ymd.year, ymd.month - 1, ymd.day, 12),
+  ).getUTCDay();
+  return addCalendarDays(ymd, weekday === 0 ? -6 : 1 - weekday);
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -172,18 +198,32 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
     const rows: string[][] = [];
     const createdAt = new Date(order.createdAt);
     const creationDateStr = formatCrmDate(createdAt);
-    const creationTimeStr = createdAt.toLocaleTimeString("uk-UA", { hour12: false });
-    const weekStartStr = formatCrmDate(getMondayOfDate(new Date(order.deliveryDate)));
+    const creationTimeStr = createdAt.toLocaleTimeString("uk-UA", {
+      hour12: false,
+      timeZone: "Europe/Kyiv",
+    });
+    const baseDeliveryYmd = kyivYmd(new Date(order.deliveryDate));
+    const weekStartStr = formatCrmYmd(
+      getMondayYmd(new Date(order.deliveryDate)),
+    );
     const normalizedPhone = normalizePhoneForLegacy(user.phone || "");
     const phoneCell = `'${normalizedPhone}`; // Prepend apostrophe
+    const selectedDaysOfWeek = cartData.days
+      .map((day) => menuById.get(day.dayId)?.dayOfWeek)
+      .filter(
+        (dayOfWeek): dayOfWeek is number => typeof dayOfWeek === "number",
+      );
+    const minDayOfWeek =
+      selectedDaysOfWeek.length > 0 ? Math.min(...selectedDaysOfWeek) : null;
 
     for (let i = 0; i < cartData.days.length; i++) {
       const day = cartData.days[i];
-      const deliveryDate = new Date(order.deliveryDate);
-      deliveryDate.setDate(deliveryDate.getDate() + i);
 
       const dayDishes: string[] = [];
       const menu = menuById.get(day.dayId);
+      const deliveryOffset =
+        menu && minDayOfWeek !== null ? menu.dayOfWeek - minDayOfWeek : i;
+      const deliveryYmd = addCalendarDays(baseDeliveryYmd, deliveryOffset);
 
       if (menu) {
         const dishesJson = (typeof menu.dishes === "string" ? JSON.parse(menu.dishes) : menu.dishes) as Record<string, (string | Dish)[]>;
@@ -218,7 +258,7 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
         user.chatId || "", // B: Telegram Chat ID (Legacy: Chat id)
         creationDateStr, // C: CreationDate
         weekStartStr, // D: WeekStart
-        formatCrmDate(deliveryDate), // E: DeliveryDate
+        formatCrmYmd(deliveryYmd), // E: DeliveryDate
         order.packageType, // F: PackageType
         dayDishes.join("\n"), // G: OrderSummary
         "1", // H: Count
