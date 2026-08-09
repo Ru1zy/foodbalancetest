@@ -103,6 +103,9 @@ npm run dev            # http://localhost:3000
 | `GOOGLE_REDIRECT_URI` | Google OAuth callback URL |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service account for Sheets access |
 | `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Target spreadsheets |
+| `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Separate admin-only OAuth client for automatic monthly workbook creation |
+| `GOOGLE_DRIVE_REDIRECT_URI` | Exact admin Drive callback: `/api/admin/google-drive/callback` |
+| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Base64 32-byte key that encrypts the stored Drive refresh token |
 | `GAS_WEBAPP_URL` | Google Apps Script web app endpoint (optional) |
 | `S3_ENDPOINT` | S3-compatible storage endpoint (Supabase/R2/B2/MinIO) |
 | `S3_BUCKET` | Bucket name for uploaded images |
@@ -227,6 +230,9 @@ npm run dev            # http://localhost:3000
 | `GOOGLE_REDIRECT_URI` | URL зворотного виклику Google OAuth |
 | `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для доступу до Таблиць |
 | `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Цільові таблиці |
+| `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Окремий адмінський OAuth-клієнт для автоматичного створення місячних книг |
+| `GOOGLE_DRIVE_REDIRECT_URI` | Точний callback адмінського Drive: `/api/admin/google-drive/callback` |
+| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | 32-байтний base64-ключ для шифрування збереженого Drive refresh token |
 | `GAS_WEBAPP_URL` | Ендпоінт вебзастосунку Google Apps Script |
 
 ### Розгортання (Vercel)

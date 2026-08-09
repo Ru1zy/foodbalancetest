@@ -73,6 +73,9 @@ private keys, database URLs, or other secret values in this file.
 - [x] Railway usage reviewed. Nearly all current cost is baseline application
   RAM; CPU, egress, PostgreSQL, and volume costs are small. Hobby is expected to
   be around the USD 5 minimum at the current scale.
+- [x] Added `INFRASTRUCTURE_INVENTORY.md` with service ownership aliases,
+  credential locations, recovery expectations, and a gradual ownership-transfer
+  checklist. It intentionally contains no live secrets or private identifiers.
 
 ### Required before cutover
 
@@ -105,9 +108,18 @@ private keys, database URLs, or other secret values in this file.
 - [x] Verify the global CRM `Orders` tab write. The test order appeared in the
   existing all-clients spreadsheet.
 - [ ] Verify the global CRM `Info` tab write separately.
-- [ ] Verify month/day Sheet writes configured through `SheetConfig`. The test
-  correctly produced the admin Telegram fallback warning because no monthly
-  spreadsheet is currently configured; no external month workbook exists yet.
+- [x] Verify month/day Sheet writes configured through `SheetConfig`. The first
+  test correctly produced the admin Telegram fallback warning with no monthly
+  mapping. After an August test workbook and `_Template` were configured, a
+  second order created/populated the `11.08` day tab with the expected client,
+  package, dishes, comment, and price.
+- [ ] Deploy and verify admin-owned Google Drive automation. The implementation
+  uses a separate `drive.file` OAuth client, encrypts its refresh token in
+  PostgreSQL, creates a formatted master workbook, provisions the next month on
+  connect/day 20, recovers by Drive app metadata, and keeps a manual admin
+  button as fallback. Before deployment: apply the new Prisma model, add the
+  four `GOOGLE_DRIVE_*` Railway variables, enable Drive API, and register the
+  exact admin callback URI. Customer Google login remains untouched.
 - [ ] Verify admin pages: orders, today, clients, menu, tariffs, and Sheets
   settings.
 - [ ] Implement external logical PostgreSQL backups. Railway built-in volume
@@ -149,6 +161,8 @@ private keys, database URLs, or other secret values in this file.
 - Month/day export now derives each tab date from the selected menu weekday,
   so non-consecutive picks such as Monday + Thursday no longer become Monday +
   Tuesday in Sheets.
+- New monthly rows trim accidental whitespace from single-line fields and
+  auto-resize their row while retaining template-defined column widths/wrapping.
 - User balances already use `UserBalance(packageId, totalDays, usedDays)`.
 - The profile already displays remaining days per package.
 

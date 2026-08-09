@@ -1,10 +1,57 @@
 import { getAllSheetConfigs } from "@/app/actions/sheet-config-impl";
+import {
+  getGoogleDriveConnectionStatus,
+  getUpcomingMonthKey,
+} from "@/lib/google-drive";
+import GoogleDriveAutomation from "./GoogleDriveAutomation";
 import SheetConfigManager from "./SheetConfigManager";
+
+type SearchParams = Promise<{
+  drive?: string;
+  drive_error?: string;
+  drive_warning?: string;
+}>;
+
+function connectionNotice(params: Awaited<SearchParams>) {
+  if (params.drive_error) {
+    const messages: Record<string, string> = {
+      access_denied: "Доступ до Google Drive не надано.",
+      connection_failed: "Не вдалося підключити Google Drive. Перевірте налаштування та Railway logs.",
+      invalid_state: "Сесію підключення втрачено. Спробуйте ще раз.",
+      missing_code: "Google не повернув код авторизації. Спробуйте ще раз.",
+    };
+    return {
+      tone: "error" as const,
+      text: messages[params.drive_error] || "Не вдалося підключити Google Drive.",
+    };
+  }
+  if (params.drive_warning) {
+    return {
+      tone: "warning" as const,
+      text: "Google Drive підключено, але таблицю наступного місяця не вдалося створити автоматично.",
+    };
+  }
+  if (params.drive === "connected") {
+    return {
+      tone: "success" as const,
+      text: "Google Drive підключено. Папку, шаблон і таблицю наступного місяця перевірено.",
+    };
+  }
+  return null;
+}
 
 // Admin auth is enforced by app/admin/layout.tsx (getAuthenticatedAdminUser)
 // and again inside every mutating server action in sheet-config-impl.ts.
-export default async function SheetSettingsPage() {
-  const configs = await getAllSheetConfigs();
+export default async function SheetSettingsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const [configs, driveStatus, params] = await Promise.all([
+    getAllSheetConfigs(),
+    getGoogleDriveConnectionStatus(),
+    searchParams,
+  ]);
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 p-6">
@@ -17,8 +64,17 @@ export default async function SheetSettingsPage() {
           </p>
         </div>
 
+        <GoogleDriveAutomation
+          status={driveStatus}
+          nextMonthKey={getUpcomingMonthKey()}
+          notice={connectionNotice(params)}
+        />
+
         <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-slate-700">
-          <h2 className="font-bold text-slate-900">Як підготувати таблицю на новий місяць</h2>
+          <h2 className="font-bold text-slate-900">Ручний резервний варіант</h2>
+          <p className="mt-2">
+            Потрібен лише якщо автоматизація Google Drive не підключена або тимчасово недоступна.
+          </p>
           <ol className="mt-3 list-decimal space-y-2 pl-5">
             <li>Створіть окрему Google-таблицю для потрібного місяця.</li>
             <li>

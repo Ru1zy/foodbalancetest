@@ -17,6 +17,11 @@ const SETTINGS_PATH = "/admin/settings/sheets";
 
 /** Lists every monthly spreadsheet mapping, newest month key first. */
 export async function getAllSheetConfigs() {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return [];
+  }
+
   try {
     return await prisma.sheetConfig.findMany({
       orderBy: { monthKey: "desc" },

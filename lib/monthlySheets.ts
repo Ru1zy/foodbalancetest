@@ -216,19 +216,23 @@ function priceCell(order: Order, isCustom: boolean): string {
   return order.price != null ? String(order.price) : "";
 }
 
+function singleLineCell(value: string | null | undefined): string {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
 /** Build columns B–K for one order/day (B sequence number filled in later). */
 function buildRow(order: Order, user: User, orderDay: OrderDay, sequence: number): string[] {
   const normalizedPhone = normalizePhoneForLegacy(user.phone || "");
   return [
     String(sequence), // B: Sequential order number for the day
-    user.name || "", // C: User Name
+    singleLineCell(user.name), // C: User Name
     `'${normalizedPhone}`, // D: Phone (apostrophe keeps the leading zero)
-    order.deliveryAddress || user.address || "", // E: Address
-    user.chatId || "", // F: Telegram Chat ID
-    order.packageType, // G: Package Name
+    singleLineCell(order.deliveryAddress || user.address), // E: Address
+    singleLineCell(user.chatId), // F: Telegram Chat ID
+    singleLineCell(order.packageType), // G: Package Name
     orderDay.dishes, // H: Dishes
     order.cutlery > 0 ? `${order.cutlery} шт` : "", // I: Cutlery count
-    order.notes || user.notes || "", // J: Comments / Notes
+    (order.notes || user.notes || "").trim(), // J: Comments / Notes
     priceCell(order, orderDay.isCustom), // K: Price
   ];
 }
@@ -418,6 +422,27 @@ export async function syncOrderToMonthlySheets(order: Order, user: User): Promis
             range: `${day.tabName}!${FIRST_COL}${targetRow}:${LAST_COL}${targetRow}`,
             valueInputOption: "USER_ENTERED",
             requestBody: { values: [row] },
+          });
+
+          // The day tab inherits column widths + wrapping from `_Template`.
+          // Resize only the row that was just written so long dishes/comments
+          // remain readable without expanding columns across the whole screen.
+          await sheets.spreadsheets.batchUpdate({
+            spreadsheetId,
+            requestBody: {
+              requests: [
+                {
+                  autoResizeDimensions: {
+                    dimensions: {
+                      sheetId,
+                      dimension: "ROWS",
+                      startIndex: targetRow - 1,
+                      endIndex: targetRow,
+                    },
+                  },
+                },
+              ],
+            },
           });
 
           console.log(

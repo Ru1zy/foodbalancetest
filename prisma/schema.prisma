@@ -113,6 +113,20 @@ model SheetConfig {
   updatedAt     DateTime @updatedAt
 }
 
+/// Single administrator-owned Google Drive connection used only for monthly
+/// delivery workbooks. The OAuth refresh token is encrypted with an
+/// environment-held AES key before it reaches PostgreSQL. Customer Google
+/// sign-in uses a separate OAuth client and never reads this model.
+model GoogleDriveConnection {
+  id                    String   @id
+  connectedEmail        String
+  encryptedRefreshToken String
+  folderId              String
+  templateSpreadsheetId String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
 model AuthToken {
   id        String   @id @default(uuid())
   token     String   @unique

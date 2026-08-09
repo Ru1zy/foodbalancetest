@@ -14,8 +14,8 @@ on:
   schedule:
     # Daily 02:00 UTC — archive past orders / clean abandoned carts.
     - cron: "0 2 * * *"
-    # Daily 09:00 UTC on days 25-31 — warn if next month's Sheet is missing.
-    - cron: "0 9 25-31 * *"
+    # Monthly on day 20 at 09:00 UTC — create/verify next month's Sheet.
+    - cron: "0 9 20 * *"
   workflow_dispatch:
     inputs:
       job:
@@ -48,9 +48,9 @@ jobs:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
 
   check-next-month-sheet:
-    # Runs on the 09:00 (25-31) schedule and on manual dispatch when chosen.
+    # Runs on the monthly day-20 schedule and on manual dispatch when chosen.
     if: >-
-      github.event.schedule == '0 9 25-31 * *' ||
+      github.event.schedule == '0 9 20 * *' ||
       (github.event_name == 'workflow_dispatch' && inputs.job == 'check-next-month-sheet')
     runs-on: ubuntu-latest
     steps:
