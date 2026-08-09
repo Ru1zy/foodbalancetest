@@ -79,6 +79,10 @@ private keys, database URLs, or other secret values in this file.
 - [x] Added a database-aware `/api/health` endpoint and Railway config-as-code
   healthcheck so a new deployment must prove that Next.js and PostgreSQL are
   reachable before Railway switches traffic.
+- [x] Dependency security refresh: Next.js/ESLint config upgraded to `16.3.0`,
+  Prisma packages aligned on `7.9.1`, and the unused legacy `@vercel/blob`
+  package removed. `npm audit` reports zero known vulnerabilities; Prisma
+  generate/validate, lint, TypeScript, and the Next.js production build pass.
 
 ### Required before cutover
 
