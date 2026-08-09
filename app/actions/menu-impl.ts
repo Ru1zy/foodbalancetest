@@ -1,7 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import prisma from "@/lib/prisma";
 import type { Menu } from "@prisma/client";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { type MenuItem } from "@/lib/menu-types";
 
 export type JsonValue =
@@ -55,12 +57,19 @@ export async function getAllMenuItems(): Promise<MenuItem[]> {
 }
 
 export async function updateMenuDishes(menuId: string, dishes: JsonValue) {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Доступ заборонено: потрібні права адміністратора." };
+  }
+
   try {
     await prisma.menu.update({
       where: { id: menuId },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { dishes: dishes as any },
     });
+    revalidatePath("/admin/menu");
+    revalidatePath("/");
     return { ok: true };
   } catch (error) {
     console.error("updateMenuDishes failed", error);
@@ -69,11 +78,18 @@ export async function updateMenuDishes(menuId: string, dishes: JsonValue) {
 }
 
 export async function updateMenuPhoto(menuId: string, photoUrl: string | null) {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, error: "Доступ заборонено: потрібні права адміністратора." };
+  }
+
   try {
     await prisma.menu.update({
       where: { id: menuId },
       data: { photoUrl },
     });
+    revalidatePath("/admin/menu");
+    revalidatePath("/");
     return { ok: true };
   } catch (error) {
     console.error("updateMenuPhoto failed", error);

@@ -92,7 +92,8 @@ private keys, database URLs, or other secret values in this file.
   public confirmation requests; the local fix removes both behaviours and
   requires `TELEGRAM_WEBHOOK_SECRET` to fail closed. The repeated test reached
   `/profile` successfully after the webhook was moved to Railway.
-- [ ] Test an authenticated admin login.
+- [x] Test an authenticated admin login on Railway. The repaired Telegram admin
+  account reached `/admin` successfully on 2026-08-09.
 - [ ] Test S3 image upload from the admin menu page and verify the resulting
   public URL.
 - [ ] Test one non-production checkout end-to-end without real payment.
