@@ -710,7 +710,10 @@ export async function ensureMonthlySpreadsheet(
 
     return await prisma.$transaction(
       async (tx) => {
-        await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${lockName}))`;
+        // Prisma 7 cannot deserialize PostgreSQL's `void` return type from
+        // pg_advisory_xact_lock(). Select a regular integer while still
+        // evaluating the locking function in the FROM clause.
+        await tx.$queryRaw`SELECT 1 AS "locked" FROM pg_advisory_xact_lock(hashtext(${lockName}))`;
 
         // Monthly Sheets writes still run through the existing service account.
         // Keep its inherited editor permission current even after key/account
