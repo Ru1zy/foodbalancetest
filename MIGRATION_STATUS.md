@@ -121,13 +121,17 @@ private keys, database URLs, or other secret values in this file.
   second order created/populated the `11.08` day tab with the expected client,
   package, dishes, comment, and price.
 - [x] Deploy the admin-owned Google Drive automation code and apply the
-  `GoogleDriveConnection` model to Railway PostgreSQL. Railway is running commit
-  `123890e`; the new table was verified directly and is empty until OAuth is
-  connected. Customer Google login remains untouched.
-- [ ] Activate and verify Google Drive automation: create the separate
-  `drive.file` OAuth client, add the four `GOOGLE_DRIVE_*` variables plus
-  `APP_BASE_URL`, authorize the admin account, verify folder/template/next-month
-  creation, and manually run the GitHub Actions check.
+  `GoogleDriveConnection` model to Railway PostgreSQL. Customer Google login
+  remains untouched.
+- [x] Activate and verify Google Drive automation: the separate `drive.file`
+  OAuth client and Railway variables are configured, the current admin account
+  is authorized, and the managed folder, `_Template`, and `09.2026` workbook
+  were created. The first live run exposed Prisma 7's inability to deserialize
+  the `void` result of `pg_advisory_xact_lock`; commit `ab9c624` selects a typed
+  lock result instead. The protected endpoint then returned success, and a
+  second run reused the existing workbook without creating a duplicate.
+- [ ] Manually dispatch the `check-next-month-sheet` job in GitHub Actions once
+  to verify the scheduler's repository secrets and end-to-end invocation path.
 - [ ] Verify admin pages: orders, today, clients, menu, tariffs, and Sheets
   settings.
 - [ ] Implement external logical PostgreSQL backups. Railway built-in volume
