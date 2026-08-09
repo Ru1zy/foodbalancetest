@@ -16,13 +16,16 @@ export async function POST(request: NextRequest) {
   try {
     const adminUser = await getAuthenticatedAdminUser();
     if (!adminUser) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Доступ заборонено: потрібні права адміністратора." },
+        { status: 401 },
+      );
     }
 
     // Fail fast with a clear message if storage isn't configured yet.
     if (!getStorageEnv()) {
       return NextResponse.json(
-        { error: "Storage is not configured on the server." },
+        { error: "Сховище зображень не налаштоване на сервері." },
         { status: 503 }
       );
     }
@@ -32,21 +35,21 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json(
-        { error: "No file provided" },
+        { error: "Файл не вибрано." },
         { status: 400 }
       );
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
       return NextResponse.json(
-        { error: "Unsupported file type. Only images are allowed." },
+        { error: "Підтримуються лише JPG, PNG, WebP, GIF та AVIF." },
         { status: 415 }
       );
     }
 
     if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 5 MB." },
+        { error: "Файл завеликий. Максимальний розмір — 5 МБ." },
         { status: 413 }
       );
     }
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
-      { error: "Failed to upload file" },
+      { error: "Не вдалося завантажити файл у сховище." },
       { status: 500 }
     );
   }
