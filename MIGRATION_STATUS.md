@@ -94,12 +94,20 @@ private keys, database URLs, or other secret values in this file.
   `/profile` successfully after the webhook was moved to Railway.
 - [x] Test an authenticated admin login on Railway. The repaired Telegram admin
   account reached `/admin` successfully on 2026-08-09.
-- [ ] Test S3 image upload from the admin menu page and verify the resulting
-  public URL.
-- [ ] Test one non-production checkout end-to-end without real payment.
-- [ ] Verify the order is persisted in PostgreSQL.
-- [ ] Verify global CRM Sheet writes: `Info` and `Orders` tabs.
-- [ ] Verify month/day Sheet writes configured through `SheetConfig`.
+- [x] Test S3 image upload from the Railway admin menu page. A reduced image
+  uploaded successfully, its public preview loaded, and the new `photoUrl`
+  appeared on the Thursday `Template` menu card.
+- [x] Test one non-production checkout end-to-end without real payment. A
+  Telegram-authenticated cash order for Slim was submitted on Railway on
+  2026-08-09 with an explicit test/no-delivery comment.
+- [x] Verify the order is persisted in PostgreSQL. The test order appeared in
+  the Railway admin order/client views.
+- [x] Verify the global CRM `Orders` tab write. The test order appeared in the
+  existing all-clients spreadsheet.
+- [ ] Verify the global CRM `Info` tab write separately.
+- [ ] Verify month/day Sheet writes configured through `SheetConfig`. The test
+  correctly produced the admin Telegram fallback warning because no monthly
+  spreadsheet is currently configured; no external month workbook exists yet.
 - [ ] Verify admin pages: orders, today, clients, menu, tariffs, and Sheets
   settings.
 - [ ] Implement external logical PostgreSQL backups. Railway built-in volume
@@ -135,6 +143,12 @@ private keys, database URLs, or other secret values in this file.
 - Selected dishes are stored in `Order.items` JSON.
 - Post-commit code sends an admin Telegram notification and attempts to write
   to the global CRM Sheet and month/day Sheets.
+- The admin orders table shows a red monthly-table warning beside the client
+  when any delivery month has no current `SheetConfig`; a configured order
+  leaves that cell empty.
+- Month/day export now derives each tab date from the selected menu weekday,
+  so non-consecutive picks such as Monday + Thursday no longer become Monday +
+  Tuesday in Sheets.
 - User balances already use `UserBalance(packageId, totalDays, usedDays)`.
 - The profile already displays remaining days per package.
 

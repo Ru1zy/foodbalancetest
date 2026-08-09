@@ -4,6 +4,7 @@ import OrderActionButtons from "@/components/admin/OrderActionButtons";
 import KitchenExport from "./KitchenExport";
 import ArchiveOrdersButton from "@/components/admin/ArchiveOrdersButton";
 import prisma from "@/lib/prisma";
+import { orderHasMissingSheetConfig } from "@/lib/monthlySheets";
 import type { Prisma } from "@prisma/client";
 
 type AdminOrderWithUser = Prisma.OrderGetPayload<{
@@ -246,10 +247,18 @@ export default async function AdminOrdersPage({
 
   // Fetch menu details for all orders
   const ordersWithMenuDetails = await Promise.all(
-    orders.map(async (order: AdminOrderWithUser) => ({
-      ...order,
-      menuDetails: await parseOrderMenuDetails(order.items, order.id, order.deliveryDate),
-    }))
+    orders.map(async (order: AdminOrderWithUser) => {
+      const [menuDetails, sheetConfigMissing] = await Promise.all([
+        parseOrderMenuDetails(order.items, order.id, order.deliveryDate),
+        orderHasMissingSheetConfig(order),
+      ]);
+
+      return {
+        ...order,
+        menuDetails,
+        sheetConfigMissing,
+      };
+    })
   );
 
   return (
@@ -295,6 +304,7 @@ export default async function AdminOrdersPage({
                   <tr>
                     <th className="px-4 py-4 sm:px-6 w-32">ID / Дата</th>
                     <th className="px-4 py-4 sm:px-6 w-40">Клієнт</th>
+                    <th className="px-4 py-4 sm:px-6 w-56">Таблиця</th>
                     <th className="px-4 py-4 sm:px-6 w-48">Адреса</th>
                     <th className="px-4 py-4 sm:px-6 min-w-[300px]">Пакет</th>
                     <th className="px-4 py-4 sm:px-6 w-32">Оплата</th>
@@ -325,6 +335,13 @@ export default async function AdminOrdersPage({
                               <div className="text-xs text-slate-500">{order.user.phone}</div>
                             </div>
                           </div>
+                        </td>
+                        <td className="px-4 py-5 sm:px-6 align-top">
+                          {order.sheetConfigMissing ? (
+                            <div className="max-w-56 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
+                              ТАБЛИЦЯ НЕ ЗНАЙДЕНА — ВНЕСТИ ВРУЧНУ
+                            </div>
+                          ) : null}
                         </td>
                         <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="flex items-start gap-2">

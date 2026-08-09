@@ -160,8 +160,9 @@ function formatDayDishes(day: OrderCartDay, menu: Menu | undefined): string {
 
 /**
  * Resolve every delivery day of an order into the data needed to write its row.
- * Mirrors the legacy per-day unrolling: cart `days[i]` lands on
- * `deliveryDate + i` calendar days.
+ * `deliveryDate` is the earliest selected weekday. Use each menu row's real
+ * weekday offset so non-consecutive picks (for example Monday + Thursday) do
+ * not accidentally land in Monday + Tuesday tabs.
  */
 async function resolveOrderDays(order: Order): Promise<OrderDay[]> {
   const cartData = order.items as unknown as OrderCartData;
@@ -177,10 +178,19 @@ async function resolveOrderDays(order: Order): Promise<OrderDay[]> {
   const menuById = new Map(menus.map((m: Menu) => [m.id, m]));
 
   const baseYmd = kyivYmd(new Date(order.deliveryDate));
+  const selectedDaysOfWeek = cartData.days
+    .map((day: OrderCartDay) => menuById.get(day.dayId)?.dayOfWeek)
+    .filter((dayOfWeek: number | undefined): dayOfWeek is number =>
+      typeof dayOfWeek === "number",
+    );
+  const minDayOfWeek =
+    selectedDaysOfWeek.length > 0 ? Math.min(...selectedDaysOfWeek) : null;
 
   return cartData.days.map((day: OrderCartDay, index: number) => {
-    const ymd = addDays(baseYmd, index);
     const menu = menuById.get(day.dayId);
+    const dateOffset =
+      menu && minDayOfWeek !== null ? menu.dayOfWeek - minDayOfWeek : index;
+    const ymd = addDays(baseYmd, dateOffset);
     const isCustom =
       isIndivPackage(order.packageType) || (Array.isArray(day.items) && day.items.length > 0);
     return {
