@@ -167,9 +167,10 @@ private keys, database URLs, or other secret values in this file.
 
 Current research as of 2026-08-09:
 
-- plata by mono and LiqPay both advertise a standard 1.3% fee for Ukrainian
-  cards and 2% for foreign cards. Confirm the exact merchant contract before
-  implementation because provider pages and legacy method pages can disagree.
+- plata by mono and LiqPay both advertise a standard 1.3% acquiring fee for
+  Ukrainian cards and 2% for foreign cards. Their standard public acquiring
+  terms do not yet prove that the payer can cover this fee while the merchant
+  receives the exact invoice amount.
 - WayForPay advertises 2%; Fondy advertises 2.2% for Ukrainian cards below
   UAH 500,000 monthly turnover. Plata and LiqPay are the current shortlist.
 - Plata has a public test environment/token available without an activated
@@ -178,14 +179,27 @@ Current research as of 2026-08-09:
   merchant followed by a refund.
 - LiqPay issues separate sandbox and production key pairs per merchant and
   provides test cards without real settlement.
-- BLOCKED: do not add `+1.3%` or another card-only surcharge to the customer.
-  Current paragraph 65 of NBU Regulation No. 164 prohibits a merchant from
-  charging an additional fee for a payment instrument and from setting a
-  different cash versus cashless price. The business must absorb acquiring in
-  its common pricing model and confirm fiscal/accounting treatment.
+- LiqPay documents `commission_payer: sender` for split-payment recipients, but
+  this has not been confirmed for ordinary Checkout. Plata exposes an
+  `agentFeePercent` API field, but its ordinary acquiring agreement says the
+  acquiring fee is withheld from merchant settlement; agent/submerchant
+  features may require separate approval.
+- Portmone publishes payer-funded tariffs (2.6%, minimum UAH 3, to a current
+  account; or 1% + UAH 1 to a card), but these have limited invoicing/card
+  functionality and are not equivalent to its full contracted merchant plan.
+- BLOCKED: the business wants the subscription price to remain, for example,
+  UAH 600, the payment provider to disclose and charge its own fee separately
+  to the payer, and the merchant to receive exactly UAH 600. FoodBalance must
+  not emulate this by adding its own card-only surcharge or by setting a
+  different card price. Select a provider/product only after its contract,
+  checkout, receipt, callback, settlement, refunds, and fiscalization all
+  explicitly support a provider-level payer fee.
 
-- [ ] Select plata by mono or LiqPay after the business owner confirms the
-  settlement account, merchant contract, and fiscalization requirements.
+- [ ] Get written confirmation from plata by mono, LiqPay, and/or Portmone that
+  their normal website checkout can charge a separately disclosed provider fee
+  to the payer while settling the exact base invoice amount to the merchant.
+- [ ] Select the provider only after the business owner confirms the settlement
+  account, merchant contract, payer-fee terms, and fiscalization requirements.
 - [ ] Obtain test credentials first; obtain production credentials only from
   the business owner's activated merchant.
 - [ ] Confirm Apple Pay and Google Pay availability on the production merchant.
@@ -240,7 +254,8 @@ Current research as of 2026-08-09:
 
 - [ ] Add unit tests for every discount boundary: 4, 5, 6, 7, 13, 14, 29, 30,
   and any confirmed maximum above 30.
-- [ ] Test financial rounding and the 1.5% LiqPay fee.
+- [ ] Test provider-calculated payer-fee display, financial rounding, exact net
+  settlement to the merchant, refunds, and partial refunds.
 - [ ] Test concurrent balance credit/deduction and webhook replay.
 - [ ] Test receipt authorization and file validation.
 - [ ] Test Sheet retry/idempotency and an unavailable Google API.
@@ -263,9 +278,9 @@ Current research as of 2026-08-09:
    different package and pay the difference?
 5. For bank transfer and cash, what happens if the admin rejects payment after
    the client has already consumed some credited days?
-6. How should acquiring cost be absorbed into the common tariff pricing? A
-   card-only surcharge and different cash/cashless price must not be implemented
-   under current NBU Regulation No. 164.
+6. Which provider contractually supports a separately disclosed payer fee while
+   settling the exact base invoice amount to the merchant? Do not imitate this
+   in FoodBalance by increasing only the card price.
 7. Does “the client selected dishes” mean after final checkout confirmation, or
    should every unfinished click/draft be persisted immediately?
 8. Which exact Google Sheet is used for delivery, which is used for accounting
