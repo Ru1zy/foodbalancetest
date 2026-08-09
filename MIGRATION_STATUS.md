@@ -1,6 +1,6 @@
 # FoodBalance: migration and product roadmap
 
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 
 This is the live project tracker. Read it before making changes and update the
 checkboxes and notes after every completed step. Never put credentials, tokens,
@@ -49,6 +49,12 @@ private keys, database URLs, or other secret values in this file.
   onboarding phone step successfully.
 - [x] The onboarding phone input now explicitly uses a white background and
   black text/caret so browser theme defaults cannot make it unreadable.
+- [x] Incomplete Google accounts can no longer bypass onboarding through
+  checkout: the header prompt links back to `/onboarding`, the swallowed
+  `NEXT_REDIRECT` bug is fixed, and server actions reject direct submissions.
+- [x] Authenticated checkout no longer auto-merges accounts solely by a typed
+  phone number. The unsafe path could delete the older user and cascade-delete
+  balances; phone collisions now fail without changing either account.
 - [x] Basic read-only load check: 100/100 successful requests, concurrency 10,
   p50 about 109 ms and p95 about 364 ms.
 - [x] Railway usage reviewed. Nearly all current cost is baseline application
@@ -157,14 +163,34 @@ private keys, database URLs, or other secret values in this file.
 
 ## Phase 3: payment methods
 
-### LiqPay
+### Card acquiring (provider not selected)
 
-- [ ] Obtain the merchant/test credentials and confirm the merchant is approved
-  for Apple Pay and Google Pay through LiqPay.
-- [ ] Confirm whether the 1.5% fee is added directly to the customer's total or
-  grossed up so the business receives the exact subscription price.
+Current research as of 2026-08-09:
+
+- plata by mono and LiqPay both advertise a standard 1.3% fee for Ukrainian
+  cards and 2% for foreign cards. Confirm the exact merchant contract before
+  implementation because provider pages and legacy method pages can disagree.
+- WayForPay advertises 2%; Fondy advertises 2.2% for Ukrainian cards below
+  UAH 500,000 monthly turnover. Plata and LiqPay are the current shortlist.
+- Plata has a public test environment/token available without an activated
+  acquiring terminal. Test-token checkout does not show Apple Pay or Google
+  Pay, so wallets require a small final live smoke test with the owner's
+  merchant followed by a refund.
+- LiqPay issues separate sandbox and production key pairs per merchant and
+  provides test cards without real settlement.
+- BLOCKED: do not add `+1.3%` or another card-only surcharge to the customer.
+  Current paragraph 65 of NBU Regulation No. 164 prohibits a merchant from
+  charging an additional fee for a payment instrument and from setting a
+  different cash versus cashless price. The business must absorb acquiring in
+  its common pricing model and confirm fiscal/accounting treatment.
+
+- [ ] Select plata by mono or LiqPay after the business owner confirms the
+  settlement account, merchant contract, and fiscalization requirements.
+- [ ] Obtain test credentials first; obtain production credentials only from
+  the business owner's activated merchant.
+- [ ] Confirm Apple Pay and Google Pay availability on the production merchant.
 - [ ] Create payment attempts server-side using trusted tariff/day values.
-- [ ] Verify LiqPay callback signatures server-side.
+- [ ] Verify provider webhook signatures server-side.
 - [ ] Credit subscription days only after a verified successful callback.
 - [ ] Add webhook idempotency, payment reconciliation, and failed/refunded
   states.
@@ -237,8 +263,9 @@ private keys, database URLs, or other secret values in this file.
    different package and pay the difference?
 5. For bank transfer and cash, what happens if the admin rejects payment after
    the client has already consumed some credited days?
-6. Is the LiqPay fee simply `subscription total + 1.5%`, and how should kopecks
-   be rounded?
+6. How should acquiring cost be absorbed into the common tariff pricing? A
+   card-only surcharge and different cash/cashless price must not be implemented
+   under current NBU Regulation No. 164.
 7. Does “the client selected dishes” mean after final checkout confirmation, or
    should every unfinished click/draft be persisted immediately?
 8. Which exact Google Sheet is used for delivery, which is used for accounting

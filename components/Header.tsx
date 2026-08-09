@@ -10,24 +10,28 @@ export default async function Header() {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
-  const isAuthenticated = !!token;
+  let isAuthenticated = false;
   let needsOnboarding = false;
 
   // Check if user needs onboarding (has google_ placeholder phone)
   if (token) {
+    let userId: string | null = null;
     try {
-      const userId = await verifyAuthToken(token);
-      if (userId) {
-        const user = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { phone: true },
-        });
-        if (user && user.phone.startsWith("google_")) {
-          needsOnboarding = true;
-        }
-      }
+      userId = await verifyAuthToken(token);
     } catch {
       // Invalid token, ignore
+    }
+
+    if (userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { phone: true },
+      });
+
+      if (user) {
+        isAuthenticated = true;
+        needsOnboarding = user.phone.startsWith("google_");
+      }
     }
   }
 
@@ -43,7 +47,12 @@ export default async function Header() {
                 {needsOnboarding ? (
                   // User needs onboarding - show only logout
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">Завершіть реєстрацію</span>
+                    <Link
+                      href="/onboarding"
+                      className="rounded-lg px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                    >
+                      Завершіть реєстрацію
+                    </Link>
                     <LogoutButton />
                   </div>
                 ) : (

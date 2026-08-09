@@ -12,34 +12,38 @@ export default async function CheckoutPage() {
 
   let user = null;
   if (token) {
+    let userId: string | null = null;
     try {
-      const payload = await verifyAuthToken(token);
-      if (payload) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: payload },
-          select: {
-            name: true,
-            phone: true,
-            address: true,
-            defaultCutlery: true,
-          },
-        });
-        if (dbUser) {
-          // Prevent onboarding bypass: redirect if phone is placeholder
-          if (dbUser.phone.startsWith("google_")) {
-            redirect("/onboarding");
-          }
-
-          user = {
-            name: dbUser.name,
-            phone: sanitizeTelegramPhone(dbUser.phone),
-            address: dbUser.address,
-            defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),
-          };
-        }
-      }
+      userId = await verifyAuthToken(token);
     } catch {
       // Invalid token, ignore
+    }
+
+    if (userId) {
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          name: true,
+          phone: true,
+          address: true,
+          defaultCutlery: true,
+        },
+      });
+
+      // redirect() deliberately throws NEXT_REDIRECT, so it must stay outside
+      // the token-verification try/catch above.
+      if (dbUser?.phone.startsWith("google_")) {
+        redirect("/onboarding");
+      }
+
+      if (dbUser) {
+        user = {
+          name: dbUser.name,
+          phone: sanitizeTelegramPhone(dbUser.phone),
+          address: dbUser.address,
+          defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),
+        };
+      }
     }
   }
 

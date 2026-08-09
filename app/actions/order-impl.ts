@@ -267,13 +267,9 @@ async function resolveAuthenticatedUserId(): Promise<string | null> {
   }
 }
 
-/**
- * If the authenticated user currently has a Google placeholder phone, the
- * checkout form must supply a real phone number. Read-only validation.
- */
-async function assertRealPhoneIfRequired(
+/** An incomplete Google account must finish onboarding before checkout. */
+async function assertCheckoutRegistrationComplete(
   userId: string | null,
-  submittedPhone: string,
 ): Promise<{ ok: true } | { ok: false; message: string; status: number }> {
   if (!userId) {
     return { ok: true };
@@ -284,11 +280,19 @@ async function assertRealPhoneIfRequired(
     select: { phone: true },
   });
 
-  if (user && isGooglePlaceholderPhone(user.phone) && isGooglePlaceholderPhone(submittedPhone)) {
+  if (!user) {
     return {
       ok: false,
-      message: "Будь ласка, введіть дійсний номер телефону для оформлення замовлення.",
-      status: 400,
+      message: "Сесію користувача не знайдено. Увійдіть ще раз.",
+      status: 401,
+    };
+  }
+
+  if (isGooglePlaceholderPhone(user.phone)) {
+    return {
+      ok: false,
+      message: "Завершіть реєстрацію перед оформленням замовлення.",
+      status: 403,
     };
   }
 
@@ -510,24 +514,7 @@ async function persistOrderInTransaction(
       });
 
       if (existingUser && existingUser.id !== userId) {
-        if (existingUser.chatId) {
-          throw new Error("PHONE_IN_USE_BY_TELEGRAM_USER");
-        }
-
-        await tx.order.updateMany({
-          where: {
-            userId: existingUser.id,
-          },
-          data: {
-            userId,
-          },
-        });
-
-        await tx.user.delete({
-          where: {
-            id: existingUser.id,
-          },
-        });
+        throw new Error("PHONE_IN_USE_BY_ANOTHER_ACCOUNT");
       }
 
       const user = await tx.user.update({
@@ -695,6 +682,13 @@ function mapOrderError(error: unknown): { message: string; status: number } {
         status: 409,
       };
     }
+    if (error.message === "PHONE_IN_USE_BY_ANOTHER_ACCOUNT") {
+      return {
+        message:
+          "Цей номер уже належить іншому обліковому запису. Увійдіть у нього або використайте інший номер.",
+        status: 409,
+      };
+    }
     if (error.message === "INSUFFICIENT_BALANCE") {
       return {
         message: "Недостатньо днів на балансі. Будь ласка, поповніть абонемент.",
@@ -751,14 +745,17 @@ export async function submitOrder(
   try {
     const userId = await resolveAuthenticatedUserId();
 
+    const registrationCheck = await assertCheckoutRegistrationComplete(userId);
+    if (!registrationCheck.ok) {
+      return {
+        ok: false,
+        message: registrationCheck.message,
+        status: registrationCheck.status,
+      };
+    }
+
     const telegramCheck = await assertTelegramIfRequired(userId, prepared.paymentMethod);
     if (!telegramCheck.ok) return { ok: false, message: telegramCheck.message, status: telegramCheck.status };
-
-    // Check if user has Google placeholder phone and needs to provide real phone
-    const phoneCheck = await assertRealPhoneIfRequired(userId, prepared.validatedData.phone);
-    if (!phoneCheck.ok) {
-      return { ok: false, message: phoneCheck.message, status: phoneCheck.status };
-    }
 
     // Atomic DB write.
     const { order, user } = await prisma.$transaction((tx: Prisma.TransactionClient) =>
@@ -844,6 +841,16 @@ export async function submitOrders(
     // Resolve auth once for the whole batch (same customer for every order).
     const userId = await resolveAuthenticatedUserId();
 
+    const registrationCheck = await assertCheckoutRegistrationComplete(userId);
+    if (!registrationCheck.ok) {
+      return {
+        ok: false,
+        message: registrationCheck.message,
+        status: registrationCheck.status,
+        createdCount: 0,
+      };
+    }
+
     // 1) Validate & prepare EVERY order before any write. A single invalid
     //    order aborts the whole batch with nothing persisted.
     const prepared: PreparedOrder[] = [];
@@ -871,17 +878,6 @@ export async function submitOrders(
     if (prepared.length > 0) {
       const tg = await assertTelegramIfRequired(userId, prepared[0].paymentMethod);
       if (!tg.ok) return { ok: false, message: tg.message, status: tg.status, createdCount: 0 };
-    }
-
-    // Phone validation once (the customer is identical across the batch).
-    const phoneCheck = await assertRealPhoneIfRequired(userId, prepared[0].validatedData.phone);
-    if (!phoneCheck.ok) {
-      return {
-        ok: false,
-        message: phoneCheck.message,
-        status: phoneCheck.status,
-        createdCount: 0,
-      };
     }
 
     // 2) Persist ALL orders atomically. If any insert throws, Prisma rolls the
