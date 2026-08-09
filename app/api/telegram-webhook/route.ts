@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordTelegramAuthConfirmation } from "@/lib/telegram-deeplink-auth";
 
 export const runtime = "nodejs";
 
@@ -30,13 +31,17 @@ async function sendTelegramRequest(method: string, body: Record<string, unknown>
 
 export async function POST(request: Request) {
   try {
-    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      const headerToken = request.headers.get("x-telegram-bot-api-secret-token");
-      if (headerToken !== webhookSecret) {
-        console.warn("Telegram webhook rejected: invalid secret token");
-        return NextResponse.json({ ok: false }, { status: 401 });
-      }
+    const webhookSecret = process.env.TELEGRAM_WEBHOOK_SECRET?.trim();
+    const headerToken = request.headers.get("x-telegram-bot-api-secret-token");
+
+    if (!webhookSecret) {
+      console.error("Telegram webhook rejected: TELEGRAM_WEBHOOK_SECRET is missing");
+      return NextResponse.json({ ok: false }, { status: 503 });
+    }
+
+    if (headerToken !== webhookSecret) {
+      console.warn("Telegram webhook rejected: invalid secret token");
+      return NextResponse.json({ ok: false }, { status: 401 });
     }
 
     const update: TelegramUpdate = await request.json();
@@ -74,13 +79,15 @@ export async function POST(request: Request) {
                        "Telegram User";
 
       try {
-        await fetch(`${new URL(request.url).origin}/api/auth/telegram-deeplink`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "confirm", token, chatId, userName }),
-        });
+        await recordTelegramAuthConfirmation({ token, chatId, userName });
       } catch (error) {
-        console.error("Failed to notify auth endpoint:", error);
+        console.error("Failed to confirm Telegram authentication:", error);
+        await sendTelegramRequest("answerCallbackQuery", {
+          callback_query_id: update.callback_query.id,
+          text: "Не вдалося підтвердити вхід. Спробуйте ще раз.",
+          show_alert: true,
+        });
+        return NextResponse.json({ ok: false }, { status: 500 });
       }
 
       await sendTelegramRequest("answerCallbackQuery", {

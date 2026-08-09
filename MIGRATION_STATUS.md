@@ -70,7 +70,12 @@ private keys, database URLs, or other secret values in this file.
   `chatId = null`. Compare that record with current Neon during the final sync;
   the Railway database is an earlier snapshot. Do not auto-merge accounts from
   a typed phone number without proof of ownership.
-- [ ] Test Telegram login/deep-link flow without changing its implementation.
+- [ ] Retest Telegram login/deep-link flow after the hardened fix is deployed.
+  The 2026-08-09 staging test could not complete because the bot webhook still
+  targeted Vercel/Neon while the browser polled Railway/PostgreSQL. The old
+  confirmation endpoint also detached an existing user's `chatId` and trusted
+  public confirmation requests; the local fix removes both behaviours and
+  requires `TELEGRAM_WEBHOOK_SECRET` to fail closed.
 - [ ] Test an authenticated admin login.
 - [ ] Test S3 image upload from the admin menu page and verify the resulting
   public URL.

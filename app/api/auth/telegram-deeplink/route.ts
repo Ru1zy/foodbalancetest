@@ -12,41 +12,21 @@ const responseHeaders = {
   "Cache-Control": "no-store, max-age=0, must-revalidate",
   Pragma: "no-cache",
   Expires: "0",
+  "X-FoodBalance-Telegram-Auth": "2",
 };
 
 export async function POST(request: Request) {
-  let payload: { action?: string; token?: string; chatId?: string; userName?: string };
+  let payload: { action?: string; token?: string };
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { action, token, chatId, userName } = payload;
+  const { action, token } = payload;
 
   if (action === "generate") {
     return NextResponse.json({ token: randomUUID() }, { headers: responseHeaders });
-  }
-
-  if (action === "confirm" && token && chatId) {
-    const cleanToken = String(token).trim();
-    const cleanChatId = String(chatId).trim();
-    try {
-      await prisma.user.updateMany({ where: { chatId: cleanChatId }, data: { chatId: null } });
-      await prisma.authToken.deleteMany({ where: { chatId: cleanChatId } });
-      await prisma.authToken.create({
-        data: {
-          token: cleanToken,
-          chatId: cleanChatId,
-          userName: userName || "Telegram User",
-          expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-        },
-      });
-      return NextResponse.json({ ok: true }, { headers: responseHeaders });
-    } catch (error) {
-      console.error("Failed to save auth token:", error);
-      return NextResponse.json({ error: "Failed to save token" }, { status: 500, headers: responseHeaders });
-    }
   }
 
   if (action === "check" && token) {
@@ -76,7 +56,7 @@ export async function POST(request: Request) {
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
       });
-      await prisma.authToken.delete({ where: { token: cleanToken } });
+      await prisma.authToken.deleteMany({ where: { token: cleanToken } });
       return NextResponse.json({
         status: "confirmed",
         user: {
