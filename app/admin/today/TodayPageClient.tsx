@@ -90,9 +90,12 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
       const result = await notifyTodayOrders(selectedDate);
 
       if (result.ok) {
+        const reasons = result.skippedReasons?.length
+          ? ` Причини: ${result.skippedReasons.join("; ")}`
+          : "";
         setNotifyMessage({
           type: "success",
-          text: `✓ Відправлено ${result.sent} сповіщень. Пропущено: ${result.skipped}`,
+          text: `✓ Відправлено ${result.sent} сповіщень. Пропущено: ${result.skipped}.${reasons}`,
         });
       } else {
         setNotifyMessage({
@@ -294,7 +297,7 @@ const handleExportToKitchen = () => {
         <div className="mt-6 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
           <p className="font-semibold mb-2">ℹ️ Як працює сторінка:</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>Показує всі оплачені замовлення на обрану дату</li>
+            <li>Показує всі активні замовлення на обрану дату незалежно від способу оплати</li>
             <li>&quot;Коментар клієнта&quot; - побажання клієнта при оформленні (тільки для перегляду)</li>
             <li>&quot;Нотатка адміна&quot; - ваше повідомлення для клієнта (автозбереження)</li>
             <li>Редагуйте час доставки та нотатку адміна прямо в таблиці</li>

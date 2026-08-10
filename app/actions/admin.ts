@@ -7,6 +7,7 @@ import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
 import { normalizePhoneForLegacy } from "@/lib/googleSheets";
+import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 import type { Prisma } from "@prisma/client";
 
 // Explicit shapes so callbacks over Prisma results never collapse to implicit
@@ -412,6 +413,11 @@ export async function updateOrderDeliveryInfo(
   deliveryTime: string | null,
   deliveryNote: string | null
 ) {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Недостатньо прав для оновлення даних доставки" };
+  }
+
   try {
     await prisma.order.update({
       where: { id: orderId },
@@ -430,6 +436,16 @@ export async function updateOrderDeliveryInfo(
 }
 
 export async function notifyTodayOrders(dateStr: string) {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return {
+      ok: false,
+      message: "Недостатньо прав для відправки сповіщень",
+      sent: 0,
+      skipped: 0,
+    };
+  }
+
   try {
     // Parse target date DD.MM
     const dateRange = parseTargetDate(dateStr);
@@ -440,14 +456,15 @@ export async function notifyTodayOrders(dateStr: string) {
       };
     }
 
-    // Fetch all paid orders for the target date with user data
+    // Cash and bank-transfer orders remain unconfirmed until the admin records
+    // payment, but they are still active deliveries and need a delivery-time
+    // notification. Only cancelled orders are excluded here.
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
           gte: dateRange.start,
           lte: dateRange.end,
         },
-        isPaid: true,
         status: { not: "cancelled" },
       },
       include: {
@@ -485,10 +502,10 @@ export async function notifyTodayOrders(dateStr: string) {
       }
 
       // Build message
-      let message = `Сьогодні у вас доставка:\nПІБ: <b>${order.user.name}</b>\nЧас доставки: ${order.deliveryTime} ⏰`;
+      let message = `Сьогодні у вас доставка:\nПІБ: <b>${escapeTelegramHtml(order.user.name)}</b>\nЧас доставки: ${escapeTelegramHtml(order.deliveryTime)} ⏰`;
 
       if (order.deliveryNote) {
-        message += `\n\nНотатка для Вас: ${order.deliveryNote}`;
+        message += `\n\nНотатка для Вас: ${escapeTelegramHtml(order.deliveryNote)}`;
       }
 
       // Send Telegram message
@@ -555,17 +572,26 @@ function parseTargetDate(targetDateStr: string): { start: Date; end: Date } | nu
 
   if (day < 1 || day > 31 || month < 1 || month > 12) return null;
 
-  // Get current year in Kyiv timezone
-  const currentYear = new Date().toLocaleDateString('en-CA', {
-    timeZone: 'Europe/Kiev'
-  }).split('-')[0];
+  const { year } = kyivTodayParts();
+  const calendarDate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    calendarDate.getUTCFullYear() !== year ||
+    calendarDate.getUTCMonth() !== month - 1 ||
+    calendarDate.getUTCDate() !== day
+  ) {
+    return null;
+  }
 
-  // Create date range for the target day in Kyiv timezone
-  const dateStr = `${currentYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  const start = new Date(`${dateStr}T00:00:00.000+03:00`);
-  const end = new Date(`${dateStr}T23:59:59.999+03:00`);
+  const { start, end } = kyivDayRangeUtc(year, month, day);
 
   return { start, end };
+}
+
+function escapeTelegramHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 }
 
 interface Dish {

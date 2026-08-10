@@ -1,6 +1,6 @@
 # FoodBalance: migration and product roadmap
 
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 This is the live project tracker. Read it before making changes and update the
 checkboxes and notes after every completed step. Never put credentials, tokens,
@@ -114,7 +114,9 @@ private keys, database URLs, or other secret values in this file.
   the Railway admin order/client views.
 - [x] Verify the global CRM `Orders` tab write. The test order appeared in the
   existing all-clients spreadsheet.
-- [ ] Verify the global CRM `Info` tab write separately.
+- [x] Verify the global CRM `Info` tab write separately. A read-only Sheets API
+  check found the Railway test client with populated name, phone, address,
+  Telegram Chat ID, and package fields; no additional order was created.
 - [x] Verify month/day Sheet writes configured through `SheetConfig`. The first
   test correctly produced the admin Telegram fallback warning with no monthly
   mapping. After an August test workbook and `_Template` were configured, a
@@ -130,10 +132,18 @@ private keys, database URLs, or other secret values in this file.
   the `void` result of `pg_advisory_xact_lock`; commit `ab9c624` selects a typed
   lock result instead. The protected endpoint then returned success, and a
   second run reused the existing workbook without creating a duplicate.
-- [ ] Manually dispatch the `check-next-month-sheet` job in GitHub Actions once
+- [x] Manually dispatch the `check-next-month-sheet` job in GitHub Actions once
   to verify the scheduler's repository secrets and end-to-end invocation path.
-- [ ] Verify admin pages: orders, today, clients, menu, tariffs, and Sheets
-  settings.
+  Run `31412473887` completed successfully on 2026-08-10.
+- [x] Verify admin pages: orders, today, clients, menu, tariffs, and Sheets
+  settings all rendered under the authenticated Railway admin session.
+- [x] Fix the Today-page notification mismatch found during that review. Cash
+  and bank-transfer deliveries were displayed but silently excluded from the
+  Telegram send query because `isPaid` was false. Active non-cancelled orders
+  are now eligible regardless of payment confirmation; skipped reasons are
+  visible, date ranges are Kyiv/DST-aware, Telegram HTML is escaped, and both
+  Today mutations re-check admin authorization. No notification was sent while
+  verifying the explicit no-delivery test order.
 - [ ] Implement external logical PostgreSQL backups. Railway built-in volume
   backups are unavailable without Pro. Use a private backup destination and
   test an actual restore; database dumps contain PII and must never use the

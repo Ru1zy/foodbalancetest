@@ -101,8 +101,12 @@ function constructUTCFromKyiv(parts: { year: number; month: number; day: number;
  */
 function kyivUtcOffsetMinutes(at: Date): number {
   // Kyiv wall-clock for `at`, reinterpreted as if it were UTC, minus the real
-  // instant = the offset. Uses the IANA database via Intl, so DST is handled.
-  return (constructUTCFromKyiv(getKyivParts(at)).getTime() - at.getTime()) / 60000;
+  // instant = the offset. Intl exposes seconds but not milliseconds, so carry
+  // the original millisecond component across; otherwise each refinement of
+  // a 23:59:59.999 boundary loses a millisecond.
+  const wallClockAsUtc = constructUTCFromKyiv(getKyivParts(at));
+  wallClockAsUtc.setUTCMilliseconds(at.getUTCMilliseconds());
+  return (wallClockAsUtc.getTime() - at.getTime()) / 60000;
 }
 
 /**

@@ -1,28 +1,25 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 import TodayPageClient from "./TodayPageClient";
 
 async function getTodayOrders(dateStr: string) {
   try {
     // Parse date in DD.MM format
     const [day, month] = dateStr.split(".");
-    const currentYear = new Date().getFullYear();
-    const targetDate = new Date(
-      currentYear,
-      parseInt(month) - 1,
-      parseInt(day)
+    const { year } = kyivTodayParts();
+    const { start: targetDate, end: nextDay } = kyivDayRangeUtc(
+      year,
+      parseInt(month, 10),
+      parseInt(day, 10),
     );
-    targetDate.setHours(0, 0, 0, 0);
-
-    const nextDay = new Date(targetDate);
-    nextDay.setDate(nextDay.getDate() + 1);
 
     const orders = await prisma.order.findMany({
       where: {
         deliveryDate: {
           gte: targetDate,
-          lt: nextDay,
+          lte: nextDay,
         },
         status: { not: "cancelled" },
       },
@@ -42,17 +39,17 @@ async function getTodayOrders(dateStr: string) {
 }
 
 export default async function TodayPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-
-  if (!token) {
-    redirect("/");
+  // Layout guards are not a data-access boundary: Next.js may render child
+  // segments in parallel. Re-check admin authorization before reading orders.
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    notFound();
   }
 
   // Default to today in DD.MM format
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const today = kyivTodayParts();
+  const day = String(today.day).padStart(2, "0");
+  const month = String(today.month).padStart(2, "0");
   const defaultDate = `${day}.${month}`;
 
   const orders = await getTodayOrders(defaultDate);
