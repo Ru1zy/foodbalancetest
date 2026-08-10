@@ -19,7 +19,7 @@ model User {
   chatId         String? @unique
   email          String? @unique // Для Google Auth
   googleId       String? @unique // Для Google Auth
-  avatarUrl      String?         // Для аватарки
+  avatarUrl      String? // Для аватарки
   address        String?
   defaultPackage String?
   defaultCutlery String?
@@ -30,24 +30,24 @@ model User {
 }
 
 model UserBalance {
-  id          String   @id @default(uuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  packageId   String   // e.g., 'Slim', 'Active', 'Sushka S'
-  totalDays   Int
-  usedDays    Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  packageId String // e.g., 'Slim', 'Active', 'Sushka S'
+  totalDays Int
+  usedDays  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, packageId])
 }
 
 model Menu {
-  id         String  @id @default(uuid())
-  dayOfWeek  Int
+  id          String  @id @default(uuid())
+  dayOfWeek   Int
   packageType String
-  photoUrl   String?
-  dishes     Json
+  photoUrl    String?
+  dishes      Json
 }
 
 model Tariff {
@@ -62,26 +62,52 @@ model Tariff {
 }
 
 model Order {
-  id              String   @id @default(uuid())
+  id              String     @id @default(uuid())
   userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt       DateTime @default(now())
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime   @default(now())
   deliveryDate    DateTime
   deliveryAddress String?
   packageType     String
   items           Json
-  status          String   @default("new")
-  isPaid          Boolean  @default(false)
-  cutlery         Int      @default(0)
+  status          String     @default("new")
+  isPaid          Boolean    @default(false)
+  cutlery         Int        @default(0)
   notes           String?
   price           Int?
-  balanceDaysUsed Int      @default(0)
+  balanceDaysUsed Int        @default(0)
   deliveryTime    String?
   deliveryNote    String?
-  paymentMethod   String   @default("balance")
+  paymentMethod   String     @default("balance")
+  days            OrderDay[]
 
   @@index([deliveryDate, status])
   @@index([userId])
+}
+
+/// One concrete delivery occurrence inside a multi-day order. Payment and the
+/// customer-level comment remain on Order; date-specific fulfilment data lives
+/// here so Monday and Thursday can have independent dishes, time and status.
+model OrderDay {
+  id           String    @id @default(uuid())
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryDate DateTime
+  weekday      Int
+  menuId       String?
+  items        Json
+  menuSnapshot Json?
+  status       String    @default("scheduled")
+  deliveryTime String?
+  deliveryNote String?
+  cancelledAt  DateTime?
+  cancelReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([orderId, deliveryDate])
+  @@index([deliveryDate, status])
+  @@index([orderId])
 }
 
 /// Idempotency guard for checkout submissions. The client sends a stable key
@@ -108,7 +134,7 @@ model SheetConfig {
   id            String   @id @default(uuid())
   monthKey      String   @unique // "MM.YYYY", e.g. "03.2026"
   spreadsheetId String
-  label         String?  // optional human note, e.g. "Березень 2026"
+  label         String? // optional human note, e.g. "Березень 2026"
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
