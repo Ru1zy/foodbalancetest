@@ -62,3 +62,11 @@ database.
 
 Never restore over the live database. Restore into a new empty database first,
 verify it, and switch the application only after review.
+
+## First verified recovery
+
+GitHub Actions run `31418162809` on 2026-08-10 completed a PostgreSQL 18 dump,
+temporary-database restore, and core-table row-count comparison, then removed
+the temporary database. The uploaded R2 ciphertext was separately downloaded
+and decrypted with the offline identity; its plaintext SHA-256 matched the
+uploaded manifest.

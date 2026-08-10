@@ -144,14 +144,19 @@ private keys, database URLs, or other secret values in this file.
   visible, date ranges are Kyiv/DST-aware, Telegram HTML is escaped, and both
   Today mutations re-check admin authorization. No notification was sent while
   verifying the explicit no-delivery test order.
-- [ ] Implement external logical PostgreSQL backups. Railway built-in volume
-  backups are unavailable without Pro. Use a private backup destination and
-  test an actual restore; database dumps contain PII and must never use the
-  public image bucket. A separate private Cloudflare R2 bucket
-  `foodbalance-database-backups` now has a 7-day deletion lock and 90-day
-  expiration policy. The age encryption identity and workflow/runbook are
-  prepared; activation still requires a new R2 key scoped only to this bucket,
-  followed by a successful encrypted upload and temporary-database restore.
+- [x] Implement external logical PostgreSQL backups without Railway Pro. Daily
+  GitHub Actions dumps use the PostgreSQL 18 client, validate the custom-format
+  archive, encrypt it with an offline age/SSH recipient, and upload only the
+  ciphertext plus checksum manifest to the separate private Cloudflare R2
+  bucket `foodbalance-database-backups`. The bucket has a 7-day deletion lock
+  and 90-day expiration policy. Manual run `31418162809` restored into a
+  uniquely named temporary database, matched core table counts, removed the
+  temporary database, and uploaded the encrypted object. The exact R2 object
+  was then downloaded, decrypted locally with the offline identity, and matched
+  the manifest's plaintext SHA-256. See `DATABASE_BACKUP_RUNBOOK.md`.
+- [ ] Copy the offline backup private identity from the documented local path
+  into the encrypted FoodBalance secret vault. Do not proceed to cutover with
+  the laptop as the only recovery copy.
 - [ ] Perform a final Neon -> Railway database sync during a no-write window.
   The current Railway database is only an earlier test snapshot.
 - [ ] Reduce DNS TTL before cutover.
