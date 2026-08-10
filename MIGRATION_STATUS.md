@@ -147,7 +147,11 @@ private keys, database URLs, or other secret values in this file.
 - [ ] Implement external logical PostgreSQL backups. Railway built-in volume
   backups are unavailable without Pro. Use a private backup destination and
   test an actual restore; database dumps contain PII and must never use the
-  public image bucket.
+  public image bucket. A separate private Cloudflare R2 bucket
+  `foodbalance-database-backups` now has a 7-day deletion lock and 90-day
+  expiration policy. The age encryption identity and workflow/runbook are
+  prepared; activation still requires a new R2 key scoped only to this bucket,
+  followed by a successful encrypted upload and temporary-database restore.
 - [ ] Perform a final Neon -> Railway database sync during a no-write window.
   The current Railway database is only an earlier test snapshot.
 - [ ] Reduce DNS TTL before cutover.
