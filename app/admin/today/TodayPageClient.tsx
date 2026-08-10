@@ -5,6 +5,7 @@ import { updateOrderDeliveryInfo, notifyTodayOrders, exportToKitchenSheet } from
 
 type Order = {
   id: string;
+  orderDayId: string | null;
   deliveryDate: Date;
   deliveryAddress: string | null;
   packageType: string;
@@ -53,6 +54,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
 
   const handleFieldUpdate = (
     orderId: string,
+    orderDayId: string | null,
     field: "deliveryTime" | "deliveryNote",
     value: string
   ) => {
@@ -64,7 +66,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
     );
 
     // Clear existing timer for this field
-    const timerKey = `${orderId}-${field}`;
+    const timerKey = `${orderDayId ?? orderId}-${field}`;
     if (debounceTimers.current[timerKey]) {
       clearTimeout(debounceTimers.current[timerKey]);
     }
@@ -77,6 +79,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
 
         await updateOrderDeliveryInfo(
           orderId,
+          orderDayId,
           field === "deliveryTime" ? value : order.deliveryTime,
           field === "deliveryNote" ? value : order.deliveryNote
         );
@@ -229,7 +232,7 @@ const handleExportToKitchen = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-blue-50/50 transition">
+                    <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 transition">
                       <td className="px-4 py-3 text-sm font-medium text-slate-900">
                         {order.user.name}
                       </td>
@@ -259,7 +262,7 @@ const handleExportToKitchen = () => {
                           type="text"
                           value={order.deliveryTime || ""}
                           onChange={(e) =>
-                            handleFieldUpdate(order.id, "deliveryTime", e.target.value)
+                            handleFieldUpdate(order.id, order.orderDayId, "deliveryTime", e.target.value)
                           }
                           placeholder="10:00 - 11:00"
                           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
@@ -270,7 +273,7 @@ const handleExportToKitchen = () => {
                           type="text"
                           value={order.deliveryNote || ""}
                           onChange={(e) =>
-                            handleFieldUpdate(order.id, "deliveryNote", e.target.value)
+                            handleFieldUpdate(order.id, order.orderDayId, "deliveryNote", e.target.value)
                           }
                           placeholder="Нотатка для клієнта..."
                           className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"

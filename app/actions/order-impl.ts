@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import type { Order, Prisma, User } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
-  earliestMenuDeliveryDateFromCartDays,
+  dateForMenuDayOfWeek,
   getOrderTotalUah,
   getPackageLimit,
   PackageType,
@@ -91,8 +91,17 @@ type PreparedOrder = {
   validatedData: CheckoutData;
   sanitizedCartData: OrderCartData;
   resolvedDeliveryDate: Date;
+  deliveryDays: PreparedOrderDay[];
   paymentMethod: CheckoutData["paymentMethod"];
   totalPrice: number;
+};
+
+type PreparedOrderDay = {
+  deliveryDate: Date;
+  weekday: number;
+  menuId: string;
+  items: OrderCartDay;
+  menuSnapshot: Prisma.JsonValue;
 };
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
@@ -227,23 +236,61 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
   };
 }
 
-async function resolveServerDeliveryDate(sanitizedCartData: OrderCartData): Promise<Date | null> {
+async function resolveServerDeliveryDays(
+  sanitizedCartData: OrderCartData,
+): Promise<PreparedOrderDay[] | null> {
   const uniqueIds = [...new Set(sanitizedCartData.days.map((d) => d.dayId))];
-  if (uniqueIds.length === 0) {
+  if (uniqueIds.length === 0 || uniqueIds.length !== sanitizedCartData.days.length) {
     return null;
   }
 
   const rows = await prisma.menu.findMany({
     where: { id: { in: uniqueIds } },
-    select: { id: true, dayOfWeek: true },
+    select: { id: true, dayOfWeek: true, dishes: true, packageType: true },
   });
 
   if (rows.length !== uniqueIds.length) {
     return null;
   }
 
-  const menuDayByItemId = Object.fromEntries(rows.map((r: { id: string; dayOfWeek: number }) => [r.id, r.dayOfWeek]));
-  return earliestMenuDeliveryDateFromCartDays(sanitizedCartData.days, menuDayByItemId, new Date());
+  const menuById = new Map(rows.map((row) => [row.id, row]));
+  const expectedMenuType = sanitizedCartData.packageType.includes("Sushka")
+    ? "Sushka"
+    : "Template";
+  const reference = new Date();
+  const resolved = sanitizedCartData.days.map((day) => {
+    const menu = menuById.get(day.dayId);
+    if (
+      !menu ||
+      menu.packageType !== expectedMenuType ||
+      !Number.isInteger(menu.dayOfWeek) ||
+      menu.dayOfWeek < 1 ||
+      menu.dayOfWeek > 7
+    ) {
+      return null;
+    }
+
+    return {
+      deliveryDate: dateForMenuDayOfWeek(menu.dayOfWeek, reference),
+      weekday: menu.dayOfWeek,
+      menuId: menu.id,
+      items: day,
+      menuSnapshot: menu.dishes,
+    } satisfies PreparedOrderDay;
+  });
+
+  if (resolved.some((day) => day === null)) {
+    return null;
+  }
+
+  const deliveryDays = resolved as PreparedOrderDay[];
+  if (new Set(deliveryDays.map((day) => day.weekday)).size !== deliveryDays.length) {
+    return null;
+  }
+
+  return deliveryDays.sort(
+    (left, right) => left.deliveryDate.getTime() - right.deliveryDate.getTime(),
+  );
 }
 
 function normalizeDeliveryDateInput(value: Date | string): Date | null {
@@ -384,9 +431,10 @@ async function prepareOrderForSubmission(
   }
 
   const submittedDeliveryDate = normalizeDeliveryDateInput(deliveryDate);
-  const serverDeliveryDate = await resolveServerDeliveryDate(sanitizedCartData);
+  const deliveryDays = await resolveServerDeliveryDays(sanitizedCartData);
+  const serverDeliveryDate = deliveryDays?.[0]?.deliveryDate ?? null;
 
-  if (!submittedDeliveryDate || !serverDeliveryDate) {
+  if (!submittedDeliveryDate || !deliveryDays || !serverDeliveryDate) {
     return {
       ok: false,
       message: "Не вдалося визначити дату доставки.",
@@ -407,7 +455,8 @@ async function prepareOrderForSubmission(
     prepared: {
       validatedData,
       sanitizedCartData,
-      resolvedDeliveryDate: submittedDeliveryDate,
+      resolvedDeliveryDate: serverDeliveryDate,
+      deliveryDays,
       paymentMethod,
       totalPrice,
     },
@@ -428,7 +477,14 @@ async function persistOrderInTransaction(
   prepared: PreparedOrder,
   userId: string | null,
 ): Promise<{ order: Order; user: User }> {
-  const { validatedData, sanitizedCartData, resolvedDeliveryDate, paymentMethod, totalPrice } = prepared;
+  const {
+    validatedData,
+    sanitizedCartData,
+    resolvedDeliveryDate,
+    deliveryDays,
+    paymentMethod,
+    totalPrice,
+  } = prepared;
   const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
 
   // --- Start: Split Payment Calculation (inside the transaction) ---
@@ -546,6 +602,15 @@ async function persistOrderInTransaction(
           paymentMethod: paymentMethod || "balance",
           status: "new",
           userId,
+          days: {
+            create: deliveryDays.map((day) => ({
+              deliveryDate: day.deliveryDate,
+              weekday: day.weekday,
+              menuId: day.menuId,
+              items: day.items as unknown as Prisma.InputJsonValue,
+              menuSnapshot: day.menuSnapshot as Prisma.InputJsonValue,
+            })),
+          },
         },
       });
 
@@ -607,6 +672,15 @@ async function persistOrderInTransaction(
       paymentMethod: paymentMethod || "balance",
       status: "new",
       userId: user.id,
+      days: {
+        create: deliveryDays.map((day) => ({
+          deliveryDate: day.deliveryDate,
+          weekday: day.weekday,
+          menuId: day.menuId,
+          items: day.items as unknown as Prisma.InputJsonValue,
+          menuSnapshot: day.menuSnapshot as Prisma.InputJsonValue,
+        })),
+      },
     },
   });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { findDeliveryOrdersForRange } from "@/lib/delivery-orders";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 
 export async function GET(request: NextRequest) {
@@ -39,21 +39,7 @@ export async function GET(request: NextRequest) {
     // Vercel's UTC runtime and across the +02:00/+03:00 switch.
     const { start: targetDate, end: nextDay } = kyivDayRangeUtc(year, month, day);
 
-    const orders = await prisma.order.findMany({
-      where: {
-        deliveryDate: {
-          gte: targetDate,
-          lte: nextDay,
-        },
-        status: { not: "cancelled" },
-      },
-      include: {
-        user: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+    const orders = await findDeliveryOrdersForRange(targetDate, nextDay);
 
     return NextResponse.json({ orders });
   } catch (error) {

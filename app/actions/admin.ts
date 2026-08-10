@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { google } from "googleapis";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import {
+  findDeliveryOrdersForRange,
+  type DeliveryOrderWithUser,
+} from "@/lib/delivery-orders";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
 import { normalizePhoneForLegacy } from "@/lib/googleSheets";
@@ -12,7 +16,6 @@ import type { Prisma } from "@prisma/client";
 
 // Explicit shapes so callbacks over Prisma results never collapse to implicit
 // `any` if the generated client isn't fully typed at build time (Vercel).
-type ActiveOrderWithUser = Prisma.OrderGetPayload<{ include: { user: true } }>;
 type MenuSelection = { id: string; dishes: Prisma.JsonValue; packageType: string };
 
 // ============================================================================
@@ -410,6 +413,7 @@ export async function archiveOldOrders(): Promise<ArchiveOrdersResult> {
 
 export async function updateOrderDeliveryInfo(
   orderId: string,
+  orderDayId: string | null,
   deliveryTime: string | null,
   deliveryNote: string | null
 ) {
@@ -419,13 +423,23 @@ export async function updateOrderDeliveryInfo(
   }
 
   try {
-    await prisma.order.update({
-      where: { id: orderId },
-      data: {
-        deliveryTime: deliveryTime || null,
-        deliveryNote: deliveryNote || null,
-      },
-    });
+    const data = {
+      deliveryTime: deliveryTime || null,
+      deliveryNote: deliveryNote || null,
+    };
+
+    if (orderDayId) {
+      const updated = await prisma.orderDay.updateMany({
+        where: { id: orderDayId, orderId },
+        data,
+      });
+      if (updated.count !== 1) {
+        return { ok: false, message: "День доставки не знайдено" };
+      }
+    } else {
+      // Compatibility path for an order that has not been backfilled yet.
+      await prisma.order.update({ where: { id: orderId }, data });
+    }
 
     revalidatePath("/admin/today");
     return { ok: true };
@@ -459,18 +473,7 @@ export async function notifyTodayOrders(dateStr: string) {
     // Cash and bank-transfer orders remain unconfirmed until the admin records
     // payment, but they are still active deliveries and need a delivery-time
     // notification. Only cancelled orders are excluded here.
-    const orders = await prisma.order.findMany({
-      where: {
-        deliveryDate: {
-          gte: dateRange.start,
-          lte: dateRange.end,
-        },
-        status: { not: "cancelled" },
-      },
-      include: {
-        user: true,
-      },
-    });
+    const orders = await findDeliveryOrdersForRange(dateRange.start, dateRange.end);
 
     let sent = 0;
     let skipped = 0;
@@ -758,30 +761,8 @@ export async function exportToKitchenSheet(
     });
     const sheets = google.sheets({ version: "v4", auth });
 
-    // Task 2: Find all active orders that might cover the target date
-    const allActiveOrders = await prisma.order.findMany({
-      where: {
-        deliveryDate: { lte: dateRange.end },
-        status: { notIn: ["cancelled", "archived"] },
-      },
-      include: { user: true },
-    });
-
-    const kyivISO = { timeZone: 'Europe/Kiev', year: 'numeric', month: '2-digit', day: '2-digit' } as const;
-    const targetStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(dateRange.start);
-    const t = new Date(targetStr);
-
-    // Filter orders to only those that actually have a delivery on targetDate
-    const orders = allActiveOrders.filter((order: ActiveOrderWithUser) => {
-      if (!order.items || typeof order.items !== "object") return false;
-      const days = (order.items as unknown as Record<string, unknown[]>).days;
-      if (!Array.isArray(days)) return false;
-
-      const startStr = new Intl.DateTimeFormat('en-CA', kyivISO).format(new Date(order.deliveryDate));
-      const s = new Date(startStr);
-      const dayIndex = Math.floor((t.getTime() - s.getTime()) / (1000 * 60 * 60 * 24));
-
-      return dayIndex >= 0 && dayIndex < days.length;
+    const orders = await findDeliveryOrdersForRange(dateRange.start, dateRange.end, {
+      excludedOrderStatuses: ["cancelled", "archived"],
     });
 
     if (orders.length === 0) return { ok: false, message: `Не знайдено замовлень на ${targetDateStr}.` };
@@ -828,7 +809,7 @@ export async function exportToKitchenSheet(
     }
 
     const rows: string[][] = await Promise.all(
-      orders.map(async (order: ActiveOrderWithUser) => {
+      orders.map(async (order: DeliveryOrderWithUser) => {
         let formattedDishes = "";
         const pkgLower = order.packageType.toLowerCase();
         const isSushka = pkgLower.includes("sushka");
@@ -859,7 +840,13 @@ export async function exportToKitchenSheet(
           }
         } else {
           // Try to format from order items
-          formattedDishes = await formatOrderDishes(order.items, menuById, order.packageType, startDay, order.deliveryDate);
+          formattedDishes = await formatOrderDishes(
+            order.items,
+            menuById,
+            order.packageType,
+            startDay,
+            order.originalDeliveryDate,
+          );
           
           // Fallback to Template menu if empty and NOT an Indiv package
           if (!formattedDishes && !isIndiv && templateMenu) {

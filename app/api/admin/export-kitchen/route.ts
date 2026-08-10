@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { google } from "googleapis";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import {
+  findDeliveryOrdersForRange,
+  type DeliveryOrderWithUser,
+} from "@/lib/delivery-orders";
 import { kyivDayRangeUtc } from "@/lib/order-logic";
 import type { Prisma } from "@prisma/client";
-
-type KitchenOrderWithUser = Prisma.OrderGetPayload<{
-  include: { user: { select: { name: true; phone: true; address: true; chatId: true } } };
-}>;
 
 export const runtime = "nodejs";
 
@@ -142,34 +142,16 @@ export async function GET(request: Request) {
     const exportDay = parseInt(dateMatch[3], 10);
     const { start: startDate, end: endDate } = kyivDayRangeUtc(exportYear, exportMonth, exportDay);
 
-    // Fetch paid orders for the date
-    const orders = await prisma.order.findMany({
-      where: {
-        deliveryDate: {
-          gte: startDate,
-          lte: endDate,
-        },
-        isPaid: true,
-      },
-      include: {
-        user: {
-          select: {
-            name: true,
-            phone: true,
-            address: true,
-            chatId: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
+    const orders = await findDeliveryOrdersForRange(startDate, endDate, {
+      paidOnly: true,
     });
 
     // Parse all orders
     const exportData = await Promise.all(
-      orders.map(async (order: KitchenOrderWithUser) => {
-        const parsedItems = await parseOrderItems(order.items);
+      orders.map(async (order: DeliveryOrderWithUser) => {
+        const parsedItems = await parseOrderItems(
+          order.orderDayItems ? { days: [order.orderDayItems] } : order.items,
+        );
         const dishesString = parsedItems.join("+");
 
         // Get cutlery info

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { findDeliveryOrdersForRange } from "@/lib/delivery-orders";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 import TodayPageClient from "./TodayPageClient";
 
@@ -15,23 +15,7 @@ async function getTodayOrders(dateStr: string) {
       parseInt(day, 10),
     );
 
-    const orders = await prisma.order.findMany({
-      where: {
-        deliveryDate: {
-          gte: targetDate,
-          lte: nextDay,
-        },
-        status: { not: "cancelled" },
-      },
-      include: {
-        user: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return orders;
+    return await findDeliveryOrdersForRange(targetDate, nextDay);
   } catch (error) {
     console.error("Error fetching today orders:", error);
     return [];

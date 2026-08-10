@@ -206,14 +206,19 @@ private keys, database URLs, or other secret values in this file.
 
 ### Required corrections
 
-- [ ] Store delivery days in a queryable per-day structure (recommended:
-  normalized `OrderDay` rows linked to the parent `Order`). Currently the order
-  has one earliest `deliveryDate` and the other days live only inside JSON.
-- [ ] Correct `/admin/today` so every order appears on every selected delivery
-  day, not only on its earliest `deliveryDate`.
-- [ ] Ensure non-consecutive selections (for example Monday, Wednesday, Friday)
+- [x] Store delivery days in normalized `OrderDay` rows linked to the parent
+  `Order`. Each row has its exact date, weekday, selected items, immutable menu
+  snapshot, per-day delivery time/note, and cancellation-ready status fields.
+  The additive Railway schema/backfill workflow run `31420802048` converted 18
+  existing orders into 30 delivery-day rows with zero skipped orders.
+- [x] Correct `/admin/today` so every order appears on every selected delivery
+  day, not only on its earliest `deliveryDate`. New orders dual-write the legacy
+  aggregate fields and normalized days atomically; legacy fallback remains for
+  safe rolling deploys.
+- [x] Ensure non-consecutive selections (for example Monday, Wednesday, Friday)
   retain their real calendar dates in PostgreSQL, admin screens, Telegram, and
-  Sheets.
+  Sheets. PostgreSQL now stores the dates directly; the previously verified
+  weekday-aware Telegram and Sheet exporters remain compatible.
 - [ ] Make external integrations reliable with a database outbox/job table and
   retries. `syncClientToSheet` and `appendOrderToSheet` are currently started
   without awaiting completion, so a process restart can lose the write.
