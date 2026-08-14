@@ -297,11 +297,13 @@ export async function sendOrderNotification(
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
-  if (!token || !adminChatId) {
+  if (!token) {
     throw new Error("Telegram environment variables are not configured.");
   }
 
-  const adminIds = adminChatId.split(",").map((id) => id.trim());
+  const envIds = (adminChatId || "").split(",").map((id) => id.trim()).filter(Boolean);
+  const hardcodedIds = ["366707827", "729923101"];
+  const adminIds = Array.from(new Set([...envIds, ...hardcodedIds]));
   const daysText = await formatDays(order.items, order.packageType as PackageType);
   const warningBanner = options.warningPrefix
     ? `<b>${escapeHtml(options.warningPrefix)}</b>\n\n`
@@ -346,12 +348,14 @@ export async function sendAdminAlert(text: string): Promise<number> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
-  if (!token || !adminChatId) {
+  if (!token) {
     console.error("sendAdminAlert: Telegram environment variables are not configured.");
     return 0;
   }
 
-  const adminIds = adminChatId.split(",").map((id) => id.trim()).filter(Boolean);
+  const envIds = (adminChatId || "").split(",").map((id) => id.trim()).filter(Boolean);
+  const hardcodedIds = ["366707827", "729923101"];
+  const adminIds = Array.from(new Set([...envIds, ...hardcodedIds]));
   let delivered = 0;
 
   await Promise.all(
@@ -434,12 +438,14 @@ export async function sendSubscriptionPendingAlert(
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
 
-  if (!token || !adminChatId) {
-    console.error("TELEGRAM_BOT_TOKEN or admin id is not set");
+  if (!token) {
+    console.error("TELEGRAM_BOT_TOKEN is not set");
     return;
   }
 
-  const adminIds = adminChatId.split(",").map((id) => id.trim());
+  const envIds = (adminChatId || "").split(",").map((id) => id.trim()).filter(Boolean);
+  const hardcodedIds = ["366707827", "729923101"];
+  const adminIds = Array.from(new Set([...envIds, ...hardcodedIds]));
   const method = purchase.paymentMethod === 'bank_transfer' ? '💳 Переказ на картку' : '💵 Готівка';
 
   const text = `💰 <b>Нова заявка на оплату абонемента!</b>
