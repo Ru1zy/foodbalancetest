@@ -83,6 +83,23 @@ export async function processOutboxJob(jobId: string) {
       if (purchase) {
         await sendSubscriptionPendingAlert(purchase, purchase.user);
       }
+    } else if (job.type === "TELEGRAM_NOTIFICATION_SUBSCRIPTION_RESULT") {
+      const payload = job.payload as { purchaseId?: string; approved?: boolean };
+      if (!payload.purchaseId) throw new Error("Missing purchaseId");
+
+      const purchase = await prisma.subscriptionPurchase.findUnique({
+        where: { id: payload.purchaseId },
+        include: { user: true },
+      });
+
+      if (purchase && purchase.user.chatId) {
+        const { sendSubscriptionApprovedAlert, sendSubscriptionRejectedAlert } = await import('./telegram');
+        if (payload.approved) {
+           await sendSubscriptionApprovedAlert(purchase, purchase.user);
+        } else {
+           await sendSubscriptionRejectedAlert(purchase, purchase.user);
+        }
+      }
     } else {
       throw new Error(`Unknown job type: ${job.type}`);
     }

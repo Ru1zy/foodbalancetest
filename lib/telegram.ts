@@ -468,3 +468,45 @@ export async function sendSubscriptionPendingAlert(
 
   await Promise.all(sendPromises);
 }
+
+export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || !user.chatId) return;
+
+  const text = `✅ <b>Оплату абонемента підтверджено!</b>
+
+📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
+💰 <b>Сума:</b> ${purchase.finalPrice} ₴
+
+Баланс поповнено. Ви можете використовувати ці дні для замовлення їжі!`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
+    });
+  } catch (error) {
+    console.error("Failed to send telegram approval alert:", error);
+  }
+}
+
+export async function sendSubscriptionRejectedAlert(purchase: any, user: any) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || !user.chatId) return;
+
+  const text = `❌ <b>Оплату абонемента скасовано</b>
+
+📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
+На жаль, адміністратор відхилив вашу оплату. Якщо це помилка, будь ласка, зверніться до підтримки.`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
+    });
+  } catch (error) {
+    console.error("Failed to send telegram rejection alert:", error);
+  }
+}
