@@ -2,6 +2,7 @@ import prisma from "./prisma";
 import type { Prisma } from "@prisma/client";
 import { syncClientToSheet, appendOrderToSheet } from "./googleSheets";
 import { syncOrderToMonthlySheets } from "./monthlySheets";
+import { sendSubscriptionPendingAlert } from "./telegram";
 
 /**
  * Enqueues an outbox job within a Prisma transaction.
@@ -70,6 +71,18 @@ export async function processOutboxJob(jobId: string) {
 
       // Export to Monthly tabs
       await syncOrderToMonthlySheets(order, order.user);
+    } else if (job.type === "TELEGRAM_NOTIFICATION_SUBSCRIPTION") {
+      const payload = job.payload as { purchaseId?: string };
+      if (!payload.purchaseId) throw new Error("Missing purchaseId");
+
+      const purchase = await prisma.subscriptionPurchase.findUnique({
+        where: { id: payload.purchaseId },
+        include: { user: true },
+      });
+
+      if (purchase) {
+        await sendSubscriptionPendingAlert(purchase, purchase.user);
+      }
     } else {
       throw new Error(`Unknown job type: ${job.type}`);
     }

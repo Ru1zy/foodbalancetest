@@ -44,18 +44,21 @@ model UserBalance {
 }
 
 model SubscriptionPurchase {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   userId        String
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   packageId     String
   days          Int
   basePrice     Int
   discount      Int
   finalPrice    Int
-  status        String   @default("PENDING") // PENDING, PAID, FAILED, CANCELLED
-  paymentMethod String   @default("liqpay")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  status        String    @default("PENDING") // PENDING, CREDITED_PENDING_CONFIRMATION, PAID, FAILED, CANCELLED
+  paymentMethod String    @default("liqpay")
+  receiptUrl    String?
+  confirmedBy   String?
+  confirmedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([userId])
   @@index([status])
@@ -199,7 +202,7 @@ model MergeToken {
 /// they are executed durably even if the server restarts.
 model OutboxJob {
   id        String   @id @default(uuid())
-  type      String   // e.g. "EXPORT_ORDER_TO_SHEETS"
+  type      String // e.g. "EXPORT_ORDER_TO_SHEETS"
   payload   Json
   status    String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
   error     String?

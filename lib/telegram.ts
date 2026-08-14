@@ -426,3 +426,44 @@ export async function sendPaymentConfirmation(chatId: string, orderDetails: Orde
     console.error("Failed to send Telegram notification:", error);
   }
 }
+
+export async function sendSubscriptionPendingAlert(
+  purchase: any,
+  user: any
+) {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+
+  if (!token || !adminChatId) {
+    console.error("TELEGRAM_BOT_TOKEN or admin id is not set");
+    return;
+  }
+
+  const adminIds = adminChatId.split(",").map((id) => id.trim());
+  const method = purchase.paymentMethod === 'bank_transfer' ? '💳 Переказ на картку' : '💵 Готівка';
+
+  const text = `💰 <b>Нова заявка на оплату абонемента!</b>
+
+👤 <b>Клієнт:</b> ${escapeHtml(user.name)} (${escapeHtml(user.phone)})
+📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
+💳 <b>Сума:</b> ${purchase.finalPrice} ₴
+Спосіб: ${method}`;
+
+  const sendPromises = adminIds.map((chatId) =>
+    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        text,
+        parse_mode: "HTML",
+      }),
+    }).then(async (response) => {
+      if (!response.ok) {
+        console.error(`Telegram sendMessage failed for ${chatId}: ${await response.text()}`);
+      }
+    })
+  );
+
+  await Promise.all(sendPromises);
+}

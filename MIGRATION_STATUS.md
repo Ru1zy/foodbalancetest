@@ -317,34 +317,33 @@ Current research as of 2026-08-09:
 - [ ] Keep `/api/balance/topup` disabled until this verified path replaces it.
 
 ### Bank transfer / account payment
-
-- [ ] Show the calculated amount and business payment details.
-- [ ] Add a dedicated authenticated receipt-upload flow. Do not reuse the
+- [x] Show the calculated amount and business payment details.
+- [x] Add a dedicated authenticated receipt-upload flow. Do not reuse the
   admin-only public menu-image upload route.
-- [ ] Store receipts in a private bucket; expose them only to authorized admins.
-- [ ] After a receipt is uploaded, credit the subscription once with status
+- [x] Store receipts in a private bucket; expose them only to authorized admins.
+- [x] After a receipt is uploaded, credit the subscription once with status
   `credited_pending_confirmation`, as requested by the owner.
-- [ ] Send a prominent Telegram alert to the admin with the client, amount,
+- [x] Send a prominent Telegram alert to the admin with the client, amount,
   method, and a link to the pending payment.
 
 ### Cash
 
-- [ ] Credit the subscription once when the cash purchase is created, with
+- [x] Credit the subscription once when the cash purchase is created, with
   status `credited_pending_confirmation`.
-- [ ] Put the purchase in the same pending-payment queue without requiring a
+- [x] Put the purchase in the same pending-payment queue without requiring a
   receipt.
-- [ ] Mark the payment method clearly as cash.
+- [x] Mark the payment method clearly as cash.
 
 ## Phase 4: admin pending-payments workflow
 
-- [ ] Add an admin page/tab named `Неоплачені` with a visible pending counter.
-- [ ] Show at minimum: client name, phone, amount, payment method, package, days,
+- [x] Add an admin page/tab named `Неоплачені` with a visible pending counter.
+- [x] Show at minimum: client name, phone, amount, payment method, package, days,
   creation time, and receipt when present.
-- [ ] Add an idempotent `Confirm payment` action.
-- [ ] Add a rejection/cancellation path only after the owner defines what to do
+- [x] Add an idempotent `Confirm payment` action.
+- [x] Add a rejection/cancellation path only after the owner defines what to do
   with days that were already credited or consumed.
-- [ ] Remove confirmed entries from the pending view but retain an audit history.
-- [ ] Record who confirmed the payment and when.
+- [x] Remove confirmed entries from the pending view but retain an audit history.
+- [x] Record who confirmed the payment and when.
 
 ## Phase 5: Telegram delivery experience and notifications
 

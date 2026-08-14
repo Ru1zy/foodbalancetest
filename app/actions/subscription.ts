@@ -5,11 +5,14 @@ import prisma from "@/lib/prisma";
 import { calculateSubscriptionPrice } from "@/lib/subscription-logic";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { enqueueOutboxJob } from "@/lib/outbox";
 
 export async function createSubscriptionPurchaseAction(
   packageId: string,
   basePrice: number,
-  days: number
+  days: number,
+  paymentMethod: "bank_transfer" | "cash",
+  receiptUrl?: string
 ) {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
@@ -39,21 +42,46 @@ export async function createSubscriptionPurchaseAction(
   const discountAmount = (basePrice * days) - totalDiscounted;
 
   try {
-    const purchase = await prisma.subscriptionPurchase.create({
-      data: {
-        userId: userId,
-        packageId,
-        days,
-        basePrice: basePrice * days,
-        discount: discountAmount,
-        finalPrice: totalDiscounted,
-        status: "PENDING",
-        // TODO: Update payment method selection logic
-        paymentMethod: "bank_transfer",
-      },
+    const purchase = await prisma.$transaction(async (tx) => {
+      const p = await tx.subscriptionPurchase.create({
+        data: {
+          userId: userId,
+          packageId,
+          days,
+          basePrice: basePrice * days,
+          discount: discountAmount,
+          finalPrice: totalDiscounted,
+          status: "CREDITED_PENDING_CONFIRMATION",
+          paymentMethod,
+          receiptUrl,
+        },
+      });
+
+      // Credit the balance immediately
+      await tx.userBalance.upsert({
+        where: {
+          userId_packageId: { userId, packageId },
+        },
+        create: {
+          userId,
+          packageId,
+          totalDays: days,
+        },
+        update: {
+          totalDays: { increment: days },
+        },
+      });
+
+      // Enqueue telegram notification for admin
+      await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION_SUBSCRIPTION", {
+        purchaseId: p.id,
+      });
+
+      return p;
     });
 
     revalidatePath("/profile");
+    revalidatePath("/admin/pending-payments");
 
     return { ok: true, purchaseId: purchase.id };
   } catch (error) {

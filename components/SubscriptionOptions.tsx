@@ -7,6 +7,7 @@ import {
   getDiscountForPackage
 } from "@/lib/subscription-logic";
 import { createSubscriptionPurchaseAction } from "@/app/actions/subscription";
+import { uploadReceiptAction } from "@/app/actions/upload-receipt";
 
 type Pkg = {
   id: string;
@@ -22,6 +23,8 @@ type Props = {
 export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) {
   const router = useRouter();
   const [days, setDays] = useState<number>(14);
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">("bank_transfer");
+  const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -38,18 +41,40 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
     setError(null);
     setSuccess(null);
 
+    if (paymentMethod === "bank_transfer" && !file) {
+      setError("Будь ласка, завантажте скріншот квитанції про оплату.");
+      setIsProcessing(false);
+      return;
+    }
+
     try {
+      let receiptUrl: string | undefined = undefined;
+
+      if (paymentMethod === "bank_transfer" && file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await uploadReceiptAction(formData);
+        
+        if (!uploadRes.ok) {
+          throw new Error(uploadRes.error || "Не вдалося завантажити квитанцію");
+        }
+        receiptUrl = uploadRes.url;
+      }
+
       const result = await createSubscriptionPurchaseAction(
         pkg.name,
         pkg.basePrice,
-        days
+        days,
+        paymentMethod,
+        receiptUrl
       );
 
       if (!result.ok) {
         throw new Error(result.error || "Помилка при купівлі абонемента");
       }
 
-      setSuccess(`Успішно оформлено покупку на ${days} днів! Очікуйте на оплату.`);
+      setSuccess(`Успішно оформлено покупку на ${days} днів! Дні зараховано на ваш баланс. Адміністратор перевірить вашу оплату найближчим часом.`);
+      setFile(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Сталася помилка");
     } finally {
@@ -137,6 +162,52 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
 
         <div className="mb-8 text-right text-sm font-semibold text-emerald-600">
           Виходить {pricePerDay} ₴ / день
+        </div>
+
+        <div className="mb-6 border-t border-gray-100 pt-6">
+          <h4 className="mb-4 font-bold text-gray-900">Спосіб оплати:</h4>
+          
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="bank_transfer"
+                checked={paymentMethod === "bank_transfer"}
+                onChange={() => setPaymentMethod("bank_transfer")}
+                className="w-4 h-4 text-emerald-600"
+              />
+              <span>Переказ на картку</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="cash"
+                checked={paymentMethod === "cash"}
+                onChange={() => setPaymentMethod("cash")}
+                className="w-4 h-4 text-emerald-600"
+              />
+              <span>Готівкою кур'єру</span>
+            </label>
+          </div>
+
+          {paymentMethod === "bank_transfer" && (
+            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+              <p className="mb-2 font-semibold">Реквізити для оплати:</p>
+              <p className="font-mono text-gray-700 mb-4 bg-white p-2 rounded border">XXXX XXXX XXXX XXXX (ФОП Іванов І.І.)</p>
+              
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Завантажте скріншот оплати:
+              </label>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+              />
+            </div>
+          )}
         </div>
 
         <button
