@@ -415,7 +415,8 @@ export async function updateOrderDeliveryInfo(
   orderId: string,
   orderDayId: string | null,
   deliveryTime: string | null,
-  deliveryNote: string | null
+  deliveryNote: string | null,
+  autoNotify?: boolean
 ) {
   const adminUser = await getAuthenticatedAdminUser();
   if (!adminUser) {
@@ -442,7 +443,37 @@ export async function updateOrderDeliveryInfo(
     }
 
     revalidatePath("/admin/today");
-    return { ok: true };
+
+    let notified = false;
+    if (autoNotify && data.deliveryTime) {
+      const order = await prisma.order.findUnique({
+        where: { id: orderId },
+        include: { user: true },
+      });
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      if (order && order.user.chatId && botToken) {
+        let message = `Сьогодні у вас доставка:\nПІБ: <b>${escapeTelegramHtml(order.user.name)}</b>\nЧас доставки: ${escapeTelegramHtml(data.deliveryTime)} ⏰`;
+        if (data.deliveryNote) {
+          message += `\n\nНотатка для Вас: ${escapeTelegramHtml(data.deliveryNote)}`;
+        }
+        try {
+          const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: order.user.chatId,
+              text: message,
+              parse_mode: "HTML",
+            }),
+          });
+          if (response.ok) notified = true;
+        } catch (e) {
+          console.error("Auto notify error:", e);
+        }
+      }
+    }
+
+    return { ok: true, notified };
   } catch (error) {
     console.error("Error updating order delivery info:", error);
     return { ok: false, message: "Помилка оновлення даних" };
