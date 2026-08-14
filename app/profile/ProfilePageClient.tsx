@@ -273,13 +273,20 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
                         <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{p.days}</td>
                         <td className="px-4 py-3 font-bold text-emerald-600 whitespace-nowrap">{p.finalPrice} ₴</td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`inline-flex rounded-md px-2 py-1 text-xs font-bold ${
-                            p.status === "PAID" ? "bg-green-100 text-green-700" :
-                            p.status === "PENDING" ? "bg-amber-100 text-amber-700" :
-                            "bg-red-100 text-red-700"
-                          }`}>
-                            {p.status}
-                          </span>
+                          {(() => {
+                            switch (p.status) {
+                              case "PAID":
+                                return <span className="inline-flex rounded-md bg-green-100 px-2 py-1 text-xs font-bold text-green-700">Оплачено</span>;
+                              case "PENDING":
+                                return <span className="inline-flex rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Очікує оплати</span>;
+                              case "CREDITED_PENDING_CONFIRMATION":
+                                return <span className="inline-flex rounded-md bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">На перевірці</span>;
+                              case "CANCELLED":
+                                return <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Скасовано</span>;
+                              default:
+                                return <span className="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{p.status}</span>;
+                            }
+                          })()}
                         </td>
                       </tr>
                     ))}
