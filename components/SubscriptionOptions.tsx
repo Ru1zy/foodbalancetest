@@ -32,7 +32,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
   // Validate day input boundaries
   const handleDaysChange = (newDays: number) => {
     if (newDays < 2) newDays = 2;
-    if (newDays > 90) newDays = 90; // arbitrary max
+    if (newDays > 30) newDays = 30; // maximum 30 days
     setDays(newDays);
   };
 
