@@ -10,6 +10,7 @@ const navLinks = [
   { href: "/admin/clients", label: "Клієнти (CRM)", icon: "👥" },
   { href: "/admin/menu", label: "Меню", icon: "🍽️" },
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
+  { href: "/admin/pending-payments", label: "Оплати", icon: "💳" },
   { href: "/admin/settings/sheets", label: "Таблиці", icon: "📊" },
 ];
 
