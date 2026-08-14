@@ -177,7 +177,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("bank_transfer")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span>Переказ на картку</span>
+              <span className="text-gray-900 font-medium">Переказ на картку</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
@@ -188,7 +188,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("cash")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span>Готівкою кур'єру</span>
+              <span className="text-gray-900 font-medium">Готівкою кур'єру</span>
             </label>
           </div>
 
