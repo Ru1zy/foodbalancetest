@@ -56,12 +56,22 @@ type Tariff = {
   basePrice: number;
 };
 
+export type SubscriptionPurchase = {
+  id: string;
+  packageId: string;
+  days: number;
+  finalPrice: number;
+  status: string;
+  createdAt: Date;
+};
+
 type Props = {
   user: User;
   orders: OrderWithResolvedDishes[];
   balances: UserBalanceSummary[];
   tariffs: Tariff[];
   isNewClient: boolean;
+  purchases: SubscriptionPurchase[];
 };
 
 function formatDate(date: Date): string {
@@ -176,7 +186,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   );
 }
 
-export default function ProfilePageClient({ user, orders, balances, tariffs, isNewClient }: Props) {
+export default function ProfilePageClient({ user, orders, balances, tariffs, isNewClient, purchases }: Props) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -235,6 +245,47 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
                   <p className="text-xs text-slate-400 mt-3 font-medium">Доступно для замовлення</p>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Purchase History Section */}
+        {purchases && purchases.length > 0 && (
+          <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
+            <h2 className="text-2xl font-bold text-blue-900 mb-6">Історія покупок</h2>
+            <div className="overflow-hidden rounded-xl border border-blue-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дата</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Пакет</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дні</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Сума</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Статус</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {purchases.map(p => (
+                      <tr key={p.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatShortDate(p.createdAt)}</td>
+                        <td className="px-4 py-3 text-slate-900 font-bold whitespace-nowrap">{p.packageId}</td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{p.days}</td>
+                        <td className="px-4 py-3 font-bold text-emerald-600 whitespace-nowrap">{p.finalPrice} ₴</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`inline-flex rounded-md px-2 py-1 text-xs font-bold ${
+                            p.status === "PAID" ? "bg-green-100 text-green-700" :
+                            p.status === "PENDING" ? "bg-amber-100 text-amber-700" :
+                            "bg-red-100 text-red-700"
+                          }`}>
+                            {p.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}

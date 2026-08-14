@@ -16,6 +16,19 @@ import type { OrderCartData, OrderCartDay } from "@/app/actions/order-impl";
  * starting at row 5, columns B–K.
  *
  * This module is the autonomous replacement for the manual batch process and
+import type { Menu, Order, User } from "@prisma/client";
+import type { OrderCartData, OrderCartDay } from "@/app/actions/order-impl";
+
+/**
+ * Real-time, month-keyed Google Sheets export.
+ *
+ * Each calendar month has its OWN spreadsheet, identified by a `MM.YYYY` key
+ * stored in the `SheetConfig` table (e.g. `03.2026 -> 1A2B3C...`). Inside that
+ * spreadsheet every delivery DAY gets its own tab named `DD.MM` (e.g. `14.02`),
+ * cloned on demand from a `_Template` tab. One row per order/day is appended
+ * starting at row 5, columns B–K.
+ *
+ * This module is the autonomous replacement for the manual batch process and
  * runs as a post-commit side-effect AFTER an order has been persisted — a
  * missing month config (admin forgot to add next month) never
  * fails the customer checkout; it is surfaced via the Telegram warning prefix
@@ -25,7 +38,7 @@ import type { OrderCartData, OrderCartDay } from "@/app/actions/order-impl";
 const TEMPLATE_TAB = "_Template";
 const DATA_START_ROW = 5;
 const FIRST_COL = "B";
-const LAST_COL = "K";
+const LAST_COL = "L";
 
 const UA_MONTHS_GENITIVE = [
   "січня",
@@ -221,7 +234,7 @@ function singleLineCell(value: string | null | undefined): string {
   return String(value ?? "").replace(/\s+/g, " ").trim();
 }
 
-/** Build columns B–K for one order/day. Column B derives its number from the appended row. */
+/** Build columns B–L for one order/day. Column B derives its number from the appended row. */
 function buildRow(order: Order, user: User, orderDay: OrderDay): string[] {
   const normalizedPhone = normalizePhoneForLegacy(user.phone || "");
   return [
@@ -235,6 +248,7 @@ function buildRow(order: Order, user: User, orderDay: OrderDay): string[] {
     order.cutlery > 0 ? `${order.cutlery} шт` : "", // I: Cutlery count
     (order.notes || user.notes || "").trim(), // J: Comments / Notes
     priceCell(order, orderDay.isCustom), // K: Price
+    order.id, // L: OrderId (Idempotency Key)
   ];
 }
 
@@ -409,6 +423,17 @@ export async function syncOrderToMonthlySheets(order: Order, user: User): Promis
             day.localizedDate,
           );
           if (sheetId == null) continue;
+
+          // Check for idempotency
+          const existingResp = await sheets.spreadsheets.values.get({
+            spreadsheetId,
+            range: `${day.tabName}!L:L`,
+          });
+          const existingIds = (existingResp.data.values || []).map(r => r[0]);
+          if (existingIds.includes(order.id)) {
+            console.log(`syncOrderToMonthlySheets: order ${order.id} already exists in ${day.tabName}, skipping.`);
+            continue;
+          }
 
           const row = buildRow(order, user, day);
 

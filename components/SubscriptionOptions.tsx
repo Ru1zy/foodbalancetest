@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   calculateSubscriptionPrice, 
-  getDiscountForPackage, 
-  type PackageDuration 
+  getDiscountForPackage
 } from "@/lib/subscription-logic";
+import { createSubscriptionPurchaseAction } from "@/app/actions/subscription";
 
 type Pkg = {
   id: string;
@@ -21,41 +21,35 @@ type Props = {
 
 export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) {
   const router = useRouter();
+  const [days, setDays] = useState<number>(14);
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const isSushka = pkg.id.toLowerCase().includes("sushka") || pkg.name.toLowerCase().includes("sushka");
-  let durations: PackageDuration[] = isSushka ? [2, 7, 14] : [2, 7, 14, 30];
+  // Validate day input boundaries
+  const handleDaysChange = (newDays: number) => {
+    if (newDays < 2) newDays = 2;
+    if (newDays > 90) newDays = 90; // arbitrary max
+    setDays(newDays);
+  };
 
-  // Filter out 2-day trial for existing clients
-  if (!isNewClient) {
-    durations = durations.filter(d => d !== 2);
-  }
-
-  const handlePurchase = async (duration: PackageDuration) => {
+  const handlePurchase = async () => {
     setIsProcessing(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const response = await fetch("/api/balance/topup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          packageId: pkg.name,
-          duration: duration,
-        }),
-      });
+      const result = await createSubscriptionPurchaseAction(
+        pkg.name,
+        pkg.basePrice,
+        days
+      );
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Помилка при поповненні балансу");
+      if (!result.ok) {
+        throw new Error(result.error || "Помилка при купівлі абонемента");
       }
 
-      setSuccess(`Успішно! Додано ${duration} днів до вашого балансу.`);
+      setSuccess(`Успішно оформлено покупку на ${days} днів! Очікуйте на оплату.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Сталася помилка");
     } finally {
@@ -64,10 +58,28 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
     }
   };
 
+  const { totalOriginal, totalDiscounted, pricePerDay } = calculateSubscriptionPrice(
+    pkg.basePrice,
+    pkg.id,
+    days
+  );
+  const discountPercent = Math.round(getDiscountForPackage(pkg.id, days) * 100);
+
   return (
     <div className="mt-8">
-      <h3 className="mb-6 text-xl font-bold text-gray-900">Оберіть абонемент ({pkg.name})</h3>
+      <h3 className="mb-6 text-xl font-bold text-gray-900">Оберіть кількість днів ({pkg.name})</h3>
       
+      {/* Discount rules display */}
+      <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+        <p className="font-semibold mb-2">Правила знижок:</p>
+        <ul className="list-disc list-inside space-y-1">
+          <li><strong>2 дні:</strong> знижка 10-15% (пробний тариф)</li>
+          <li><strong>7-13 днів:</strong> знижка 5%</li>
+          <li><strong>14-29 днів:</strong> знижка 10%</li>
+          <li><strong>30+ днів:</strong> знижка 15% (крім програми Сушка)</li>
+        </ul>
+      </div>
+
       {success && (
         <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
           {success}
@@ -80,50 +92,63 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {durations.map((duration) => {
-          const { totalOriginal, totalDiscounted, pricePerDay } = calculateSubscriptionPrice(
-            pkg.basePrice,
-            pkg.id,
-            duration
-          );
-          const discountPercent = Math.round(getDiscountForPackage(pkg.id, duration) * 100);
-
-          return (
-            <div
-              key={duration}
-              className="relative flex flex-col rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+      <div className="max-w-md mx-auto relative flex flex-col rounded-3xl border-2 border-emerald-500 bg-white p-6 shadow-sm">
+        {discountPercent > 0 && (
+          <div className="absolute -right-3 -top-3 rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white shadow-md">
+            -{discountPercent}%
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-gray-700 font-bold">Кількість днів:</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => handleDaysChange(days - 1)}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold text-xl transition-colors"
             >
-              {discountPercent > 0 && (
-                <div className="absolute -right-2 -top-2 rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                  -{discountPercent}%
-                </div>
-              )}
-              
-              <div className="mb-1 text-lg font-bold text-gray-900">{duration} днів</div>
-              
-              <div className="mb-4">
-                <span className="font-bold text-red-600">{totalDiscounted} грн</span>
-                {" "}<span className="text-gray-600 font-medium">замість</span>{" "}
-                <s className="text-gray-400">{totalOriginal} грн</s>
-              </div>
+              -
+            </button>
+            <input
+              type="number"
+              min={2}
+              max={90}
+              value={days}
+              onChange={(e) => handleDaysChange(parseInt(e.target.value) || 2)}
+              className="w-16 text-center text-xl font-bold rounded-lg border border-gray-200 py-1"
+            />
+            <button
+              onClick={() => handleDaysChange(days + 1)}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-700 hover:bg-emerald-200 font-bold text-xl transition-colors"
+            >
+              +
+            </button>
+          </div>
+        </div>
+        
+        <div className="mb-2 flex justify-between items-end">
+          <span className="text-gray-500">До сплати:</span>
+          <div className="text-right">
+             <span className="text-2xl font-black text-gray-900">{totalDiscounted} ₴</span>
+             {discountPercent > 0 && (
+               <span className="ml-2 text-sm text-gray-400 line-through">{totalOriginal} ₴</span>
+             )}
+          </div>
+        </div>
 
-              <div className="mb-6 text-sm font-semibold text-gray-600">
-                ({pricePerDay} грн/день)
-              </div>
+        <div className="mb-8 text-right text-sm font-semibold text-emerald-600">
+          Виходить {pricePerDay} ₴ / день
+        </div>
 
-              <button
-                type="button"
-                disabled={isProcessing}
-                onClick={() => handlePurchase(duration)}
-                className="mt-auto w-full rounded-xl bg-emerald-500 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-600 disabled:opacity-50"
-              >
-                {isProcessing ? "Обробка..." : "Придбати абонемент"}
-              </button>
-            </div>
-          );
-        })}
+        <button
+          type="button"
+          disabled={isProcessing}
+          onClick={handlePurchase}
+          className="w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700 disabled:opacity-50"
+        >
+          {isProcessing ? "Обробка..." : "Оформити покупку"}
+        </button>
       </div>
     </div>
   );
 }
+

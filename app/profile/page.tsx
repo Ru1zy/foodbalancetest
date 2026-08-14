@@ -253,6 +253,11 @@ export default async function ProfilePage() {
 
   const tariffs = await getAllTariffs();
 
+  const rawPurchases = await prisma.subscriptionPurchase.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+
   return (
     <ProfilePageClient 
       user={user} 
@@ -260,6 +265,7 @@ export default async function ProfilePage() {
       balances={activeBalances} 
       tariffs={tariffs} 
       isNewClient={orderCount === 0}
+      purchases={rawPurchases}
     />
   );
 }

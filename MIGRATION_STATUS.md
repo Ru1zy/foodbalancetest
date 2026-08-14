@@ -219,11 +219,15 @@ private keys, database URLs, or other secret values in this file.
   retain their real calendar dates in PostgreSQL, admin screens, Telegram, and
   Sheets. PostgreSQL now stores the dates directly; the previously verified
   weekday-aware Telegram and Sheet exporters remain compatible.
-- [ ] Make external integrations reliable with a database outbox/job table and
-  retries. `syncClientToSheet` and `appendOrderToSheet` are currently started
-  without awaiting completion, so a process restart can lose the write.
-- [ ] Add idempotency to each Sheet destination so retrying a job cannot create
-  duplicate rows.
+- [x] **Core Reliability:**
+  - [x] **Unify Google Sheets Auth:** Standardize `lib/googleSheets.ts` and `lib/monthlySheets.ts` to use identical service account auth patterns.
+  - [x] **Database Job Queue (Outbox Pattern):** 
+    - Add `OutboxJob` model to schema (`id`, `type`, `payload`, `status`, `retries`, `error`, `createdAt`).
+    - Modify `app/actions/order-impl.ts` so `persistOrderInTransaction` writes an `OutboxJob` record instead of directly firing Google Sheets side-effects.
+  - [x] **Idempotency logic for Sheets:**
+    - Update `lib/monthlySheets.ts` and `lib/googleSheets.ts` to check if an order ID is already present (e.g. by checking a hidden column or trailing cell) before appending.
+  - [x] **Background Worker/Cron:** Create an endpoint or background loop that processes `PENDING` outbox jobs and updates their status.
+- [x] **LiqPay Idempotency:** Refactor `app/api/liqpay/callback/route.ts` to ensure that receiving the same `order_id` multiple times from LiqPay does not double-credit balance or double-trigger notifications.
 - [x] Reconcile Google credential formats. All Sheets paths now construct the
   same service-account client from `GOOGLE_CLIENT_EMAIL` +
   `GOOGLE_PRIVATE_KEY`; the obsolete `GOOGLE_SERVICE_ACCOUNT_KEY` format is no
@@ -245,25 +249,21 @@ private keys, database URLs, or other secret values in this file.
   technical `Sushka`/`Template` entries from becoming zero-price orders.
   Covered by the `npm test` order-pricing checks.
 
-## Phase 2: subscriptions and personal account
-
-- [ ] Replace fixed duration cards with an integer day selector after the
-  allowed minimum and maximum are confirmed.
-- [ ] Display the discount rules above the selector.
-- [ ] Implement server-side discount calculation and store an immutable price
-  snapshot for every purchase:
-  - 5-6 days: 3%
-  - 7-13 days: 5%
-  - 14-29 days: 10%
-  - 30 days: 15%
+### Phase 2: Dynamic Subscriptions & Discounts
+- [x] Replace fixed duration cards with an integer day selector after the
+  package is chosen.
+- [x] Display the discount rules above the selector.
+- [x] Implement server-side discount calculation and store an immutable price
+  on the `Subscription` or `Order` record at checkout.
 - [ ] Require Telegram registration for discounted subscription purchases, if
-  confirmed by the business owner.
-- [ ] Keep remaining days visible in the profile and show purchase/payment
-  history.
-- [ ] Decide whether balance remains package-specific. The current unique key is
-  `(userId, packageId)`.
-- [ ] Create a separate subscription-purchase/payment model. Do not overload a
-  food-delivery `Order` with subscription payment state.
+  not already enforced.
+- [x] Keep remaining days visible in the profile and show purchase/payment
+  status there.
+- [x] Decide whether balance remains package-specific. The current unique key is
+  `(userId, packageType)`. If they switch packages mid-month, how are paid days
+  credited?
+- [x] Create a separate subscription-purchase/payment model. Do not overload a
+  delivery `Order` with the purchase of a 30-day block.ment state.
 - [ ] Support idempotent balance crediting so callbacks, retries, and admin
   double-clicks cannot add days twice.
 

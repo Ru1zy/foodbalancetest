@@ -16,10 +16,9 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { isIndivPackage, type IndivDishQuantity } from "@/lib/order-selection";
 import { sendOrderNotification } from "@/lib/telegram";
 import { checkoutSchema } from "@/lib/validations";
-import { syncClientToSheet, appendOrderToSheet } from "@/lib/googleSheets";
-import { orderHasMissingSheetConfig, syncOrderToMonthlySheets } from "@/lib/monthlySheets";
 import { isGooglePlaceholderPhone } from "@/lib/google-auth";
 import { normalizePhone } from "@/lib/phone-utils";
+import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 
 export type StandardSelections = Record<string, number>;
 
@@ -607,6 +606,8 @@ async function persistOrderInTransaction(
         },
       });
 
+      await enqueueOutboxJob(tx, "SYNC_CRM_ORDER", { orderId: order.id });
+
       return { order, user };
     }
   }
@@ -677,6 +678,8 @@ async function persistOrderInTransaction(
     },
   });
 
+  await enqueueOutboxJob(tx, "SYNC_CRM_ORDER", { orderId: order.id });
+
   return { order, user };
 }
 
@@ -697,6 +700,7 @@ async function dispatchOrderSideEffects(
   // flag the Telegram notification so the admin enters it manually.
   let sheetMissing = false;
   try {
+    const { orderHasMissingSheetConfig } = await import("@/lib/monthlySheets");
     sheetMissing = await orderHasMissingSheetConfig(order);
   } catch (configError) {
     console.error("orderHasMissingSheetConfig failed", configError);
@@ -712,31 +716,6 @@ async function dispatchOrderSideEffects(
     );
   } catch (telegramError) {
     console.error("sendOrderNotification failed", telegramError);
-  }
-
-  // Await all post-commit exports so the server cannot suspend the request
-  // while the global CRM writes are still in flight. They run concurrently and
-  // each helper swallows its own errors, so an outage still cannot roll back the
-  // already-persisted order.
-  try {
-    await Promise.all([
-      syncClientToSheet({
-        name: user.name,
-        phone: user.phone || validatedData.phone,
-        address: user.address || validatedData.address,
-        chatId: user.chatId,
-        packageType: sanitizedCartData.packageType,
-        cutlery: Number(user.defaultCutlery || validatedData.cutlery),
-        notes: user.notes || validatedData.comment || "",
-      }),
-      // Append to the global "Orders" tab (all orders, all months).
-      appendOrderToSheet(order, user),
-      // Real-time month-keyed export (dynamic DD.MM tabs). Months without a
-      // configured spreadsheet are skipped here — the warning above covers them.
-      syncOrderToMonthlySheets(order, user),
-    ]);
-  } catch (sheetError) {
-    console.error("Google Sheets sync failed:", sheetError);
   }
 }
 
@@ -998,6 +977,12 @@ export async function submitOrders(
         dispatchOrderSideEffects(r.order, r.user, r.prepared.validatedData, r.prepared.sanitizedCartData),
       ),
     );
+
+    // Fire processing of queued outbox jobs asynchronously
+    processAllOutboxJobs().catch((err) => {
+      console.error("processAllOutboxJobs error:", err);
+    });
+
 
     return {
       ok: true,

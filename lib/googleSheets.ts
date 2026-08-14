@@ -256,12 +256,24 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
         order.cutlery > 0 ? `${order.cutlery} шт` : "—", // L: Cutlery
         order.notes || "—", // M: Notes
         user.name, // N: ClientName
+        order.id, // O: OrderId (Idempotency Key)
       ]);
+    }
+
+    // Check idempotency
+    const existingIdsResp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: "Orders!O:O",
+    });
+    const existingIds = (existingIdsResp.data.values || []).map(r => r[0]);
+    if (existingIds.includes(order.id)) {
+      console.log(`appendOrderToSheet: Order ${order.id} already exists, skipping.`);
+      return;
     }
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: "Orders!A:N",
+      range: "Orders!A:O",
       valueInputOption: "USER_ENTERED",
       requestBody: {
         values: rows,
