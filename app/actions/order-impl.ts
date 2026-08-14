@@ -8,6 +8,7 @@ import {
   dateForMenuDayOfWeek,
   getOrderTotalUah,
   getPackageLimit,
+  isOrderablePackageType,
   PackageType,
 } from "@/lib/order-logic";
 import { kyivCalendarDateKey } from "@/lib/checkout";
@@ -105,6 +106,10 @@ type PreparedOrderDay = {
 };
 
 function sanitizeCartData(cartData: OrderCartData): OrderCartData {
+  if (!isOrderablePackageType(cartData.packageType)) {
+    throw new Error(`Unsupported package type: ${cartData.packageType}`);
+  }
+
   // CRITICAL: Calculate server-side package limit - NEVER trust client's packageLimit
   const { limit: serverPackageLimit, exact } = getPackageLimit(cartData.packageType);
 
@@ -401,32 +406,26 @@ async function prepareOrderForSubmission(
     };
   }
 
-  // Skip standard price validation if using balance
+  // The browser may display a price, but it is not a trusted calculation
+  // boundary. Always derive the full package total on the server. For a pure
+  // balance order we do not need the client number for charging, but storing
+  // the server value keeps all future payment paths consistent.
+  const expectedTotalPrice = getOrderTotalUah(
+    sanitizedCartData.packageType,
+    sanitizedCartData.totalDays,
+  );
+
   if (paymentMethod !== "balance") {
-    // For Sushka packages, use the passed totalPrice directly (calculated on client)
-    const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
-    if (!isSushkaPackage) {
-      const expectedPrice = getOrderTotalUah(sanitizedCartData.packageType, sanitizedCartData.totalDays);
-      if (
-        typeof totalPrice !== "number" ||
-        !Number.isInteger(totalPrice) ||
-        totalPrice !== expectedPrice
-      ) {
-        return {
-          ok: false,
-          message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
-          status: 400,
-        };
-      }
-    } else {
-      // For Sushka, just validate that totalPrice is a positive number
-      if (typeof totalPrice !== "number" || !Number.isInteger(totalPrice) || totalPrice < 0) {
-        return {
-          ok: false,
-          message: "Сума замовлення некоректна. Оновіть сторінку та спробуйте ще раз.",
-          status: 400,
-        };
-      }
+    if (
+      typeof totalPrice !== "number" ||
+      !Number.isInteger(totalPrice) ||
+      totalPrice !== expectedTotalPrice
+    ) {
+      return {
+        ok: false,
+        message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
+        status: 400,
+      };
     }
   }
 
@@ -458,7 +457,7 @@ async function prepareOrderForSubmission(
       resolvedDeliveryDate: serverDeliveryDate,
       deliveryDays,
       paymentMethod,
-      totalPrice,
+      totalPrice: expectedTotalPrice,
     },
   };
 }
@@ -485,8 +484,6 @@ async function persistOrderInTransaction(
     paymentMethod,
     totalPrice,
   } = prepared;
-  const isSushkaPackage = sanitizedCartData.packageType.includes("Sushka");
-
   // --- Start: Split Payment Calculation (inside the transaction) ---
   let balanceDaysToUse = 0;
   let balanceTotalDays = 0;
@@ -510,12 +507,8 @@ async function persistOrderInTransaction(
 
       if (fiatDays <= 0) {
         fiatPrice = 0;
-      } else if (!isSushkaPackage) {
-        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays);
       } else {
-        // For Sushka, calculate daily price from original total
-        const dailyPrice = Math.round(totalPrice / sanitizedCartData.totalDays);
-        fiatPrice = dailyPrice * fiatDays;
+        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays);
       }
     }
 

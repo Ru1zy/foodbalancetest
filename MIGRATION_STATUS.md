@@ -229,8 +229,11 @@ private keys, database URLs, or other secret values in this file.
   expects `GOOGLE_SERVICE_ACCOUNT_KEY` JSON.
 - [ ] Verify and document the purpose of all current Sheet destinations:
   `GOOGLE_SHEET_ID`, `EXTERNAL_SHEET_ID`, and month-specific `SheetConfig` IDs.
-- [ ] Re-check the known Sushka server-side price-validation gap before payment
-  work begins.
+- [x] Close the known Sushka server-side price-validation gap before payment
+  work. Checkout now derives XS/S totals and partial-balance remainders from
+  trusted package prices, rejects browser price mismatches, and blocks the
+  technical `Sushka`/`Template` entries from becoming zero-price orders.
+  Covered by the `npm test` order-pricing checks.
 
 ## Phase 2: subscriptions and personal account
 

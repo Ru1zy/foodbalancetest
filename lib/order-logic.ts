@@ -1,5 +1,24 @@
 export type PackageType = "Slim" | "Balance" | "Active" | "Sport" | "Sushka" | "Sushka XS" | "Sushka S" | "Indiv" | "Template";
 
+/** Package cards that a customer can actually buy. `Sushka` is only a UI
+ * grouping and `Template` is a menu source; neither may become a zero-price
+ * checkout payload. */
+export const ORDERABLE_PACKAGE_TYPES = [
+  "Slim",
+  "Balance",
+  "Active",
+  "Sport",
+  "Sushka XS",
+  "Sushka S",
+  "Indiv",
+] as const;
+
+export type OrderablePackageType = (typeof ORDERABLE_PACKAGE_TYPES)[number];
+
+export function isOrderablePackageType(value: string): value is OrderablePackageType {
+  return (ORDERABLE_PACKAGE_TYPES as readonly string[]).includes(value);
+}
+
 /** Базова ціна одного дня (грн) для розрахунку замовлення. */
 export const PACKAGE_PRICES: Record<PackageType, number> = {
   Slim: 610,
