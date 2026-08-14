@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { google } from "googleapis";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import {
@@ -12,6 +11,7 @@ import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
 import { normalizePhoneForLegacy } from "@/lib/googleSheets";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
+import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
 import type { Prisma } from "@prisma/client";
 
 // Explicit shapes so callbacks over Prisma results never collapse to implicit
@@ -737,11 +737,10 @@ export async function exportToKitchenSheet(
   const adminUser = await getAuthenticatedAdminUser();
   if (!adminUser) return { ok: false, message: "Недостатньо прав для експорту." };
 
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
   const sheetId = process.env.EXTERNAL_SHEET_ID;
+  const sheets = createGoogleSheetsClient();
 
-  if (!clientEmail || !privateKey || !sheetId) {
+  if (!sheets || !sheetId) {
     return { ok: false, message: "Не налаштовано Google Sheets API." };
   }
 
@@ -755,12 +754,6 @@ export async function exportToKitchenSheet(
   targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: { client_email: clientEmail, private_key: privateKey },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth });
-
     const orders = await findDeliveryOrdersForRange(dateRange.start, dateRange.end, {
       excludedOrderStatuses: ["cancelled", "archived"],
     });

@@ -101,7 +101,7 @@ npm run dev            # http://localhost:3000
 | `TELEGRAM_WEBHOOK_SECRET` | Validates incoming Telegram webhooks |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
 | `GOOGLE_REDIRECT_URI` | Google OAuth callback URL |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service account for Sheets access |
+| `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service account for Sheets access |
 | `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Target spreadsheets |
 | `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Separate admin-only OAuth client for automatic monthly workbook creation |
 | `GOOGLE_DRIVE_REDIRECT_URI` | Exact admin Drive callback: `/api/admin/google-drive/callback` |
@@ -228,7 +228,7 @@ npm run dev            # http://localhost:3000
 | `TELEGRAM_WEBHOOK_SECRET` | Перевірка вхідних вебхуків Telegram |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Облікові дані Google OAuth |
 | `GOOGLE_REDIRECT_URI` | URL зворотного виклику Google OAuth |
-| `GOOGLE_SERVICE_ACCOUNT_KEY` / `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для доступу до Таблиць |
+| `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для доступу до Таблиць |
 | `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Цільові таблиці |
 | `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Окремий адмінський OAuth-клієнт для автоматичного створення місячних книг |
 | `GOOGLE_DRIVE_REDIRECT_URI` | Точний callback адмінського Drive: `/api/admin/google-drive/callback` |

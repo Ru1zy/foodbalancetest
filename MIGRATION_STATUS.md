@@ -224,9 +224,11 @@ private keys, database URLs, or other secret values in this file.
   without awaiting completion, so a process restart can lose the write.
 - [ ] Add idempotency to each Sheet destination so retrying a job cannot create
   duplicate rows.
-- [ ] Reconcile Google credential formats. Most Sheet code uses
-  `GOOGLE_CLIENT_EMAIL` + `GOOGLE_PRIVATE_KEY`, while one kitchen-export route
-  expects `GOOGLE_SERVICE_ACCOUNT_KEY` JSON.
+- [x] Reconcile Google credential formats. All Sheets paths now construct the
+  same service-account client from `GOOGLE_CLIENT_EMAIL` +
+  `GOOGLE_PRIVATE_KEY`; the obsolete `GOOGLE_SERVICE_ACCOUNT_KEY` format is no
+  longer read by the application. Remove that unused Railway secret only after
+  the post-deploy kitchen-export verification.
 - [ ] Verify and document the purpose of all current Sheet destinations:
   `GOOGLE_SHEET_ID`, `EXTERNAL_SHEET_ID`, and month-specific `SheetConfig` IDs.
 - [x] Close the known Sushka server-side price-validation gap before payment

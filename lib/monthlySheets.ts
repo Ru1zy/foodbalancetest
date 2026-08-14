@@ -1,7 +1,8 @@
-import { google, sheets_v4 } from "googleapis";
+import { sheets_v4 } from "googleapis";
 import prisma from "./prisma";
 import { parseIndivDishId, isIndivPackage } from "./order-selection";
 import { normalizePhoneForLegacy } from "./googleSheets";
+import { createGoogleSheetsClient } from "./google-sheets-auth";
 import type { Menu, Order, User } from "@prisma/client";
 import type { OrderCartData, OrderCartDay } from "@/app/actions/order-impl";
 
@@ -278,20 +279,7 @@ export async function orderHasMissingSheetConfig(order: Order): Promise<boolean>
 // ---------------------------------------------------------------------------
 
 function getSheetsClient(): sheets_v4.Sheets | null {
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-  if (!clientEmail || !privateKey) {
-    console.error("monthlySheets: Missing Google API environment variables.");
-    return null;
-  }
-
-  const auth = new google.auth.GoogleAuth({
-    credentials: { client_email: clientEmail, private_key: privateKey },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-  });
-
-  return google.sheets({ version: "v4", auth });
+  return createGoogleSheetsClient();
 }
 
 /**

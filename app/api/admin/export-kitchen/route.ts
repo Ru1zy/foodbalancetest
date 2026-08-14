@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { google } from "googleapis";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import {
   findDeliveryOrdersForRange,
   type DeliveryOrderWithUser,
 } from "@/lib/delivery-orders";
 import { kyivDayRangeUtc } from "@/lib/order-logic";
+import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -182,9 +182,9 @@ export async function GET(request: Request) {
     if (format === "sheets") {
       // Google Sheets export
       const sheetId = process.env.GOOGLE_SHEET_ID;
-      const credentials = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+      const sheets = createGoogleSheetsClient();
 
-      if (!sheetId || !credentials) {
+      if (!sheetId || !sheets) {
         return NextResponse.json(
           { error: "Google Sheets credentials not configured" },
           { status: 500 }
@@ -192,13 +192,6 @@ export async function GET(request: Request) {
       }
 
       try {
-        const auth = new google.auth.GoogleAuth({
-          credentials: JSON.parse(credentials),
-          scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-        });
-
-        const sheets = google.sheets({ version: "v4", auth });
-
         // Format date as DD.MM for sheet name (derived from the parsed Kyiv
         // calendar date, not a TZ-dependent Date parse).
         const sheetName = `${String(exportDay).padStart(2, "0")}.${String(exportMonth).padStart(2, "0")}`;

@@ -1,8 +1,8 @@
-import { google } from "googleapis";
 import prisma from "./prisma";
 import { parseIndivDishId } from "./order-selection";
 import { Menu, Order, User } from "@prisma/client";
 import { OrderCartData } from "@/app/actions/order-impl";
+import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
 
 /**
  * Normalizes a phone number to the strict legacy format: 0XXXXXXXXX
@@ -41,11 +41,10 @@ export type ClientProfileSyncData = {
  * Synchronizes client profile to the "Info" tab of the CRM Google Sheet.
  */
 export async function syncClientToSheet(profileData: ClientProfileSyncData): Promise<void> {
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+  const sheets = createGoogleSheetsClient();
 
-  if (!clientEmail || !privateKey || !spreadsheetId) {
+  if (!sheets || !spreadsheetId) {
     console.error("syncClientToSheet: Missing Google API environment variables.");
     return;
   }
@@ -53,16 +52,6 @@ export async function syncClientToSheet(profileData: ClientProfileSyncData): Pro
   const normalizedPhone = normalizePhoneForLegacy(profileData.phone);
 
   try {
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-
-    const sheets = google.sheets({ version: "v4", auth });
-
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range: "Info!A:H",
@@ -174,11 +163,10 @@ type Dish = {
  * Bypasses legacy scripts and appends one row per delivery day.
  */
 export async function appendOrderToSheet(order: Order, user: User): Promise<void> {
-  const clientEmail = process.env.GOOGLE_CLIENT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+  const sheets = createGoogleSheetsClient();
 
-  if (!clientEmail || !privateKey || !spreadsheetId) {
+  if (!sheets || !spreadsheetId) {
     console.error("appendOrderToSheet: Missing Google API environment variables.");
     return;
   }
@@ -270,12 +258,6 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
         user.name, // N: ClientName
       ]);
     }
-
-    const auth = new google.auth.GoogleAuth({
-      credentials: { client_email: clientEmail, private_key: privateKey },
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth });
 
     await sheets.spreadsheets.values.append({
       spreadsheetId,
