@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import type { Menu } from "@prisma/client";
+import { sendEmail } from "./email";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
 import {
   isIndivPackage,
@@ -391,39 +392,31 @@ function formatDeliveryDate(date: Date): string {
   }).format(date);
 }
 
-export async function sendPaymentConfirmation(chatId: string, orderDetails: OrderDetails): Promise<void> {
+export async function sendPaymentConfirmation(user: { chatId: string | null; email: string | null; name?: string }, orderDetails: OrderDetails): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-
-  if (!token) {
-    console.error("TELEGRAM_BOT_TOKEN is not set");
-    return;
-  }
-
   const formattedDate = formatDeliveryDate(orderDetails.date);
   const text = `✅ <b>Оплату отримано. Замовлення підтверджено!</b>
 
 📅 На дату: ${formattedDate}
 Тариф: ${escapeHtml(orderDetails.pkg)}`;
 
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Telegram API error:", errorData);
+  if (user.chatId) {
+    if (!token) {
+      console.error("TELEGRAM_BOT_TOKEN is not set");
+      return;
     }
-  } catch (error) {
-    console.error("Failed to send Telegram notification:", error);
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
+      });
+      if (!response.ok) console.error("Telegram API error:", await response.json());
+    } catch (error) {
+      console.error("Failed to send Telegram notification:", error);
+    }
+  } else if (user.email) {
+    await sendEmail(user.email, "Оплату отримано. Замовлення підтверджено!", text.replace(/\n/g, "<br>"));
   }
 }
 

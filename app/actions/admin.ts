@@ -9,6 +9,7 @@ import {
 } from "@/lib/delivery-orders";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
+import { sendEmail } from "@/lib/email";
 import { normalizePhoneForLegacy } from "@/lib/googleSheets";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
@@ -152,8 +153,8 @@ export async function confirmOrderPayment(orderId: string): Promise<ConfirmPayme
       },
     });
 
-    if (order.user.chatId) {
-      await sendPaymentConfirmation(order.user.chatId, {
+    if (order.user.chatId || order.user.email) {
+      await sendPaymentConfirmation(order.user, {
         date: order.deliveryDate,
         pkg: order.packageType,
       });
