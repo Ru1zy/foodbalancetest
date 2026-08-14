@@ -347,12 +347,12 @@ Current research as of 2026-08-09:
 
 ## Phase 5: Telegram delivery experience and notifications
 
-- [ ] Keep Telegram as the primary registration path for customers who want
+- [x] Keep Telegram as the primary registration path for customers who want
   discounts and subscriptions.
-- [ ] Verify the existing delivery-time notification flow end-to-end.
-- [ ] Decide whether delivery time is sent automatically when an admin enters it
+- [x] Verify the existing delivery-time notification flow end-to-end.
+- [x] Decide whether delivery time is sent automatically when an admin enters it
   or only after the existing explicit `Notify` action.
-- [ ] Add email duplication of admin Telegram alerts only after an email provider,
+- [x] Add email duplication of admin Telegram alerts only after an email provider,
   sender domain, recipients, and delivery policy are selected.
 
 ## Phase 6: verification and release
