@@ -1,4 +1,4 @@
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import PendingPaymentsClient from "./PendingPaymentsClient";
@@ -6,9 +6,9 @@ import PendingPaymentsClient from "./PendingPaymentsClient";
 export const dynamic = "force-dynamic";
 
 export default async function PendingPaymentsPage() {
-  const adminResult = await verifyAdminToken();
+  const admin = await getAuthenticatedAdminUser();
   
-  if (!adminResult.ok) {
+  if (!admin) {
     redirect("/admin/login");
   }
 

@@ -1,15 +1,15 @@
 "use server";
 
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function confirmPaymentAction(purchaseId: string) {
-  const adminResult = await verifyAdminToken();
-  if (!adminResult.ok) {
+  const admin = await getAuthenticatedAdminUser();
+  if (!admin) {
     return { ok: false, error: "Unauthorized" };
   }
-  const adminName = adminResult.adminName || "Admin";
+  const adminName = admin.name || "Admin";
 
   try {
     await prisma.subscriptionPurchase.update({
@@ -32,11 +32,11 @@ export async function confirmPaymentAction(purchaseId: string) {
 }
 
 export async function rejectPaymentAction(purchaseId: string) {
-  const adminResult = await verifyAdminToken();
-  if (!adminResult.ok) {
+  const admin = await getAuthenticatedAdminUser();
+  if (!admin) {
     return { ok: false, error: "Unauthorized" };
   }
-  const adminName = adminResult.adminName || "Admin";
+  const adminName = admin.name || "Admin";
 
   try {
     const purchase = await prisma.subscriptionPurchase.findUnique({
