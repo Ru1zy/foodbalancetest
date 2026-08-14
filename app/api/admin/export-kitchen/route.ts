@@ -6,7 +6,6 @@ import {
   type DeliveryOrderWithUser,
 } from "@/lib/delivery-orders";
 import { kyivDayRangeUtc } from "@/lib/order-logic";
-import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -120,10 +119,26 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
-    const format = searchParams.get("format") || "csv"; // csv or sheets
+    const format = searchParams.get("format") || "csv";
 
     if (!date) {
       return NextResponse.json({ error: "Date parameter required" }, { status: 400 });
+    }
+
+    // This route is intentionally CSV-only. The former `format=sheets` branch
+    // wrote kitchen rows into GOOGLE_SHEET_ID, which is the global CRM workbook.
+    // Admin UI exports to the dedicated EXTERNAL_SHEET_ID through the server
+    // action instead, so rejecting the obsolete mode prevents accidental CRM
+    // overwrites without changing the working kitchen flow.
+    if (format === "sheets") {
+      return NextResponse.json(
+        { error: "The legacy Google Sheets export is disabled. Use the admin kitchen export instead." },
+        { status: 410 },
+      );
+    }
+
+    if (format !== "csv") {
+      return NextResponse.json({ error: "Unsupported export format" }, { status: 400 });
     }
 
     // `date` is the Kyiv delivery day as YYYY-MM-DD. Build the same DST-aware
@@ -179,114 +194,32 @@ export async function GET(request: Request) {
       })
     );
 
-    if (format === "sheets") {
-      // Google Sheets export
-      const sheetId = process.env.GOOGLE_SHEET_ID;
-      const sheets = createGoogleSheetsClient();
+    // CSV export
+    let csv = "\uFEFF"; // UTF-8 BOM
+    csv += "Клієнт,Телефон,Адреса,Chat ID,Пакет,Страви,Прибори,Особливості\n";
 
-      if (!sheetId || !sheets) {
-        return NextResponse.json(
-          { error: "Google Sheets credentials not configured" },
-          { status: 500 }
-        );
-      }
+    for (const row of exportData) {
+      const escapeCsv = (str: string | number) => `"${String(str).replace(/"/g, '""')}"`;
 
-      try {
-        // Format date as DD.MM for sheet name (derived from the parsed Kyiv
-        // calendar date, not a TZ-dependent Date parse).
-        const sheetName = `${String(exportDay).padStart(2, "0")}.${String(exportMonth).padStart(2, "0")}`;
-
-        // Prepare rows for Google Sheets
-        const rows = exportData.map((row) => [
-          row.name,
-          row.phone,
-          row.address,
-          row.chatId,
-          row.packageType,
-          row.dishes,
-          row.cutlery,
-          row.notes,
-        ]);
-
-        // Check if sheet exists, if not create it
-        const spreadsheet = await sheets.spreadsheets.get({
-          spreadsheetId: sheetId,
-        });
-
-        const sheetExists = spreadsheet.data.sheets?.some(
-          (sheet) => sheet.properties?.title === sheetName
-        );
-
-        if (!sheetExists) {
-          await sheets.spreadsheets.batchUpdate({
-            spreadsheetId: sheetId,
-            requestBody: {
-              requests: [
-                {
-                  addSheet: {
-                    properties: {
-                      title: sheetName,
-                    },
-                  },
-                },
-              ],
-            },
-          });
-        }
-
-        // Write data to sheet
-        await sheets.spreadsheets.values.update({
-          spreadsheetId: sheetId,
-          range: `${sheetName}!A1`,
-          valueInputOption: "RAW",
-          requestBody: {
-            values: [
-              ["Клієнт", "Телефон", "Адреса", "Chat ID", "Пакет", "Страви", "Прибори", "Особливості"],
-              ...rows,
-            ],
-          },
-        });
-
-        return NextResponse.json({
-          success: true,
-          message: `Exported ${exportData.length} orders to Google Sheets`,
-          sheetName,
-        });
-      } catch (error) {
-        console.error("Google Sheets error:", error);
-        return NextResponse.json(
-          { error: "Failed to export to Google Sheets" },
-          { status: 500 }
-        );
-      }
-    } else {
-      // CSV export
-      let csv = "\uFEFF"; // UTF-8 BOM
-      csv += "Клієнт,Телефон,Адреса,Chat ID,Пакет,Страви,Прибори,Особливості\n";
-
-      for (const row of exportData) {
-        const escapeCsv = (str: string | number) => `"${String(str).replace(/"/g, '""')}"`;
-
-        csv += [
-          escapeCsv(row.name),
-          escapeCsv(row.phone),
-          escapeCsv(row.address),
-          escapeCsv(row.chatId),
-          escapeCsv(row.packageType),
-          escapeCsv(row.dishes),
-          escapeCsv(row.cutlery),
-          escapeCsv(row.notes),
-        ].join(",");
-        csv += "\n";
-      }
-
-      return new NextResponse(csv, {
-        headers: {
-          "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="kitchen-${date}.csv"`,
-        },
-      });
+      csv += [
+        escapeCsv(row.name),
+        escapeCsv(row.phone),
+        escapeCsv(row.address),
+        escapeCsv(row.chatId),
+        escapeCsv(row.packageType),
+        escapeCsv(row.dishes),
+        escapeCsv(row.cutlery),
+        escapeCsv(row.notes),
+      ].join(",");
+      csv += "\n";
     }
+
+    return new NextResponse(csv, {
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": `attachment; filename="kitchen-${date}.csv"`,
+      },
+    });
   } catch (error) {
     console.error("Export error:", error);
     return NextResponse.json({ error: "Export failed" }, { status: 500 });

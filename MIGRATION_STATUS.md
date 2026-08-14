@@ -229,8 +229,16 @@ private keys, database URLs, or other secret values in this file.
   `GOOGLE_PRIVATE_KEY`; the obsolete `GOOGLE_SERVICE_ACCOUNT_KEY` format is no
   longer read by the application. Remove that unused Railway secret only after
   the post-deploy kitchen-export verification.
-- [ ] Verify and document the purpose of all current Sheet destinations:
-  `GOOGLE_SHEET_ID`, `EXTERNAL_SHEET_ID`, and month-specific `SheetConfig` IDs.
+- [x] Verify and document the purpose of all current Sheet destinations:
+  - `GOOGLE_SHEET_ID` is the global CRM workbook, with `Info` client rows and
+    `Orders` delivery-day rows.
+  - `EXTERNAL_SHEET_ID` is the separate manually-maintained kitchen/delivery
+    workbook used only by the authenticated admin export action.
+  - `SheetConfig` is a PostgreSQL mapping from `MM.YYYY` to the automated
+    monthly workbook, whose `DD.MM` tabs are created from `_Template`.
+  - The unused legacy `format=sheets` API mode was disabled because it wrote
+    kitchen exports into the CRM workbook. CSV download and the dedicated admin
+    kitchen export continue unchanged.
 - [x] Close the known Sushka server-side price-validation gap before payment
   work. Checkout now derives XS/S totals and partial-balance remainders from
   trusted package prices, rejects browser price mismatches, and blocks the

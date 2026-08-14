@@ -102,7 +102,8 @@ npm run dev            # http://localhost:3000
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
 | `GOOGLE_REDIRECT_URI` | Google OAuth callback URL |
 | `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service account for Sheets access |
-| `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Target spreadsheets |
+| `GOOGLE_SHEET_ID` | Global CRM workbook (`Info` and `Orders` tabs) |
+| `EXTERNAL_SHEET_ID` | Separate manual kitchen/delivery export workbook |
 | `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Separate admin-only OAuth client for automatic monthly workbook creation |
 | `GOOGLE_DRIVE_REDIRECT_URI` | Exact admin Drive callback: `/api/admin/google-drive/callback` |
 | `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Base64 32-byte key that encrypts the stored Drive refresh token |
@@ -229,7 +230,8 @@ npm run dev            # http://localhost:3000
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Облікові дані Google OAuth |
 | `GOOGLE_REDIRECT_URI` | URL зворотного виклику Google OAuth |
 | `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для доступу до Таблиць |
-| `GOOGLE_SHEET_ID` / `EXTERNAL_SHEET_ID` | Цільові таблиці |
+| `GOOGLE_SHEET_ID` | Глобальна CRM-книга (вкладки `Info` і `Orders`) |
+| `EXTERNAL_SHEET_ID` | Окрема книга ручного експорту для кухні/доставки |
 | `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Окремий адмінський OAuth-клієнт для автоматичного створення місячних книг |
 | `GOOGLE_DRIVE_REDIRECT_URI` | Точний callback адмінського Drive: `/api/admin/google-drive/callback` |
 | `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | 32-байтний base64-ключ для шифрування збереженого Drive refresh token |
