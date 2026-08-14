@@ -3,6 +3,7 @@
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 
 export async function confirmPaymentAction(purchaseId: string) {
   const admin = await getAuthenticatedAdminUser();
@@ -12,17 +13,23 @@ export async function confirmPaymentAction(purchaseId: string) {
   const adminName = admin.name || "Admin";
 
   try {
-    await prisma.subscriptionPurchase.update({
-      where: { id: purchaseId },
-      data: {
-        status: "PAID",
-        confirmedBy: adminName,
-        confirmedAt: new Date(),
-      },
+    await prisma.$transaction(async (tx) => {
+      await tx.subscriptionPurchase.update({
+        where: { id: purchaseId },
+        data: {
+          status: "PAID",
+          confirmedBy: adminName,
+          confirmedAt: new Date(),
+        },
+      });
+
+      await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION_SUBSCRIPTION_RESULT", { purchaseId, approved: true });
     });
 
     revalidatePath("/admin/pending-payments");
     revalidatePath("/profile");
+    
+    processAllOutboxJobs().catch(err => console.error("Async outbox error:", err));
 
     return { ok: true };
   } catch (error: any) {
@@ -71,10 +78,15 @@ export async function rejectPaymentAction(purchaseId: string) {
           totalDays: { decrement: purchase.days },
         },
       });
+
+      // 3. Notify user
+      await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION_SUBSCRIPTION_RESULT", { purchaseId, approved: false });
     });
 
     revalidatePath("/admin/pending-payments");
     revalidatePath("/profile");
+    
+    processAllOutboxJobs().catch(err => console.error("Async outbox error:", err));
 
     return { ok: true };
   } catch (error: any) {
