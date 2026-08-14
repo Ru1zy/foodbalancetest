@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { calculateSubscriptionPrice } from "@/lib/subscription-logic";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { enqueueOutboxJob } from "@/lib/outbox";
+import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 
 export async function createSubscriptionPurchaseAction(
   packageId: string,
@@ -99,6 +99,10 @@ export async function createSubscriptionPurchaseAction(
 
     revalidatePath("/profile");
     revalidatePath("/admin/pending-payments");
+
+    processAllOutboxJobs().catch((err) => {
+      console.error("processAllOutboxJobs error in subscription:", err);
+    });
 
     return { ok: true, purchaseId: purchase.id };
   } catch (error) {
