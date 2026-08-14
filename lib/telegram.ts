@@ -449,21 +449,22 @@ export async function sendSubscriptionPendingAlert(
 💳 <b>Сума:</b> ${purchase.finalPrice} ₴
 Спосіб: ${method}`;
 
-  const sendPromises = adminIds.map((chatId) =>
-    fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+  const sendPromises = adminIds.map((chatId) => {
+    const endpoint = purchase.receiptUrl ? "sendPhoto" : "sendMessage";
+    const body = purchase.receiptUrl
+      ? { chat_id: chatId, photo: purchase.receiptUrl, caption: text, parse_mode: "HTML" }
+      : { chat_id: chatId, text, parse_mode: "HTML" };
+
+    return fetch(`https://api.telegram.org/bot${token}/${endpoint}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text,
-        parse_mode: "HTML",
-      }),
+      body: JSON.stringify(body),
     }).then(async (response) => {
       if (!response.ok) {
-        console.error(`Telegram sendMessage failed for ${chatId}: ${await response.text()}`);
+        console.error(`Telegram ${endpoint} failed for ${chatId}: ${await response.text()}`);
       }
-    })
-  );
+    });
+  });
 
   await Promise.all(sendPromises);
 }
