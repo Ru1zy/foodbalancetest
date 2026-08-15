@@ -70,9 +70,10 @@ export async function rejectPaymentAction(purchaseId: string) {
       });
 
       // 2. Знімаємо дні з балансу, які були нараховані авансом
-      await tx.userBalance.update({
+      await tx.userBalance.updateMany({
         where: {
-          userId_packageId: { userId: purchase.userId, packageId: purchase.packageId },
+          userId: purchase.userId,
+          packageId: purchase.packageId,
         },
         data: {
           totalDays: { decrement: purchase.days },
