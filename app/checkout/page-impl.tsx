@@ -119,6 +119,7 @@ export default function CheckoutPageImpl({
     formState: { errors },
     reset,
     watch,
+    getValues,
   } = useForm<CheckoutSchema>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -133,7 +134,9 @@ export default function CheckoutPageImpl({
     },
   });
 
+  // Preserve email state when payment method changes
   useEffect(() => {
+    const currentValues = getValues();
     reset({
       name: customerProfile.name,
       phone: normalizedPhone,
@@ -141,10 +144,10 @@ export default function CheckoutPageImpl({
       comment: customerProfile.notes || "",
       cutlery: customerProfile.cutlery,
       paymentMethod,
-      sendEmailReceipt: false,
-      receiptEmail: "",
+      sendEmailReceipt: currentValues.sendEmailReceipt ?? false,
+      receiptEmail: currentValues.receiptEmail || "",
     });
-  }, [customerProfile, normalizedPhone, paymentMethod, reset]);
+  }, [customerProfile, normalizedPhone, paymentMethod, reset, getValues]);
 
   useEffect(() => {
     if (!pkg) return;

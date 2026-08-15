@@ -373,6 +373,8 @@ async function prepareOrderForSubmission(
     comment: formData.get("comment"),
     cutlery: Number(formData.get("cutlery") ?? 0),
     paymentMethod: formData.get("paymentMethod"),
+    sendEmailReceipt: formData.get("sendEmailReceipt") === "true",
+    receiptEmail: formData.get("receiptEmail") || "",
   };
 
   const validation = checkoutSchema.safeParse(rawData);
