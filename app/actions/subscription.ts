@@ -12,7 +12,9 @@ export async function createSubscriptionPurchaseAction(
   basePrice: number,
   days: number,
   paymentMethod: "bank_transfer" | "cash",
-  receiptUrl?: string
+  receiptUrl?: string,
+  sendEmailReceipt: boolean = false,
+  receiptEmail?: string
 ) {
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
@@ -70,7 +72,9 @@ export async function createSubscriptionPurchaseAction(
           finalPrice: totalDiscounted,
           status: "CREDITED_PENDING_CONFIRMATION",
           paymentMethod,
-          receiptUrl,
+          receiptUrl: receiptUrl || null,
+          sendEmailReceipt,
+          receiptEmail: receiptEmail || null,
         },
       });
 

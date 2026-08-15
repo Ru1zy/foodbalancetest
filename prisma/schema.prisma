@@ -55,6 +55,8 @@ model SubscriptionPurchase {
   status        String    @default("PENDING") // PENDING, CREDITED_PENDING_CONFIRMATION, PAID, FAILED, CANCELLED
   paymentMethod String    @default("liqpay")
   receiptUrl    String?
+  sendEmailReceipt Boolean @default(false)
+  receiptEmail  String?
   confirmedBy   String?
   confirmedAt   DateTime?
   createdAt     DateTime  @default(now())
@@ -101,6 +103,8 @@ model Order {
   deliveryTime    String?
   deliveryNote    String?
   paymentMethod   String     @default("balance")
+  sendEmailReceipt Boolean   @default(false)
+  receiptEmail    String?
   days            OrderDay[]
 
   @@index([deliveryDate, status])

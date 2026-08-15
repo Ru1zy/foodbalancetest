@@ -392,7 +392,7 @@ function formatDeliveryDate(date: Date): string {
   }).format(date);
 }
 
-export async function sendPaymentConfirmation(user: { chatId: string | null; email: string | null; name?: string }, orderDetails: OrderDetails): Promise<void> {
+export async function sendPaymentConfirmation(user: { chatId: string | null; email: string | null; name?: string }, orderDetails: OrderDetails & { sendEmailReceipt?: boolean; receiptEmail?: string | null }): Promise<void> {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const formattedDate = formatDeliveryDate(orderDetails.date);
   const text = `✅ <b>Оплату отримано. Замовлення підтверджено!</b>
@@ -415,7 +415,12 @@ export async function sendPaymentConfirmation(user: { chatId: string | null; ema
     } catch (error) {
       console.error("Failed to send Telegram notification:", error);
     }
-  } else if (user.email) {
+  } 
+  
+  if (orderDetails.sendEmailReceipt && orderDetails.receiptEmail) {
+    await sendEmail(orderDetails.receiptEmail, "Оплату отримано. Замовлення підтверджено!", text.replace(/\n/g, "<br>"));
+  } else if (!user.chatId && user.email) {
+    // Fallback if no TG
     await sendEmail(user.email, "Оплату отримано. Замовлення підтверджено!", text.replace(/\n/g, "<br>"));
   }
 }
@@ -464,8 +469,6 @@ export async function sendSubscriptionPendingAlert(
 
 export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token || !user.chatId) return;
-
   const text = `✅ <b>Оплату абонемента підтверджено!</b>
 
 📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
@@ -473,33 +476,47 @@ export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
 
 Баланс поповнено. Ви можете використовувати ці дні для замовлення їжі!`;
 
-  try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
-    });
-  } catch (error) {
-    console.error("Failed to send telegram approval alert:", error);
+  if (token && user.chatId) {
+    try {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
+      });
+    } catch (error) {
+      console.error("Failed to send telegram approval alert:", error);
+    }
+  }
+
+  if (purchase.sendEmailReceipt && purchase.receiptEmail) {
+    await sendEmail(purchase.receiptEmail, "Оплату абонемента підтверджено", text.replace(/\n/g, "<br>"));
+  } else if (!user.chatId && user.email) {
+    await sendEmail(user.email, "Оплату абонемента підтверджено", text.replace(/\n/g, "<br>"));
   }
 }
 
 export async function sendSubscriptionRejectedAlert(purchase: any, user: any) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  if (!token || !user.chatId) return;
-
   const text = `❌ <b>Оплату абонемента скасовано</b>
 
 📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
 На жаль, адміністратор відхилив вашу оплату. Якщо це помилка, будь ласка, зверніться до підтримки.`;
 
-  try {
-    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
-    });
-  } catch (error) {
-    console.error("Failed to send telegram rejection alert:", error);
+  if (token && user.chatId) {
+    try {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: user.chatId, text, parse_mode: "HTML" }),
+      });
+    } catch (error) {
+      console.error("Failed to send telegram rejection alert:", error);
+    }
+  }
+
+  if (purchase.sendEmailReceipt && purchase.receiptEmail) {
+    await sendEmail(purchase.receiptEmail, "Оплату абонемента скасовано", text.replace(/\n/g, "<br>"));
+  } else if (!user.chatId && user.email) {
+    await sendEmail(user.email, "Оплату абонемента скасовано", text.replace(/\n/g, "<br>"));
   }
 }

@@ -12,6 +12,8 @@ export const checkoutSchema = z.object({
   comment: z.string(),
   cutlery: z.number().int().min(0).max(10),
   paymentMethod: z.enum(["balance", "card", "cash", "fiat"]),
+  sendEmailReceipt: z.boolean().optional(),
+  receiptEmail: z.string().email("Невірний формат email").optional().or(z.literal('')),
 });
 
 export type CheckoutSchema = z.infer<typeof checkoutSchema>;

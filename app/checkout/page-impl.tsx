@@ -118,6 +118,7 @@ export default function CheckoutPageImpl({
     handleSubmit: handleFormSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<CheckoutSchema>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -127,6 +128,8 @@ export default function CheckoutPageImpl({
       comment: customerProfile.notes || "",
       cutlery: customerProfile.cutlery,
       paymentMethod: "balance",
+      sendEmailReceipt: false,
+      receiptEmail: "",
     },
   });
 
@@ -138,6 +141,8 @@ export default function CheckoutPageImpl({
       comment: customerProfile.notes || "",
       cutlery: customerProfile.cutlery,
       paymentMethod,
+      sendEmailReceipt: false,
+      receiptEmail: "",
     });
   }, [customerProfile, normalizedPhone, paymentMethod, reset]);
 
@@ -1020,6 +1025,42 @@ export default function CheckoutPageImpl({
                   rows={4}
                 />
               </label>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <div className="flex h-6 items-center">
+                    <input
+                      type="checkbox"
+                      {...register("sendEmailReceipt")}
+                      className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                    />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium text-slate-900">
+                      Відправити квитанцію про оплату на Email
+                    </span>
+                    <span className="text-sm text-slate-500">
+                      Ми надішлемо копію чеку після підтвердження менеджером
+                    </span>
+                  </div>
+                </label>
+                {watch("sendEmailReceipt") && (
+                  <div className="mt-4 pl-8">
+                    <input
+                      type="email"
+                      {...register("receiptEmail")}
+                      placeholder="Введіть ваш Email..."
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      aria-invalid={errors.receiptEmail ? "true" : "false"}
+                    />
+                    {errors.receiptEmail && (
+                      <p className="mt-1.5 text-sm font-medium text-red-500">
+                        {errors.receiptEmail.message}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
               <div className="rounded-3xl bg-slate-50 px-5 py-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

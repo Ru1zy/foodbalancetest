@@ -25,6 +25,8 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
   const [days, setDays] = useState<number>(14);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">("bank_transfer");
   const [file, setFile] = useState<File | null>(null);
+  const [sendEmailReceipt, setSendEmailReceipt] = useState(false);
+  const [receiptEmail, setReceiptEmail] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,12 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
 
     if (paymentMethod === "bank_transfer" && !file) {
       setError("Будь ласка, завантажте скріншот квитанції про оплату.");
+      setIsProcessing(false);
+      return;
+    }
+
+    if (sendEmailReceipt && !receiptEmail) {
+      setError("Будь ласка, введіть email для отримання квитанції.");
       setIsProcessing(false);
       return;
     }
@@ -66,7 +74,9 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         pkg.basePrice,
         days,
         paymentMethod,
-        receiptUrl
+        receiptUrl,
+        sendEmailReceipt,
+        receiptEmail || undefined
       );
 
       if (!result.ok) {
@@ -208,6 +218,38 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
               />
             </div>
           )}
+          
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <div className="flex h-6 items-center">
+                <input
+                  type="checkbox"
+                  checked={sendEmailReceipt}
+                  onChange={(e) => setSendEmailReceipt(e.target.checked)}
+                  className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-slate-900">
+                  Відправити квитанцію про оплату на Email
+                </span>
+                <span className="text-sm text-slate-500">
+                  Ми надішлемо копію чеку після підтвердження менеджером
+                </span>
+              </div>
+            </label>
+            {sendEmailReceipt && (
+              <div className="mt-4 pl-8">
+                <input
+                  type="email"
+                  value={receiptEmail}
+                  onChange={(e) => setReceiptEmail(e.target.value)}
+                  placeholder="Введіть ваш Email..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <button
