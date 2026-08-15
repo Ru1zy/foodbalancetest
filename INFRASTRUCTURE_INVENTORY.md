@@ -83,11 +83,12 @@ vault. Its current local recovery copy is documented in
 2. Copy/transfer Sheets and Drive assets while both accounts can verify them.
 3. Reconnect admin Drive OAuth from the FoodBalance admin page using the
    business account; this replaces the encrypted refresh token.
-4. Switch service-account credentials separately and verify CRM, kitchen and
+4. When recreating the Google OAuth Web Client for the new account, ensure you add `https://developers.google.com/oauthplayground` to the "Authorized redirect URIs" in Google Cloud Console. This is required to generate the `GOOGLE_OAUTH_REFRESH_TOKEN` for the Gmail API.
+5. Switch service-account credentials separately and verify CRM, kitchen and
    monthly destinations after each change.
-5. Transfer billing/project ownership where the provider supports it.
-6. Test login, order export, cron and backup restore.
-7. Revoke the previous credentials only after an observation period and a
+6. Transfer billing/project ownership where the provider supports it.
+7. Test login, order export, cron and backup restore, and verify email receipts are sending.
+8. Revoke the previous credentials only after an observation period and a
    documented rollback test.
 8. Update this inventory and the encrypted vault on the same day.
 

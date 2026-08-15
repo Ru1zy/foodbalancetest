@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import type { Menu } from "@prisma/client";
 import { sendEmail } from "./email";
+import { generateOrderReceiptHtml } from "./email-templates";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
 import {
   isIndivPackage,
@@ -8,11 +9,15 @@ import {
 } from "@/lib/order-selection";
 
 type TelegramOrder = {
+  id: string;
   cutlery: number;
   deliveryAddress: string | null;
   items: unknown;
   notes: string | null;
   packageType: string;
+  price?: number | null;
+  sendEmailReceipt?: boolean;
+  receiptEmail?: string | null;
 };
 
 type TelegramUser = {
@@ -336,6 +341,25 @@ export async function sendOrderNotification(
   );
 
   await Promise.all(sendPromises);
+
+  if (order.sendEmailReceipt && order.receiptEmail) {
+    try {
+      const html = generateOrderReceiptHtml({
+        orderId: order.id,
+        name: user.name || "Клієнт",
+        phone: user.phone,
+        packageType: order.packageType,
+        price: order.price,
+        daysText: daysText,
+        address: user.address,
+        cutlery: order.cutlery,
+        notes: order.notes || user.notes,
+      });
+      await sendEmail(order.receiptEmail, "Ваше замовлення прийнято! | Food Balance", html);
+    } catch (emailError) {
+      console.error("Failed to send HTML email receipt:", emailError);
+    }
+  }
 }
 
 /**
@@ -416,13 +440,8 @@ export async function sendPaymentConfirmation(user: { chatId: string | null; ema
       console.error("Failed to send Telegram notification:", error);
     }
   } 
-  
-  if (orderDetails.sendEmailReceipt && orderDetails.receiptEmail) {
-    await sendEmail(orderDetails.receiptEmail, "Оплату отримано. Замовлення підтверджено!", text.replace(/\n/g, "<br>"));
-  } else if (!user.chatId && user.email) {
-    // Fallback if no TG
-    await sendEmail(user.email, "Оплату отримано. Замовлення підтверджено!", text.replace(/\n/g, "<br>"));
-  }
+  // Email receipts are now sent immediately upon order creation in sendOrderNotification,
+  // so we no longer send emails here during payment confirmation.
 }
 
 export async function sendSubscriptionPendingAlert(

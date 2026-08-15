@@ -353,7 +353,7 @@ Current research as of 2026-08-09:
 - [x] Decide whether delivery time is sent automatically when an admin enters it
   or only after the existing explicit `Notify` action.
 - [x] Add email duplication of admin Telegram alerts only after an email provider,
-  sender domain, recipients, and delivery policy are selected.
+  sender domain, recipients, and delivery policy are selected. (Implemented via Gmail API over HTTPS to bypass Railway SMTP blocks)
 
 ## Phase 6: verification and release
 
