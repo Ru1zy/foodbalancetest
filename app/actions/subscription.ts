@@ -62,6 +62,8 @@ export async function createSubscriptionPurchaseAction(
 
   try {
     const purchase = await prisma.$transaction(async (tx) => {
+      const isCash = paymentMethod === "cash";
+      
       const p = await tx.subscriptionPurchase.create({
         data: {
           userId: userId,
@@ -70,7 +72,7 @@ export async function createSubscriptionPurchaseAction(
           basePrice: basePrice * days,
           discount: discountAmount,
           finalPrice: totalDiscounted,
-          status: "CREDITED_PENDING_CONFIRMATION",
+          status: isCash ? "PAID" : "CREDITED_PENDING_CONFIRMATION",
           paymentMethod,
           receiptUrl: receiptUrl || null,
           sendEmailReceipt,

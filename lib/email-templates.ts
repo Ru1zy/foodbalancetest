@@ -146,6 +146,7 @@ export function generateSubscriptionReceiptHtml({
   days,
   finalPrice,
   method,
+  status,
 }: {
   purchaseId?: string;
   name: string;
@@ -154,7 +155,14 @@ export function generateSubscriptionReceiptHtml({
   days: number;
   finalPrice: number;
   method: string;
+  status: string;
 }) {
+  const isPaid = status === 'PAID';
+  const title = isPaid ? 'Абонемент активовано!' : 'Заявка на абонемент!';
+  const message = isPaid 
+    ? "Дні успішно зараховані на ваш баланс. Якщо ви обрали оплату готівкою, просто передайте суму кур'єру при доставці."
+    : "Ми отримали вашу заявку. Після успішного підтвердження платежу дні будуть автоматично зараховані на ваш баланс.";
+
   return `
 <!DOCTYPE html>
 <html lang="uk">
@@ -171,7 +179,7 @@ export function generateSubscriptionReceiptHtml({
           <!-- Header -->
           <tr>
             <td align="center" style="background-color: #047857; padding: 30px 20px;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Заявка на абонемент!</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">${title}</h1>
               <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Дякуємо, що обрали Food Balance 🥑</p>
             </td>
           </tr>
@@ -209,7 +217,7 @@ export function generateSubscriptionReceiptHtml({
                 <tr>
                   <td>
                     <p style="margin: 0 0 5px 0; color: #374151; font-size: 15px;">💳 <strong>Спосіб оплати:</strong> ${method}</p>
-                    <p style="margin: 15px 0 0 0; color: #4b5563; font-size: 14px; line-height: 1.5;">Ми отримали вашу заявку. Після успішного підтвердження платежу дні будуть автоматично зараховані на ваш баланс, і ви зможете використовувати їх для замовлення їжі.</p>
+                    <p style="margin: 15px 0 0 0; color: #4b5563; font-size: 14px; line-height: 1.5;">${message}</p>
                   </td>
                 </tr>
               </table>

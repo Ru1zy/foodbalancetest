@@ -458,13 +458,11 @@ export async function sendSubscriptionPendingAlert(
 
   const adminIds = adminChatId.split(",").map((id) => id.trim());
   const method = purchase.paymentMethod === 'bank_transfer' ? '💳 Переказ на картку' : '💵 Готівка';
+  const isAutoApproved = purchase.status === 'PAID';
 
-  const text = `💰 <b>Нова заявка на оплату абонемента!</b>
-
-👤 <b>Клієнт:</b> ${escapeHtml(user.name)} (${escapeHtml(user.phone)})
-📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
-💳 <b>Сума:</b> ${purchase.finalPrice} ₴
-Спосіб: ${method}`;
+  const text = isAutoApproved 
+    ? `💰 <b>Оформлено абонемент (Готівка)</b>\n<i>Автоматично схвалено, дні зараховано.</i>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name)} (${escapeHtml(user.phone)})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice} ₴\nСпосіб: ${method}`
+    : `💰 <b>Нова заявка на оплату абонемента!</b>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name)} (${escapeHtml(user.phone)})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice} ₴\nСпосіб: ${method}`;
 
   const sendPromises = adminIds.map((chatId) => {
     const endpoint = purchase.receiptUrl ? "sendPhoto" : "sendMessage";
@@ -495,6 +493,7 @@ export async function sendSubscriptionPendingAlert(
         days: purchase.days,
         finalPrice: purchase.finalPrice,
         method: method,
+        status: purchase.status,
       });
       await sendEmail(purchase.receiptEmail, "Заявка на абонемент | Food Balance", html);
     } catch (error) {
