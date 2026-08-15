@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import type { Menu } from "@prisma/client";
 import { sendEmail } from "./email";
-import { generateOrderReceiptHtml } from "./email-templates";
+import { generateOrderReceiptHtml, generateSubscriptionReceiptHtml } from "./email-templates";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
 import {
   isIndivPackage,
@@ -484,6 +484,23 @@ export async function sendSubscriptionPendingAlert(
   });
 
   await Promise.all(sendPromises);
+
+  if (purchase.sendEmailReceipt && purchase.receiptEmail) {
+    try {
+      const html = generateSubscriptionReceiptHtml({
+        purchaseId: purchase.id,
+        name: user.name || "Клієнт",
+        phone: user.phone,
+        packageId: purchase.packageId,
+        days: purchase.days,
+        finalPrice: purchase.finalPrice,
+        method: method,
+      });
+      await sendEmail(purchase.receiptEmail, "Заявка на абонемент | Food Balance", html);
+    } catch (error) {
+      console.error("Failed to send HTML subscription receipt:", error);
+    }
+  }
 }
 
 export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
@@ -506,12 +523,7 @@ export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
       console.error("Failed to send telegram approval alert:", error);
     }
   }
-
-  if (purchase.sendEmailReceipt && purchase.receiptEmail) {
-    await sendEmail(purchase.receiptEmail, "Оплату абонемента підтверджено", text.replace(/\n/g, "<br>"));
-  } else if (!user.chatId && user.email) {
-    await sendEmail(user.email, "Оплату абонемента підтверджено", text.replace(/\n/g, "<br>"));
-  }
+  // Email receipt is now sent at PENDING stage, so we don't send one here.
 }
 
 export async function sendSubscriptionRejectedAlert(purchase: any, user: any) {
