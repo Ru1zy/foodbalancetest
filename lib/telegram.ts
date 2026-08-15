@@ -1,7 +1,12 @@
 import prisma from "@/lib/prisma";
 import type { Menu } from "@prisma/client";
 import { sendEmail } from "./email";
-import { generateOrderReceiptHtml, generateSubscriptionReceiptHtml } from "./email-templates";
+import { 
+  generateOrderReceiptHtml, 
+  generateSubscriptionReceiptHtml, 
+  generateSubscriptionApprovedHtml, 
+  generateSubscriptionRejectedHtml 
+} from "./email-templates";
 import { mealSuffix, PackageType } from "@/lib/order-logic";
 import {
   isIndivPackage,
@@ -474,11 +479,7 @@ export async function sendSubscriptionPendingAlert(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-    }).then(async (response) => {
-      if (!response.ok) {
-        console.error(`Telegram ${endpoint} failed for ${chatId}: ${await response.text()}`);
-      }
-    });
+    }).catch((err) => console.error(`Failed to notify admin ${chatId}`, err));
   });
 
   await Promise.all(sendPromises);
@@ -504,12 +505,7 @@ export async function sendSubscriptionPendingAlert(
 
 export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const text = `✅ <b>Оплату абонемента підтверджено!</b>
-
-📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
-💰 <b>Сума:</b> ${purchase.finalPrice} ₴
-
-Баланс поповнено. Ви можете використовувати ці дні для замовлення їжі!`;
+  const text = `✅ <b>Оплату абонемента підтверджено!</b>\n\n📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💰 <b>Сума:</b> ${purchase.finalPrice} ₴\n\nБаланс поповнено. Ви можете використовувати ці дні для замовлення їжі!`;
 
   if (token && user.chatId) {
     try {
@@ -522,15 +518,19 @@ export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
       console.error("Failed to send telegram approval alert:", error);
     }
   }
-  // Email receipt is now sent at PENDING stage, so we don't send one here.
+  
+  if (purchase.sendEmailReceipt && purchase.receiptEmail) {
+    const html = generateSubscriptionApprovedHtml({ packageId: purchase.packageId, days: purchase.days });
+    await sendEmail(purchase.receiptEmail, "Оплату абонемента підтверджено | Food Balance", html);
+  } else if (!user.chatId && user.email) {
+    const html = generateSubscriptionApprovedHtml({ packageId: purchase.packageId, days: purchase.days });
+    await sendEmail(user.email, "Оплату абонемента підтверджено | Food Balance", html);
+  }
 }
 
 export async function sendSubscriptionRejectedAlert(purchase: any, user: any) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const text = `❌ <b>Оплату абонемента скасовано</b>
-
-📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів
-На жаль, адміністратор відхилив вашу оплату. Якщо це помилка, будь ласка, зверніться до підтримки.`;
+  const text = `❌ <b>Оплату абонемента скасовано</b>\n\n📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\nНа жаль, адміністратор відхилив вашу оплату. Якщо це помилка, будь ласка, зверніться до підтримки.`;
 
   if (token && user.chatId) {
     try {
@@ -545,8 +545,10 @@ export async function sendSubscriptionRejectedAlert(purchase: any, user: any) {
   }
 
   if (purchase.sendEmailReceipt && purchase.receiptEmail) {
-    await sendEmail(purchase.receiptEmail, "Оплату абонемента скасовано", text.replace(/\n/g, "<br>"));
+    const html = generateSubscriptionRejectedHtml({ packageId: purchase.packageId, days: purchase.days });
+    await sendEmail(purchase.receiptEmail, "Оплату абонемента скасовано | Food Balance", html);
   } else if (!user.chatId && user.email) {
-    await sendEmail(user.email, "Оплату абонемента скасовано", text.replace(/\n/g, "<br>"));
+    const html = generateSubscriptionRejectedHtml({ packageId: purchase.packageId, days: purchase.days });
+    await sendEmail(user.email, "Оплату абонемента скасовано | Food Balance", html);
   }
 }
