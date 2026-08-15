@@ -157,6 +157,8 @@ export async function confirmOrderPayment(orderId: string): Promise<ConfirmPayme
       await sendPaymentConfirmation(order.user, {
         date: order.deliveryDate,
         pkg: order.packageType,
+        sendEmailReceipt: order.sendEmailReceipt,
+        receiptEmail: order.receiptEmail,
       });
     }
 
