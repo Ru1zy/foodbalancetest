@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { updateUserProfile } from "../actions/profile";
+import { cancelSubscriptionPurchaseAction } from "../actions/subscription";
 import { isIndivPackage } from "@/lib/order-selection";
 import SubscriptionOptions from "@/components/SubscriptionOptions";
 import { 
@@ -521,6 +522,28 @@ export default function ProfilePageClient({
 }
 
 function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
+  const [isCancelling, setIsCancelling] = useState(false);
+  const router = useRouter();
+
+  const handleCancel = async () => {
+    if (!confirm("Ви впевнені, що хочете скасувати покупку абонемента?")) return;
+    setIsCancelling(true);
+    try {
+      const res = await cancelSubscriptionPurchaseAction(purchase.id);
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert(res.error || "Помилка при скасуванні");
+      }
+    } catch (e) {
+      alert("Сталася помилка при скасуванні.");
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const canCancel = purchase.status === "PENDING" || purchase.status === "CREDITED_PENDING_CONFIRMATION";
+
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
       <div className="p-5 sm:p-6">
@@ -563,6 +586,18 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
             </div>
           </div>
         </div>
+
+        {canCancel && (
+          <div className="mt-4 flex justify-end border-t border-gray-100 pt-4">
+            <button
+              onClick={handleCancel}
+              disabled={isCancelling}
+              className="text-sm font-semibold text-red-600 hover:text-red-700 transition disabled:opacity-50"
+            >
+              {isCancelling ? "Скасування..." : "Скасувати покупку"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

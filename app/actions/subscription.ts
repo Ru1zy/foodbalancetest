@@ -116,3 +116,65 @@ export async function createSubscriptionPurchaseAction(
     return { ok: false, error: "Internal Server Error" };
   }
 }
+
+
+export async function cancelSubscriptionPurchaseAction(purchaseId: string) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("auth_token")?.value;
+  
+  if (!token) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const userId = await verifyAuthToken(token);
+  if (!userId) {
+    return { ok: false, error: "Invalid token" };
+  }
+
+  try {
+    const purchase = await prisma.subscriptionPurchase.findUnique({
+      where: { id: purchaseId }
+    });
+
+    if (!purchase || purchase.userId !== userId) {
+      return { ok: false, error: "??????? ?? ????????" };
+    }
+
+    if (purchase.status === "PAID" || purchase.status === "CANCELLED") {
+      return { ok: false, error: "?? ??????? ??? ?? ????? ?????????" };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      // 1. ???????? ?????? ?? CANCELLED
+      await tx.subscriptionPurchase.update({
+        where: { id: purchaseId },
+        data: {
+          status: "CANCELLED",
+        },
+      });
+
+      // 2. ???????? ??? ? ???????, ??? ???? ?????????? ???????
+      // (?????? ???? ?????? ??? CREDITED_PENDING_CONFIRMATION)
+      if (purchase.status === "CREDITED_PENDING_CONFIRMATION") {
+        await tx.userBalance.updateMany({
+          where: {
+            userId: purchase.userId,
+            packageId: purchase.packageId,
+          },
+          data: {
+            totalDays: { decrement: purchase.days },
+          },
+        });
+      }
+    });
+
+    revalidatePath("/profile");
+    revalidatePath("/admin/pending-payments");
+
+    return { ok: true };
+  } catch (error) {
+    console.error("Failed to cancel subscription purchase:", error);
+    return { ok: false, error: "Internal Server Error" };
+  }
+}
+
