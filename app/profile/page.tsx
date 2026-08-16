@@ -178,7 +178,16 @@ async function resolveOrderDishes(order: {
   return resolvedDays;
 }
 
-export default async function ProfilePage() {
+export default async function ProfilePage(
+  props: {
+    searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const ordersPage = Math.max(1, parseInt(searchParams?.ordersPage as string || "1", 10));
+  const purchasesPage = Math.max(1, parseInt(searchParams?.purchasesPage as string || "1", 10));
+  const ITEMS_PER_PAGE = 10;
+
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
 
@@ -227,14 +236,17 @@ export default async function ProfilePage() {
       remainingDays: b.totalDays - b.usedDays,
     }));
 
-  const rawOrders = await prisma.order.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
-
-  const orderCount = await prisma.order.count({
-    where: { userId },
-  });
+  const [rawOrders, orderCount] = await Promise.all([
+    prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      skip: (ordersPage - 1) * ITEMS_PER_PAGE,
+      take: ITEMS_PER_PAGE,
+    }),
+    prisma.order.count({
+      where: { userId },
+    }),
+  ]);
 
   // Resolve dish names for all orders
   const ordersWithResolvedDishes: OrderWithResolvedDishes[] = await Promise.all(
@@ -253,10 +265,20 @@ export default async function ProfilePage() {
 
   const tariffs = await getAllTariffs();
 
-  const rawPurchases = await prisma.subscriptionPurchase.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-  });
+  const [rawPurchases, purchaseCount] = await Promise.all([
+    prisma.subscriptionPurchase.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      skip: (purchasesPage - 1) * ITEMS_PER_PAGE,
+      take: ITEMS_PER_PAGE,
+    }),
+    prisma.subscriptionPurchase.count({
+      where: { userId },
+    }),
+  ]);
+
+  const totalOrdersPages = Math.max(1, Math.ceil(orderCount / ITEMS_PER_PAGE));
+  const totalPurchasesPages = Math.max(1, Math.ceil(purchaseCount / ITEMS_PER_PAGE));
 
   return (
     <ProfilePageClient 
@@ -266,6 +288,10 @@ export default async function ProfilePage() {
       tariffs={tariffs} 
       isNewClient={orderCount === 0}
       purchases={rawPurchases}
+      currentOrdersPage={ordersPage}
+      totalOrdersPages={totalOrdersPages}
+      currentPurchasesPage={purchasesPage}
+      totalPurchasesPages={totalPurchasesPages}
     />
   );
 }

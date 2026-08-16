@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { updateUserProfile } from "../actions/profile";
 import { isIndivPackage } from "@/lib/order-selection";
 import SubscriptionOptions from "@/components/SubscriptionOptions";
@@ -10,6 +10,8 @@ import {
   Calendar, 
   ChevronDown, 
   ChevronUp, 
+  ChevronLeft,
+  ChevronRight,
   RefreshCw,
   AlertCircle,
   ForkKnife,
@@ -72,6 +74,10 @@ type Props = {
   tariffs: Tariff[];
   isNewClient: boolean;
   purchases: SubscriptionPurchase[];
+  currentOrdersPage: number;
+  totalOrdersPages: number;
+  currentPurchasesPage: number;
+  totalPurchasesPages: number;
 };
 
 function formatDate(date: Date): string {
@@ -89,6 +95,67 @@ function formatShortDate(date: Date): string {
     month: "short",
     timeZone: "Europe/Kiev",
   }).format(new Date(date));
+}
+
+function PaginationControls({ 
+  currentPage, 
+  totalPages, 
+  onPageChange 
+}: { 
+  currentPage: number; 
+  totalPages: number; 
+  onPageChange: (page: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+
+  return (
+    <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 sm:px-6 mt-4">
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm text-gray-500 font-medium">
+            Сторінка <span className="font-bold text-gray-900">{currentPage}</span> з <span className="font-bold text-gray-900">{totalPages}</span>
+          </p>
+        </div>
+        <div>
+          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+            <button
+              onClick={() => onPageChange(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="sr-only">Попередня</span>
+              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => onPageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <span className="sr-only">Наступна</span>
+              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </nav>
+        </div>
+      </div>
+      <div className="flex flex-1 justify-between sm:hidden">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          Попередня
+        </button>
+        <span className="inline-flex items-center text-sm font-bold text-gray-900">{currentPage} / {totalPages}</span>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+        >
+          Наступна
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
@@ -186,12 +253,38 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   );
 }
 
-export default function ProfilePageClient({ user, orders, balances, tariffs, isNewClient, purchases }: Props) {
+export default function ProfilePageClient({ 
+  user, 
+  orders, 
+  balances, 
+  tariffs, 
+  isNewClient, 
+  purchases,
+  currentOrdersPage,
+  totalOrdersPages,
+  currentPurchasesPage,
+  totalPurchasesPages
+}: Props) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
+
+  const handleOrdersPageChange = useCallback((page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('ordersPage', page.toString());
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  const handlePurchasesPageChange = useCallback((page: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('purchasesPage', page.toString());
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [searchParams, pathname, router]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -293,6 +386,11 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
                   </tbody>
                 </table>
               </div>
+              <PaginationControls 
+                currentPage={currentPurchasesPage} 
+                totalPages={totalPurchasesPages} 
+                onPageChange={handlePurchasesPageChange} 
+              />
             </div>
           </div>
         )}
@@ -474,6 +572,11 @@ export default function ProfilePageClient({ user, orders, balances, tariffs, isN
               {orders.map((order) => (
                 <OrderCard key={order.id} order={order} />
               ))}
+              <PaginationControls 
+                currentPage={currentOrdersPage} 
+                totalPages={totalOrdersPages} 
+                onPageChange={handleOrdersPageChange} 
+              />
             </div>
           )}
         </div>
