@@ -127,7 +127,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         </div>
       )}
 
-      <div className="max-w-md mx-auto relative flex flex-col rounded-3xl border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-slate-900 p-6 shadow-sm">
+      <div className="max-w-md mx-auto relative flex flex-col rounded-xl border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-slate-900 p-6 shadow-sm">
         {discountPercent > 0 && (
           <div className="absolute -right-3 -top-3 rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white shadow-md">
             -{discountPercent}%

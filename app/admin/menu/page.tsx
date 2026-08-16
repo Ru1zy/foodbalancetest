@@ -76,7 +76,7 @@ export default async function AdminMenuPage() {
         </div>
 
         {menuItems.length === 0 && (
-          <div className="mt-8 rounded-2xl border border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-950 p-8 text-center">
+          <div className="mt-8 rounded-2xl border border-solid border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-950 p-8 text-center">
             <p className="text-sm text-gray-600 dark:text-slate-400">
               Меню порожнє. Додайте записи через базу даних або seed скрипт.
             </p>

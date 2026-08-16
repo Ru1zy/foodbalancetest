@@ -75,7 +75,7 @@ export default function PackageSelector({ tariffs }: Props) {
           {sushkaOptions.map((option) => (
             <div
               key={option.id}
-              className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
+              className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
             >
               <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
                 {option.previewImageUrl ? (
@@ -111,7 +111,7 @@ export default function PackageSelector({ tariffs }: Props) {
               setShowSushkaOptions(false);
               setPreviewPkg(null);
             }}
-            className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
+            className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
           >
             <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
               <div className="flex h-full items-center justify-center text-gray-300">
@@ -136,7 +136,7 @@ export default function PackageSelector({ tariffs }: Props) {
             onClick={() => setPreviewPkg(null)}
           >
             <div
-              className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white dark:bg-slate-900 p-8 shadow-xl"
+              className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="mb-6 text-3xl font-bold text-gray-900 dark:text-slate-100 break-words">{previewPkg.title}</h2>
@@ -207,7 +207,7 @@ export default function PackageSelector({ tariffs }: Props) {
             return (
               <div
                 key="sushka-folder"
-                className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+                className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
                   selectedPackage?.includes("Sushka") ? "border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
                 }`}
               >
@@ -241,7 +241,7 @@ export default function PackageSelector({ tariffs }: Props) {
           return (
             <div
               key={pkg.id}
-              className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+              className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
                 active ? "border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
               }`}
             >
@@ -289,7 +289,7 @@ export default function PackageSelector({ tariffs }: Props) {
           onClick={() => setPreviewPkg(null)}
         >
           <div
-            className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white dark:bg-slate-900 p-8 shadow-xl"
+            className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="mb-6 text-3xl font-bold text-gray-900 dark:text-slate-100 break-words">{previewPkg.title}</h2>

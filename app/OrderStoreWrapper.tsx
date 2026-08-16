@@ -49,7 +49,7 @@ export default function OrderStoreWrapper() {
     <main className="flex-grow flex flex-col">
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 md:px-8 lg:px-16">
         {menuItems.length === 0 ? (
-          <div className="rounded-3xl p-16 text-center border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+          <div className="rounded-xl p-16 text-center border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
             <div className="mb-6 flex justify-center">
               <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain border border-gray-200 dark:border-slate-700" />
             </div>

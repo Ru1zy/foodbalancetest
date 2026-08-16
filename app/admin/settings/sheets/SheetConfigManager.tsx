@@ -56,7 +56,7 @@ export default function SheetConfigManager({ configs }: Props) {
         </div>
 
         {configs.length === 0 && (
-          <div className="border-t border-dashed border-gray-200 dark:border-slate-700 p-8 text-center">
+          <div className="border-t border-solid border-gray-200 dark:border-slate-700 p-8 text-center">
             <p className="text-sm text-gray-600 dark:text-slate-400">
               Конфігурації відсутні. Додайте першу таблицю через форму вище.
             </p>

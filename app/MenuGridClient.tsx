@@ -278,7 +278,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   if (!menuItems || menuItems.length === 0) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center rounded-xl border-2 border-dashed border-gray-200 dark:border-slate-700">
+      <div className="flex min-h-[200px] items-center justify-center rounded-xl border-2 border-solid border-gray-200 dark:border-slate-700">
         <p className="text-gray-500 dark:text-slate-400">Меню завантажується або порожнє...</p>
       </div>
     );
@@ -297,7 +297,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   if (step === 3 && !pkg) {
     return (
-      <div className="rounded-2xl border border-dashed border-amber-200 dark:border-amber-800 bg-amber-50 p-8 text-center text-sm text-amber-900">
+      <div className="rounded-2xl border border-amber-200 dark:border-amber-800 dark:border-amber-800 bg-amber-50 p-8 text-center text-sm text-amber-900">
         Тариф не обрано. Поверніться на перший крок майстра замовлення.
         <div className="mt-4">
           <button
@@ -373,7 +373,7 @@ export default function MenuGridClient({ menuItems }: Props) {
         )}
 
         {sorted.length === 0 && wizardFilterActive ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-950 p-8 text-center text-sm text-gray-600 dark:text-slate-400">
+          <div className="rounded-2xl border border-solid border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-950 p-8 text-center text-sm text-gray-600 dark:text-slate-400">
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
@@ -381,7 +381,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             {currentDayItem && (
               <div
                 key={currentDayItem.id}
-                className={`w-full max-w-2xl group flex flex-col bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-all duration-200 ease-out ${
+                className={`w-full max-w-2xl group flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-all duration-200 ease-out ${
                   isDaySelectable(currentDayItem.dayOfWeek) ? "hover:shadow-md" : "opacity-50"
                 }`}
               >
@@ -414,7 +414,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                     <button
                       type="button"
                       onClick={() => toggleCustomMode(currentDayItem.id, !currentDayCustom)}
-                      className="mb-6 w-full rounded-2xl border-2 border-dashed border-emerald-200 dark:border-emerald-800 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
+                      className="mb-6 w-full rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/20 shadow-sm dark:border-emerald-800 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
                     >
                       {currentDayCustom ? "Повернутися до стандарту" : "Індивідуальна збірка"}
                     </button>

@@ -34,7 +34,7 @@ export default function MegaphoneClient() {
   };
 
   return (
-    <div className="rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
+    <div className="rounded-xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
       <div className="mb-4">
         <label htmlFor="message" className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-2">
           Повідомлення (HTML підтримується)

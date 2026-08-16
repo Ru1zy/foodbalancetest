@@ -546,7 +546,7 @@ export default function CheckoutPageImpl({
   if (submitted) {
     return (
       <main className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
-      <section className="mx-auto max-w-3xl rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-sm sm:p-10">
+      <section className="mx-auto max-w-3xl rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-sm sm:p-10">
           <div className="text-center">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl text-emerald-600">
               ✓
@@ -641,7 +641,7 @@ export default function CheckoutPageImpl({
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <aside className="h-fit rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8 lg:sticky lg:top-24">
+          <aside className="h-fit rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8 lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -655,7 +655,7 @@ export default function CheckoutPageImpl({
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl bg-slate-950 px-5 py-5 text-white">
+            <div className="mt-6 rounded-xl bg-slate-950 px-5 py-5 text-white">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-slate-300">Тариф</span>
                 <span className="text-sm font-semibold text-white">{selectedPackageRaw ?? "—"}</span>
@@ -773,7 +773,7 @@ export default function CheckoutPageImpl({
             <button
               type="button"
               onClick={handleAddAnotherPackage}
-              className="mt-6 w-full rounded-2xl border-2 border-dashed border-emerald-300 py-3.5 text-sm font-bold text-emerald-600 transition hover:bg-emerald-50 active:scale-95"
+              className="mt-6 w-full rounded-2xl border-2 border-solid border-emerald-300 py-3.5 text-sm font-bold text-emerald-600 transition hover:bg-emerald-50 active:scale-95"
             >
               + Додати ще один раціон
             </button>
@@ -803,7 +803,7 @@ export default function CheckoutPageImpl({
               </div>
 
               {summaryDays.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-950 px-4 py-5 text-sm text-slate-600 dark:text-slate-400">
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 px-4 py-5 text-sm text-slate-600 dark:text-slate-400">
                   Поки що немає повністю зібраних днів. Поверніться до меню та додайте хоча б один день.
                 </div>
               ) : (
@@ -841,7 +841,7 @@ export default function CheckoutPageImpl({
             )}
           </aside>
 
-          <section className="rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
+          <section className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-slate-50">Куди і кому доставляти</h2>
@@ -851,7 +851,7 @@ export default function CheckoutPageImpl({
             </div>
 
             {!customerProfile.isAuthenticated && (
-              <div className="mb-8 rounded-[2rem] border-2 border-red-200 dark:border-red-800 bg-red-50 p-6 shadow-sm">
+              <div className="mb-8 rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 p-6 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-red-900">Увага! Ви не авторизовані</h3>
@@ -866,7 +866,7 @@ export default function CheckoutPageImpl({
               </div>
             )}
 
-            <div className="mb-8 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-6">
+            <div className="mb-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-6">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
               
               {fiatPrice === 0 ? (
@@ -1065,7 +1065,7 @@ export default function CheckoutPageImpl({
                 )}
               </div>
 
-              <div className="rounded-3xl bg-slate-50 dark:bg-slate-950 px-5 py-5">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-950 px-5 py-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">

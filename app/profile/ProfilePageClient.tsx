@@ -313,7 +313,7 @@ export default function ProfilePageClient({
         </header>
 
         {/* Settings Section */}
-        <div className="mb-10 rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
+        <div className="mb-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -423,7 +423,7 @@ export default function ProfilePageClient({
         </div>
 
         {/* Purchase Subscription Section */}
-        <div className="mb-10 rounded-3xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 p-6 sm:p-8">
+        <div className="mb-10 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 p-6 sm:p-8">
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
               <RefreshCw className="w-5 h-5" />
@@ -459,7 +459,7 @@ export default function ProfilePageClient({
 
         {/* Balances Section */}
         {balances.length > 0 && (
-          <div className="mb-10 rounded-3xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 p-6 sm:p-8">
+          <div className="mb-10 rounded-xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 p-6 sm:p-8">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <CreditCard className="w-5 h-5" />
@@ -492,8 +492,8 @@ export default function ProfilePageClient({
           </div>
 
           {actions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-16 text-center shadow-sm">
-              <div className="mb-6 rounded-3xl bg-slate-50 dark:bg-slate-950 p-8">
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-solid border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-16 text-center shadow-sm">
+              <div className="mb-6 rounded-xl bg-slate-50 dark:bg-slate-950 p-8">
                 <Package className="h-16 w-16 text-slate-200" />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">У вас ще немає дій</h3>
