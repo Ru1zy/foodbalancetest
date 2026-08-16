@@ -282,6 +282,11 @@ export default function ProfilePageClient({
     params.set('page', page.toString());
     params.set('limit', itemsPerPage.toString());
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    
+    // Scroll to action history top smoothly
+    setTimeout(() => {
+      document.getElementById('action-history')?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
   }, [searchParams, pathname, router, itemsPerPage]);
 
   const handleLimitChange = useCallback((limit: number) => {
@@ -493,7 +498,7 @@ export default function ProfilePageClient({
         )}
 
         {/* Action History Section */}
-        <div className="space-y-6 pb-12">
+        <div id="action-history" className="space-y-6 pb-12">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Історія дій</h2>

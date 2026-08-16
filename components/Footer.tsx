@@ -1,5 +1,5 @@
 import { Phone } from "lucide-react";
-import { FaInstagram, FaTiktok } from "react-icons/fa";
+import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
 
 export default function Footer() {
   return (
@@ -39,6 +39,14 @@ export default function Footer() {
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
             >
               <FaInstagram className="w-4 h-4" /> Instagram: @food.balance.zp
+            </a>
+            <a 
+              href="https://t.me/foodbalancezp" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
+            >
+              <FaTelegram className="w-4 h-4" /> Telegram: @foodbalancezp
             </a>
             <a 
               href="https://www.tiktok.com/@food.balance.zp" 

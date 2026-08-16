@@ -149,7 +149,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
               max={90}
               value={days}
               onChange={(e) => handleDaysChange(parseInt(e.target.value) || 2)}
-              className="w-16 text-center text-xl font-bold rounded-lg border border-gray-200 dark:border-slate-700 py-1"
+              className="w-16 text-center text-xl font-bold rounded-lg border border-gray-200 dark:border-slate-700 py-1 bg-transparent text-gray-900 dark:text-slate-100"
             />
             <button
               onClick={() => handleDaysChange(days + 1)}
