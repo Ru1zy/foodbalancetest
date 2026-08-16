@@ -16,6 +16,8 @@ on:
     - cron: "0 2 * * *"
     # Monthly on day 20 at 09:00 UTC — create/verify next month's Sheet.
     - cron: "0 9 20 * *"
+    # Every 5 minutes — process outbox jobs (fallback for async errors).
+    - cron: "*/5 * * * *"
   workflow_dispatch:
     inputs:
       job:
@@ -26,6 +28,7 @@ on:
         options:
           - archive-orders
           - check-next-month-sheet
+          - process-outbox
 
 jobs:
   archive-orders:
@@ -61,6 +64,25 @@ jobs:
           : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
           curl -fsS --retry 3 --retry-delay 10 -X GET \
             "${APP_BASE_URL%/}/api/cron/check-next-month-sheet" \
+            -H "Authorization: Bearer ${CRON_SECRET}"
+        env:
+          APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+  process-outbox:
+    # Runs every 5 minutes and on manual dispatch when chosen.
+    if: >-
+      github.event.schedule == '*/5 * * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.job == 'process-outbox')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call process-outbox
+        run: |
+          set -euo pipefail
+          : "${APP_BASE_URL:?Repository secret APP_BASE_URL is not configured}"
+          : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
+          curl -fsS --retry 3 --retry-delay 10 -X GET \
+            "${APP_BASE_URL%/}/api/cron/process-outbox" \
             -H "Authorization: Bearer ${CRON_SECRET}"
         env:
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
