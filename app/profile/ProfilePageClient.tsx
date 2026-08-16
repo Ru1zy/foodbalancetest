@@ -67,17 +67,18 @@ export type SubscriptionPurchase = {
   createdAt: Date;
 };
 
+export type UnifiedAction = 
+  | { type: 'ORDER'; data: OrderWithResolvedDishes }
+  | { type: 'PURCHASE'; data: SubscriptionPurchase };
+
 type Props = {
   user: User;
-  orders: OrderWithResolvedDishes[];
+  actions: UnifiedAction[];
   balances: UserBalanceSummary[];
   tariffs: Tariff[];
   isNewClient: boolean;
-  purchases: SubscriptionPurchase[];
-  currentOrdersPage: number;
-  totalOrdersPages: number;
-  currentPurchasesPage: number;
-  totalPurchasesPages: number;
+  currentPage: number;
+  totalPages: number;
 };
 
 function formatDate(date: Date): string {
@@ -255,15 +256,12 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
 
 export default function ProfilePageClient({ 
   user, 
-  orders, 
+  actions, 
   balances, 
   tariffs, 
   isNewClient, 
-  purchases,
-  currentOrdersPage,
-  totalOrdersPages,
-  currentPurchasesPage,
-  totalPurchasesPages
+  currentPage,
+  totalPages
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -274,15 +272,9 @@ export default function ProfilePageClient({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
 
-  const handleOrdersPageChange = useCallback((page: number) => {
+  const handlePageChange = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('ordersPage', page.toString());
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router]);
-
-  const handlePurchasesPageChange = useCallback((page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('purchasesPage', page.toString());
+    params.set('page', page.toString());
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }, [searchParams, pathname, router]);
 
@@ -487,99 +479,90 @@ export default function ProfilePageClient({
           </div>
         )}
 
-        {/* Order History Section */}
+        {/* Action History Section */}
         <div className="space-y-6 pb-12">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Історія замовлень</h2>
-            {orders.length > 0 && (
+            <h2 className="text-2xl font-bold text-gray-900">Історія дій</h2>
+            {actions.length > 0 && (
               <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-600">
-                {orders.length}
+                {actions.length}
               </span>
             )}
           </div>
 
-          {orders.length === 0 ? (
+          {actions.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-gray-200 bg-white p-16 text-center shadow-sm">
               <div className="mb-6 rounded-3xl bg-slate-50 p-8">
                 <Package className="h-16 w-16 text-slate-200" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">У вас ще немає замовлень</h3>
+              <h3 className="text-2xl font-bold text-gray-900">У вас ще немає дій</h3>
               <p className="mt-3 max-w-xs text-sm text-gray-500 font-medium">
-                Оформіть своє перше замовлення, і воно з&apos;явиться у цьому розділі.
+                Оформіть своє перше замовлення або придбайте абонемент.
               </p>
-              <button 
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="mt-10 rounded-2xl bg-slate-900 px-8 py-4 text-sm font-black text-white shadow-xl shadow-slate-200 transition hover:bg-slate-800 active:scale-95"
-              >
-                Оформити замовлення
-              </button>
             </div>
           ) : (
             <div className="space-y-6">
-              {orders.map((order) => (
-                <OrderCard key={order.id} order={order} />
+              {actions.map((action, idx) => (
+                action.type === 'ORDER' 
+                  ? <OrderCard key={`order-${action.data.id}-${idx}`} order={action.data as any} />
+                  : <PurchaseCard key={`purchase-${action.data.id}-${idx}`} purchase={action.data as any} />
               ))}
               <PaginationControls 
-                currentPage={currentOrdersPage} 
-                totalPages={totalOrdersPages} 
-                onPageChange={handleOrdersPageChange} 
+                currentPage={currentPage} 
+                totalPages={totalPages} 
+                onPageChange={handlePageChange} 
               />
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Purchase History Section */}
-        {purchases && purchases.length > 0 && (
-          <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">Історія покупок</h2>
-            <div className="overflow-hidden rounded-xl border border-blue-200 bg-white">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дата</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Пакет</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дні</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Сума</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Статус</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 bg-white">
-                    {purchases.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatShortDate(p.createdAt)}</td>
-                        <td className="px-4 py-3 text-slate-900 font-bold whitespace-nowrap">{p.packageId}</td>
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{p.days}</td>
-                        <td className="px-4 py-3 font-bold text-emerald-600 whitespace-nowrap">{p.finalPrice} ₴</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {(() => {
-                            switch (p.status) {
-                              case "PAID":
-                                return <span className="inline-flex rounded-md bg-green-100 px-2 py-1 text-xs font-bold text-green-700">Оплачено</span>;
-                              case "PENDING":
-                                return <span className="inline-flex rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Очікує оплати</span>;
-                              case "CREDITED_PENDING_CONFIRMATION":
-                                return <span className="inline-flex rounded-md bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">На перевірці</span>;
-                              case "CANCELLED":
-                                return <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Скасовано</span>;
-                              default:
-                                return <span className="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{p.status}</span>;
-                            }
-                          })()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
+      <div className="p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Абонемент {purchase.packageId}</h3>
+              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                <Calendar className="w-4 h-4" />
+                <span>{formatShortDate(purchase.createdAt)}</span>
               </div>
-              <PaginationControls 
-                currentPage={currentPurchasesPage} 
-                totalPages={totalPurchasesPages} 
-                onPageChange={handlePurchasesPageChange} 
-              />
             </div>
           </div>
-        )}
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="text-right flex flex-col items-end">
+              <span className="text-[10px] font-bold text-blue-600 uppercase tracking-tight">
+                {purchase.days} днів
+              </span>
+              <p className="text-lg font-black text-emerald-600">{purchase.finalPrice} ₴</p>
+              <div className="mt-1">
+                {(() => {
+                  switch (purchase.status) {
+                    case "PAID":
+                      return <span className="inline-flex rounded-md bg-green-100 px-2 py-1 text-xs font-bold text-green-700">Оплачено</span>;
+                    case "PENDING":
+                      return <span className="inline-flex rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Очікує оплати</span>;
+                    case "CREDITED_PENDING_CONFIRMATION":
+                      return <span className="inline-flex rounded-md bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">На перевірці</span>;
+                    case "CANCELLED":
+                      return <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Скасовано</span>;
+                    default:
+                      return <span className="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{purchase.status}</span>;
+                  }
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

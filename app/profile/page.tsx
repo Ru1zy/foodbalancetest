@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import type { Order, Prisma, UserBalance } from "@prisma/client";
-import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay } from "./ProfilePageClient";
+import ProfilePageClient, { type OrderWithResolvedDishes, type ResolvedDay, type UnifiedAction } from "./ProfilePageClient";
 import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 import { parseIndivDishId } from "@/lib/order-selection";
@@ -184,8 +184,7 @@ export default async function ProfilePage(
   }
 ) {
   const searchParams = await props.searchParams;
-  const ordersPage = Math.max(1, parseInt(searchParams?.ordersPage as string || "1", 10));
-  const purchasesPage = Math.max(1, parseInt(searchParams?.purchasesPage as string || "1", 10));
+  const page = Math.max(1, parseInt(searchParams?.page as string || "1", 10));
   const ITEMS_PER_PAGE = 10;
 
   const cookieStore = await cookies();
@@ -236,16 +235,33 @@ export default async function ProfilePage(
       remainingDays: b.totalDays - b.usedDays,
     }));
 
-  const [rawOrders, orderCount] = await Promise.all([
+  const [allOrders, allPurchases, tariffs] = await Promise.all([
     prisma.order.findMany({
       where: { userId },
-      orderBy: { createdAt: "desc" },
-      skip: (ordersPage - 1) * ITEMS_PER_PAGE,
-      take: ITEMS_PER_PAGE,
+      select: { id: true, createdAt: true },
     }),
-    prisma.order.count({
+    prisma.subscriptionPurchase.findMany({
       where: { userId },
+      select: { id: true, createdAt: true },
     }),
+    getAllTariffs()
+  ]);
+
+  const unifiedActions = [
+    ...allOrders.map(o => ({ id: o.id, createdAt: o.createdAt, type: 'ORDER' as const })),
+    ...allPurchases.map(p => ({ id: p.id, createdAt: p.createdAt, type: 'PURCHASE' as const }))
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const totalActions = unifiedActions.length;
+  const totalPages = Math.max(1, Math.ceil(totalActions / ITEMS_PER_PAGE));
+  const paginatedActions = unifiedActions.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const orderIds = paginatedActions.filter(a => a.type === 'ORDER').map(a => a.id);
+  const purchaseIds = paginatedActions.filter(a => a.type === 'PURCHASE').map(a => a.id);
+
+  const [rawOrders, rawPurchases] = await Promise.all([
+    orderIds.length > 0 ? prisma.order.findMany({ where: { id: { in: orderIds } } }) : Promise.resolve([]),
+    purchaseIds.length > 0 ? prisma.subscriptionPurchase.findMany({ where: { id: { in: purchaseIds } } }) : Promise.resolve([])
   ]);
 
   // Resolve dish names for all orders
@@ -263,35 +279,26 @@ export default async function ProfilePage(
     }))
   );
 
-  const tariffs = await getAllTariffs();
+  const orderMap = new Map(ordersWithResolvedDishes.map(o => [o.id, o]));
+  const purchaseMap = new Map(rawPurchases.map(p => [p.id, p]));
 
-  const [rawPurchases, purchaseCount] = await Promise.all([
-    prisma.subscriptionPurchase.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      skip: (purchasesPage - 1) * ITEMS_PER_PAGE,
-      take: ITEMS_PER_PAGE,
-    }),
-    prisma.subscriptionPurchase.count({
-      where: { userId },
-    }),
-  ]);
-
-  const totalOrdersPages = Math.max(1, Math.ceil(orderCount / ITEMS_PER_PAGE));
-  const totalPurchasesPages = Math.max(1, Math.ceil(purchaseCount / ITEMS_PER_PAGE));
+  const actions: UnifiedAction[] = paginatedActions.map(action => {
+    if (action.type === 'ORDER') {
+      return { type: 'ORDER' as const, data: orderMap.get(action.id)! };
+    } else {
+      return { type: 'PURCHASE' as const, data: purchaseMap.get(action.id)! };
+    }
+  }).filter(a => a.data !== undefined);
 
   return (
     <ProfilePageClient 
       user={user} 
-      orders={ordersWithResolvedDishes} 
+      actions={actions} 
       balances={activeBalances} 
       tariffs={tariffs} 
-      isNewClient={orderCount === 0}
-      purchases={rawPurchases}
-      currentOrdersPage={ordersPage}
-      totalOrdersPages={totalOrdersPages}
-      currentPurchasesPage={purchasesPage}
-      totalPurchasesPages={totalPurchasesPages}
+      isNewClient={allOrders.length === 0}
+      currentPage={page}
+      totalPages={totalPages}
     />
   );
 }
