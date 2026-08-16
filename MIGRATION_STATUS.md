@@ -373,7 +373,7 @@ Current research as of 2026-08-09:
 - [ ] Test provider-calculated payer-fee display, financial rounding, exact net
   settlement to the merchant, refunds, and partial refunds.
 - [ ] Test concurrent balance credit/deduction and webhook replay.
-- [ ] Test receipt authorization and file validation.
+- [x] Test receipt authorization and file validation. (Validated via unit tests in `receipt-validation.test.ts` and runtime checks in `uploadReceiptAction`)
 - [ ] Test Sheet retry/idempotency and an unavailable Google API.
 - [ ] Use an isolated database and disabled/test integrations for load testing.
 - [ ] Load-test staged checkout at 10, 25, 50, and 100 concurrent submissions.
