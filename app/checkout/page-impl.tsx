@@ -545,8 +545,8 @@ export default function CheckoutPageImpl({
 
   if (submitted) {
     return (
-      <main className="min-h-[100dvh] bg-gray-50 px-4 py-10 text-slate-900 md:px-8">
-      <section className="mx-auto max-w-3xl rounded-[2rem] border border-gray-200 bg-white p-8 shadow-sm sm:p-10">
+      <main className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
+      <section className="mx-auto max-w-3xl rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-sm sm:p-10">
           <div className="text-center">
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl text-emerald-600">
               ✓
@@ -557,7 +557,7 @@ export default function CheckoutPageImpl({
             <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950">
               {isIndivPackage(submitted.packageType) ? "Заявку прийнято" : "Дякуємо за замовлення"}
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600">
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-400">
               {isIndivPackage(submitted.packageType)
                 ? "Вашу заявку прийнято! З вами найближчим часом зв'яжеться оператор для погодження меню та кінцевої вартості."
                 : "Ми вже зберегли ваше замовлення в системі. Найближчим часом менеджер зв'яжеться з вами для підтвердження деталей доставки."}
@@ -565,17 +565,17 @@ export default function CheckoutPageImpl({
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 px-5 py-4 text-left">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Тариф</div>
-              <div className="mt-2 text-lg font-bold text-slate-900">{submitted.packageType}</div>
+              <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">{submitted.packageType}</div>
             </div>
-            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 px-5 py-4 text-left">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Днів</div>
-              <div className="mt-2 text-lg font-bold text-slate-900">{submitted.totalDays}</div>
+              <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">{submitted.totalDays}</div>
             </div>
-            <div className="rounded-2xl bg-slate-50 px-5 py-4 text-left">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 px-5 py-4 text-left">
               <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Сума</div>
-              <div className="mt-2 text-lg font-bold text-slate-900">
+              <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">
                 {isIndivPackage(submitted.packageType) ? (
                   "—"
                 ) : submitted.totalPrice > 0 ? (
@@ -588,7 +588,7 @@ export default function CheckoutPageImpl({
           </div>
 
           {submitted.orderCount > 1 && (
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-700">
+            <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-5 py-4 text-sm text-slate-700 dark:text-slate-300">
               Створено замовлень: <span className="font-semibold">{submitted.orderCount}</span>.
             </div>
           )}
@@ -602,13 +602,13 @@ export default function CheckoutPageImpl({
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-xl bg-gray-900 px-6 py-4 text-base font-bold text-white transition-all duration-200 ease-out hover:bg-emerald-600 active:scale-95 shadow-sm hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-xl bg-gray-900 dark:bg-slate-50 px-6 py-4 text-base font-bold text-white transition-all duration-200 ease-out hover:bg-emerald-600 active:scale-95 shadow-sm hover:shadow-md"
             >
               Повернутися до меню
             </Link>
             <Link
               href="/profile"
-              className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-6 py-4 text-base font-bold text-gray-700 transition-all duration-200 ease-out hover:bg-gray-50 active:scale-95"
+              className="inline-flex items-center justify-center rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-4 text-base font-bold text-gray-700 dark:text-slate-300 transition-all duration-200 ease-out hover:bg-gray-50 dark:bg-slate-950 active:scale-95"
             >
               Перейти до профілю
             </Link>
@@ -619,7 +619,7 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="flex-1 flex flex-col min-h-[100dvh] bg-slate-50/50 px-4 py-10 text-slate-900 md:px-8">
+    <main className="flex-1 flex flex-col min-h-[100dvh] bg-slate-50 dark:bg-slate-950/50 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
       <section className="flex-grow mx-auto w-full max-w-6xl pb-20">
         <Link
           href="/"
@@ -634,14 +634,14 @@ export default function CheckoutPageImpl({
           <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
             Завершення замовлення
           </h1>
-          <p className="mt-4 text-sm leading-6 text-slate-600">
+          <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
             Перевірте обрані дні, залиште контакти та підтвердьте замовлення. Кошик зберігається окремо,
             тому ви можете повернутися до меню й відредагувати його без втрати даних.
           </p>
         </div>
 
         <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-          <aside className="h-fit rounded-[2rem] border border-gray-200 bg-white p-5 shadow-sm sm:p-8 lg:sticky lg:top-24">
+          <aside className="h-fit rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8 lg:sticky lg:top-24">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
@@ -711,11 +711,11 @@ export default function CheckoutPageImpl({
                     return (
                       <li
                         key={item.id}
-                        className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm"
+                        className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 shadow-sm"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="break-words text-sm font-bold text-slate-900">
+                            <p className="break-words text-sm font-bold text-slate-900 dark:text-slate-100">
                               {item.packageLabel}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
@@ -741,23 +741,23 @@ export default function CheckoutPageImpl({
                               onClick={() => decrementQuantity(item.id)}
                               disabled={item.quantity <= 1}
                               aria-label="Зменшити кількість"
-                              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-bold text-slate-700 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+                              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-300 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
                             >
                               −
                             </button>
-                            <span className="min-w-8 text-center text-base font-black text-slate-900">
+                            <span className="min-w-8 text-center text-base font-black text-slate-900 dark:text-slate-100">
                               {item.quantity}
                             </span>
                             <button
                               type="button"
                               onClick={() => incrementQuantity(item.id)}
                               aria-label="Збільшити кількість"
-                              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-lg font-bold text-emerald-600 transition hover:border-emerald-300 active:scale-95"
+                              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-lg font-bold text-emerald-600 transition hover:border-emerald-300 active:scale-95"
                             >
                               +
                             </button>
                           </div>
-                          <div className="text-right text-sm font-bold text-slate-900">
+                          <div className="text-right text-sm font-bold text-slate-900 dark:text-slate-100">
                             {itemIndiv
                               ? "Індивідуально"
                               : `${item.unitPrice * item.quantity} ₴`}
@@ -780,7 +780,7 @@ export default function CheckoutPageImpl({
 
             {(cartItems.length > 0 || (currentDraftValid && grandGrossTotal > 0)) && (
               <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-100 px-5 py-4">
-                <span className="text-sm font-semibold text-slate-600">Разом за всі раціони</span>
+                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Разом за всі раціони</span>
                 <span className="text-xl font-black text-slate-950">
                   {grandGrossTotal > 0 ? `${grandGrossTotal} ₴` : "—"}
                   {(hasIndivInCart || isIndivCurrent) && (
@@ -803,7 +803,7 @@ export default function CheckoutPageImpl({
               </div>
 
               {summaryDays.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+                <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-950 px-4 py-5 text-sm text-slate-600 dark:text-slate-400">
                   Поки що немає повністю зібраних днів. Поверніться до меню та додайте хоча б один день.
                 </div>
               ) : (
@@ -811,11 +811,11 @@ export default function CheckoutPageImpl({
                   {summaryDays.map((day) => (
                     <li
                       key={day.dayId}
-                      className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4"
+                      className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-4"
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0">
-                          <p className="break-words text-sm font-bold text-slate-900">
+                          <p className="break-words text-sm font-bold text-slate-900 dark:text-slate-100">
                             {day.dayName} - {cartData.packageType}
                           </p>
                           <p className="mt-1 break-words text-sm text-slate-500">{day.scheduleLabel}</p>
@@ -841,11 +841,11 @@ export default function CheckoutPageImpl({
             )}
           </aside>
 
-          <section className="rounded-[2rem] border border-gray-200 bg-white p-5 shadow-sm sm:p-8">
+          <section className="rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">Куди і кому доставляти</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
                 Telegram-авторизація допоможе швидше підтягнути ваші дані та отримати доступ до абонементів.
               </p>
             </div>
@@ -866,7 +866,7 @@ export default function CheckoutPageImpl({
               </div>
             )}
 
-            <div className="mb-8 rounded-[2rem] border border-slate-200 bg-slate-50 p-6">
+            <div className="mb-8 rounded-[2rem] border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-6">
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
               
               {fiatPrice === 0 ? (
@@ -886,17 +886,17 @@ export default function CheckoutPageImpl({
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
                       paymentMethod === "card"
                         ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
-                        : "border-slate-200 bg-white hover:border-slate-300"
+                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >
                     <div className="text-left">
-                      <div className="font-bold text-slate-900">Карткою онлайн</div>
+                      <div className="font-bold text-slate-900 dark:text-slate-100">Карткою онлайн</div>
                       <div className="text-xs text-slate-500">Apple Pay, Google Pay, Visa/MC</div>
                     </div>
                     <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                      paymentMethod === "card" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
+                      paymentMethod === "card" ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
                     }`}>
-                      {paymentMethod === "card" && <div className="h-2 w-2 rounded-full bg-white" />}
+                      {paymentMethod === "card" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
                     </div>
                   </button>
                   <button
@@ -905,17 +905,17 @@ export default function CheckoutPageImpl({
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
                       paymentMethod === "cash"
                         ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
-                        : "border-slate-200 bg-white hover:border-slate-300"
+                        : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >
                     <div className="text-left">
-                      <div className="font-bold text-slate-900">Готівкою</div>
+                      <div className="font-bold text-slate-900 dark:text-slate-100">Готівкою</div>
                       <div className="text-xs text-slate-500">При отриманні кур&apos;єру</div>
                     </div>
                     <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                      paymentMethod === "cash" ? "border-emerald-500 bg-emerald-500" : "border-slate-300"
+                      paymentMethod === "cash" ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
                     }`}>
-                      {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white" />}
+                      {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
                     </div>
                   </button>
                 </div>
@@ -943,15 +943,15 @@ export default function CheckoutPageImpl({
             <form key={formKey} className="space-y-6" onSubmit={handleFormSubmit(onValidSubmit)}>
               <div className="grid gap-4 md:grid-cols-2 md:gap-5">
                 <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-slate-900">Ім&apos;я</span>
+                  <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Ім&apos;я</span>
                   <input
                     {...register("name")}
                     aria-invalid={errors.name ? "true" : "false"}
                     autoComplete="name"
-                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                    className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
                       errors.name
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
+                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-100"
                     }`}
                     placeholder="Як до вас звертатися"
                     type="text"
@@ -962,15 +962,15 @@ export default function CheckoutPageImpl({
                 </label>
 
                 <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-slate-900">Телефон</span>
+                  <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Телефон</span>
                   <input
                     {...register("phone")}
                     aria-invalid={errors.phone ? "true" : "false"}
                     autoComplete="tel"
-                    className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                    className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
                       errors.phone
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                        : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
+                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-100"
                     }`}
                     inputMode="tel"
                     placeholder="0501234567"
@@ -983,15 +983,15 @@ export default function CheckoutPageImpl({
               </div>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-slate-900">Адреса доставки</span>
+                <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Адреса доставки</span>
                 <textarea
                   {...register("address")}
                   aria-invalid={errors.address ? "true" : "false"}
                   autoComplete="street-address"
-                  className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:ring-4 ${
+                  className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
                     errors.address
                       ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                      : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-100"
+                      : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-100"
                   }`}
                   placeholder="Вулиця, будинок, квартира, під’їзд, орієнтир"
                   rows={3}
@@ -1003,12 +1003,12 @@ export default function CheckoutPageImpl({
 
               <div className="grid gap-4 md:grid-cols-2 md:gap-5">
                 <label className="block">
-                  <span className="mb-2 block text-sm font-semibold text-slate-900">
+                  <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">
                     Кількість приборів
                   </span>
                   <select
                     {...register("cutlery", { valueAsNumber: true })}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                   >
                     {CUTLERY_OPTIONS.map((value) => (
                       <option key={value} value={value}>
@@ -1020,26 +1020,26 @@ export default function CheckoutPageImpl({
               </div>
 
               <label className="block">
-                <span className="mb-2 block text-sm font-semibold text-slate-900">Коментар до замовлення</span>
+                <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Коментар до замовлення</span>
                 <textarea
                   {...register("comment")}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                   placeholder="Побажання, деталі для курʼєра або зручний орієнтир"
                   rows={4}
                 />
               </label>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <div className="flex h-6 items-center">
                     <input
                       type="checkbox"
                       {...register("sendEmailReceipt")}
-                      className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                      className="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-600"
                     />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium text-slate-900">
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                       Відправити квитанцію про оплату на Email
                     </span>
                     <span className="text-sm text-slate-500">
@@ -1053,7 +1053,7 @@ export default function CheckoutPageImpl({
                       type="email"
                       {...register("receiptEmail")}
                       placeholder="Введіть ваш Email..."
-                      className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:bg-white dark:bg-slate-900 focus:ring-4 focus:ring-emerald-100"
                       aria-invalid={errors.receiptEmail ? "true" : "false"}
                     />
                     {errors.receiptEmail && (
@@ -1065,10 +1065,10 @@ export default function CheckoutPageImpl({
                 )}
               </div>
 
-              <div className="rounded-3xl bg-slate-50 px-5 py-5">
+              <div className="rounded-3xl bg-slate-50 dark:bg-slate-950 px-5 py-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       {cartItems.length > 0
                         ? grandGrossTotal > 0
                           ? `До підтвердження: ${grandGrossTotal} ₴${

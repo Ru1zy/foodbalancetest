@@ -45,7 +45,7 @@ export default function ClientsPageClient({ clients }: Props) {
 
   return (
     <>
-      <div className="mb-6 rounded-2xl bg-white p-6 shadow-sm">
+      <div className="mb-6 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex-1">
             <input
@@ -53,30 +53,30 @@ export default function ClientsPageClient({ clients }: Props) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Пошук за ім'ям, телефоном або ChatID..."
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-gray-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </div>
-          <div className="rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white shadow-sm">
+          <div className="rounded-xl bg-gray-900 dark:bg-slate-50 px-5 py-3 text-sm font-bold text-white shadow-sm">
             {filteredClients.length} клієнтів
           </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+      <div className="overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-sm">
         {filteredClients.length === 0 ? (
           <div className="p-12">
             <div className="text-6xl mb-4">👥</div>
-            <p className="text-lg font-semibold text-gray-700">
+            <p className="text-lg font-semibold text-gray-700 dark:text-slate-300">
               {searchQuery ? "Клієнтів не знайдено" : "Клієнтів поки немає"}
             </p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
               {searchQuery ? "Спробуйте інший запит" : "Нові клієнти з'являться тут після першого замовлення"}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse">
-              <thead className="bg-gradient-to-r from-slate-50 to-blue-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+              <thead className="bg-gradient-to-r from-slate-50 to-blue-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-4 sm:px-6">ПІБ</th>
                   <th className="px-4 py-4 sm:px-6">Телефон</th>
@@ -97,7 +97,7 @@ export default function ClientsPageClient({ clients }: Props) {
                           {client.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-900">{client.name}</div>
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">{client.name}</div>
                           {client.balances.filter(b => b.totalDays - b.usedDays > 0).length > 0 && (
                             <div className="mt-1 flex flex-wrap gap-1">
                               {client.balances
@@ -127,14 +127,14 @@ export default function ClientsPageClient({ clients }: Props) {
                           <span>Підключено</span>
                         </div>
                       ) : (
-                        <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-bold text-gray-500">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-bold text-gray-500 dark:text-slate-400">
                           <span>—</span>
                           <span>Немає</span>
                         </div>
                       )}
                     </td>
                     <td className="px-4 py-5 sm:px-6">
-                      <div className="max-w-xs text-sm text-slate-700">
+                      <div className="max-w-xs text-sm text-slate-700 dark:text-slate-300">
                         {client.address || (
                           <span className="text-slate-400 italic">Не вказано</span>
                         )}

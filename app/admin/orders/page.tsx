@@ -197,13 +197,13 @@ export default async function AdminOrdersPage({
 
   if (!adminUser) {
     return (
-      <main className="min-h-[100dvh] bg-gray-100 px-4 py-8 text-gray-800 sm:px-6">
-        <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 text-center shadow-sm ring-1 ring-gray-200">
-          <h1 className="text-2xl font-bold text-gray-900">Доступ заборонено</h1>
-          <p className="mt-3 text-sm text-gray-600">Увійдіть як адміністратор, щоб переглянути замовлення.</p>
+      <main className="min-h-[100dvh] bg-gray-100 dark:bg-slate-800 px-4 py-8 text-gray-800 dark:text-slate-200 sm:px-6">
+        <section className="mx-auto max-w-2xl rounded-3xl bg-white dark:bg-slate-900 p-8 text-center shadow-sm ring-1 ring-gray-200">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Доступ заборонено</h1>
+          <p className="mt-3 text-sm text-gray-600 dark:text-slate-400">Увійдіть як адміністратор, щоб переглянути замовлення.</p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="mt-6 inline-flex rounded-xl bg-gray-900 dark:bg-slate-50 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             Повернутися на головну
           </Link>
@@ -262,21 +262,21 @@ export default async function AdminOrdersPage({
   );
 
   return (
-    <main className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 sm:px-6">
+    <main className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 dark:text-slate-200 sm:px-6">
       <section className="mx-auto w-full px-6">
-        <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
+        <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>
             <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700">
               <span>←</span> Повернутися до сайту
             </Link>
-            <h1 className="mt-4 text-4xl font-bold text-gray-900">
+            <h1 className="mt-4 text-4xl font-bold text-gray-900 dark:text-slate-100">
               Замовлення
             </h1>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
               Панель адміністратора для перегляду нових замовлень і оновлення статусів.
             </p>
           </div>
-          <div className="rounded-xl bg-gray-900 px-5 py-3 text-sm text-white shadow-sm">
+          <div className="rounded-xl bg-gray-900 dark:bg-slate-50 px-5 py-3 text-sm text-white shadow-sm">
             <div className="flex items-center gap-2">
               <span className="text-gray-300">👤</span>
               <span className="font-semibold">{adminUser.name}</span>
@@ -290,17 +290,17 @@ export default async function AdminOrdersPage({
           <ArchiveOrdersButton />
         </div>
 
-        <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-sm">
           {ordersWithMenuDetails.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-6xl mb-4">📦</div>
-              <p className="text-lg font-semibold text-gray-700">Замовлень поки немає</p>
-              <p className="text-sm text-gray-500 mt-2">Нові замовлення з&apos;являться тут</p>
+              <p className="text-lg font-semibold text-gray-700 dark:text-slate-300">Замовлень поки немає</p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">Нові замовлення з&apos;являться тут</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full border-collapse">
-                <thead className="bg-gray-50 text-left text-xs font-bold uppercase tracking-wider text-gray-600">
+                <thead className="bg-gray-50 dark:bg-slate-950 text-left text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-slate-400">
                   <tr>
                     <th className="px-4 py-4 sm:px-6 w-32">ID / Дата</th>
                     <th className="px-4 py-4 sm:px-6 w-40">Клієнт</th>
@@ -321,7 +321,7 @@ export default async function AdminOrdersPage({
                       <tr key={order.id} className="hover:bg-blue-50/50 transition-colors duration-150 align-top">
                         <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
-                            <span className="font-mono text-xs font-bold text-slate-700">{order.id.slice(0, 8)}</span>
+                            <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{order.id.slice(0, 8)}</span>
                           </div>
                           <div className="mt-2 text-xs text-slate-500">{formatDateTime(order.createdAt)}</div>
                         </td>
@@ -331,7 +331,7 @@ export default async function AdminOrdersPage({
                               {order.user.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="text-sm font-bold text-slate-900">{order.user.name}</div>
+                              <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{order.user.name}</div>
                               <div className="text-xs text-slate-500">{order.user.phone}</div>
                             </div>
                           </div>
@@ -346,7 +346,7 @@ export default async function AdminOrdersPage({
                         <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="flex items-start gap-2">
                             <span className="text-slate-400 mt-0.5">📍</span>
-                            <div className="text-sm text-slate-700 max-w-xs">{getOrderAddressLabel(order)}</div>
+                            <div className="text-sm text-slate-700 dark:text-slate-300 max-w-xs">{getOrderAddressLabel(order)}</div>
                           </div>
                         </td>
                         <td className="px-4 py-5 sm:px-6 align-top min-w-[300px]">
@@ -354,8 +354,8 @@ export default async function AdminOrdersPage({
                             <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 px-3 py-1.5">
                               <span className="text-sm font-bold text-indigo-700">{order.packageType}</span>
                             </div>
-                            <div className="text-xs text-slate-600">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
-                            <div className="text-xs text-slate-600">🍴 Прибори: {order.cutlery}</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">🍴 Прибори: {order.cutlery}</div>
                             {order.packageType && (
                               <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">
                                 <span>💰</span>
@@ -374,8 +374,8 @@ export default async function AdminOrdersPage({
                                   <span className="group-open:rotate-90 transition-transform">▶</span>
                                   Деталі раціону
                                 </summary>
-                                <div className="mt-2 rounded-lg bg-slate-50 p-3 border border-slate-200">
-                                  <pre className="whitespace-pre-wrap text-xs text-slate-600 font-mono leading-relaxed">
+                                <div className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-700">
+                                  <pre className="whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-400 font-mono leading-relaxed">
                                     {order.menuDetails}
                                   </pre>
                                 </div>
@@ -419,7 +419,7 @@ export default async function AdminOrdersPage({
                             )}
                           </div>
                         </td>
-                        <td className="sticky right-0 bg-white px-4 py-5 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">
+                        <td className="sticky right-0 bg-white dark:bg-slate-900 px-4 py-5 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">
                           <OrderActionButtons
                             orderId={order.id}
                             isPaid={order.isPaid}

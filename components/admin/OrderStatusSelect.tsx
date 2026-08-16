@@ -46,7 +46,7 @@ export default function OrderStatusSelect({ currentStatus, orderId }: OrderStatu
         value={selectedStatus}
         onChange={handleChange}
         disabled={isPending}
-        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+        className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-gray-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-gray-100 dark:bg-slate-800"
       >
         {ORDER_STATUS_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
@@ -54,7 +54,7 @@ export default function OrderStatusSelect({ currentStatus, orderId }: OrderStatu
           </option>
         ))}
       </select>
-      {isPending && <p className="mt-2 text-xs font-medium text-gray-500">Зберігаємо статус...</p>}
+      {isPending && <p className="mt-2 text-xs font-medium text-gray-500 dark:text-slate-400">Зберігаємо статус...</p>}
       {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
     </div>
   );

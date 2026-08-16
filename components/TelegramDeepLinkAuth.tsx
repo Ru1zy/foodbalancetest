@@ -107,8 +107,8 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900">Вхід до FoodBalance</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Вхід до FoodBalance</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
           Оберіть зручний спосіб авторизації
         </p>
       </div>
@@ -134,7 +134,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           {/* Google Auth Button */}
           <a
             href="/api/auth/google/login"
-            className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-white border-2 border-gray-200 rounded-xl hover:border-gray-300 hover:shadow-md transition-all duration-200 group"
+            className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-gray-300 dark:border-slate-600 hover:shadow-md transition-all duration-200 group"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -154,7 +154,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="font-semibold text-gray-700 group-hover:text-gray-900">
+            <span className="font-semibold text-gray-700 dark:text-slate-300 group-hover:text-gray-900 dark:text-slate-100">
               Увійти через Google
             </span>
           </a>
@@ -162,10 +162,10 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-gray-200 dark:border-slate-700"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-2 text-gray-400 uppercase tracking-wider font-medium">або</span>
+              <span className="bg-white dark:bg-slate-900 px-2 text-gray-400 uppercase tracking-wider font-medium">або</span>
             </div>
           </div>
 

@@ -49,14 +49,14 @@ export default function OrderStoreWrapper() {
     <main className="flex-grow flex flex-col">
       <section className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 md:px-8 lg:px-16">
         {menuItems.length === 0 ? (
-          <div className="rounded-3xl p-16 text-center border border-gray-200 bg-white">
+          <div className="rounded-3xl p-16 text-center border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
             <div className="mb-6 flex justify-center">
-              <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain border border-gray-200" />
+              <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain border border-gray-200 dark:border-slate-700" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-4">
               Меню оновлюється
             </h2>
-            <p className="text-lg text-gray-500">Незабаром з’являться нові смачні страви</p>
+            <p className="text-lg text-gray-500 dark:text-slate-400">Незабаром з’являться нові смачні страви</p>
           </div>
         ) : (
           <OrderWizard menuItems={menuItems} tariffs={tariffs} />

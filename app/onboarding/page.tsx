@@ -97,8 +97,8 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -106,8 +106,8 @@ export default function OnboardingPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Завершення реєстрації</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Завершення реєстрації</h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
             {step === "phone"
               ? "Введіть ваш номер телефону для завершення налаштування аккаунта"
               : "Введіть код підтвердження з Telegram"}
@@ -117,14 +117,14 @@ export default function OnboardingPage() {
         {/* Step Indicator */}
         <div className="flex items-center justify-center mb-8">
           <div className={`flex items-center ${step === "phone" ? "text-emerald-600" : "text-gray-400"}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === "phone" ? "bg-emerald-600 text-white" : "bg-gray-200"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === "phone" ? "bg-emerald-600 text-white" : "bg-gray-200 dark:bg-slate-700"}`}>
               1
             </div>
             <span className="ml-2 text-sm font-medium">Телефон</span>
           </div>
-          <div className="w-12 h-0.5 bg-gray-200 mx-4"></div>
+          <div className="w-12 h-0.5 bg-gray-200 dark:bg-slate-700 mx-4"></div>
           <div className={`flex items-center ${step === "otp" ? "text-emerald-600" : "text-gray-400"}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === "otp" ? "bg-emerald-600 text-white" : "bg-gray-200"}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === "otp" ? "bg-emerald-600 text-white" : "bg-gray-200 dark:bg-slate-700"}`}>
               2
             </div>
             <span className="ml-2 text-sm font-medium">Код</span>
@@ -149,7 +149,7 @@ export default function OnboardingPage() {
         {step === "phone" && (
           <form onSubmit={handlePhoneSubmit} className="space-y-6">
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                 Номер телефону
               </label>
               <input
@@ -158,11 +158,11 @@ export default function OnboardingPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+380501234567"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-black caret-black placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-black caret-black placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 required
                 disabled={loading}
               />
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">
                 Формат: +380501234567 або 0501234567
               </p>
             </div>
@@ -181,7 +181,7 @@ export default function OnboardingPage() {
         {step === "otp" && (
           <form onSubmit={handleOtpSubmit} className="space-y-6">
             <div>
-              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                 Код підтвердження
               </label>
               <input
@@ -191,12 +191,12 @@ export default function OnboardingPage() {
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="1234"
                 maxLength={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 bg-white focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
                 required
                 disabled={loading}
                 autoFocus
               />
-              <p className="mt-2 text-xs text-gray-500 text-center">
+              <p className="mt-2 text-xs text-gray-500 dark:text-slate-400 text-center">
                 Введіть 4-значний код з Telegram
               </p>
             </div>
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
                   setError(null);
                   setOtpMessage("");
                 }}
-                className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-xl transition-all"
+                className="w-full bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300 font-medium py-3 px-6 rounded-xl transition-all"
                 disabled={loading}
               >
                 Використати інший номер
@@ -228,8 +228,8 @@ export default function OnboardingPage() {
         )}
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700">
+          <p className="text-xs text-gray-500 dark:text-slate-400 text-center">
             🔒 Ваші дані захищені та використовуються тільки для оформлення замовлень
           </p>
         </div>

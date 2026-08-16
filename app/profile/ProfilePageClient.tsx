@@ -111,11 +111,11 @@ function PaginationControls({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between border-t border-gray-100 px-4 py-3 sm:px-6 mt-4">
+    <div className="flex items-center justify-between border-t border-gray-100 dark:border-slate-800 px-4 py-3 sm:px-6 mt-4">
       <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm text-gray-500 font-medium">
-            Сторінка <span className="font-bold text-gray-900">{currentPage}</span> з <span className="font-bold text-gray-900">{totalPages}</span>
+          <p className="text-sm text-gray-500 dark:text-slate-400 font-medium">
+            Сторінка <span className="font-bold text-gray-900 dark:text-slate-100">{currentPage}</span> з <span className="font-bold text-gray-900 dark:text-slate-100">{totalPages}</span>
           </p>
         </div>
         <div>
@@ -123,7 +123,7 @@ function PaginationControls({
             <button
               onClick={() => onPageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-slate-950 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="sr-only">Попередня</span>
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -131,7 +131,7 @@ function PaginationControls({
             <button
               onClick={() => onPageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-slate-950 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="sr-only">Наступна</span>
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -143,15 +143,15 @@ function PaginationControls({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="relative inline-flex items-center rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50"
         >
           Попередня
         </button>
-        <span className="inline-flex items-center text-sm font-bold text-gray-900">{currentPage} / {totalPages}</span>
+        <span className="inline-flex items-center text-sm font-bold text-gray-900 dark:text-slate-100">{currentPage} / {totalPages}</span>
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
-          className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 text-sm font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50"
         >
           Наступна
         </button>
@@ -164,7 +164,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition hover:shadow-md">
       {/* Card Header */}
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -173,8 +173,8 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">{order.packageType}</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">{order.packageType}</h3>
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 mt-1">
                 <Calendar className="w-4 h-4" />
                 <span>{formatDate(order.createdAt)}</span>
               </div>
@@ -191,14 +191,14 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
                     З балансу: {order.balanceDaysUsed}д
                   </span>
                   {order.price !== null && order.price > 0 ? (
-                    <p className="text-lg font-black text-gray-900">{order.price} ₴</p>
+                    <p className="text-lg font-black text-gray-900 dark:text-slate-100">{order.price} ₴</p>
                   ) : (
                     <p className="text-sm font-bold text-emerald-600">Оплачено днями</p>
                   )}
                 </div>
               ) : (
                 order.price !== null && (
-                  <p className="text-lg font-black text-gray-900">{order.price} ₴</p>
+                  <p className="text-lg font-black text-gray-900 dark:text-slate-100">{order.price} ₴</p>
                 )
               )}
             </div>
@@ -206,7 +206,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 pt-5">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-gray-100 dark:border-slate-800 pt-5">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700"
@@ -228,19 +228,19 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
 
       {/* Expandable Details */}
       {isExpanded && (
-        <div className="bg-gray-50 border-t border-gray-100 p-5 sm:p-6">
+        <div className="bg-gray-50 dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800 p-5 sm:p-6">
           <div className="space-y-4">
             {order.resolvedDays.map((day, idx) => (
-              <div key={idx} className="rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200/50">
+              <div key={idx} className="rounded-xl bg-white dark:bg-slate-900 p-4 shadow-sm ring-1 ring-gray-200/50">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-bold text-gray-900">
+                  <p className="text-sm font-bold text-gray-900 dark:text-slate-100">
                     День {idx + 1} — {formatShortDate(day.date)}
                   </p>
                   <ForkKnife className="w-4 h-4 text-gray-400" />
                 </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {day.dishes.map((dish, dishIdx) => (
-                    <div key={dishIdx} className="flex items-center gap-2 text-sm text-gray-600">
+                    <div key={dishIdx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400">
                       <div className="h-1.5 w-1.5 rounded-full bg-blue-400" />
                       <span className="break-words">{dish}</span>
                     </div>
@@ -303,23 +303,23 @@ export default function ProfilePageClient({
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50/50 p-4 sm:p-8">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950/50 p-4 sm:p-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-10">
-          <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h1 className="text-4xl font-black text-gray-900 dark:text-slate-100 tracking-tight">
             Профіль
           </h1>
-          <p className="text-gray-500 mt-2 font-medium">Керування вашими даними та замовленнями</p>
+          <p className="text-gray-500 dark:text-slate-400 mt-2 font-medium">Керування вашими даними та замовленнями</p>
         </header>
 
         {/* Settings Section */}
-        <div className="mb-10 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
+        <div className="mb-10 rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:text-slate-400">
                 <Settings className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Налаштування</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Налаштування</h2>
             </div>
             <button
               onClick={() => setIsEditing(!isEditing)}
@@ -340,47 +340,47 @@ export default function ProfilePageClient({
           {isEditing ? (
             <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="sm:col-span-1">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Ім&apos;я</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Ім&apos;я</label>
                 <div className="relative">
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     name="name"
                     defaultValue={user.name}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-11 py-3 text-sm text-gray-900 placeholder-gray-500 transition focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
                     required
                   />
                 </div>
               </div>
               <div className="sm:col-span-1">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Телефон</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Телефон</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">📞</span>
                   <input
                     name="phone"
                     defaultValue={user.phone || ""}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-11 py-3 text-sm text-gray-900 placeholder-gray-500 transition focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Адреса за замовчуванням</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Адреса за замовчуванням</label>
                 <div className="relative">
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
                     name="address"
                     defaultValue={user.address || ""}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-11 py-3 text-sm text-gray-900 placeholder-gray-500 transition focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
               </div>
               <div className="sm:col-span-1">
-                <label className="block text-sm font-bold text-slate-700 mb-2">Прибори за замовчуванням</label>
+                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Прибори за замовчуванням</label>
                 <div className="relative">
                   <Utensils className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <select
                     name="cutlery"
                     defaultValue={user.defaultCutlery || 0}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-11 py-3 text-sm text-gray-900 appearance-none transition focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 appearance-none transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value={0}>0</option>
                     <option value={1}>1</option>
@@ -402,21 +402,21 @@ export default function ProfilePageClient({
             </form>
           ) : (
             <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100">
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100">
                 <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ім&apos;я</dt>
-                <dd className="text-base font-bold text-slate-900">{user.name}</dd>
+                <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.name}</dd>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100">
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100">
                 <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Телефон</dt>
-                <dd className="text-base font-bold text-slate-900">{user.phone || "Не вказано"}</dd>
+                <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.phone || "Не вказано"}</dd>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100 sm:col-span-2">
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 sm:col-span-2">
                 <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Адреса доставки</dt>
-                <dd className="text-base font-bold text-slate-900 break-words">{user.address || "Не вказано"}</dd>
+                <dd className="text-base font-bold text-slate-900 dark:text-slate-100 break-words">{user.address || "Не вказано"}</dd>
               </div>
-              <div className="rounded-2xl bg-slate-50 p-5 border border-slate-100">
+              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100">
                 <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Прибори</dt>
-                <dd className="text-base font-bold text-slate-900">{user.defaultCutlery || 0} шт</dd>
+                <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.defaultCutlery || 0} шт</dd>
               </div>
             </dl>
           )}
@@ -441,7 +441,7 @@ export default function ProfilePageClient({
                   className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
                     activeTab === t.id
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                      : "bg-white text-blue-600 hover:bg-blue-50 border border-blue-100"
+                      : "bg-white dark:bg-slate-900 text-blue-600 hover:bg-blue-50 border border-blue-100"
                   }`}
                 >
                   {t.name}
@@ -468,9 +468,9 @@ export default function ProfilePageClient({
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {balances.map((balance) => (
-                <div key={balance.packageId} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-emerald-100 transition hover:shadow-md">
+                <div key={balance.packageId} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-emerald-100 transition hover:shadow-md">
                   <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">{balance.packageId}</div>
-                  <div className="text-3xl font-black text-slate-900 leading-none">
+                  <div className="text-3xl font-black text-slate-900 dark:text-slate-100 leading-none">
                     {balance.remainingDays} <span className="text-lg font-bold text-slate-500">днів</span>
                   </div>
                   <p className="text-xs text-slate-400 mt-3 font-medium">Доступно для замовлення</p>
@@ -483,21 +483,21 @@ export default function ProfilePageClient({
         {/* Action History Section */}
         <div className="space-y-6 pb-12">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">Історія дій</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Історія дій</h2>
             {actions.length > 0 && (
-              <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-600">
+              <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-600 dark:text-slate-400">
                 {actions.length}
               </span>
             )}
           </div>
 
           {actions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-gray-200 bg-white p-16 text-center shadow-sm">
-              <div className="mb-6 rounded-3xl bg-slate-50 p-8">
+            <div className="flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-16 text-center shadow-sm">
+              <div className="mb-6 rounded-3xl bg-slate-50 dark:bg-slate-950 p-8">
                 <Package className="h-16 w-16 text-slate-200" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">У вас ще немає дій</h3>
-              <p className="mt-3 max-w-xs text-sm text-gray-500 font-medium">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">У вас ще немає дій</h3>
+              <p className="mt-3 max-w-xs text-sm text-gray-500 dark:text-slate-400 font-medium">
                 Оформіть своє перше замовлення або придбайте абонемент.
               </p>
             </div>
@@ -545,7 +545,7 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
   const canCancel = purchase.status === "PENDING" || purchase.status === "CREDITED_PENDING_CONFIRMATION";
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:shadow-md">
+    <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition hover:shadow-md">
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
@@ -553,8 +553,8 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
               <CreditCard className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900">Абонемент {purchase.packageId}</h3>
-              <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">Абонемент {purchase.packageId}</h3>
+              <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 mt-1">
                 <Calendar className="w-4 h-4" />
                 <span>{formatShortDate(purchase.createdAt)}</span>
               </div>
@@ -579,7 +579,7 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
                     case "CANCELLED":
                       return <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Скасовано</span>;
                     default:
-                      return <span className="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{purchase.status}</span>;
+                      return <span className="inline-flex rounded-md bg-gray-100 dark:bg-slate-800 px-2 py-1 text-xs font-bold text-gray-700 dark:text-slate-300">{purchase.status}</span>;
                   }
                 })()}
               </div>
@@ -588,7 +588,7 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
         </div>
 
         {canCancel && (
-          <div className="mt-4 flex justify-end border-t border-gray-100 pt-4">
+          <div className="mt-4 flex justify-end border-t border-gray-100 dark:border-slate-800 pt-4">
             <button
               onClick={handleCancel}
               disabled={isCancelling}

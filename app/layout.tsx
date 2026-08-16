@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import GradientOrbs from "@/components/GradientOrbs";
 import ConditionalWrapper from "@/components/ConditionalWrapper";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
 
 const comfortaa = Comfortaa({
@@ -36,22 +37,30 @@ export default function RootLayout({
     <html
       lang="uk"
       className={`${comfortaa.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-[100dvh] flex-col bg-slate-50 text-slate-900">
-        <GradientOrbs />
-        <AnimatedBackground />
-        
-        <ConditionalWrapper>
-          <Header />
-        </ConditionalWrapper>
+      <body className="flex min-h-[100dvh] flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <GradientOrbs />
+          <AnimatedBackground />
+          
+          <ConditionalWrapper>
+            <Header />
+          </ConditionalWrapper>
 
-        <main className="flex-grow flex flex-col">
-          <TelegramProvider>{children}</TelegramProvider>
-        </main>
+          <main className="flex-grow flex flex-col">
+            <TelegramProvider>{children}</TelegramProvider>
+          </main>
 
-        <ConditionalWrapper>
-          <Footer />
-        </ConditionalWrapper>
+          <ConditionalWrapper>
+            <Footer />
+          </ConditionalWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

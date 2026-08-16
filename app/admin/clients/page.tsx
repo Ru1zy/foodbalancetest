@@ -10,15 +10,15 @@ export default async function AdminClientsPage() {
 
   if (!adminUser) {
     return (
-      <main className="min-h-[100dvh] bg-gray-100 px-4 py-8 text-gray-800 sm:px-6">
-        <section className="mx-auto max-w-2xl rounded-3xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
-          <h1 className="text-2xl font-bold text-gray-900">Доступ заборонено</h1>
-          <p className="mt-3 text-sm text-gray-600">
+      <main className="min-h-[100dvh] bg-gray-100 dark:bg-slate-800 px-4 py-8 text-gray-800 dark:text-slate-200 sm:px-6">
+        <section className="mx-auto max-w-2xl rounded-3xl bg-white dark:bg-slate-900 p-8 shadow-sm ring-1 ring-gray-200">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Доступ заборонено</h1>
+          <p className="mt-3 text-sm text-gray-600 dark:text-slate-400">
             Увійдіть як адміністратор, щоб переглянути клієнтів.
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="mt-6 inline-flex rounded-xl bg-gray-900 dark:bg-slate-50 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             Повернутися на головну
           </Link>
@@ -55,9 +55,9 @@ export default async function AdminClientsPage() {
   });
 
   return (
-    <main className="min-h-[100dvh] bg-gray-50 px-4 py-8 text-gray-800 sm:px-6">
+    <main className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 px-4 py-8 text-gray-800 dark:text-slate-200 sm:px-6">
       <section className="mx-auto w-full px-6">
-        <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
+        <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>
             <Link
               href="/admin/orders"
@@ -68,7 +68,7 @@ export default async function AdminClientsPage() {
             <h1 className="mt-4 text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Клієнти (CRM)
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
               База клієнтів з історією замовлень та контактною інформацією.
             </p>
           </div>

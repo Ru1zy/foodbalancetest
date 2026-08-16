@@ -141,12 +141,12 @@ export default function ClientEditModal({ client, onClose }: Props) {
       />
 
       {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-white p-6 shadow-sm">
-        <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
-          <h2 className="text-2xl font-bold text-gray-900">Редагувати клієнта</h2>
+      <div className="fixed left-1/2 top-1/2 z-50 max-h-[90dvh] w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm">
+        <div className="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-slate-700 pb-4">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Редагувати клієнта</h2>
           <button
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 transition hover:bg-gray-100 dark:bg-slate-800 hover:text-gray-600 dark:text-slate-400"
           >
             <svg className="h-6 w-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
               <path d="M6 18L18 6M6 6l12 12" />
@@ -155,19 +155,19 @@ export default function ClientEditModal({ client, onClose }: Props) {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-lg bg-slate-50 p-4">
+          <div className="rounded-lg bg-slate-50 dark:bg-slate-950 p-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
                 <span className="text-slate-500">Ім&apos;я:</span>
-                <div className="font-semibold text-slate-900">{client.name}</div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100">{client.name}</div>
               </div>
               <div>
                 <span className="text-slate-500">Телефон:</span>
-                <div className="font-semibold text-slate-900">{client.phone}</div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100">{client.phone}</div>
               </div>
               <div>
                 <span className="text-slate-500">Тариф за замовчуванням:</span>
-                <div className="font-semibold text-slate-900">{client.defaultPackage || "—"}</div>
+                <div className="font-semibold text-slate-900 dark:text-slate-100">{client.defaultPackage || "—"}</div>
               </div>
               <div>
                 <span className="text-slate-500">Telegram:</span>
@@ -192,26 +192,26 @@ export default function ClientEditModal({ client, onClose }: Props) {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-900">
+            <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-slate-100">
               Адреса доставки
             </label>
             <textarea
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-gray-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               rows={2}
               placeholder="Вул. Хрещатик, буд. 1, кв. 10"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-gray-900">
+            <label className="mb-2 block text-sm font-semibold text-gray-900 dark:text-slate-100">
               Внутрішні нотатки (не видно клієнту)
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-gray-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
               rows={3}
               placeholder="Додаткова інформація про клієнта..."
             />
@@ -223,9 +223,9 @@ export default function ClientEditModal({ client, onClose }: Props) {
             {localBalances.length > 0 && (
               <div className="mb-4 space-y-2">
                 {localBalances.map((b) => (
-                  <div key={b.packageId} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-emerald-200">
+                  <div key={b.packageId} className="flex items-center justify-between rounded-lg bg-white dark:bg-slate-900 px-3 py-2 text-sm shadow-sm ring-1 ring-emerald-200">
                     <div className="flex flex-col">
-                      <span className="font-bold text-slate-700">{b.packageId}</span>
+                      <span className="font-bold text-slate-700 dark:text-slate-300">{b.packageId}</span>
                       <span className="font-black text-emerald-600">
                         Залишилось: {b.totalDays - b.usedDays} днів
                       </span>
@@ -249,7 +249,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
               <select
                 value={balancePackage}
                 onChange={(e) => setBalancePackage(e.target.value)}
-                className="flex-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                className="flex-1 rounded-lg border border-emerald-200 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none"
               >
                 {["Slim", "Balance", "Active", "Sport", "Sushka S", "Sushka XS", "Indiv"].map((p) => (
                   <option key={p} value={p}>{p}</option>
@@ -259,7 +259,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
                 type="number"
                 value={balanceDays}
                 onChange={(e) => setBalanceDays(Number(e.target.value))}
-                className="w-20 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none"
+                className="w-20 rounded-lg border border-emerald-200 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none"
                 placeholder="Дні"
                 min="-100"
                 max="100"
@@ -284,7 +284,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
             </div>
           )}
 
-          <div className="flex gap-3 border-t border-gray-200 pt-4">
+          <div className="flex gap-3 border-t border-gray-200 dark:border-slate-700 pt-4">
             <button
               onClick={handleDeleteClient}
               disabled={isPending}
@@ -304,7 +304,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
             <button
               onClick={onClose}
               disabled={isPending}
-              className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-6 py-3 text-sm font-semibold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-50"
             >
               Скасувати
             </button>

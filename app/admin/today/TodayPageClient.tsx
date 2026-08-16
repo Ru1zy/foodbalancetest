@@ -128,19 +128,19 @@ const handleExportToKitchen = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50 p-6">
+    <div className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
             📅 Доставки на сьогодні
           </h1>
         </div>
 
         {/* Date Picker and Notify Button */}
-        <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mb-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div className="flex flex-col gap-2">
-              <label htmlFor="date-picker" className="text-sm font-semibold text-gray-700">
+              <label htmlFor="date-picker" className="text-sm font-semibold text-gray-700 dark:text-slate-300">
                 Дата доставки (формат: ДД.МM):
               </label>
               <input
@@ -149,7 +149,7 @@ const handleExportToKitchen = () => {
                 value={selectedDate}
                 onChange={(e) => handleDateChange(e.target.value)}
                 placeholder="19.04"
-                className="rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+                className="rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
               />
             </div>
 
@@ -189,43 +189,43 @@ const handleExportToKitchen = () => {
 
         {/* Orders Table */}
         {orders.length === 0 ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-12 shadow-sm">
-            <p className="text-lg text-gray-600">Немає замовлень на цю дату</p>
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-12 shadow-sm">
+            <p className="text-lg text-gray-600 dark:text-slate-400">Немає замовлень на цю дату</p>
           </div>
         ) : (
-          <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50">
+                <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       ПІБ
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Телефон
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Адреса
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Пакет
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Прибори
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Коментар клієнта
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Час доставки
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Нотатка адміна
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Ціна
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Telegram
                     </th>
                   </tr>
@@ -233,22 +233,22 @@ const handleExportToKitchen = () => {
                 <tbody className="divide-y divide-slate-200">
                   {orders.map((order) => (
                     <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 transition">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
                         {order.user.name}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {order.user.phone}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {order.deliveryAddress || order.user.address || "—"}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {order.packageType}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {order.cutlery}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {order.notes ? (
                           <div className="max-w-xs text-xs italic text-slate-500">
                             {order.notes}
@@ -265,7 +265,7 @@ const handleExportToKitchen = () => {
                             handleFieldUpdate(order.id, order.orderDayId, "deliveryTime", e.target.value)
                           }
                           placeholder="10:00 - 11:00"
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -276,10 +276,10 @@ const handleExportToKitchen = () => {
                             handleFieldUpdate(order.id, order.orderDayId, "deliveryNote", e.target.value)
                           }
                           placeholder="Нотатка для клієнта..."
-                          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                         />
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900">
+                      <td className="px-4 py-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
                         {order.price ? `${order.price} ₴` : "—"}
                       </td>
                       <td className="px-4 py-3 text-center">

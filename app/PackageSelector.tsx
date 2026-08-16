@@ -70,14 +70,14 @@ export default function PackageSelector({ tariffs }: Props) {
   if (showSushkaOptions) {
     return (
       <div className="w-full max-w-6xl mx-auto">
-        <h2 className="mb-8 text-3xl font-black text-gray-900 text-center">Варіанти Сушки</h2>
+        <h2 className="mb-8 text-3xl font-black text-gray-900 dark:text-slate-100 text-center">Варіанти Сушки</h2>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {sushkaOptions.map((option) => (
             <div
               key={option.id}
-              className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white rounded-[2rem] border border-gray-100 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
+              className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
             >
-              <div className="relative h-56 w-full overflow-hidden bg-gray-50">
+              <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
                 {option.previewImageUrl ? (
                   <img
                     src={option.previewImageUrl}
@@ -91,8 +91,8 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 break-words line-clamp-2">{option.title}</h3>
-                  <p className="mt-2 text-base text-gray-500">{option.kcal}</p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100 break-words line-clamp-2">{option.title}</h3>
+                  <p className="mt-2 text-base text-gray-500 dark:text-slate-400">{option.kcal}</p>
                   <p className="text-xl font-extrabold text-emerald-600 mt-4">{option.price}</p>
                 </div>
                 <button
@@ -111,9 +111,9 @@ export default function PackageSelector({ tariffs }: Props) {
               setShowSushkaOptions(false);
               setPreviewPkg(null);
             }}
-            className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white rounded-[2rem] border border-gray-100 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
+            className="w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95"
           >
-            <div className="relative h-56 w-full overflow-hidden bg-gray-50">
+            <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
               <div className="flex h-full items-center justify-center text-gray-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-16 w-16">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
@@ -122,8 +122,8 @@ export default function PackageSelector({ tariffs }: Props) {
             </div>
             <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-gray-900">Назад</h3>
-                <p className="mt-2 text-base text-gray-500">До вибору тарифу</p>
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Назад</h3>
+                <p className="mt-2 text-base text-gray-500 dark:text-slate-400">До вибору тарифу</p>
               </div>
             </div>
           </button>
@@ -136,13 +136,13 @@ export default function PackageSelector({ tariffs }: Props) {
             onClick={() => setPreviewPkg(null)}
           >
             <div
-              className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white p-8 shadow-xl"
+              className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white dark:bg-slate-900 p-8 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h2 className="mb-6 text-3xl font-bold text-gray-900 break-words">{previewPkg.title}</h2>
+              <h2 className="mb-6 text-3xl font-bold text-gray-900 dark:text-slate-100 break-words">{previewPkg.title}</h2>
 
               {previewPkg.imageUrl ? (
-                <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50">
+                <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50 dark:bg-slate-950">
                   <img
                     src={previewPkg.imageUrl}
                     alt={previewPkg.title}
@@ -150,17 +150,17 @@ export default function PackageSelector({ tariffs }: Props) {
                   />
                 </div>
               ) : (
-                <div className="mb-6 flex h-64 items-center justify-center rounded-2xl bg-gray-50">
-                  <p className="text-gray-500">Зображення відсутнє</p>
+                <div className="mb-6 flex h-64 items-center justify-center rounded-2xl bg-gray-50 dark:bg-slate-950">
+                  <p className="text-gray-500 dark:text-slate-400">Зображення відсутнє</p>
                 </div>
               )}
 
               <div className="mb-8 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl bg-gray-50 p-4">
+                <div className="rounded-2xl bg-gray-50 dark:bg-slate-950 p-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Калорійність</p>
-                  <p className="text-lg font-bold text-gray-900">{previewPkg.kcal}</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-slate-100">{previewPkg.kcal}</p>
                 </div>
-                <div className="rounded-2xl bg-gray-50 p-4">
+                <div className="rounded-2xl bg-gray-50 dark:bg-slate-950 p-4">
                   <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Ціна</p>
                   <p className="text-lg font-bold text-emerald-600">
                     {previewPkg.name === "Indiv" ? (
@@ -176,7 +176,7 @@ export default function PackageSelector({ tariffs }: Props) {
                 <button
                   type="button"
                   onClick={() => setPreviewPkg(null)}
-                  className="flex-1 rounded-xl border border-gray-200 bg-white py-4 text-lg font-bold text-gray-700 transition hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-4 text-lg font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950"
                 >
                   🔙 Назад
                 </button>
@@ -200,18 +200,18 @@ export default function PackageSelector({ tariffs }: Props) {
       key={1}
       className="w-full max-w-6xl mx-auto transition-opacity duration-300 ease-out motion-reduce:transition-none"
     >
-      <h2 className="mb-10 text-3xl font-black text-gray-900 text-center">Оберіть тариф</h2>
+      <h2 className="mb-10 text-3xl font-black text-gray-900 dark:text-slate-100 text-center">Оберіть тариф</h2>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
         {sortedMainItems.map((item) => {
           if ("type" in item && item.type === "sushka-folder") {
             return (
               <div
                 key="sushka-folder"
-                className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
-                  selectedPackage?.includes("Sushka") ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100 shadow-sm"
+                className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+                  selectedPackage?.includes("Sushka") ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
                 }`}
               >
-                <div className="relative h-56 w-full overflow-hidden bg-gray-50">
+                <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
                   <img 
                     src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800" 
                     alt="Sushka program" 
@@ -220,8 +220,8 @@ export default function PackageSelector({ tariffs }: Props) {
                 </div>
                 <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-900">Сушка</h3>
-                    <p className="mt-2 text-base text-gray-500">Сушка S та Сушка XS</p>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Сушка</h3>
+                    <p className="mt-2 text-base text-gray-500 dark:text-slate-400">Сушка S та Сушка XS</p>
                     <p className="text-xl font-extrabold text-emerald-600 mt-4">{sushkaPriceRange}</p>
                   </div>
                   <button
@@ -241,11 +241,11 @@ export default function PackageSelector({ tariffs }: Props) {
           return (
             <div
               key={pkg.id}
-              className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
-                active ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100 shadow-sm"
+              className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-[2rem] border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+                active ? "border-emerald-500 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
               }`}
             >
-              <div className="relative h-56 w-full overflow-hidden bg-gray-50">
+              <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
                 {pkg.previewImageUrl && (
                   <img
                     src={pkg.previewImageUrl}
@@ -259,8 +259,8 @@ export default function PackageSelector({ tariffs }: Props) {
               </div>
               <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 break-words line-clamp-2">{pkg.title}</h3>
-                  <p className="mt-2 text-base text-gray-500">{pkg.kcal}</p>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100 break-words line-clamp-2">{pkg.title}</h3>
+                  <p className="mt-2 text-base text-gray-500 dark:text-slate-400">{pkg.kcal}</p>
                   <p className="text-xl font-extrabold text-emerald-600 mt-4">
                     {pkg.name === "Indiv" ? (
                       <span className="font-semibold text-emerald-600">Індивідуально</span>
@@ -289,13 +289,13 @@ export default function PackageSelector({ tariffs }: Props) {
           onClick={() => setPreviewPkg(null)}
         >
           <div
-            className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white p-8 shadow-xl"
+            className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-[2rem] bg-white dark:bg-slate-900 p-8 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-6 text-3xl font-bold text-gray-900 break-words">{previewPkg.title}</h2>
+            <h2 className="mb-6 text-3xl font-bold text-gray-900 dark:text-slate-100 break-words">{previewPkg.title}</h2>
 
             {previewPkg.imageUrl ? (
-              <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50">
+              <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50 dark:bg-slate-950">
                 <img
                   src={previewPkg.imageUrl}
                   alt={previewPkg.title}
@@ -303,17 +303,17 @@ export default function PackageSelector({ tariffs }: Props) {
                 />
               </div>
             ) : (
-              <div className="mb-6 flex h-64 items-center justify-center rounded-2xl bg-gray-50">
-                <p className="text-gray-500">Зображення відсутнє</p>
+              <div className="mb-6 flex h-64 items-center justify-center rounded-2xl bg-gray-50 dark:bg-slate-950">
+                <p className="text-gray-500 dark:text-slate-400">Зображення відсутнє</p>
               </div>
             )}
 
             <div className="mb-8 grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-gray-50 p-4">
+              <div className="rounded-2xl bg-gray-50 dark:bg-slate-950 p-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Калорійність</p>
-                <p className="text-lg font-bold text-gray-900">{previewPkg.kcal}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-slate-100">{previewPkg.kcal}</p>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
+              <div className="rounded-2xl bg-gray-50 dark:bg-slate-950 p-4">
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Ціна</p>
                 <p className="text-lg font-bold text-emerald-600">
                   {previewPkg.name === "Indiv" ? (
@@ -329,7 +329,7 @@ export default function PackageSelector({ tariffs }: Props) {
               <button
                 type="button"
                 onClick={() => setPreviewPkg(null)}
-                className="flex-1 rounded-xl border border-gray-200 bg-white py-4 text-lg font-bold text-gray-700 transition hover:bg-gray-50"
+                className="flex-1 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-4 text-lg font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950"
               >
                 🔙 Назад
               </button>

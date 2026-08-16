@@ -41,8 +41,8 @@ export default async function PendingPaymentsPage(props: { searchParams: Promise
     <div className="max-w-5xl mx-auto p-4 sm:p-8">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Оплати абонементів</h1>
-          <p className="text-sm text-gray-500 mt-1">Керування запитами на поповнення балансу</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Оплати абонементів</h1>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">Керування запитами на поповнення балансу</p>
         </div>
         {!isHistory && (
           <div className="rounded-full bg-yellow-100 px-3 py-1 text-sm font-semibold text-yellow-800">

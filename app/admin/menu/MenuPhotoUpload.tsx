@@ -95,9 +95,9 @@ export default function MenuPhotoUpload({ menuId, currentPhotoUrl }: Props) {
           accept="image/*"
           onChange={handleFileChange}
           disabled={uploading}
-          className="text-sm text-gray-600"
+          className="text-sm text-gray-600 dark:text-slate-400"
         />
-        <p className="mt-1 text-xs text-gray-500">JPG, PNG, WebP, GIF або AVIF — до 5 МБ.</p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">JPG, PNG, WebP, GIF або AVIF — до 5 МБ.</p>
         {uploading && <p className="mt-1 text-xs text-blue-600">Uploading...</p>}
         {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
       </div>

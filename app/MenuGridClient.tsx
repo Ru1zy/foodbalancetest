@@ -85,11 +85,11 @@ function MealSection({
           {visibleOptions.map((opt, idx) => (
             <li
               key={buildDishOptionKey(itemId, category, opt, idx)}
-              className="break-words text-sm text-gray-700"
+              className="break-words text-sm text-gray-700 dark:text-slate-300"
             >
               {opt.full}
               {opt.short && opt.short !== opt.full && (
-                <span className="text-xs text-gray-500"> ({opt.short})</span>
+                <span className="text-xs text-gray-500 dark:text-slate-400"> ({opt.short})</span>
               )}
             </li>
           ))}
@@ -117,18 +117,18 @@ function MealSection({
               <div
                 key={dishId}
                 className={`rounded-lg border p-3 text-left text-sm transition ${
-                  quantity > 0 ? "border-emerald-500 bg-emerald-50" : "border-gray-200 bg-white"
+                  quantity > 0 ? "border-emerald-500 bg-emerald-50" : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                 } ${disabled ? "opacity-50" : ""}`}
               >
-                <div className="break-words font-medium text-gray-800">{opt.full}</div>
+                <div className="break-words font-medium text-gray-800 dark:text-slate-200">{opt.full}</div>
                 {opt.short && opt.short !== opt.full && (
-                  <div className="break-words text-xs text-gray-500">{opt.short}</div>
+                  <div className="break-words text-xs text-gray-500 dark:text-slate-400">{opt.short}</div>
                 )}
                 {options.length > 1 && (
                   <div className="mt-1 text-[9px] text-emerald-500">ВАРІАНТ {idx + 1}</div>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-3">
-                  <div className="text-xs font-semibold text-gray-500">
+                  <div className="text-xs font-semibold text-gray-500 dark:text-slate-400">
                     Обрано: {quantity}
                   </div>
                   <div className="flex items-center gap-2">
@@ -141,11 +141,11 @@ function MealSection({
                         if (disabled || quantity === 0) return;
                         decrementDish(itemId, dishId);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-base font-bold text-gray-700 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-base font-bold text-gray-700 dark:text-slate-300 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       -
                     </button>
-                    <div className="min-w-8 text-center text-sm font-bold text-gray-900">{quantity}</div>
+                    <div className="min-w-8 text-center text-sm font-bold text-gray-900 dark:text-slate-100">{quantity}</div>
                     <button
                       type="button"
                       disabled={disabled || isAtLimit}
@@ -155,7 +155,7 @@ function MealSection({
                         if (disabled || isAtLimit) return;
                         incrementDish(itemId, dishId);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-base font-bold text-emerald-600 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-base font-bold text-emerald-600 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       +
                     </button>
@@ -278,8 +278,8 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   if (!menuItems || menuItems.length === 0) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center rounded-xl border-2 border-dashed border-gray-200">
-        <p className="text-gray-500">Меню завантажується або порожнє...</p>
+      <div className="flex min-h-[200px] items-center justify-center rounded-xl border-2 border-dashed border-gray-200 dark:border-slate-700">
+        <p className="text-gray-500 dark:text-slate-400">Меню завантажується або порожнє...</p>
       </div>
     );
   }
@@ -342,7 +342,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                   <div
                     key={idx}
                     className={`h-2 w-2 rounded-full transition-all ${
-                      idx === activeDayIndex ? "w-6 bg-emerald-500" : "bg-gray-200"
+                      idx === activeDayIndex ? "w-6 bg-emerald-500" : "bg-gray-200 dark:bg-slate-700"
                     }`}
                   />
                 ))}
@@ -353,7 +353,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
         {!hidePackageSwitcher && (
           <div className="mb-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-            <div className="flex flex-wrap justify-center gap-1 rounded-xl bg-gray-100 p-1 shadow-inner">
+            <div className="flex flex-wrap justify-center gap-1 rounded-xl bg-gray-100 dark:bg-slate-800 p-1 shadow-inner">
               {PACKAGES.map((type) => (
                 <button
                   key={type}
@@ -361,8 +361,8 @@ export default function MenuGridClient({ menuItems }: Props) {
                   onClick={() => setPackage(type)}
                   className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-200 ${
                     selectedPackageRaw === type
-                      ? "bg-white text-emerald-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "bg-white dark:bg-slate-900 text-emerald-600 shadow-sm"
+                      : "text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-300"
                   }`}
                 >
                   {type === "Indiv" ? "INDIV" : type}
@@ -373,7 +373,7 @@ export default function MenuGridClient({ menuItems }: Props) {
         )}
 
         {sorted.length === 0 && wizardFilterActive ? (
-          <div className="rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center text-sm text-gray-600">
+          <div className="rounded-2xl border border-dashed border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-950 p-8 text-center text-sm text-gray-600 dark:text-slate-400">
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
@@ -381,13 +381,13 @@ export default function MenuGridClient({ menuItems }: Props) {
             {currentDayItem && (
               <div
                 key={currentDayItem.id}
-                className={`w-full max-w-2xl group flex flex-col bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden transition-all duration-200 ease-out ${
+                className={`w-full max-w-2xl group flex flex-col bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-all duration-200 ease-out ${
                   isDaySelectable(currentDayItem.dayOfWeek) ? "hover:shadow-md" : "opacity-50"
                 }`}
               >
                 {currentDayItem.photoUrl && (
                   <div
-                    className="relative h-64 w-full overflow-hidden bg-gray-50 cursor-pointer"
+                    className="relative h-64 w-full overflow-hidden bg-gray-50 dark:bg-slate-950 cursor-pointer"
                     onClick={() => {
                       setZoomedImage(currentDayItem.photoUrl || null);
                       setZoomScale(1);
@@ -402,7 +402,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                 )}
                 <div className="p-6 sm:p-8">
                   <div className="mb-6 flex flex-wrap items-center justify-between gap-2 border-b border-gray-50 pb-4">
-                    <h3 className="break-words text-2xl font-black text-gray-900 sm:text-3xl">
+                    <h3 className="break-words text-2xl font-black text-gray-900 dark:text-slate-100 sm:text-3xl">
                       {dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`}
                     </h3>
                     <span className="rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700">
@@ -518,12 +518,12 @@ export default function MenuGridClient({ menuItems }: Props) {
                     />
                   </div>
 
-                  <div className="mt-6 flex flex-col gap-4 border-t border-gray-100 pt-6">
+                  <div className="mt-6 flex flex-col gap-4 border-t border-gray-100 dark:border-slate-800 pt-6">
                     <div className="flex items-center justify-between">
                       {progressByDay[currentDayItem.id]?.isComplete ? (
                         <p className="text-base font-bold text-emerald-600">День зібрано ✓</p>
                       ) : (
-                        <p className="text-base font-bold text-gray-600">
+                        <p className="text-base font-bold text-gray-600 dark:text-slate-400">
                           Обрано {progressByDay[currentDayItem.id]?.selectedCount || 0} з {packageLimit.limit}
                         </p>
                       )}
@@ -534,7 +534,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                         type="button"
                         disabled={activeDayIndex === 0}
                         onClick={() => setActiveDayIndex(prev => prev - 1)}
-                        className="flex-1 rounded-2xl border border-gray-200 bg-white py-4 text-sm font-bold text-gray-700 transition hover:bg-gray-50 disabled:opacity-30 active:scale-95"
+                        className="flex-1 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-4 text-sm font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-30 active:scale-95"
                       >
                         ← Назад
                       </button>
@@ -581,7 +581,7 @@ export default function MenuGridClient({ menuItems }: Props) {
             />
           </div>
           
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white dark:bg-slate-900/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -606,7 +606,7 @@ export default function MenuGridClient({ menuItems }: Props) {
           </div>
 
           <button
-            className="absolute top-6 right-6 h-12 w-12 flex items-center justify-center rounded-full bg-white/10 text-white text-3xl hover:bg-white/20 transition-colors"
+            className="absolute top-6 right-6 h-12 w-12 flex items-center justify-center rounded-full bg-white dark:bg-slate-900/10 text-white text-3xl hover:bg-white dark:bg-slate-900/20 transition-colors"
             onClick={(e) => {
               e.stopPropagation();
               setZoomedImage(null);
@@ -620,8 +620,8 @@ export default function MenuGridClient({ menuItems }: Props) {
       {/* Floating Bubble Button */}
       {(!wizardFilterActive || isLastDay) && (
         <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
-          <div className="pointer-events-auto w-full max-w-md bg-white/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
-            <span className="text-slate-800 font-bold text-sm md:text-base whitespace-nowrap">
+          <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-slate-900/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 dark:border-slate-700 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
+            <span className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base whitespace-nowrap">
               Обрано днів: {completedDaysCount}
             </span>
             <Link

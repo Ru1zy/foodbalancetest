@@ -34,9 +34,9 @@ export default function MegaphoneClient() {
   };
 
   return (
-    <div className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
+    <div className="rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-gray-200 sm:p-8">
       <div className="mb-4">
-        <label htmlFor="message" className="block text-sm font-semibold text-gray-900 mb-2">
+        <label htmlFor="message" className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-2">
           Повідомлення (HTML підтримується)
         </label>
         <textarea
@@ -46,9 +46,9 @@ export default function MegaphoneClient() {
           disabled={isSending}
           placeholder="Введіть текст повідомлення. Можна використовувати HTML теги: <b>жирний</b>, <i>курсив</i>, <code>код</code>"
           rows={10}
-          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          className="w-full rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:bg-slate-800"
         />
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">
           Символів: {htmlContent.length}
         </p>
       </div>
@@ -87,7 +87,7 @@ export default function MegaphoneClient() {
         disabled={isSending || !(htmlContent || "").trim()}
         className={`w-full rounded-xl px-6 py-3 text-sm font-semibold transition ${
           isSending || !(htmlContent || "").trim()
-            ? "cursor-not-allowed bg-gray-200 text-gray-400"
+            ? "cursor-not-allowed bg-gray-200 dark:bg-slate-700 text-gray-400"
             : "bg-blue-600 text-white hover:bg-blue-700"
         }`}
       >

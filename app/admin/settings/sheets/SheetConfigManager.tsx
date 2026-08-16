@@ -21,28 +21,28 @@ type Props = {
 };
 
 const inputClass =
-  "w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
+  "w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
 export default function SheetConfigManager({ configs }: Props) {
   return (
     <div className="space-y-6">
       <CreateForm />
 
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50">
+            <thead className="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">
                   Місяць (MM.YYYY)
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">
                   Назва
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">
                   Spreadsheet ID
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600">
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">
                   Дії
                 </th>
               </tr>
@@ -56,8 +56,8 @@ export default function SheetConfigManager({ configs }: Props) {
         </div>
 
         {configs.length === 0 && (
-          <div className="border-t border-dashed border-gray-200 p-8 text-center">
-            <p className="text-sm text-gray-600">
+          <div className="border-t border-dashed border-gray-200 dark:border-slate-700 p-8 text-center">
+            <p className="text-sm text-gray-600 dark:text-slate-400">
               Конфігурації відсутні. Додайте першу таблицю через форму вище.
             </p>
           </div>
@@ -105,11 +105,11 @@ function CreateForm() {
   };
 
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
-      <h2 className="mb-4 text-lg font-semibold text-gray-900">Додати таблицю</h2>
+    <div className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-gray-200">
+      <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-slate-100">Додати таблицю</h2>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-slate-400">
             Місяць (MM.YYYY) <span className="text-red-500">*</span>
           </label>
           <input
@@ -129,7 +129,7 @@ function CreateForm() {
           )}
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">Назва (необов&apos;язково)</label>
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-slate-400">Назва (необов&apos;язково)</label>
           <input
             type="text"
             placeholder="Березень 2026"
@@ -139,7 +139,7 @@ function CreateForm() {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-gray-600">
+          <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-slate-400">
             Spreadsheet ID або URL <span className="text-red-500">*</span>
           </label>
           <input
@@ -158,7 +158,7 @@ function CreateForm() {
         <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-lg bg-gray-900 dark:bg-slate-50 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isPending ? "Додавання…" : "Додати"}
         </button>
@@ -273,7 +273,7 @@ function ConfigRow({ config }: { config: SheetConfig }) {
                 setEditing(false);
               }}
               disabled={isPending}
-              className="rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300"
+              className="rounded bg-gray-200 dark:bg-slate-700 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-300"
             >
               Скасувати
             </button>
@@ -284,11 +284,11 @@ function ConfigRow({ config }: { config: SheetConfig }) {
   }
 
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4 text-sm font-semibold text-gray-900">{config.monthKey}</td>
-      <td className="px-6 py-4 text-sm text-gray-600">{config.label || "—"}</td>
+    <tr className="hover:bg-gray-50 dark:bg-slate-950">
+      <td className="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-slate-100">{config.monthKey}</td>
+      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">{config.label || "—"}</td>
       <td className="px-6 py-4">
-        <code className="break-all text-xs text-gray-600">{config.spreadsheetId}</code>
+        <code className="break-all text-xs text-gray-600 dark:text-slate-400">{config.spreadsheetId}</code>
       </td>
       <td className="px-6 py-4">
         <div className="flex flex-col items-end gap-2">
@@ -305,7 +305,7 @@ function ConfigRow({ config }: { config: SheetConfig }) {
               <button
                 onClick={() => setConfirmingDelete(false)}
                 disabled={isPending}
-                className="rounded bg-gray-200 px-3 py-1 text-sm text-gray-700 hover:bg-gray-300"
+                className="rounded bg-gray-200 dark:bg-slate-700 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-300"
               >
                 Ні
               </button>

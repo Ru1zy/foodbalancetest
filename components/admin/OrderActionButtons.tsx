@@ -50,7 +50,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
   if (isPaid) {
     return (
       <div className="flex flex-col gap-2 w-full max-w-[200px]">
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-gray-500 dark:text-slate-400">
           Оплату підтверджено
         </div>
         {hasChatId && (
@@ -61,7 +61,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
               onChange={(e) => setTimeWindow(e.target.value)}
               placeholder="Time (e.g. 19:00-20:00)"
               disabled={isSendingTime}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <button
               type="button"
@@ -69,7 +69,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
               disabled={isSendingTime}
               className={`w-full rounded-lg px-3 py-1 text-sm font-semibold transition ${
                 isSendingTime
-                  ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                  ? "cursor-not-allowed bg-gray-200 dark:bg-slate-700 text-gray-400"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
             >
@@ -88,7 +88,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
       disabled={isPending}
       className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
         isPending
-          ? "cursor-not-allowed bg-gray-200 text-gray-400"
+          ? "cursor-not-allowed bg-gray-200 dark:bg-slate-700 text-gray-400"
           : "bg-green-600 text-white hover:bg-green-700"
       }`}
     >

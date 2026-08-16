@@ -44,14 +44,14 @@ export default function KitchenExport() {
   };
 
   return (
-    <div className="mb-6 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="mb-4 text-xl font-bold text-gray-900">
+    <div className="mb-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm">
+      <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-slate-100">
         📊 Експорт на кухню
       </h2>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
         <div className="flex flex-col gap-2">
-          <label htmlFor="export-date" className="text-sm font-semibold text-slate-700">
+          <label htmlFor="export-date" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
             Дата доставки (формат: ДД.МM):
           </label>
           <input
@@ -60,7 +60,7 @@ export default function KitchenExport() {
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
             placeholder="23.02"
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
+            className="rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2.5 text-sm font-medium text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-100"
           />
           <p className="text-xs text-slate-500">Приклад: 23.02 (23 лютого)</p>
         </div>

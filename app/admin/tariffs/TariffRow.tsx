@@ -89,13 +89,13 @@ export default function TariffRow({ tariff }: Props) {
   if (editing) {
     return (
       <tr className="bg-blue-50">
-        <td className="px-6 py-4 text-sm font-medium text-gray-900">{tariff.name}</td>
+        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-slate-100">{tariff.name}</td>
         <td className="px-6 py-4">
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -103,7 +103,7 @@ export default function TariffRow({ tariff }: Props) {
             type="text"
             value={formData.kcal}
             onChange={(e) => setFormData({ ...formData, kcal: e.target.value })}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -111,7 +111,7 @@ export default function TariffRow({ tariff }: Props) {
             type="text"
             value={formData.price}
             onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -119,7 +119,7 @@ export default function TariffRow({ tariff }: Props) {
             type="number"
             value={formData.basePrice}
             onChange={(e) => setFormData({ ...formData, basePrice: Number(e.target.value) })}
-            className="w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
         </td>
         <td className="px-6 py-4">
@@ -128,13 +128,13 @@ export default function TariffRow({ tariff }: Props) {
               {tariff.previewImageUrl && (
                 <img src={tariff.previewImageUrl} alt="Preview" className="h-12 w-12 rounded object-cover mb-1" />
               )}
-              <div className="text-xs text-gray-500">Preview</div>
+              <div className="text-xs text-gray-500 dark:text-slate-400">Preview</div>
             </div>
             <div className="text-center">
               {tariff.imageUrl && (
                 <img src={tariff.imageUrl} alt="Detail" className="h-12 w-12 rounded object-cover mb-1" />
               )}
-              <div className="text-xs text-gray-500">Detail</div>
+              <div className="text-xs text-gray-500 dark:text-slate-400">Detail</div>
             </div>
           </div>
         </td>
@@ -148,7 +148,7 @@ export default function TariffRow({ tariff }: Props) {
             </button>
             <button
               onClick={() => setEditing(false)}
-              className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 hover:bg-gray-400"
+              className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-400"
             >
               Скасувати
             </button>
@@ -159,18 +159,18 @@ export default function TariffRow({ tariff }: Props) {
   }
 
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4 text-sm font-medium text-gray-900">{tariff.name}</td>
-      <td className="px-6 py-4 text-sm text-gray-600">{tariff.title}</td>
-      <td className="px-6 py-4 text-sm text-gray-600">{tariff.kcal}</td>
-      <td className="px-6 py-4 text-sm text-gray-600">
+    <tr className="hover:bg-gray-50 dark:bg-slate-950">
+      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-slate-100">{tariff.name}</td>
+      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">{tariff.title}</td>
+      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">{tariff.kcal}</td>
+      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">
         {tariff.name === "Indiv" ? (
           <span className="font-semibold text-emerald-600">Індивідуально</span>
         ) : (
           tariff.price
         )}
       </td>
-      <td className="px-6 py-4 text-sm text-gray-600">
+      <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">
         {tariff.name === "Indiv" ? (
           <span className="font-semibold text-emerald-600">Індивідуально</span>
         ) : (
@@ -183,15 +183,15 @@ export default function TariffRow({ tariff }: Props) {
             {tariff.previewImageUrl && (
               <img src={tariff.previewImageUrl} alt="Preview" className="h-12 w-12 rounded object-cover mb-1" />
             )}
-            {!tariff.previewImageUrl && <div className="h-12 w-12 rounded bg-gray-100 mb-1" />}
-            <div className="text-xs text-gray-500">Preview</div>
+            {!tariff.previewImageUrl && <div className="h-12 w-12 rounded bg-gray-100 dark:bg-slate-800 mb-1" />}
+            <div className="text-xs text-gray-500 dark:text-slate-400">Preview</div>
           </div>
           <div className="text-center">
             {tariff.imageUrl && (
               <img src={tariff.imageUrl} alt="Detail" className="h-12 w-12 rounded object-cover mb-1" />
             )}
-            {!tariff.imageUrl && <div className="h-12 w-12 rounded bg-gray-100 mb-1" />}
-            <div className="text-xs text-gray-500">Detail</div>
+            {!tariff.imageUrl && <div className="h-12 w-12 rounded bg-gray-100 dark:bg-slate-800 mb-1" />}
+            <div className="text-xs text-gray-500 dark:text-slate-400">Detail</div>
           </div>
         </div>
       </td>

@@ -44,11 +44,11 @@ export default function GoogleDriveAutomation({
   const canConnect = status.configured && status.databaseReady;
 
   return (
-    <section className="mb-6 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+    <section className="mb-6 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-gray-200">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-lg font-bold text-gray-900">Автоматизація Google Drive</h2>
-          <p className="mt-1 max-w-2xl text-sm text-gray-600">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-slate-100">Автоматизація Google Drive</h2>
+          <p className="mt-1 max-w-2xl text-sm text-gray-600 dark:text-slate-400">
             Після одноразового підключення FoodBalance сам створює місячні книги
             з оформленого шаблону. Власнику не потрібно щомісяця додавати URL.
           </p>
@@ -100,10 +100,10 @@ export default function GoogleDriveAutomation({
       )}
 
       {status.connected && (
-        <div className="mt-4 grid gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 rounded-xl bg-slate-50 dark:bg-slate-950 p-4 text-sm sm:grid-cols-2">
           <div>
             <span className="text-slate-500">Google-акаунт</span>
-            <p className="font-semibold text-slate-900">{status.connectedEmail}</p>
+            <p className="font-semibold text-slate-900 dark:text-slate-100">{status.connectedEmail}</p>
           </div>
           <div className="flex flex-wrap items-end gap-3 sm:justify-end">
             {status.folderUrl && (
@@ -134,12 +134,12 @@ export default function GoogleDriveAutomation({
         {canConnect ? (
           <a
             href="/api/admin/google-drive/connect"
-            className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+            className="rounded-lg bg-gray-900 dark:bg-slate-50 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
           >
             {status.connected ? "Перепідключити Google Drive" : "Підключити Google Drive"}
           </a>
         ) : (
-          <span className="rounded-lg bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-500">
+          <span className="rounded-lg bg-gray-200 dark:bg-slate-700 px-4 py-2 text-sm font-semibold text-gray-500 dark:text-slate-400">
             Підключення недоступне
           </span>
         )}

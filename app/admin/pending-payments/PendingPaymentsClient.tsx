@@ -53,13 +53,13 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
   return (
     <div className="space-y-6">
       {/* Tabs */}
-      <div className="flex border-b border-gray-200">
+      <div className="flex border-b border-gray-200 dark:border-slate-700">
         <Link
           href="/admin/pending-payments?tab=pending"
           className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
             !isHistory
               ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:border-slate-600"
           }`}
         >
           Очікують підтвердження
@@ -69,7 +69,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
           className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors ${
             isHistory
               ? "border-blue-600 text-blue-600"
-              : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:border-slate-600"
           }`}
         >
           Історія оплат
@@ -77,34 +77,34 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
       </div>
 
       {purchases.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-8 text-center text-gray-500">
+        <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center text-gray-500 dark:text-slate-400">
           {isHistory ? "Історія оплат порожня." : "Немає заявок, що очікують на підтвердження."}
         </div>
       ) : (
         <div className="grid gap-6">
           {purchases.map((purchase) => (
-            <div key={purchase.id} className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col md:flex-row gap-6">
+            <div key={purchase.id} className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col md:flex-row gap-6">
               <div className="flex-1 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-bold text-gray-900">{purchase.user.name}</h3>
-                  <span className="text-sm text-gray-500">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">{purchase.user.name}</h3>
+                  <span className="text-sm text-gray-500 dark:text-slate-400">
                     {new Date(purchase.createdAt).toLocaleString("uk-UA")}
                   </span>
                 </div>
                 
-                <p className="text-gray-600 font-mono text-sm">{purchase.user.phone}</p>
+                <p className="text-gray-600 dark:text-slate-400 font-mono text-sm">{purchase.user.phone}</p>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
+                <div className="grid grid-cols-2 gap-4 text-sm bg-gray-50 dark:bg-slate-950 p-4 rounded-lg">
                   <div>
-                    <span className="block text-gray-500 mb-1">Пакет:</span>
+                    <span className="block text-gray-500 dark:text-slate-400 mb-1">Пакет:</span>
                     <span className="font-semibold">{purchase.packageId} на {purchase.days} днів</span>
                   </div>
                   <div>
-                    <span className="block text-gray-500 mb-1">До сплати:</span>
+                    <span className="block text-gray-500 dark:text-slate-400 mb-1">До сплати:</span>
                     <span className="font-bold text-lg text-emerald-600">{purchase.finalPrice} ₴</span>
                   </div>
                   <div>
-                    <span className="block text-gray-500 mb-1">Спосіб:</span>
+                    <span className="block text-gray-500 dark:text-slate-400 mb-1">Спосіб:</span>
                     <span className="font-semibold capitalize">
                       {purchase.paymentMethod === 'bank_transfer' ? 'Переказ на картку' : (
                         isHistory ? 'Готівка' : (
@@ -117,11 +117,11 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                   </div>
                   {isHistory && purchase.status && (
                     <div>
-                      <span className="block text-gray-500 mb-1">Статус:</span>
+                      <span className="block text-gray-500 dark:text-slate-400 mb-1">Статус:</span>
                       <span className={`inline-flex rounded-md px-2 py-1 text-xs font-bold ${
                         purchase.status === 'PAID' ? 'bg-green-100 text-green-700' :
                         purchase.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                        'bg-gray-100 text-gray-700'
+                        'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300'
                       }`}>
                         {purchase.status === 'PAID' ? 'Оплачено' : 
                          purchase.status === 'CANCELLED' ? 'Скасовано' : purchase.status}
@@ -142,7 +142,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     Переглянути квитанцію ↗
                   </a>
                 ) : (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 py-2 text-center text-sm text-gray-500 italic">
+                  <div className="rounded-lg border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 py-2 text-center text-sm text-gray-500 dark:text-slate-400 italic">
                     Без квитанції
                   </div>
                 )}
@@ -152,7 +152,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     <button
                       onClick={() => handleReject(purchase.id)}
                       disabled={processingId === purchase.id}
-                      className="flex-1 rounded-lg border border-red-200 bg-white py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                      className="flex-1 rounded-lg border border-red-200 bg-white dark:bg-slate-900 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                     >
                       Відхилити
                     </button>

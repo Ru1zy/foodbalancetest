@@ -11,6 +11,19 @@
   --font-sans: var(--font-comfortaa);
 }
 
+@custom-variant dark (&:is(.dark *));
+
+@layer base {
+  :root {
+    --background: #f8fafc;
+    --foreground: #171717;
+  }
+  .dark {
+    --background: #020617; /* slate-950 */
+    --foreground: #f8fafc; /* slate-50 */
+  }
+}
+
 
 
 body {

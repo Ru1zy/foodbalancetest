@@ -54,13 +54,13 @@ export default async function SheetSettingsPage({
   ]);
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50 p-6">
+    <div className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 p-6">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Налаштування таблиць замовлень</h1>
-          <p className="mt-2 text-sm text-gray-600">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-slate-100">Налаштування таблиць замовлень</h1>
+          <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
             Словник місячних Google-таблиць для експорту замовлень. Кожен місяць має власну таблицю,
-            ідентифіковану ключем <code className="rounded bg-gray-100 px-1 py-0.5 text-gray-800">MM.YYYY</code>.
+            ідентифіковану ключем <code className="rounded bg-gray-100 dark:bg-slate-800 px-1 py-0.5 text-gray-800 dark:text-slate-200">MM.YYYY</code>.
           </p>
         </div>
 
@@ -70,8 +70,8 @@ export default async function SheetSettingsPage({
           notice={connectionNotice(params)}
         />
 
-        <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-slate-700">
-          <h2 className="font-bold text-slate-900">Ручний резервний варіант</h2>
+        <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-slate-700 dark:text-slate-300">
+          <h2 className="font-bold text-slate-900 dark:text-slate-100">Ручний резервний варіант</h2>
           <p className="mt-2">
             Потрібен лише якщо автоматизація Google Drive не підключена або тимчасово недоступна.
           </p>
@@ -83,7 +83,7 @@ export default async function SheetSettingsPage({
             </li>
             <li>
               Створіть у ній лист із точним іменем{" "}
-              <code className="rounded bg-white px-1 py-0.5 text-slate-900">_Template</code>.
+              <code className="rounded bg-white dark:bg-slate-900 px-1 py-0.5 text-slate-900 dark:text-slate-100">_Template</code>.
               Заголовки та форматування можна оформити як потрібно;
               замовлення записуються з рядка 5 у колонки B–K.
             </li>
@@ -94,10 +94,10 @@ export default async function SheetSettingsPage({
             </li>
             <li>
               Вставте URL цієї книги нижче та вкажіть місяць у форматі{" "}
-              <code className="rounded bg-white px-1 py-0.5 text-slate-900">MM.YYYY</code>.
+              <code className="rounded bg-white dark:bg-slate-900 px-1 py-0.5 text-slate-900 dark:text-slate-100">MM.YYYY</code>.
             </li>
           </ol>
-          <p className="mt-3 text-xs text-slate-600">
+          <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
             FoodBalance сам створить вкладку <code>DD.MM</code> копіюванням{" "}
             <code>_Template</code>, якщо вона ще не існує.
           </p>

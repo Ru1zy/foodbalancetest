@@ -102,7 +102,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
 
   return (
     <div className="mt-8">
-      <h3 className="mb-6 text-xl font-bold text-gray-900">Оберіть кількість днів ({pkg.name})</h3>
+      <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-slate-100">Оберіть кількість днів ({pkg.name})</h3>
       
       {/* Discount rules display */}
       <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
@@ -127,7 +127,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         </div>
       )}
 
-      <div className="max-w-md mx-auto relative flex flex-col rounded-3xl border-2 border-emerald-500 bg-white p-6 shadow-sm">
+      <div className="max-w-md mx-auto relative flex flex-col rounded-3xl border-2 border-emerald-500 bg-white dark:bg-slate-900 p-6 shadow-sm">
         {discountPercent > 0 && (
           <div className="absolute -right-3 -top-3 rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white shadow-md">
             -{discountPercent}%
@@ -135,11 +135,11 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         )}
         
         <div className="flex items-center justify-between mb-6">
-          <span className="text-gray-700 font-bold">Кількість днів:</span>
+          <span className="text-gray-700 dark:text-slate-300 font-bold">Кількість днів:</span>
           <div className="flex items-center gap-3">
             <button
               onClick={() => handleDaysChange(days - 1)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold text-xl transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 hover:bg-gray-200 dark:bg-slate-700 font-bold text-xl transition-colors"
             >
               -
             </button>
@@ -149,7 +149,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
               max={90}
               value={days}
               onChange={(e) => handleDaysChange(parseInt(e.target.value) || 2)}
-              className="w-16 text-center text-xl font-bold rounded-lg border border-gray-200 py-1"
+              className="w-16 text-center text-xl font-bold rounded-lg border border-gray-200 dark:border-slate-700 py-1"
             />
             <button
               onClick={() => handleDaysChange(days + 1)}
@@ -161,9 +161,9 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         </div>
         
         <div className="mb-2 flex justify-between items-end">
-          <span className="text-gray-500">До сплати:</span>
+          <span className="text-gray-500 dark:text-slate-400">До сплати:</span>
           <div className="text-right">
-             <span className="text-2xl font-black text-gray-900">{totalDiscounted} ₴</span>
+             <span className="text-2xl font-black text-gray-900 dark:text-slate-100">{totalDiscounted} ₴</span>
              {discountPercent > 0 && (
                <span className="ml-2 text-sm text-gray-400 line-through">{totalOriginal} ₴</span>
              )}
@@ -174,8 +174,8 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
           Виходить {pricePerDay} ₴ / день
         </div>
 
-        <div className="mb-6 border-t border-gray-100 pt-6">
-          <h4 className="mb-4 font-bold text-gray-900">Спосіб оплати:</h4>
+        <div className="mb-6 border-t border-gray-100 dark:border-slate-800 pt-6">
+          <h4 className="mb-4 font-bold text-gray-900 dark:text-slate-100">Спосіб оплати:</h4>
           
           <div className="flex gap-4 mb-4">
             <label className="flex items-center gap-2 cursor-pointer">
@@ -187,7 +187,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("bank_transfer")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span className="text-gray-900 font-medium">Переказ на картку</span>
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на картку</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
@@ -198,39 +198,39 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("cash")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span className="text-gray-900 font-medium">Готівкою кур'єру</span>
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Готівкою кур'єру</span>
             </label>
           </div>
 
           {paymentMethod === "bank_transfer" && (
-            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-4 text-sm">
               <p className="mb-2 font-semibold">Реквізити для оплати:</p>
-              <p className="font-mono text-gray-700 mb-4 bg-white p-2 rounded border">XXXX XXXX XXXX XXXX (ФОП Іванов І.І.)</p>
+              <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border">XXXX XXXX XXXX XXXX (ФОП Іванов І.І.)</p>
               
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                 Завантажте скріншот оплати:
               </label>
               <input 
                 type="file" 
                 accept="image/*"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
               />
             </div>
           )}
           
-          <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
             <label className="flex items-start gap-3 cursor-pointer">
               <div className="flex h-6 items-center">
                 <input
                   type="checkbox"
                   checked={sendEmailReceipt}
                   onChange={(e) => setSendEmailReceipt(e.target.checked)}
-                  className="h-5 w-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+                  className="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-emerald-600 focus:ring-emerald-600"
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-medium text-slate-900">
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                   Відправити квитанцію про оплату на Email
                 </span>
                 <span className="text-sm text-slate-500">
@@ -245,7 +245,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                   value={receiptEmail}
                   onChange={(e) => setReceiptEmail(e.target.value)}
                   placeholder="Введіть ваш Email..."
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:bg-white dark:bg-slate-900 focus:ring-4 focus:ring-emerald-100"
                 />
               </div>
             )}
