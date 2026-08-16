@@ -137,15 +137,15 @@ export async function cancelSubscriptionPurchaseAction(purchaseId: string) {
     });
 
     if (!purchase || purchase.userId !== userId) {
-      return { ok: false, error: "??????? ?? ????????" };
+      return { ok: false, error: "Покупку не знайдено" };
     }
 
     if (purchase.status === "PAID" || purchase.status === "CANCELLED") {
-      return { ok: false, error: "?? ??????? ??? ?? ????? ?????????" };
+      return { ok: false, error: "Цю покупку вже не можна скасувати" };
     }
 
     await prisma.$transaction(async (tx) => {
-      // 1. ???????? ?????? ?? CANCELLED
+      // 1. Оновити статус на CANCELLED
       await tx.subscriptionPurchase.update({
         where: { id: purchaseId },
         data: {
@@ -153,8 +153,8 @@ export async function cancelSubscriptionPurchaseAction(purchaseId: string) {
         },
       });
 
-      // 2. ???????? ??? ? ???????, ??? ???? ?????????? ???????
-      // (?????? ???? ?????? ??? CREDITED_PENDING_CONFIRMATION)
+      // 2. Повернути дні з балансу, якщо вони вже були зараховані
+      // (тільки якщо статус був CREDITED_PENDING_CONFIRMATION)
       if (purchase.status === "CREDITED_PENDING_CONFIRMATION") {
         await tx.userBalance.updateMany({
           where: {

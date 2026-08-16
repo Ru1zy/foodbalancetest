@@ -378,8 +378,8 @@ Current research as of 2026-08-09:
 
 ## Phase 6: verification and release
 
-- [ ] Add unit tests for every discount boundary: 4, 5, 6, 7, 13, 14, 29, 30,
-  and any confirmed maximum above 30.
+- [x] Add unit tests for every discount boundary: 4, 5, 6, 7, 13, 14, 29, 30,
+  and any confirmed maximum above 30. (Added in lib/subscription-logic.test.ts)
 - [ ] Test provider-calculated payer-fee display, financial rounding, exact net
   settlement to the merchant, refunds, and partial refunds.
 - [ ] Test concurrent balance credit/deduction and webhook replay.
