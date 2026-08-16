@@ -80,6 +80,8 @@ type Props = {
   isNewClient: boolean;
   currentPage: number;
   totalPages: number;
+  totalActions: number;
+  itemsPerPage: number;
 };
 
 function formatDate(date: Date): string {
@@ -262,7 +264,9 @@ export default function ProfilePageClient({
   tariffs, 
   isNewClient, 
   currentPage,
-  totalPages
+  totalPages,
+  totalActions,
+  itemsPerPage
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -276,8 +280,16 @@ export default function ProfilePageClient({
   const handlePageChange = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
+    params.set('limit', itemsPerPage.toString());
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchParams, pathname, router]);
+  }, [searchParams, pathname, router, itemsPerPage]);
+
+  const handleLimitChange = useCallback((limit: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', '1');
+    params.set('limit', limit.toString());
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -483,11 +495,30 @@ export default function ProfilePageClient({
         {/* Action History Section */}
         <div className="space-y-6 pb-12">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Історія дій</h2>
-            {actions.length > 0 && (
-              <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-600 dark:text-slate-400">
-                {actions.length}
-              </span>
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Історія дій</h2>
+              {totalActions > 0 && (
+                <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-600 dark:text-slate-400">
+                  {totalActions}
+                </span>
+              )}
+            </div>
+
+            {totalActions > 10 && (
+              <div className="flex items-center gap-2">
+                <label htmlFor="limit" className="text-sm text-slate-500 hidden sm:block">На сторінці:</label>
+                <select
+                  id="limit"
+                  value={itemsPerPage}
+                  onChange={(e) => handleLimitChange(Number(e.target.value))}
+                  className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
             )}
           </div>
 

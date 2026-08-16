@@ -185,7 +185,8 @@ export default async function ProfilePage(
 ) {
   const searchParams = await props.searchParams;
   const page = Math.max(1, parseInt(searchParams?.page as string || "1", 10));
-  const ITEMS_PER_PAGE = 10;
+  const limitParam = parseInt(searchParams?.limit as string || "10", 10);
+  const ITEMS_PER_PAGE = [10, 25, 50, 100].includes(limitParam) ? limitParam : 10;
 
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
@@ -299,6 +300,8 @@ export default async function ProfilePage(
       isNewClient={allOrders.length === 0}
       currentPage={page}
       totalPages={totalPages}
+      totalActions={totalActions}
+      itemsPerPage={ITEMS_PER_PAGE}
     />
   );
 }
