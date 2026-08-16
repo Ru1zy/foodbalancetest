@@ -42,7 +42,7 @@ export default async function Header() {
         <div className="flex h-20 items-center justify-between">
           <Logo />
 
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
             <ThemeToggle />
             {isAuthenticated ? (
               <>
