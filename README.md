@@ -51,12 +51,14 @@ The app runs as a regular web app and as a **Telegram Mini App (TMA)**, with sig
 | Database | PostgreSQL via Prisma 7 (`@prisma/adapter-pg`) |
 | Auth | JWT sessions with `jose`; Telegram + Google OAuth |
 | Integrations | Telegram Bot / TMA (`@twa-dev/sdk`), Google APIs (`googleapis`) |
-| File storage | Vercel Blob |
-| Hosting | Vercel (with Vercel Cron) |
+| Theming | `next-themes` (class strategy, light/dark toggle) |
+| Email | Gmail API via OAuth2 (Railway blocks SMTP ports) |
+| File storage | Cloudflare R2 (S3-compatible via `@aws-sdk/client-s3`) |
+| Hosting | Railway (primary), GitHub Actions cron |
 
 ### Data model (Prisma)
 
-`User` · `UserBalance` (prepaid days per package) · `Menu` · `Tariff` · `Order` · `CheckoutIdempotency` · `AuthToken` · `MergeToken`
+`User` · `UserBalance` (prepaid days per package) · `SubscriptionPurchase` · `Menu` · `Tariff` · `Order` · `OrderDay` · `CheckoutIdempotency` · `SheetConfig` · `GoogleDriveConnection` · `AuthToken` · `MergeToken` · `OutboxJob`
 
 ### Getting started
 
@@ -180,12 +182,14 @@ public/     Static assets
 | База даних | PostgreSQL через Prisma 7 (`@prisma/adapter-pg`) |
 | Автентифікація | JWT-сесії на `jose`; Telegram + Google OAuth |
 | Інтеграції | Telegram Bot / TMA (`@twa-dev/sdk`), Google APIs (`googleapis`) |
-| Сховище файлів | Vercel Blob |
-| Хостинг | Vercel (з Vercel Cron) |
+| Тема | `next-themes` (class strategy, перемикач light/dark) |
+| Email | Gmail API через OAuth2 (Railway блокує SMTP порти) |
+| Сховище файлів | Cloudflare R2 (S3-compatible через `@aws-sdk/client-s3`) |
+| Хостинг | Railway (основний), GitHub Actions cron |
 
 ### Модель даних (Prisma)
 
-`User` · `UserBalance` (передплачені дні за пакетом) · `Menu` · `Tariff` · `Order` · `CheckoutIdempotency` · `AuthToken` · `MergeToken`
+`User` · `UserBalance` (передплачені дні за пакетом) · `SubscriptionPurchase` · `Menu` · `Tariff` · `Order` · `OrderDay` · `CheckoutIdempotency` · `SheetConfig` · `GoogleDriveConnection` · `AuthToken` · `MergeToken` · `OutboxJob`
 
 ### Початок роботи
 

@@ -1,6 +1,6 @@
 # FoodBalance: migration and product roadmap
 
-Last updated: 2026-08-10
+Last updated: 2026-08-16
 
 This is the live project tracker. Read it before making changes and update the
 checkboxes and notes after every completed step. Never put credentials, tokens,
@@ -354,6 +354,25 @@ Current research as of 2026-08-09:
   or only after the existing explicit `Notify` action.
 - [x] Add email duplication of admin Telegram alerts only after an email provider,
   sender domain, recipients, and delivery policy are selected. (Implemented via Gmail API over HTTPS to bypass Railway SMTP blocks)
+
+### UI/UX improvements (2026-08-14 – 2026-08-16)
+
+- [x] Implement light/dark mode toggle using `next-themes` (class strategy) with
+  an animated Sun ↔ Moon switch in the header.
+- [x] Ensure all components support `dark:` Tailwind variants across every page
+  (header, footer, checkout, profile, onboarding, admin).
+- [x] Remove "AI-template" aesthetics: standardize border radii to `rounded-2xl`,
+  remove dashed borders, apply consistent glassmorphism header and dark footer.
+- [x] Fix logo visibility on dark backgrounds (white backdrop in dark mode).
+- [x] Replace the default Next.js/Vercel favicon with the FoodBalance logo.
+- [x] Configure `metadataBase` and OpenGraph metadata for rich messenger previews.
+- [x] Optimize mobile header layout: icon-only logout button, hidden slogan on
+  small screens, reduced gap between nav elements.
+- [x] Add smooth scroll-to-top on day navigation in Menu Wizard and page change
+  in Action History.
+- [x] Add dynamic "Items per page" selector (10/25/50/100) to profile Action History.
+- [x] Add Telegram link to footer, reorder social links: Instagram → Telegram → TikTok.
+- [x] Fix subscription day-input contrast in dark mode.
 
 ## Phase 6: verification and release
 
