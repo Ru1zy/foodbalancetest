@@ -51,7 +51,9 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
           <div className="mb-8 text-center relative w-full">
             <div className="inline-block mb-6">
               <div className="mb-4 flex justify-center">
-                <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain drop-shadow-sm mix-blend-multiply" />
+                <div className="rounded-3xl dark:bg-white dark:p-3 drop-shadow-sm">
+                  <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain mix-blend-multiply dark:mix-blend-normal" />
+                </div>
               </div>
             </div>
 
