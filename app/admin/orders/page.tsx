@@ -320,7 +320,7 @@ export default async function AdminOrdersPage({
                     return (
                       <tr key={order.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition-colors duration-150 align-top">
                         <td className="px-4 py-5 sm:px-6 align-top">
-                          <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
+                          <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5">
                             <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{order.id.slice(0, 8)}</span>
                           </div>
                           <div className="mt-2 text-xs text-slate-500">{formatDateTime(order.createdAt)}</div>

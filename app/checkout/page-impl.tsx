@@ -554,7 +554,7 @@ export default function CheckoutPageImpl({
             <p className="mt-6 text-sm font-semibold uppercase tracking-[0.28em] text-emerald-600">
               Замовлення прийнято
             </p>
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950">
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950 dark:text-slate-50">
               {isIndivPackage(submitted.packageType) ? "Заявку прийнято" : "Дякуємо за замовлення"}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-400">
@@ -594,7 +594,7 @@ export default function CheckoutPageImpl({
           )}
 
           {submitted.deliveryDateLabel && (
-            <div className="mt-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
+            <div className="mt-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4 text-sm text-emerald-900">
               Перша доставка запланована на <span className="font-semibold">{submitted.deliveryDateLabel}</span>.
             </div>
           )}
@@ -631,7 +631,7 @@ export default function CheckoutPageImpl({
 
         <div className="mt-5 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Checkout</p>
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-slate-50 sm:text-4xl">
             Завершення замовлення
           </h1>
           <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
@@ -647,11 +647,11 @@ export default function CheckoutPageImpl({
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                   Підсумок
                 </p>
-                <h2 className="mt-2 text-2xl font-bold text-slate-950">Ваше замовлення</h2>
+                <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-slate-50">Ваше замовлення</h2>
               </div>
-              <div className="rounded-2xl bg-slate-100 px-4 py-3 text-right">
+              <div className="rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-3 text-right">
                 <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Днів</div>
-                <div className="mt-1 text-2xl font-black text-slate-950">{cartData.totalDays}</div>
+                <div className="mt-1 text-2xl font-black text-slate-950 dark:text-slate-50">{cartData.totalDays}</div>
               </div>
             </div>
 
@@ -779,9 +779,9 @@ export default function CheckoutPageImpl({
             </button>
 
             {(cartItems.length > 0 || (currentDraftValid && grandGrossTotal > 0)) && (
-              <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-100 px-5 py-4">
+              <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-100 dark:bg-slate-800 px-5 py-4">
                 <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Разом за всі раціони</span>
-                <span className="text-xl font-black text-slate-950">
+                <span className="text-xl font-black text-slate-950 dark:text-slate-50">
                   {grandGrossTotal > 0 ? `${grandGrossTotal} ₴` : "—"}
                   {(hasIndivInCart || isIndivCurrent) && (
                     <span className="ml-1 align-middle text-xs font-medium text-slate-500">
@@ -844,7 +844,7 @@ export default function CheckoutPageImpl({
           <section className="rounded-[2rem] border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
             <div className="mb-8">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Контактні дані</p>
-              <h2 className="mt-2 text-2xl font-bold text-slate-950">Куди і кому доставляти</h2>
+              <h2 className="mt-2 text-2xl font-bold text-slate-950 dark:text-slate-50">Куди і кому доставляти</h2>
               <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-400">
                 Telegram-авторизація допоможе швидше підтягнути ваші дані та отримати доступ до абонементів.
               </p>
@@ -870,7 +870,7 @@ export default function CheckoutPageImpl({
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
               
               {fiatPrice === 0 ? (
-                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 px-5 py-4">
+                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                       <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -885,7 +885,7 @@ export default function CheckoutPageImpl({
                     onClick={() => setPaymentMethod("card")}
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
                       paymentMethod === "card"
-                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 ring-2 ring-emerald-500/20"
+                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 ring-2 ring-emerald-500/20"
                         : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >
@@ -904,7 +904,7 @@ export default function CheckoutPageImpl({
                     onClick={() => setPaymentMethod("cash")}
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
                       paymentMethod === "cash"
-                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 ring-2 ring-emerald-500/20"
+                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 ring-2 ring-emerald-500/20"
                         : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >

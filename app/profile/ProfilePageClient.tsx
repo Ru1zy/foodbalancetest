@@ -316,7 +316,7 @@ export default function ProfilePageClient({
         <div className="mb-10 rounded-3xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:text-slate-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
                 <Settings className="w-5 h-5" />
               </div>
               <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Налаштування</h2>

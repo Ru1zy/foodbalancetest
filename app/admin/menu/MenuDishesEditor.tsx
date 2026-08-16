@@ -160,7 +160,7 @@ export default function MenuDishesEditor({ menuId, currentDishes, packageType, d
               </div>
               <button
                 onClick={handleClose}
-                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:text-slate-400"
+                className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-600 dark:text-slate-400"
               >
                 <span className="text-2xl">×</span>
               </button>
