@@ -14,17 +14,11 @@ private keys, database URLs, or other secret values in this file.
 
 ## Current production strategy
 
-- Current production remains on Vercel + Neon until the Railway environment is
-  fully verified and a final database sync is completed.
-- The Railway environment is currently a staging candidate at
-  `https://foodbalancetest-production.up.railway.app`.
-- Google OAuth and Google Sheets stay on the current owner's Google account for
-  the first production launch.
-- Migration to `foodbalancezp@gmail.com` happens gradually only after the new
-  production is stable. Do not touch the corporate account's working Telegram
-  bot or Google setup during the initial launch.
-- `/api/balance/topup` must remain `501 Not Implemented` until a payment is
-  verified server-side. Never credit balance from an untrusted client request.
+- The **Next.js web application is currently in development**. It has never been used by real customers.
+- The **legacy Telegram bot** (in `legacy_bot_logic.js`) is the only current production system.
+- The Railway environment (`https://foodbalancetest-production.up.railway.app`) is the single source of truth for the new web app. Vercel and Neon are no longer relevant for production data, as there is no real web app data to sync.
+- A custom domain has not yet been registered.
+- Google OAuth and Google Sheets stay on the current owner's Google account for the first production launch.
 
 ## Phase 0: Vercel/Neon to Railway
 
@@ -157,9 +151,8 @@ private keys, database URLs, or other secret values in this file.
 - [ ] Copy the offline backup private identity from the documented local path
   into the encrypted FoodBalance secret vault. Do not proceed to cutover with
   the laptop as the only recovery copy.
-- [ ] Perform a final Neon -> Railway database sync during a no-write window.
-  The current Railway database is only an earlier test snapshot.
-- [ ] Reduce DNS TTL before cutover.
+- [x] Perform a final Neon -> Railway database sync. (Cancelled: The site was never live on Vercel/Neon, so there is no customer data to sync. Railway is the primary DB).
+- [ ] Register a custom domain.
 - [ ] Point the production domain to Railway.
 - [ ] Set the final custom-domain `GOOGLE_REDIRECT_URI` in Railway and add the
   exact URI to Google Cloud Console:
@@ -167,11 +160,8 @@ private keys, database URLs, or other secret values in this file.
 - [ ] Reinstall the Telegram webhook on
   `https://<production-domain>/api/telegram-webhook`.
 - [ ] Change GitHub Actions `APP_BASE_URL` to the final production domain.
-- [ ] Remove or disable Vercel cron execution so jobs cannot run twice. Keep
-  only one active scheduler.
-- [ ] Keep the Vercel deployment available as a fallback until Railway is
-  stable, but document that a fallback after live writes also requires a fresh
-  Railway -> Neon database transfer.
+- [x] Remove or disable Vercel cron execution so jobs cannot run twice. (N/A: Only Railway/GitHub Actions will be used).
+- [x] Keep the Vercel deployment available as a fallback. (Cancelled: Not needed).
 - [ ] Rotate every secret exposed in the earlier chat after cutover: Telegram
   bot token, database password, Google service-account key, OAuth client secret,
   and the old Blob token.
