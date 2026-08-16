@@ -319,117 +319,6 @@ export default function ProfilePageClient({
           <p className="text-gray-500 mt-2 font-medium">Керування вашими даними та замовленнями</p>
         </header>
 
-        {/* Balances Section */}
-        {balances.length > 0 && (
-          <div className="mb-10 rounded-3xl border border-emerald-100 bg-emerald-50/50 p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <h2 className="text-2xl font-bold text-emerald-900">Мої абонементи</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {balances.map((balance) => (
-                <div key={balance.packageId} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-emerald-100 transition hover:shadow-md">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">{balance.packageId}</div>
-                  <div className="text-3xl font-black text-slate-900 leading-none">
-                    {balance.remainingDays} <span className="text-lg font-bold text-slate-500">днів</span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-3 font-medium">Доступно для замовлення</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Purchase History Section */}
-        {purchases && purchases.length > 0 && (
-          <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
-            <h2 className="text-2xl font-bold text-blue-900 mb-6">Історія покупок</h2>
-            <div className="overflow-hidden rounded-xl border border-blue-200 bg-white">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дата</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Пакет</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дні</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Сума</th>
-                      <th className="px-4 py-3 text-left font-bold text-slate-700">Статус</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 bg-white">
-                    {purchases.map(p => (
-                      <tr key={p.id} className="hover:bg-slate-50">
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatShortDate(p.createdAt)}</td>
-                        <td className="px-4 py-3 text-slate-900 font-bold whitespace-nowrap">{p.packageId}</td>
-                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{p.days}</td>
-                        <td className="px-4 py-3 font-bold text-emerald-600 whitespace-nowrap">{p.finalPrice} ₴</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {(() => {
-                            switch (p.status) {
-                              case "PAID":
-                                return <span className="inline-flex rounded-md bg-green-100 px-2 py-1 text-xs font-bold text-green-700">Оплачено</span>;
-                              case "PENDING":
-                                return <span className="inline-flex rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Очікує оплати</span>;
-                              case "CREDITED_PENDING_CONFIRMATION":
-                                return <span className="inline-flex rounded-md bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">На перевірці</span>;
-                              case "CANCELLED":
-                                return <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Скасовано</span>;
-                              default:
-                                return <span className="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{p.status}</span>;
-                            }
-                          })()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <PaginationControls 
-                currentPage={currentPurchasesPage} 
-                totalPages={totalPurchasesPages} 
-                onPageChange={handlePurchasesPageChange} 
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Purchase Subscription Section */}
-        <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-              <RefreshCw className="w-5 h-5" />
-            </div>
-            <h2 className="text-2xl font-bold text-blue-900">Придбати абонемент</h2>
-          </div>
-          
-          <div className="mb-8 flex flex-wrap gap-2">
-            {tariffs
-              .filter(t => t.name !== "Template" && !t.name.toLowerCase().includes("indiv"))
-              .map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
-                    activeTab === t.id
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                      : "bg-white text-blue-600 hover:bg-blue-50 border border-blue-100"
-                  }`}
-                >
-                  {t.name}
-                </button>
-              ))}
-          </div>
-
-          {tariffs.find(t => t.id === activeTab) && (
-            <SubscriptionOptions 
-              pkg={tariffs.find(t => t.id === activeTab)!} 
-              isNewClient={isNewClient}
-            />
-          )}
-        </div>
-
         {/* Settings Section */}
         <div className="mb-10 rounded-3xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm">
           <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -540,6 +429,64 @@ export default function ProfilePageClient({
           )}
         </div>
 
+        {/* Purchase Subscription Section */}
+        <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
+          <div className="mb-6 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+              <RefreshCw className="w-5 h-5" />
+            </div>
+            <h2 className="text-2xl font-bold text-blue-900">Придбати абонемент</h2>
+          </div>
+          
+          <div className="mb-8 flex flex-wrap gap-2">
+            {tariffs
+              .filter(t => t.name !== "Template" && !t.name.toLowerCase().includes("indiv"))
+              .map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
+                    activeTab === t.id
+                      ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                      : "bg-white text-blue-600 hover:bg-blue-50 border border-blue-100"
+                  }`}
+                >
+                  {t.name}
+                </button>
+              ))}
+          </div>
+
+          {tariffs.find(t => t.id === activeTab) && (
+            <SubscriptionOptions 
+              pkg={tariffs.find(t => t.id === activeTab)!} 
+              isNewClient={isNewClient}
+            />
+          )}
+        </div>
+
+        {/* Balances Section */}
+        {balances.length > 0 && (
+          <div className="mb-10 rounded-3xl border border-emerald-100 bg-emerald-50/50 p-6 sm:p-8">
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <h2 className="text-2xl font-bold text-emerald-900">Мої абонементи</h2>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {balances.map((balance) => (
+                <div key={balance.packageId} className="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-emerald-100 transition hover:shadow-md">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">{balance.packageId}</div>
+                  <div className="text-3xl font-black text-slate-900 leading-none">
+                    {balance.remainingDays} <span className="text-lg font-bold text-slate-500">днів</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 font-medium">Доступно для замовлення</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Order History Section */}
         <div className="space-y-6 pb-12">
           <div className="flex items-center justify-between">
@@ -580,6 +527,59 @@ export default function ProfilePageClient({
             </div>
           )}
         </div>
+
+        {/* Purchase History Section */}
+        {purchases && purchases.length > 0 && (
+          <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
+            <h2 className="text-2xl font-bold text-blue-900 mb-6">Історія покупок</h2>
+            <div className="overflow-hidden rounded-xl border border-blue-200 bg-white">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дата</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Пакет</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Дні</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Сума</th>
+                      <th className="px-4 py-3 text-left font-bold text-slate-700">Статус</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {purchases.map(p => (
+                      <tr key={p.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{formatShortDate(p.createdAt)}</td>
+                        <td className="px-4 py-3 text-slate-900 font-bold whitespace-nowrap">{p.packageId}</td>
+                        <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{p.days}</td>
+                        <td className="px-4 py-3 font-bold text-emerald-600 whitespace-nowrap">{p.finalPrice} ₴</td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {(() => {
+                            switch (p.status) {
+                              case "PAID":
+                                return <span className="inline-flex rounded-md bg-green-100 px-2 py-1 text-xs font-bold text-green-700">Оплачено</span>;
+                              case "PENDING":
+                                return <span className="inline-flex rounded-md bg-amber-100 px-2 py-1 text-xs font-bold text-amber-700">Очікує оплати</span>;
+                              case "CREDITED_PENDING_CONFIRMATION":
+                                return <span className="inline-flex rounded-md bg-blue-100 px-2 py-1 text-xs font-bold text-blue-700">На перевірці</span>;
+                              case "CANCELLED":
+                                return <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Скасовано</span>;
+                              default:
+                                return <span className="inline-flex rounded-md bg-gray-100 px-2 py-1 text-xs font-bold text-gray-700">{p.status}</span>;
+                            }
+                          })()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <PaginationControls 
+                currentPage={currentPurchasesPage} 
+                totalPages={totalPurchasesPages} 
+                onPageChange={handlePurchasesPageChange} 
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
