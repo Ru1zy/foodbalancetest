@@ -41,9 +41,10 @@ export function BaseEmailLayout({
           <!-- Footer -->
           <tr>
             <td align="center" style="background-color: #f9fafb; padding: 25px 20px; border-top: 1px solid #e5e7eb;">
-              <p style="margin: 0; color: #6b7280; font-size: 14px;">Виникли питання? Напишіть нам у Telegram!</p>
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">Виникли питання? Напишіть нам!</p>
               <p style="margin: 10px 0 0 0; font-size: 14px;">
-                <a href="https://t.me/foodbalancezp" style="color: #047857; text-decoration: none; font-weight: 600;">@foodbalancezp</a>
+                <a href="https://instagram.com/food.balance.zp" style="color: #047857; text-decoration: none; font-weight: 600; margin-right: 15px;">Instagram</a>
+                <a href="https://t.me/foodbalancezp" style="color: #047857; text-decoration: none; font-weight: 600;">Telegram</a>
               </p>
             </td>
           </tr>
