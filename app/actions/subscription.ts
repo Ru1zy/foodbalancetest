@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 
-import { createMonobankInvoice } from "@/lib/monobank";
+import { createMonobankInvoice, calculateAmountWithFee } from "@/lib/monobank";
 
 export async function createSubscriptionPurchaseAction(
   packageId: string,
@@ -85,8 +85,9 @@ export async function createSubscriptionPurchaseAction(
 
       if (isPlata) {
         // Monobank integration
+        const grossAmount = calculateAmountWithFee(totalDiscounted);
         const invoice = await createMonobankInvoice({
-          amount: totalDiscounted * 100, // convert UAH to kopecks
+          amount: grossAmount * 100, // convert UAH to kopecks
           reference: p.id,
           destination: `Оплата підписки на ${days} днів (${packageId})`,
           redirectPath: "/profile",

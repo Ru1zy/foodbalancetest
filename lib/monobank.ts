@@ -1,6 +1,19 @@
 const MONOBANK_API_TOKEN = process.env.MONOBANK_API_TOKEN || "";
 const APP_BASE_URL = process.env.APP_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
+// The percentage the payment gateway takes (e.g. 1.3% = 0.013).
+// We pass this fee to the customer so the merchant receives the exact net amount.
+export const PLATA_FEE_PERCENT = 0.013;
+
+/**
+ * Calculates the gross amount to charge the user so that after the gateway fee,
+ * the merchant is left with exactly `netAmount`.
+ * Formula: Gross = Net / (1 - Fee)
+ */
+export function calculateAmountWithFee(netAmount: number): number {
+  return Math.ceil(netAmount / (1 - PLATA_FEE_PERCENT));
+}
+
 interface MonobankInvoiceOptions {
   amount: number; // in pennies/kopecks (e.g. 10 UAH = 1000)
   reference: string;

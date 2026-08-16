@@ -105,7 +105,7 @@ export default function CheckoutPageImpl({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<"card" | "cash">("card");
+  const [paymentMethod, setPaymentMethod] = useState<"plata" | "cash">("plata");
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
   // Stable idempotency key for this checkout session — prevents duplicate orders
@@ -882,21 +882,21 @@ export default function CheckoutPageImpl({
                 <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <button
                     type="button"
-                    onClick={() => setPaymentMethod("card")}
+                    onClick={() => setPaymentMethod("plata")}
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
-                      paymentMethod === "card"
+                      paymentMethod === "plata"
                         ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 ring-2 ring-emerald-500/20"
                         : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >
                     <div className="text-left">
-                      <div className="font-bold text-slate-900 dark:text-slate-100">Карткою онлайн</div>
+                      <div className="font-bold text-slate-900 dark:text-slate-100">Monobank (Картка)</div>
                       <div className="text-xs text-slate-500">Apple Pay, Google Pay, Visa/MC</div>
                     </div>
                     <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                      paymentMethod === "card" ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
+                      paymentMethod === "plata" ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
                     }`}>
-                      {paymentMethod === "card" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
+                      {paymentMethod === "plata" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
                     </div>
                   </button>
                   <button
@@ -919,6 +919,12 @@ export default function CheckoutPageImpl({
                     </div>
                   </button>
                 </div>
+              )}
+
+              {paymentMethod === "plata" && fiatPrice > 0 && (
+                <p className="mt-3 px-1 text-sm text-orange-600 dark:text-orange-500 italic">
+                  * Платіжні системи можуть стягувати додаткову комісію (1.3%).
+                </p>
               )}
 
               {balanceDaysToUse > 0 && fiatPrice > 0 && (

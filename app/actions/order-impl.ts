@@ -19,6 +19,7 @@ import { checkoutSchema } from "@/lib/validations";
 import { isGooglePlaceholderPhone } from "@/lib/google-auth";
 import { normalizePhone } from "@/lib/phone-utils";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
+import { createMonobankInvoice, calculateAmountWithFee } from "@/lib/monobank";
 
 export type StandardSelections = Record<string, number>;
 
@@ -64,6 +65,7 @@ export type SubmitOrdersResult =
       orderIds: string[];
       orderCount: number;
       userId: string;
+      pageUrl?: string;
     }
   | {
       message: string;
@@ -990,11 +992,29 @@ export async function submitOrders(
     });
 
 
+    let pageUrl: string | undefined;
+
+    const firstPrepared = prepared[0];
+    if (firstPrepared && firstPrepared.paymentMethod === "plata" && idempotencyKey) {
+      const totalAmount = results.reduce((sum: number, r: any) => sum + (r.order.price ?? 0), 0);
+      if (totalAmount > 0) {
+        const grossAmount = calculateAmountWithFee(totalAmount);
+        const invoice = await createMonobankInvoice({
+          amount: grossAmount * 100, // convert UAH to kopecks
+          reference: idempotencyKey, // Using the checkout key to identify the batch
+          destination: `Оплата замовлень (${results.length} шт.)`,
+          redirectPath: "/profile",
+        });
+        pageUrl = invoice.pageUrl;
+      }
+    }
+
     return {
       ok: true,
       orderIds: results.map((r: { order: Order; user: User; prepared: PreparedOrder }) => r.order.id),
       orderCount: results.length,
       userId: results[results.length - 1]?.user.id ?? "",
+      pageUrl,
     };
   } catch (error) {
     // Duplicate submission for an already-used idempotency key. The original

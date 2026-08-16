@@ -82,9 +82,29 @@ export async function POST(request: Request) {
         return;
       }
 
-      // TODO: Handle one-off order payments if implemented
-      // const order = await tx.order.findUnique({ where: { id: reference } });
-      // if (order) { ... }
+      // Check if reference is a CheckoutIdempotency key (for multi-order checkout)
+      const idempotency = await tx.checkoutIdempotency.findUnique({
+        where: { key: reference },
+      });
+
+      if (idempotency && idempotency.orderIds.length > 0) {
+        if (status === "success") {
+          await tx.order.updateMany({
+            where: { id: { in: idempotency.orderIds } },
+            data: { isPaid: true },
+          });
+
+          // Enqueue telegram notification for admin
+          await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION", {
+            orderIds: idempotency.orderIds,
+          });
+
+          console.log(`Monobank webhook: Checkout ${reference} marked as paid.`);
+        } else {
+          console.log(`Monobank webhook: Checkout ${reference} payment ${status}.`);
+        }
+        return;
+      }
     });
 
     // Fire outbox processing in background

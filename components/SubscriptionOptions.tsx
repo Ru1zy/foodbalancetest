@@ -199,6 +199,11 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
               />
               <span className="text-gray-900 dark:text-slate-100 font-medium">Monobank (Картка, Apple Pay, Google Pay)</span>
             </label>
+            {paymentMethod === "plata" && (
+              <p className="ml-6 text-sm text-orange-600 dark:text-orange-500 italic">
+                * Платіжні системи можуть стягувати додаткову комісію (1.3%).
+              </p>
+            )}
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
                 type="radio" 
