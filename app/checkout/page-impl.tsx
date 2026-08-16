@@ -619,7 +619,7 @@ export default function CheckoutPageImpl({
   }
 
   return (
-    <main className="flex-1 flex flex-col min-h-[100dvh] bg-slate-50 dark:bg-slate-950/50 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
+    <main className="flex-1 flex flex-col min-h-[100dvh] bg-transparent dark:bg-slate-950/50 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
       <section className="flex-grow mx-auto w-full max-w-6xl pb-20">
         <Link
           href="/"

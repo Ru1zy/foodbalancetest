@@ -303,7 +303,7 @@ export default function ProfilePageClient({
   };
 
   return (
-    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950/50 p-4 sm:p-8">
+    <div className="min-h-[100dvh] bg-transparent dark:bg-slate-950/50 p-4 sm:p-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-10">
           <h1 className="text-4xl font-black text-gray-900 dark:text-slate-100 tracking-tight">
