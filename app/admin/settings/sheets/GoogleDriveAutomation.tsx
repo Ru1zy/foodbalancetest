@@ -68,10 +68,10 @@ export default function GoogleDriveAutomation({
         <div
           className={`mt-4 rounded-xl border px-4 py-3 text-sm ${
             notice.tone === "success"
-              ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+              ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 text-emerald-800"
               : notice.tone === "warning"
-                ? "border-amber-200 bg-amber-50 text-amber-900"
-                : "border-red-200 bg-red-50 text-red-800"
+                ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/40 text-amber-900 dark:text-amber-400"
+                : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/40 text-red-800 dark:text-red-400"
           }`}
         >
           {notice.text}
@@ -79,13 +79,13 @@ export default function GoogleDriveAutomation({
       )}
 
       {!status.databaseReady && (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <p className="mt-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Спочатку застосуйте оновлення Prisma-схеми до Railway PostgreSQL.
         </p>
       )}
 
       {status.missingEnvironmentVariables.length > 0 && (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="mt-4 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <p className="font-semibold">У Railway відсутні або некоректні змінні:</p>
           <code className="mt-1 block break-words text-xs">
             {status.missingEnvironmentVariables.join(", ")}
@@ -94,7 +94,7 @@ export default function GoogleDriveAutomation({
       )}
 
       {status.statusError && (
-        <p className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <p className="mt-4 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 px-4 py-3 text-sm text-red-800">
           Не вдалося прочитати стан підключення. Перевірте Railway logs.
         </p>
       )}
@@ -134,7 +134,7 @@ export default function GoogleDriveAutomation({
         {canConnect ? (
           <a
             href="/api/admin/google-drive/connect"
-            className="rounded-lg bg-gray-900 dark:bg-slate-50 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
+            className="rounded-lg bg-gray-900 dark:bg-slate-800 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700"
           >
             {status.connected ? "Перепідключити Google Drive" : "Підключити Google Drive"}
           </a>

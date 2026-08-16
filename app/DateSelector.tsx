@@ -97,7 +97,7 @@ export default function DateSelector({ menuItems }: Props) {
               onClick={() => toggleDay(dow)}
               className={`w-full sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] rounded-2xl border-2 px-6 py-5 text-base font-bold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
                 on
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                  ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-400"
                   : "border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:border-gray-200 dark:border-slate-700"
               }`}
             >
@@ -120,7 +120,7 @@ export default function DateSelector({ menuItems }: Props) {
           onClick={() => setStep(3)}
           className={`w-full sm:w-auto min-w-[200px] rounded-xl px-8 py-4 text-lg font-bold transition-all duration-200 ease-out active:scale-95 ${
             selectedDates.length > 0
-              ? "bg-gray-900 dark:bg-slate-50 text-white hover:bg-emerald-600 hover:shadow-lg"
+              ? "bg-gray-900 dark:bg-slate-800 text-white hover:bg-emerald-600 hover:shadow-lg"
               : "cursor-not-allowed bg-gray-200 dark:bg-slate-700 text-gray-400"
           }`}
         >

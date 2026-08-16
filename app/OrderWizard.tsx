@@ -36,7 +36,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
 
   if (getSelectableMenuDayNumbers().length === 0) {
     return (
-      <div className="rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm font-semibold text-yellow-800">
+      <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 p-4 text-sm font-semibold text-yellow-800">
         ⚠️ Наразі замовлення закриті. Меню на наступний тиждень публікується в суботу о 12:00 (приблизно). У
         п&apos;ятницю замовлення не приймаються.
       </div>

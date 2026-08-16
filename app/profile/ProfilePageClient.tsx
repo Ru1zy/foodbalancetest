@@ -169,7 +169,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
               <Package className="w-6 h-6" />
             </div>
             <div>
@@ -331,7 +331,7 @@ export default function ProfilePageClient({
           </div>
 
           {error && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 p-4 text-sm text-red-700">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
@@ -423,7 +423,7 @@ export default function ProfilePageClient({
         </div>
 
         {/* Purchase Subscription Section */}
-        <div className="mb-10 rounded-3xl border border-blue-100 bg-blue-50/50 p-6 sm:p-8">
+        <div className="mb-10 rounded-3xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 p-6 sm:p-8">
           <div className="mb-6 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
               <RefreshCw className="w-5 h-5" />
@@ -441,7 +441,7 @@ export default function ProfilePageClient({
                   className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
                     activeTab === t.id
                       ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                      : "bg-white dark:bg-slate-900 text-blue-600 hover:bg-blue-50 border border-blue-100"
+                      : "bg-white dark:bg-slate-900 text-blue-600 hover:bg-blue-50 border border-blue-100 dark:border-blue-800/50"
                   }`}
                 >
                   {t.name}
@@ -459,7 +459,7 @@ export default function ProfilePageClient({
 
         {/* Balances Section */}
         {balances.length > 0 && (
-          <div className="mb-10 rounded-3xl border border-emerald-100 bg-emerald-50/50 p-6 sm:p-8">
+          <div className="mb-10 rounded-3xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 p-6 sm:p-8">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <CreditCard className="w-5 h-5" />
@@ -549,7 +549,7 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
               <CreditCard className="w-6 h-6" />
             </div>
             <div>

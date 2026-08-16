@@ -124,7 +124,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
             Відкрити Telegram бота
           </a>
 
-          <div className="text-center text-sm text-blue-800 animate-pulse font-medium bg-blue-50 py-3 rounded-xl border border-blue-100">
+          <div className="text-center text-sm text-blue-800 animate-pulse font-medium bg-blue-50 py-3 rounded-xl border border-blue-100 dark:border-blue-800/50">
             ⏳ Очікуємо підтвердження...
             <p className="mt-1 text-[10px] opacity-70">Натисніть кнопку в боті після переходу</p>
           </div>

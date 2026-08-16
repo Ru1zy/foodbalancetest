@@ -117,7 +117,7 @@ function MealSection({
               <div
                 key={dishId}
                 className={`rounded-lg border p-3 text-left text-sm transition ${
-                  quantity > 0 ? "border-emerald-500 bg-emerald-50" : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  quantity > 0 ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50" : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                 } ${disabled ? "opacity-50" : ""}`}
               >
                 <div className="break-words font-medium text-gray-800 dark:text-slate-200">{opt.full}</div>
@@ -287,7 +287,7 @@ export default function MenuGridClient({ menuItems }: Props) {
   if (allClosed) {
     return (
       <div className="mx-auto max-w-7xl p-4 sm:p-6">
-        <div className="rounded-xl border border-yellow-300 bg-yellow-50 p-4 text-sm font-semibold text-yellow-800">
+        <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 p-4 text-sm font-semibold text-yellow-800">
           ⚠️ Наразі замовлення закриті. Меню на наступний тиждень публікується в суботу о 12:00 (приблизно). У
           п&apos;ятницю замовлення не приймаються.
         </div>
@@ -297,7 +297,7 @@ export default function MenuGridClient({ menuItems }: Props) {
 
   if (step === 3 && !pkg) {
     return (
-      <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50 p-8 text-center text-sm text-amber-900">
+      <div className="rounded-2xl border border-dashed border-amber-200 dark:border-amber-800 bg-amber-50 p-8 text-center text-sm text-amber-900">
         Тариф не обрано. Поверніться на перший крок майстра замовлення.
         <div className="mt-4">
           <button
@@ -414,7 +414,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                     <button
                       type="button"
                       onClick={() => toggleCustomMode(currentDayItem.id, !currentDayCustom)}
-                      className="mb-6 w-full rounded-2xl border-2 border-dashed border-emerald-200 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
+                      className="mb-6 w-full rounded-2xl border-2 border-dashed border-emerald-200 dark:border-emerald-800 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
                     >
                       {currentDayCustom ? "Повернутися до стандарту" : "Індивідуальна збірка"}
                     </button>

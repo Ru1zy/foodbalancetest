@@ -105,7 +105,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
       <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-slate-100">Оберіть кількість днів ({pkg.name})</h3>
       
       {/* Discount rules display */}
-      <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+      <div className="mb-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 p-4 text-sm text-blue-800">
         <p className="font-semibold mb-2">Правила знижок:</p>
         <ul className="list-disc list-inside space-y-1">
           <li><strong>2 дні:</strong> знижка 10-15% (пробний тариф)</li>
@@ -122,12 +122,12 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
       )}
 
       {error && (
-        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="mb-6 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="max-w-md mx-auto relative flex flex-col rounded-3xl border-2 border-emerald-500 bg-white dark:bg-slate-900 p-6 shadow-sm">
+      <div className="max-w-md mx-auto relative flex flex-col rounded-3xl border-2 border-emerald-500 dark:border-emerald-400 bg-white dark:bg-slate-900 p-6 shadow-sm">
         {discountPercent > 0 && (
           <div className="absolute -right-3 -top-3 rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white shadow-md">
             -{discountPercent}%
@@ -245,7 +245,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                   value={receiptEmail}
                   onChange={(e) => setReceiptEmail(e.target.value)}
                   placeholder="Введіть ваш Email..."
-                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:bg-white dark:bg-slate-900 focus:ring-4 focus:ring-emerald-100"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:bg-white dark:bg-slate-900 focus:ring-4 focus:ring-emerald-100"
                 />
               </div>
             )}

@@ -133,14 +133,14 @@ export default function OnboardingPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 dark:border-red-800 rounded-xl text-sm text-red-800">
             ⚠️ {error}
           </div>
         )}
 
         {/* OTP Message */}
         {otpMessage && step === "otp" && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 dark:border-blue-800 rounded-xl text-sm text-blue-800">
             ✉️ {otpMessage}
           </div>
         )}
@@ -158,7 +158,7 @@ export default function OnboardingPage() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 placeholder="+380501234567"
-                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-black caret-black placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-900 text-black caret-black placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:border-emerald-400 outline-none transition-all"
                 required
                 disabled={loading}
               />
@@ -191,7 +191,7 @@ export default function OnboardingPage() {
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))}
                 placeholder="1234"
                 maxLength={4}
-                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:border-emerald-400 outline-none transition-all"
                 required
                 disabled={loading}
                 autoFocus

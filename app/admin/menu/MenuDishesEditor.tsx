@@ -245,7 +245,7 @@ export default function MenuDishesEditor({ menuId, currentDishes, packageType, d
                 className={`mb-4 rounded-lg px-4 py-3 text-sm font-medium ${
                   message.type === "success"
                     ? "bg-green-50 text-green-800 border border-green-200"
-                    : "bg-red-50 text-red-800 border border-red-200"
+                    : "bg-red-50 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800"
                 }`}
               >
                 {message.text}

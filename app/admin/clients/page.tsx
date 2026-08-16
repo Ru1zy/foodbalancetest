@@ -18,7 +18,7 @@ export default async function AdminClientsPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-xl bg-gray-900 dark:bg-slate-50 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="mt-6 inline-flex rounded-xl bg-gray-900 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             Повернутися на головну
           </Link>

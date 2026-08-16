@@ -56,7 +56,7 @@ export default function ClientsPageClient({ clients }: Props) {
               className="w-full rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-gray-900 dark:text-slate-100 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
             />
           </div>
-          <div className="rounded-xl bg-gray-900 dark:bg-slate-50 px-5 py-3 text-sm font-bold text-white shadow-sm">
+          <div className="rounded-xl bg-gray-900 dark:bg-slate-800 px-5 py-3 text-sm font-bold text-white shadow-sm">
             {filteredClients.length} клієнтів
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function ClientsPageClient({ clients }: Props) {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-blue-50/50 transition-colors duration-150">
+                  <tr key={client.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition-colors duration-150">
                     <td className="px-4 py-5 sm:px-6">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
@@ -157,7 +157,7 @@ export default function ClientsPageClient({ clients }: Props) {
                     <td className="px-4 py-5 sm:px-6">
                       <div className="max-w-xs">
                         {client.notes ? (
-                          <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900">
+                          <div className="rounded-lg bg-amber-50 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-900">
                             {client.notes}
                           </div>
                         ) : (

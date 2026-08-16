@@ -203,7 +203,7 @@ export default async function AdminOrdersPage({
           <p className="mt-3 text-sm text-gray-600 dark:text-slate-400">Увійдіть як адміністратор, щоб переглянути замовлення.</p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-xl bg-gray-900 dark:bg-slate-50 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
+            className="mt-6 inline-flex rounded-xl bg-gray-900 dark:bg-slate-800 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600"
           >
             Повернутися на головну
           </Link>
@@ -276,7 +276,7 @@ export default async function AdminOrdersPage({
               Панель адміністратора для перегляду нових замовлень і оновлення статусів.
             </p>
           </div>
-          <div className="rounded-xl bg-gray-900 dark:bg-slate-50 px-5 py-3 text-sm text-white shadow-sm">
+          <div className="rounded-xl bg-gray-900 dark:bg-slate-800 px-5 py-3 text-sm text-white shadow-sm">
             <div className="flex items-center gap-2">
               <span className="text-gray-300">👤</span>
               <span className="font-semibold">{adminUser.name}</span>
@@ -318,7 +318,7 @@ export default async function AdminOrdersPage({
                     const daysCount = getOrderDaysCount(order.items);
 
                     return (
-                      <tr key={order.id} className="hover:bg-blue-50/50 transition-colors duration-150 align-top">
+                      <tr key={order.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition-colors duration-150 align-top">
                         <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 px-3 py-1.5">
                             <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{order.id.slice(0, 8)}</span>
@@ -338,7 +338,7 @@ export default async function AdminOrdersPage({
                         </td>
                         <td className="px-4 py-5 sm:px-6 align-top">
                           {order.sheetConfigMissing ? (
-                            <div className="max-w-56 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
+                            <div className="max-w-56 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
                               ТАБЛИЦЯ НЕ ЗНАЙДЕНА — ВНЕСТИ ВРУЧНУ
                             </div>
                           ) : null}
@@ -408,7 +408,7 @@ export default async function AdminOrdersPage({
                         <td className="px-4 py-5 sm:px-6 align-top">
                           <div className="max-w-xs">
                             {order.notes ? (
-                              <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-900">
+                              <div className="rounded-lg bg-amber-50 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-900">
                                 <div className="flex items-start gap-2">
                                   <span className="text-amber-500 mt-0.5">💬</span>
                                   <span>{order.notes}</span>

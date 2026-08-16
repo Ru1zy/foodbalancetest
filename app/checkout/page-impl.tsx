@@ -594,7 +594,7 @@ export default function CheckoutPageImpl({
           )}
 
           {submitted.deliveryDateLabel && (
-            <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
+            <div className="mt-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50 px-5 py-4 text-sm text-emerald-900">
               Перша доставка запланована на <span className="font-semibold">{submitted.deliveryDateLabel}</span>.
             </div>
           )}
@@ -602,7 +602,7 @@ export default function CheckoutPageImpl({
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center rounded-xl bg-gray-900 dark:bg-slate-50 px-6 py-4 text-base font-bold text-white transition-all duration-200 ease-out hover:bg-emerald-600 active:scale-95 shadow-sm hover:shadow-md"
+              className="inline-flex items-center justify-center rounded-xl bg-gray-900 dark:bg-slate-800 px-6 py-4 text-base font-bold text-white transition-all duration-200 ease-out hover:bg-emerald-600 active:scale-95 shadow-sm hover:shadow-md"
             >
               Повернутися до меню
             </Link>
@@ -675,7 +675,7 @@ export default function CheckoutPageImpl({
                 </span>
               </div>
               {availableDays > 0 && balanceDaysToUse > 0 && (
-                <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500/30">
+                <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500 dark:border-emerald-400/30">
                   {fiatPrice === 0 
                     ? `Ви використовуєте свій абонемент. З балансу буде списано ${balanceDaysToUse} дні(в).`
                     : `Часткова оплата: з балансу буде списано ${balanceDaysToUse} дні(в). Залишок до сплати: ${fiatPrice} ₴.`}
@@ -835,7 +835,7 @@ export default function CheckoutPageImpl({
             </div>
 
             {incompleteDaysCount > 0 && (
-              <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <div className="mt-5 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 Неповністю зібрані дні не потраплять у замовлення. Зараз таких днів: {incompleteDaysCount}.
               </div>
             )}
@@ -851,7 +851,7 @@ export default function CheckoutPageImpl({
             </div>
 
             {!customerProfile.isAuthenticated && (
-              <div className="mb-8 rounded-[2rem] border-2 border-red-200 bg-red-50 p-6 shadow-sm">
+              <div className="mb-8 rounded-[2rem] border-2 border-red-200 dark:border-red-800 bg-red-50 p-6 shadow-sm">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-red-900">Увага! Ви не авторизовані</h3>
@@ -870,7 +870,7 @@ export default function CheckoutPageImpl({
               <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
               
               {fiatPrice === 0 ? (
-                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+                <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 px-5 py-4">
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                       <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
@@ -885,7 +885,7 @@ export default function CheckoutPageImpl({
                     onClick={() => setPaymentMethod("card")}
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
                       paymentMethod === "card"
-                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
+                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 ring-2 ring-emerald-500/20"
                         : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >
@@ -894,7 +894,7 @@ export default function CheckoutPageImpl({
                       <div className="text-xs text-slate-500">Apple Pay, Google Pay, Visa/MC</div>
                     </div>
                     <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                      paymentMethod === "card" ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
+                      paymentMethod === "card" ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
                     }`}>
                       {paymentMethod === "card" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
                     </div>
@@ -904,7 +904,7 @@ export default function CheckoutPageImpl({
                     onClick={() => setPaymentMethod("cash")}
                     className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
                       paymentMethod === "cash"
-                        ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-500/20"
+                        ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 ring-2 ring-emerald-500/20"
                         : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
                     }`}
                   >
@@ -913,7 +913,7 @@ export default function CheckoutPageImpl({
                       <div className="text-xs text-slate-500">При отриманні кур&apos;єру</div>
                     </div>
                     <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                      paymentMethod === "cash" ? "border-emerald-500 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
+                      paymentMethod === "cash" ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
                     }`}>
                       {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
                     </div>
@@ -933,7 +933,7 @@ export default function CheckoutPageImpl({
                 className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-medium ${
                   feedback.tone === "success"
                     ? "border-green-200 bg-green-50 text-green-800"
-                    : "border-red-200 bg-red-50 text-red-700"
+                    : "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-400"
                 }`}
               >
                 {feedback.message}
@@ -951,7 +951,7 @@ export default function CheckoutPageImpl({
                     className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
                       errors.name
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-100"
+                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
                     }`}
                     placeholder="Як до вас звертатися"
                     type="text"
@@ -970,7 +970,7 @@ export default function CheckoutPageImpl({
                     className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
                       errors.phone
                         ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-100"
+                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
                     }`}
                     inputMode="tel"
                     placeholder="0501234567"
@@ -991,7 +991,7 @@ export default function CheckoutPageImpl({
                   className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
                     errors.address
                       ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                      : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 focus:ring-emerald-100"
+                      : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
                   }`}
                   placeholder="Вулиця, будинок, квартира, під’їзд, орієнтир"
                   rows={3}
@@ -1008,7 +1008,7 @@ export default function CheckoutPageImpl({
                   </span>
                   <select
                     {...register("cutlery", { valueAsNumber: true })}
-                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                    className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
                   >
                     {CUTLERY_OPTIONS.map((value) => (
                       <option key={value} value={value}>
@@ -1023,7 +1023,7 @@ export default function CheckoutPageImpl({
                 <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Коментар до замовлення</span>
                 <textarea
                   {...register("comment")}
-                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                  className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
                   placeholder="Побажання, деталі для курʼєра або зручний орієнтир"
                   rows={4}
                 />
@@ -1053,7 +1053,7 @@ export default function CheckoutPageImpl({
                       type="email"
                       {...register("receiptEmail")}
                       placeholder="Введіть ваш Email..."
-                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 focus:bg-white dark:bg-slate-900 focus:ring-4 focus:ring-emerald-100"
+                      className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:bg-white dark:bg-slate-900 focus:ring-4 focus:ring-emerald-100"
                       aria-invalid={errors.receiptEmail ? "true" : "false"}
                     />
                     {errors.receiptEmail && (

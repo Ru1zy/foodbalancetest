@@ -91,14 +91,14 @@ export default function KitchenExport() {
           className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium shadow-sm ${
             message.type === "success"
               ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
+              : "bg-red-50 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800"
           }`}
         >
           {message.text}
         </div>
       )}
 
-      <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
+      <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 dark:border-blue-800 px-4 py-3 text-xs text-blue-800">
         <p className="font-semibold mb-2">ℹ️ Як працює експорт в Google Sheets:</p>
         <ul className="list-disc list-inside space-y-1">
           <li>Шукає вкладку з назвою дати (наприклад, &quot;23.02&quot;)</li>

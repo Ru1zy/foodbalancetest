@@ -65,7 +65,7 @@ export default function MegaphoneClient() {
       {result && (
         <div className={`mb-4 rounded-xl border p-4 ${
           result.message
-            ? "border-red-200 bg-red-50"
+            ? "border-red-200 dark:border-red-800 bg-red-50"
             : "border-green-200 bg-green-50"
         }`}>
           <p className={`text-sm font-semibold ${

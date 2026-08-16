@@ -40,7 +40,7 @@ export default function OrderStoreWrapper() {
   if (loading) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-500 dark:border-emerald-400 border-t-transparent"></div>
       </div>
     );
   }

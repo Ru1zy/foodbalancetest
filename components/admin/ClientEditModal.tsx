@@ -217,7 +217,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
             />
           </div>
 
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+          <div className="rounded-xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50 p-4">
             <h3 className="mb-3 text-sm font-bold text-emerald-900 uppercase tracking-wider">Керування балансом</h3>
             
             {localBalances.length > 0 && (
@@ -249,7 +249,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
               <select
                 value={balancePackage}
                 onChange={(e) => setBalancePackage(e.target.value)}
-                className="flex-1 rounded-lg border border-emerald-200 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none"
+                className="flex-1 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none"
               >
                 {["Slim", "Balance", "Active", "Sport", "Sushka S", "Sushka XS", "Indiv"].map((p) => (
                   <option key={p} value={p}>{p}</option>
@@ -259,7 +259,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
                 type="number"
                 value={balanceDays}
                 onChange={(e) => setBalanceDays(Number(e.target.value))}
-                className="w-20 rounded-lg border border-emerald-200 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none"
+                className="w-20 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 outline-none"
                 placeholder="Дні"
                 min="-100"
                 max="100"
@@ -278,7 +278,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
             <div className={`rounded-lg px-4 py-3 text-sm font-medium ${
               feedback.startsWith("✓")
                 ? "bg-green-50 text-green-700 border border-green-200"
-                : "bg-red-50 text-red-700 border border-red-200"
+                : "bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
             }`}>
               {feedback}
             </div>
@@ -288,7 +288,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
             <button
               onClick={handleDeleteClient}
               disabled={isPending}
-              className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+              className="rounded-xl border border-red-200 dark:border-red-800 bg-red-50 px-4 py-3 text-sm font-bold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
               title="Повне видалення клієнта та всієї його історії"
             >
               Видалити

@@ -137,7 +137,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     href={purchase.receiptUrl} 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
                   >
                     Переглянути квитанцію ↗
                   </a>
@@ -152,7 +152,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     <button
                       onClick={() => handleReject(purchase.id)}
                       disabled={processingId === purchase.id}
-                      className="flex-1 rounded-lg border border-red-200 bg-white dark:bg-slate-900 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                      className="flex-1 rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-slate-900 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                     >
                       Відхилити
                     </button>

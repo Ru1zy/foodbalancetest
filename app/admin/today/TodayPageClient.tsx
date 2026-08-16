@@ -179,7 +179,7 @@ const handleExportToKitchen = () => {
               className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium shadow-sm ${
                 notifyMessage.type === "success"
                   ? "bg-green-50 text-green-800 border border-green-200"
-                  : "bg-red-50 text-red-800 border border-red-200"
+                  : "bg-red-50 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800"
               }`}
             >
               {notifyMessage.text}
@@ -232,7 +232,7 @@ const handleExportToKitchen = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-200">
                   {orders.map((order) => (
-                    <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 transition">
+                    <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition">
                       <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
                         {order.user.name}
                       </td>
@@ -297,7 +297,7 @@ const handleExportToKitchen = () => {
           </div>
         )}
 
-        <div className="mt-6 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-xs text-blue-800">
+        <div className="mt-6 rounded-xl bg-blue-50 border border-blue-200 dark:border-blue-800 px-4 py-3 text-xs text-blue-800">
           <p className="font-semibold mb-2">ℹ️ Як працює сторінка:</p>
           <ul className="list-disc list-inside space-y-1">
             <li>Показує всі активні замовлення на обрану дату незалежно від способу оплати</li>
