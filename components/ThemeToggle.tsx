@@ -13,17 +13,46 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="w-9 h-9" />; // Placeholder to avoid layout shift
+    return <div className="h-8 w-14 shrink-0" />; // Placeholder to avoid layout shift
   }
+
+  const isDark = theme === "dark";
 
   return (
     <button
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 transition-colors hover:bg-gray-200 dark:hover:bg-slate-700"
-      aria-label="Toggle theme"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 shadow-inner ${
+        isDark ? "bg-slate-700 hover:bg-slate-600" : "bg-blue-100 hover:bg-blue-200"
+      }`}
+      role="switch"
+      aria-checked={isDark}
+      aria-label="Toggle dark mode"
     >
-      <Sun className="h-5 w-5 rotate-0 scale-100 transition-transform duration-300 dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-transform duration-300 dark:rotate-0 dark:scale-100" />
+      <span className="sr-only">Toggle dark mode</span>
+      <span
+        className={`pointer-events-none relative inline-block h-6 w-6 transform rounded-full bg-white shadow-sm ring-0 transition duration-300 ease-in-out ${
+          isDark ? "translate-x-6" : "translate-x-0"
+        }`}
+      >
+        {/* Sun Icon */}
+        <span
+          className={`absolute inset-0 flex h-full w-full items-center justify-center transition-opacity duration-300 ease-in-out ${
+            isDark ? "opacity-0 duration-100" : "opacity-100 duration-200"
+          }`}
+          aria-hidden="true"
+        >
+          <Sun className="h-3.5 w-3.5 text-amber-500" />
+        </span>
+        {/* Moon Icon */}
+        <span
+          className={`absolute inset-0 flex h-full w-full items-center justify-center transition-opacity duration-300 ease-in-out ${
+            isDark ? "opacity-100 duration-200" : "opacity-0 duration-100"
+          }`}
+          aria-hidden="true"
+        >
+          <Moon className="h-3.5 w-3.5 text-slate-800" />
+        </span>
+      </span>
     </button>
   );
 }
