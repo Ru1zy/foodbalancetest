@@ -72,7 +72,7 @@ export async function createSubscriptionPurchaseAction(
           basePrice: basePrice * days,
           discount: discountAmount,
           finalPrice: totalDiscounted,
-          status: isCash ? "PAID" : "CREDITED_PENDING_CONFIRMATION",
+          status: "CREDITED_PENDING_CONFIRMATION",
           paymentMethod,
           receiptUrl: receiptUrl || null,
           sendEmailReceipt,
