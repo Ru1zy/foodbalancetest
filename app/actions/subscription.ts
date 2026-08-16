@@ -7,11 +7,13 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 
+import { createMonobankInvoice } from "@/lib/monobank";
+
 export async function createSubscriptionPurchaseAction(
   packageId: string,
   basePrice: number,
   days: number,
-  paymentMethod: "bank_transfer" | "cash",
+  paymentMethod: "bank_transfer" | "cash" | "plata",
   receiptUrl?: string,
   sendEmailReceipt: boolean = false,
   receiptEmail?: string
@@ -61,9 +63,10 @@ export async function createSubscriptionPurchaseAction(
   const discountAmount = (basePrice * days) - totalDiscounted;
 
   try {
+    const isPlata = paymentMethod === "plata";
+    let pageUrl: string | undefined;
+
     const purchase = await prisma.$transaction(async (tx) => {
-      const isCash = paymentMethod === "cash";
-      
       const p = await tx.subscriptionPurchase.create({
         data: {
           userId: userId,
@@ -72,7 +75,7 @@ export async function createSubscriptionPurchaseAction(
           basePrice: basePrice * days,
           discount: discountAmount,
           finalPrice: totalDiscounted,
-          status: "CREDITED_PENDING_CONFIRMATION",
+          status: isPlata ? "PENDING" : "CREDITED_PENDING_CONFIRMATION",
           paymentMethod,
           receiptUrl: receiptUrl || null,
           sendEmailReceipt,
@@ -80,40 +83,52 @@ export async function createSubscriptionPurchaseAction(
         },
       });
 
-      // Credit the balance immediately
-      await tx.userBalance.upsert({
-        where: {
-          userId_packageId: { userId, packageId },
-        },
-        create: {
-          userId,
-          packageId,
-          totalDays: days,
-        },
-        update: {
-          totalDays: { increment: days },
-        },
-      });
+      if (isPlata) {
+        // Monobank integration
+        const invoice = await createMonobankInvoice({
+          amount: totalDiscounted * 100, // convert UAH to kopecks
+          reference: p.id,
+          destination: `Оплата підписки на ${days} днів (${packageId})`,
+          redirectPath: "/profile",
+        });
+        pageUrl = invoice.pageUrl;
+      } else {
+        // Credit the balance immediately for cash/bank_transfer
+        await tx.userBalance.upsert({
+          where: {
+            userId_packageId: { userId, packageId },
+          },
+          create: {
+            userId,
+            packageId,
+            totalDays: days,
+          },
+          update: {
+            totalDays: { increment: days },
+          },
+        });
 
-      // Enqueue telegram notification for admin
-      await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION_SUBSCRIPTION", {
-        purchaseId: p.id,
-      });
+        // Enqueue telegram notification for admin
+        await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION_SUBSCRIPTION", {
+          purchaseId: p.id,
+        });
+      }
 
       return p;
     });
 
-    revalidatePath("/profile");
-    revalidatePath("/admin/pending-payments");
+    if (!isPlata) {
+      revalidatePath("/profile");
+      revalidatePath("/admin/pending-payments");
+      processAllOutboxJobs().catch((err) => {
+        console.error("processAllOutboxJobs error in subscription:", err);
+      });
+    }
 
-    processAllOutboxJobs().catch((err) => {
-      console.error("processAllOutboxJobs error in subscription:", err);
-    });
-
-    return { ok: true, purchaseId: purchase.id };
-  } catch (error) {
+    return { ok: true, purchaseId: purchase.id, pageUrl };
+  } catch (error: any) {
     console.error("Failed to create subscription purchase:", error);
-    return { ok: false, error: "Internal Server Error" };
+    return { ok: false, error: error.message || "Internal Server Error" };
   }
 }
 

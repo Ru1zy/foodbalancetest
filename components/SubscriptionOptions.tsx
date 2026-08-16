@@ -23,7 +23,7 @@ type Props = {
 export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) {
   const router = useRouter();
   const [days, setDays] = useState<number>(14);
-  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash">("bank_transfer");
+  const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash" | "plata">("plata");
   const [file, setFile] = useState<File | null>(null);
   const [sendEmailReceipt, setSendEmailReceipt] = useState(false);
   const [receiptEmail, setReceiptEmail] = useState("");
@@ -83,7 +83,17 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         throw new Error(result.error || "Помилка при купівлі абонемента");
       }
 
-      setSuccess(`Успішно оформлено покупку на ${days} днів! Дні зараховано на ваш баланс. Адміністратор перевірить вашу оплату найближчим часом.`);
+      if (result.pageUrl) {
+        // Monobank payment redirect
+        window.location.href = result.pageUrl;
+        return;
+      }
+
+      setSuccess(
+        paymentMethod === "cash" 
+          ? `Успішно оформлено покупку на ${days} днів! Оплатіть кур'єру при доставці.`
+          : `Успішно оформлено покупку на ${days} днів! Дні зараховано на ваш баланс. Адміністратор перевірить вашу оплату найближчим часом.`
+      );
       setFile(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Сталася помилка");
@@ -177,7 +187,18 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
         <div className="mb-6 border-t border-gray-100 dark:border-slate-800 pt-6">
           <h4 className="mb-4 font-bold text-gray-900 dark:text-slate-100">Спосіб оплати:</h4>
           
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col gap-3 mb-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="plata"
+                checked={paymentMethod === "plata"}
+                onChange={() => setPaymentMethod("plata")}
+                className="w-4 h-4 text-emerald-600"
+              />
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Monobank (Картка, Apple Pay, Google Pay)</span>
+            </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
                 type="radio" 
@@ -187,7 +208,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("bank_transfer")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на картку</span>
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на картку (ФОП)</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
