@@ -890,7 +890,7 @@ export default function CheckoutPageImpl({
                     }`}
                   >
                     <div className="text-left">
-                      <div className="font-bold text-slate-900 dark:text-slate-100">Monobank (Картка)</div>
+                      <div className="font-bold text-slate-900 dark:text-slate-100">Mono Pay (Картка)</div>
                       <div className="text-xs text-slate-500">Apple Pay, Google Pay, Visa/MC</div>
                     </div>
                     <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
