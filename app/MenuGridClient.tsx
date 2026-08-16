@@ -533,7 +533,10 @@ export default function MenuGridClient({ menuItems }: Props) {
                       <button
                         type="button"
                         disabled={activeDayIndex === 0}
-                        onClick={() => setActiveDayIndex(prev => prev - 1)}
+                        onClick={() => {
+                          setActiveDayIndex(prev => prev - 1);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
                         className="flex-1 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-4 text-sm font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-30 active:scale-95"
                       >
                         ← Назад
@@ -545,6 +548,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                           onClick={() => {
                             if (!currentDayComplete) return;
                             setActiveDayIndex(prev => prev + 1);
+                            window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
                           className={`flex-1 rounded-2xl py-4 text-sm font-bold text-white transition active:scale-95 ${
                             currentDayComplete

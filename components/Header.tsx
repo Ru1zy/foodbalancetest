@@ -62,7 +62,7 @@ export default async function Header() {
                   <>
                     <Link
                       href="/profile"
-                      className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:bg-slate-950"
+                      className="flex items-center gap-2 rounded-xl px-3 sm:px-5 py-2.5 text-sm font-bold text-gray-900 dark:text-slate-100 border border-gray-200 dark:border-slate-700 hover:border-gray-300 dark:border-slate-600 hover:bg-gray-50 dark:bg-slate-950"
                     >
                       <span>👤</span>
                       <span className="hidden sm:inline">Профіль</span>
