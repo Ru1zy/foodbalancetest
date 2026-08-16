@@ -71,7 +71,6 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
 
       const result = await createSubscriptionPurchaseAction(
         pkg.name,
-        pkg.basePrice,
         days,
         paymentMethod,
         receiptUrl,

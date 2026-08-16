@@ -30,8 +30,6 @@ export default async function CheckoutPage() {
         },
       });
 
-      // redirect() deliberately throws NEXT_REDIRECT, so it must stay outside
-      // the token-verification try/catch above.
       if (dbUser?.phone.startsWith("google_")) {
         redirect("/onboarding");
       }
@@ -61,11 +59,14 @@ export default async function CheckoutPage() {
     }
   }
 
+  const tariffs = await prisma.tariff.findMany();
+
   return (
     <CheckoutPageImpl
       authenticatedUser={user}
       menuDayByItemId={menuDayByItemId}
       sushkaMenuIdByDay={sushkaMenuIdByDay}
+      tariffs={tariffs}
     />
   );
 }

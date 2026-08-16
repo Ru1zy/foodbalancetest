@@ -32,11 +32,20 @@ export const PACKAGE_PRICES: Record<PackageType, number> = {
   Template: 0,
 };
 
-export function getOrderTotalUah(packageType: PackageType, totalDays: number): number {
+export function getOrderTotalUah(packageType: PackageType, totalDays: number, tariffs?: { name: string; basePrice: number }[]): number {
   if (totalDays < 1) {
     return 0;
   }
-  const unit = PACKAGE_PRICES[packageType] ?? 0;
+  
+  let unit = PACKAGE_PRICES[packageType] ?? 0;
+  
+  if (tariffs && tariffs.length > 0) {
+    const tariff = tariffs.find(t => t.name === packageType);
+    if (tariff) {
+      unit = tariff.basePrice;
+    }
+  }
+  
   return totalDays * unit;
 }
 

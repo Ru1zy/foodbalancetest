@@ -59,6 +59,7 @@ type Props = {
   authenticatedUser: AuthenticatedUser;
   menuDayByItemId: Record<string, number>;
   sushkaMenuIdByDay: Record<number, string>;
+  tariffs?: { name: string; basePrice: number }[];
 };
 
 type SummaryDay = {
@@ -84,6 +85,7 @@ export default function CheckoutPageImpl({
   authenticatedUser,
   menuDayByItemId,
   sushkaMenuIdByDay,
+  tariffs,
 }: Props) {
   const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
@@ -290,7 +292,7 @@ export default function CheckoutPageImpl({
       return 0;
     }
 
-    return getOrderTotalUah(pkg, cartData.totalDays);
+    return getOrderTotalUah(pkg, cartData.totalDays, tariffs);
   }, [cartData.totalDays, pkg]);
 
   const { balanceDaysToUse, fiatPrice } = useMemo(() => {
@@ -304,7 +306,7 @@ export default function CheckoutPageImpl({
     let fPrice = 0;
     if (fiatDays > 0) {
       if (!pkg.includes("Sushka")) {
-        fPrice = getOrderTotalUah(pkg, fiatDays);
+        fPrice = getOrderTotalUah(pkg, fiatDays, tariffs);
       } else {
         // Calculate daily price from the full total for sushka
         const dailyPrice = cartData.totalDays > 0 ? Math.round(orderTotalUah / cartData.totalDays) : 0;

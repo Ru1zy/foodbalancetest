@@ -409,6 +409,8 @@ async function prepareOrderForSubmission(
     };
   }
 
+  const tariffs = await prisma.tariff.findMany();
+  
   // The browser may display a price, but it is not a trusted calculation
   // boundary. Always derive the full package total on the server. For a pure
   // balance order we do not need the client number for charging, but storing
@@ -416,6 +418,7 @@ async function prepareOrderForSubmission(
   const expectedTotalPrice = getOrderTotalUah(
     sanitizedCartData.packageType,
     sanitizedCartData.totalDays,
+    tariffs
   );
 
   if (paymentMethod !== "balance") {
@@ -511,7 +514,8 @@ async function persistOrderInTransaction(
       if (fiatDays <= 0) {
         fiatPrice = 0;
       } else {
-        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays);
+        const tariffs = await prisma.tariff.findMany();
+        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays, tariffs);
       }
     }
 

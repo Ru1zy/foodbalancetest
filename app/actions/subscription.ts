@@ -11,7 +11,6 @@ import { createMonobankInvoice, calculateAmountWithFee } from "@/lib/monobank";
 
 export async function createSubscriptionPurchaseAction(
   packageId: string,
-  basePrice: number,
   days: number,
   paymentMethod: "bank_transfer" | "cash" | "plata",
   receiptUrl?: string,
@@ -29,6 +28,17 @@ export async function createSubscriptionPurchaseAction(
   if (!userId) {
     return { ok: false, error: "Invalid token" };
   }
+
+  // Fetch true base price from database to prevent price spoofing
+  const tariff = await prisma.tariff.findUnique({
+    where: { name: packageId }
+  });
+
+  if (!tariff) {
+    return { ok: false, error: "Тариф не знайдено" };
+  }
+  
+  const basePrice = tariff.basePrice;
 
   // Validate the days
   if (days < 2) {

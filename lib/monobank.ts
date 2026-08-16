@@ -1,3 +1,4 @@
+import crypto from "crypto";
 const MONOBANK_API_TOKEN = process.env.MONOBANK_API_TOKEN || "";
 const APP_BASE_URL = process.env.APP_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
@@ -67,19 +68,45 @@ export async function createMonobankInvoice(
   };
 }
 
+let cachedMonobankPubKey: string | null = null;
+
+async function getMonobankPublicKey(): Promise<string> {
+  if (cachedMonobankPubKey) return cachedMonobankPubKey;
+
+  const response = await fetch("https://api.monobank.ua/api/merchant/pubkey", {
+    headers: { "X-Token": MONOBANK_API_TOKEN },
+    next: { revalidate: 3600 } // cache for 1 hour
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch Monobank public key");
+  }
+
+  const data = await response.json();
+  cachedMonobankPubKey = data.key;
+  return data.key;
+}
+
 /**
- * Parses and validates the webhook signature from Monobank if needed.
- * For basic integration, verifying the X-Sign header involves checking the 
- * ECDSA signature against Monobank's public key.
- * This is a stub for the public key verification if strict security is enforced.
+ * Parses and validates the webhook signature from Monobank.
  */
 export async function verifyMonobankWebhook(
   signature: string,
-  rawBody: Buffer
+  rawBody: Buffer | string
 ): Promise<boolean> {
-  // In a robust production environment, implement ECDSA verification here 
-  // using Monobank's public key (retrieved from /api/merchant/pubkey).
-  // For now, if the signature is present, we consider it valid, 
-  // but we will also double check the invoice status via API if needed.
-  return !!signature;
+  if (!signature) return false;
+
+  try {
+    const pubKeyBase64 = await getMonobankPublicKey();
+    // The key from API is raw base64. It needs to be PEM formatted for crypto.
+    const pemKey = `-----BEGIN PUBLIC KEY-----\n${pubKeyBase64}\n-----END PUBLIC KEY-----`;
+
+    const verify = crypto.createVerify("SHA256");
+    verify.update(rawBody);
+    
+    return verify.verify(pemKey, signature, "base64");
+  } catch (error) {
+    console.error("Monobank webhook verification failed:", error);
+    return false;
+  }
 }
