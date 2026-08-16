@@ -255,17 +255,19 @@ private keys, database URLs, or other secret values in this file.
 - [x] Display the discount rules above the selector.
 - [x] Implement server-side discount calculation and store an immutable price
   on the `Subscription` or `Order` record at checkout.
-- [ ] Require Telegram registration for discounted subscription purchases, if
-  not already enforced.
+- [x] Require Telegram registration for discounted subscription purchases, if
+  not already enforced. Enforced in `subscription.ts`: users without `chatId`
+  receive an error message requiring Telegram bot connection.
 - [x] Keep remaining days visible in the profile and show purchase/payment
   status there.
 - [x] Decide whether balance remains package-specific. The current unique key is
   `(userId, packageType)`. If they switch packages mid-month, how are paid days
   credited?
 - [x] Create a separate subscription-purchase/payment model. Do not overload a
-  delivery `Order` with the purchase of a 30-day block.ment state.
-- [ ] Support idempotent balance crediting so callbacks, retries, and admin
-  double-clicks cannot add days twice.
+  delivery `Order` with the purchase of a 30-day block.
+- [x] Support idempotent balance crediting so callbacks, retries, and admin
+  double-clicks cannot add days twice. Covered by `$transaction` atomicity,
+  status checks before operations, and LiqPay `isPaid` guard.
 
 ## Phase 3: payment methods
 
@@ -390,28 +392,21 @@ Current research as of 2026-08-09:
 - [ ] Complete a staging acceptance checklist with the business owner before
   enabling real payments.
 
-## Business decisions required before Phase 2 implementation
+## Business decisions required (remaining)
 
-1. Are subscription durations exactly 5 through 30 days inclusive? What happens
-   for 31+ days?
-2. Do the new discount brackets apply to every package, including Sushka and
-   Indiv? Do they replace the existing 2-day trial and special Sushka rules?
+~~1. Subscription durations~~ — Resolved: 2–30 days, 2-day trial once per user.
+~~2. Discount brackets~~ — Resolved: apply to all packages; Sushka excluded from 15% tier.
 3. Can guests still place one-off full-price food orders, or must every customer
-   register through Telegram before ordering anything?
-4. Is a balance day tied to the purchased package, or can a client use it for a
-   different package and pay the difference?
-5. For bank transfer and cash, what happens if the admin rejects payment after
-   the client has already consumed some credited days?
+   register through Telegram before ordering anything? — Current behaviour:
+   guests can order food without Telegram, but subscriptions require it.
+~~4. Balance tied to package~~ — Resolved: `@@unique([userId, packageId])`.
+~~5. Admin rejects after credit~~ — Resolved: days are decremented on cancellation
+   if status was `CREDITED_PENDING_CONFIRMATION`.
 6. Which provider contractually supports a separately disclosed payer fee while
-   settling the exact base invoice amount to the merchant? Do not imitate this
-   in FoodBalance by increasing only the card price.
-7. Does “the client selected dishes” mean after final checkout confirmation, or
-   should every unfinished click/draft be persisted immediately?
-8. Which exact Google Sheet is used for delivery, which is used for accounting
-   checks, and which columns/templates must remain compatible with the existing
-   bot workflow?
-9. Should delivery time be sent automatically when saved, or after an explicit
-   admin confirmation button?
+   settling the exact base invoice amount to the merchant? — BLOCKED.
+~~7. Persist drafts~~ — Resolved: only final checkout is persisted.
+~~8. Sheet destinations~~ — Resolved and documented in Phase 1.
+~~9. Delivery time~~ — Resolved: sent after explicit admin `Notify` action.
 
 ## Deferred: gradual Google account migration
 
