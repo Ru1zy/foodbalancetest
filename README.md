@@ -10,7 +10,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-7-2d3748?logo=prisma)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Deploy: Vercel](https://img.shields.io/badge/Deploy-Vercel-black?logo=vercel)](https://vercel.com/)
+[![Deploy: Railway](https://img.shields.io/badge/Deploy-Railway-black?logo=railway)](https://railway.app/)
 
 **🇬🇧 [English](#-english)  ·  🇺🇦 [Українська](#-українська)**
 
@@ -36,6 +36,7 @@ The app runs as a regular web app and as a **Telegram Mini App (TMA)**, with sig
 - 🔑 **Google integration** — Google OAuth sign-in and order export to Google Sheets for the operations team.
 - 🍽️ **Kitchen export & daily view** — admin "today" view and a kitchen export endpoint that always agree on the day's order set (DST-aware, Kyiv-timezone correct).
 - 🛠️ **Admin back office** — manage menu, tariffs, clients, daily orders, and broadcast messages ("megaphone").
+- 🎨 **Premium UI & Dark Mode** — fluid responsive design, smooth micro-animations, glassmorphism, and a seamless light/dark mode toggle.
 - ⏰ **Scheduled jobs** — nightly cron to archive completed orders.
 
 ### Tech stack
@@ -164,6 +165,7 @@ public/     Static assets
 - 🔑 **Інтеграція з Google** — вхід через Google OAuth та експорт замовлень у Google Таблиці для операційної команди.
 - 🍽️ **Експорт для кухні та денний огляд** — адмін-перегляд «сьогодні» та ендпоінт експорту для кухні, які завжди узгоджені щодо набору замовлень дня (коректний київський час із урахуванням переходу на літній/зимовий).
 - 🛠️ **Адмін-панель** — керування меню, тарифами, клієнтами, щоденними замовленнями та масовими розсилками («мегафон»).
+- 🎨 **Преміальний дизайн та темна тема** — плавна адаптивність, сучасні анімації, гласморфізм та легке перемикання між світлою та темною темами.
 - ⏰ **Заплановані задачі** — нічний cron для архівації виконаних замовлень.
 
 ### Технологічний стек

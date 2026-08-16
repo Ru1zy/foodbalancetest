@@ -15,16 +15,17 @@ const comfortaa = Comfortaa({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://foodbalancetest-production.up.railway.app"),
   title: "Food Balance - Здорове харчування з доставкою",
   description: "Замовте здорове харчування з доставкою додому",
   icons: {
-    icon: "/foodbalancelogo.png",
-    apple: "/foodbalancelogo.png",
+    icon: "/icon.png",
+    apple: "/icon.png",
   },
   openGraph: {
     title: "Food Balance - Здорове харчування з доставкою",
     description: "Замовте здорове харчування з доставкою додому",
-    images: ["/foodbalancelogo.png"],
+    images: ["/icon.png"],
   },
 };
 
