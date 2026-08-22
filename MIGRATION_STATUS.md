@@ -157,8 +157,10 @@ private keys, database URLs, or other secret values in this file.
 - [ ] Set the final custom-domain `GOOGLE_REDIRECT_URI` in Railway and add the
   exact URI to Google Cloud Console:
   `https://<production-domain>/api/auth/google/callback`.
+- [ ] Update **Authorized Domains** and homepage/privacy links in the Google Cloud Console (Google Auth Platform -> Branding) to use the new custom domain.
 - [ ] Reinstall the Telegram webhook on
   `https://<production-domain>/api/telegram-webhook`.
+- [ ] Update the Monobank/Plata webhook URL in their respective dashboards to point to the new custom domain.
 - [ ] Change GitHub Actions `APP_BASE_URL` to the final production domain.
 - [x] Remove or disable Vercel cron execution so jobs cannot run twice. (N/A: Only Railway/GitHub Actions will be used).
 - [x] Keep the Vercel deployment available as a fallback. (Cancelled: Not needed).
