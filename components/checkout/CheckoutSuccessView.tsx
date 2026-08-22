@@ -57,7 +57,7 @@ export function CheckoutSuccessView({ submitted }: Props) {
         )}
 
         {submitted.deliveryDateLabel && (
-          <div className="mt-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4 text-sm text-emerald-900">
+          <div className="mt-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4 text-sm text-emerald-900 dark:text-emerald-300">
             Перша доставка запланована на <span className="font-semibold">{submitted.deliveryDateLabel}</span>.
           </div>
         )}
