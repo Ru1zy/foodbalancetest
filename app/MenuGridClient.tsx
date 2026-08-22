@@ -117,7 +117,7 @@ function MealSection({
               <div
                 key={dishId}
                 className={`rounded-lg border p-3 text-left text-sm transition ${
-                  quantity > 0 ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50" : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                  quantity > 0 ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
                 } ${disabled ? "opacity-50" : ""}`}
               >
                 <div className="break-words font-medium text-gray-800 dark:text-slate-200">{opt.full}</div>
@@ -125,7 +125,7 @@ function MealSection({
                   <div className="break-words text-xs text-gray-500 dark:text-slate-400">{opt.short}</div>
                 )}
                 {options.length > 1 && (
-                  <div className="mt-1 text-[9px] text-emerald-500">ВАРІАНТ {idx + 1}</div>
+                  <div className="mt-1 text-[9px] text-emerald-500 dark:text-emerald-400">ВАРІАНТ {idx + 1}</div>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div className="text-xs font-semibold text-gray-500 dark:text-slate-400">
