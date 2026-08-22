@@ -875,6 +875,21 @@ export async function submitOrders(
   items: CartOrderInput[],
   idempotencyKey?: string,
 ): Promise<SubmitOrdersResult> {
+  // Rate limiting to prevent spam
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown-ip";
+  const userId = await resolveAuthenticatedUserId();
+  const rateLimitId = userId || ip;
+
+  if (!checkoutLimiter.check(rateLimitId)) {
+    return {
+      ok: false,
+      message: "Забагато спроб оформлення замовлення. Будь ласка, зачекайте кілька хвилин перед наступною спробою.",
+      status: 429,
+      createdCount: 0,
+    };
+  }
+
   if (!Array.isArray(items) || items.length === 0) {
     return {
       ok: false,
