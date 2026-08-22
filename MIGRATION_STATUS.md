@@ -296,17 +296,17 @@ Current research as of 2026-08-09:
 - [ ] Get written confirmation from plata by mono, LiqPay, and/or Portmone that
   their normal website checkout can charge a separately disclosed provider fee
   to the payer while settling the exact base invoice amount to the merchant.
-- [ ] Select the provider only after the business owner confirms the settlement
-  account, merchant contract, payer-fee terms, and fiscalization requirements.
+- [x] Select the provider only after the business owner confirms the settlement
+  account, merchant contract, payer-fee terms, and fiscalization requirements. (Plata by mono selected; waiting for business account approval).
 - [ ] Obtain test credentials first; obtain production credentials only from
-  the business owner's activated merchant.
+  the business owner's activated merchant. (Pending Mono approval)
 - [ ] Confirm Apple Pay and Google Pay availability on the production merchant.
-- [ ] Create payment attempts server-side using trusted tariff/day values.
-- [ ] Verify provider webhook signatures server-side.
-- [ ] Credit subscription days only after a verified successful callback.
-- [ ] Add webhook idempotency, payment reconciliation, and failed/refunded
+- [x] Create payment attempts server-side using trusted tariff/day values.
+- [x] Verify provider webhook signatures server-side. (RSA-SHA256 implemented in `lib/monobank.ts`)
+- [x] Credit subscription days only after a verified successful callback.
+- [x] Add webhook idempotency, payment reconciliation, and failed/refunded
   states.
-- [ ] Keep `/api/balance/topup` disabled until this verified path replaces it.
+- [x] Keep `/api/balance/topup` disabled until this verified path replaces it.
 
 ### Bank transfer / account payment
 - [x] Show the calculated amount and business payment details.
@@ -328,7 +328,7 @@ Current research as of 2026-08-09:
 
 ## Phase 4: admin pending-payments workflow
 
-- [x] Add an admin page/tab named `Неоплачені` with a visible pending counter.
+- [x] Add an admin page/tab named `Оплати` with a visible pending counter.
 - [x] Show at minimum: client name, phone, amount, payment method, package, days,
   creation time, and receipt when present.
 - [x] Add an idempotent `Confirm payment` action.
@@ -347,12 +347,12 @@ Current research as of 2026-08-09:
 - [x] Add email duplication of admin Telegram alerts only after an email provider,
   sender domain, recipients, and delivery policy are selected. (Implemented via Gmail API over HTTPS to bypass Railway SMTP blocks)
 
-### UI/UX improvements (2026-08-14 – 2026-08-16)
+### UI/UX improvements (2026-08-14 – 2026-08-22)
 
 - [x] Implement light/dark mode toggle using `next-themes` (class strategy) with
-  an animated Sun ↔ Moon switch in the header.
+  an animated Sun / Moon switch in the header.
 - [x] Ensure all components support `dark:` Tailwind variants across every page
-  (header, footer, checkout, profile, onboarding, admin).
+  (header, footer, checkout, profile, onboarding, admin). Fix admin styles (22.08).
 - [x] Remove "AI-template" aesthetics: standardize border radii to `rounded-2xl`,
   remove dashed borders, apply consistent glassmorphism header and dark footer.
 - [x] Fix logo visibility on dark backgrounds (white backdrop in dark mode).
@@ -363,15 +363,18 @@ Current research as of 2026-08-09:
 - [x] Add smooth scroll-to-top on day navigation in Menu Wizard and page change
   in Action History.
 - [x] Add dynamic "Items per page" selector (10/25/50/100) to profile Action History.
-- [x] Add Telegram link to footer, reorder social links: Instagram → Telegram → TikTok.
+- [x] Add Telegram link to footer, reorder social links: Instagram -> Telegram -> TikTok.
 - [x] Fix subscription day-input contrast in dark mode.
+- [x] Improve mobile view of checkout form (ensure inputs scroll into view) and login modal.
 
 ## Phase 6: verification and release
 
+- [x] Revert testing bypasses and restore strict `order-logic` cutoff times (22.08).
+- [x] Verify legacy Google Sheets cutover (business owner successfully cloned legacy tables).
 - [x] Add unit tests for every discount boundary: 4, 5, 6, 7, 13, 14, 29, 30,
   and any confirmed maximum above 30. (Added in lib/subscription-logic.test.ts)
 - [ ] Test provider-calculated payer-fee display, financial rounding, exact net
-  settlement to the merchant, refunds, and partial refunds.
+  settlement to the merchant, refunds, and partial refunds. (Pending Monobank)
 - [ ] Test concurrent balance credit/deduction and webhook replay.
 - [x] Test receipt authorization and file validation. (Validated via unit tests in `receipt-validation.test.ts` and runtime checks in `uploadReceiptAction`)
 - [ ] Test Sheet retry/idempotency and an unavailable Google API.
