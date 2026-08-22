@@ -70,7 +70,7 @@ export default async function SheetSettingsPage({
           notice={connectionNotice(params)}
         />
 
-        <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 p-5 text-sm text-slate-700 dark:text-slate-300">
+        <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-slate-800/50 p-5 text-sm text-slate-700 dark:text-slate-300">
           <h2 className="font-bold text-slate-900 dark:text-slate-100">Ручний резервний варіант</h2>
           <p className="mt-2">
             Потрібен лише якщо автоматизація Google Drive не підключена або тимчасово недоступна.

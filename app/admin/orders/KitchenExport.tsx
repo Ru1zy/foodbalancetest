@@ -98,10 +98,12 @@ export default function KitchenExport() {
         </div>
       )}
 
-      <div className="mt-4 rounded-xl bg-blue-50 border border-blue-200 dark:border-blue-800 px-4 py-3 text-xs text-blue-800">
-        <p className="font-semibold mb-2">ℹ️ Як працює експорт в Google Sheets:</p>
-        <ul className="list-disc list-inside space-y-1">
-          <li>Шукає вкладку з назвою дати (наприклад, &quot;23.02&quot;)</li>
+      <div className="mt-4 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-4 py-3 text-xs text-blue-800 dark:text-blue-200">
+        <p className="font-semibold mb-2 flex items-center gap-2">
+          <span>ℹ️</span> Як працює експорт в Google Sheets:
+        </p>
+        <ul className="list-disc pl-5 space-y-1 opacity-90">
+          <li>Шукає вкладку з назвою дати (наприклад, &apos;23.02&apos;)</li>
           <li>Додає нові рядки в кінець таблиці з даними замовлень</li>
           <li>Експортуються всі замовлення, які ще не були експортовані</li>
           <li>Після експорту замовлення отримують статус &quot;Передано в учёт&quot;</li>

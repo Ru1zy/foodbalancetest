@@ -37,7 +37,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
                   className={`group flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
                     isActive
                       ? "bg-gray-900 dark:bg-slate-800 text-white shadow-sm scale-105"
-                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:bg-slate-800 hover:scale-102"
+                      : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:scale-102"
                   }`}
                 >
                   <span className="text-xl">{link.icon}</span>

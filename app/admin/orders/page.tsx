@@ -262,7 +262,7 @@ export default async function AdminOrdersPage({
   );
 
   return (
-    <main className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-8 text-gray-800 dark:text-slate-200 sm:px-6">
+    <main className="min-h-[100dvh] bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 px-4 py-8 text-gray-800 dark:text-slate-200 sm:px-6">
       <section className="mx-auto w-full px-6">
         <div className="mb-8 flex flex-col gap-4 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-8">
           <div>
