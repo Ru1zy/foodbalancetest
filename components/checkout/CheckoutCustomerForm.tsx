@@ -165,7 +165,7 @@ export function CheckoutCustomerForm({
               {...register("name")}
               aria-invalid={errors.name ? "true" : "false"}
               autoComplete="name"
-              className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
+              className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 scroll-mt-32 ${
                 errors.name
                   ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                   : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
@@ -184,7 +184,7 @@ export function CheckoutCustomerForm({
               {...register("phone")}
               aria-invalid={errors.phone ? "true" : "false"}
               autoComplete="tel"
-              className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
+              className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 scroll-mt-32 ${
                 errors.phone
                   ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                   : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
@@ -205,7 +205,7 @@ export function CheckoutCustomerForm({
             {...register("address")}
             aria-invalid={errors.address ? "true" : "false"}
             autoComplete="street-address"
-            className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
+            className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 scroll-mt-32 ${
               errors.address
                 ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                 : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"

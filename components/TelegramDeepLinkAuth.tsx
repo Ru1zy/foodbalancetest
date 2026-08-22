@@ -184,7 +184,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800 break-words overflow-hidden">
           ⚠️ {error}
         </div>
       )}
