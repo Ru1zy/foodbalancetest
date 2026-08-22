@@ -78,8 +78,15 @@ export default async function SheetSettingsPage({
           <ol className="mt-3 list-decimal space-y-2 pl-5">
             <li>Створіть окрему Google-таблицю для потрібного місяця.</li>
             <li>
-              Надайте сервісному Google-акаунту FoodBalance права
-              редактора.
+              Надайте сервісному Google-акаунту FoodBalance{" "}
+              {process.env.GOOGLE_CLIENT_EMAIL ? (
+                <code className="rounded bg-white dark:bg-slate-900 px-1 py-0.5 text-slate-900 dark:text-slate-100 break-all select-all">
+                  {process.env.GOOGLE_CLIENT_EMAIL}
+                </code>
+              ) : (
+                "права редактора"
+              )}
+              {" "}права редактора.
             </li>
             <li>
               Створіть у ній лист із точним іменем{" "}
