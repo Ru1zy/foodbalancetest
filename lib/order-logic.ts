@@ -180,17 +180,13 @@ export function kyivTodayParts(reference: Date = new Date()): { year: number; mo
   return { year: parts.year, month: parts.month, day: parts.day };
 }
 
-// TODO: REMOVE FOR PRODUCTION
-// Temporary bypass for testing - allows ordering any time
-export const NEXT_WEEK_OPEN = true;
-
-// Original time-based logic (commented out for testing):
-// export const NEXT_WEEK_OPEN = (() => {
-//   const nowKyiv = getKyivParts(new Date());
-//   const isSaturdayAfterNoon = nowKyiv.weekday === 6 && nowKyiv.hour >= 12;
-//   const isSunday = nowKyiv.weekday === 0;
-//   return isSaturdayAfterNoon || isSunday;
-// })();
+// Production time-based logic: next menu week opens Saturday afternoon / Sunday (Kyiv).
+export const NEXT_WEEK_OPEN = (() => {
+  const nowKyiv = getKyivParts(new Date());
+  const isSaturdayAfterNoon = nowKyiv.weekday === 6 && nowKyiv.hour >= 12;
+  const isSunday = nowKyiv.weekday === 0;
+  return isSaturdayAfterNoon || isSunday;
+})();
 
 function getKyivMidnight(parts: { year: number; month: number; day: number; }) {
   return constructUTCFromKyiv({ year: parts.year, month: parts.month, day: parts.day, hour: 0, minute: 0, second: 0 });
@@ -280,21 +276,17 @@ export function getDeadlineForDay(target: Date): Date {
 }
 
 export function isDaySelectable(dayOfWeek: number): boolean {
-  // TODO: REMOVE FOR PRODUCTION
-  // Temporary bypass for testing - all days are selectable
-  return true;
+  // Production time-based validation logic.
+  if (!dayOfWeek || dayOfWeek < 1 || dayOfWeek > 7) return false;
 
-  // Original time-based validation logic (commented out for testing):
-  // if (!dayOfWeek || dayOfWeek < 1 || dayOfWeek > 7) return false;
-  //
-  // const nowKyivParts = getKyivParts(new Date());
-  // const nowKyiv = constructUTCFromKyiv(nowKyivParts);
-  //
-  // const targetMonday = getTargetMonday(nowKyivParts);
-  // const targetDate = getTargetDate(dayOfWeek, targetMonday);
-  //
-  // const deadline = getDeadlineForDay(targetDate);
-  // return nowKyiv.getTime() < deadline.getTime();
+  const nowKyivParts = getKyivParts(new Date());
+  const nowKyiv = constructUTCFromKyiv(nowKyivParts);
+
+  const targetMonday = getTargetMonday(nowKyivParts);
+  const targetDate = getTargetDate(dayOfWeek, targetMonday);
+
+  const deadline = getDeadlineForDay(targetDate);
+  return nowKyiv.getTime() < deadline.getTime();
 }
 
 /** Weekday indices 1–7 still open for the current menu week (same rules as `isDaySelectable`). */
