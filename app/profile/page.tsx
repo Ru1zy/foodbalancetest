@@ -8,6 +8,7 @@ import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 import { parseIndivDishId } from "@/lib/order-selection";
 import { getAllTariffs } from "@/app/actions/tariff-impl";
+import { getCachedMenus } from "@/lib/cache";
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: "Сніданок",
@@ -54,19 +55,9 @@ async function resolveOrderDishes(order: {
     return [];
   }
 
-  // Fetch all Menu records in one query
-  const menus = await prisma.menu.findMany({
-    where: {
-      id: {
-        in: dayIds,
-      },
-    },
-    select: {
-      id: true,
-      dishes: true,
-      dayOfWeek: true,
-    },
-  });
+  // Fetch all Menu records using cache to avoid N+1 queries
+  const allMenus = await getCachedMenus();
+  const menus = allMenus.filter(menu => dayIds.includes(menu.id));
 
   const menuById = new Map(
     menus.map((menu: { id: string; dishes: Prisma.JsonValue; dayOfWeek: number }) => [menu.id, menu]),

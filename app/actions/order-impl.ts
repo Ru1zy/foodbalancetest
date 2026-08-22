@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { checkoutLimiter } from "@/lib/rate-limit";
 import type { Order, Prisma, User } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import {
@@ -794,6 +795,20 @@ export async function submitOrder(
   deliveryDate: Date | string,
   totalPrice: number,
 ): Promise<SubmitOrderResult> {
+  // Rate limiting to prevent spam
+  const headersList = await headers();
+  const ip = headersList.get("x-forwarded-for") || headersList.get("x-real-ip") || "unknown-ip";
+  const userId = await resolveAuthenticatedUserId();
+  const rateLimitId = userId || ip;
+
+  if (!checkoutLimiter.check(rateLimitId)) {
+    return {
+      ok: false,
+      message: "Забагато спроб оформлення замовлення. Будь ласка, зачекайте кілька хвилин перед наступною спробою.",
+      status: 429,
+    };
+  }
+
   const preparation = await prepareOrderForSubmission(formData, cartData, deliveryDate, totalPrice);
   if (!preparation.ok) {
     return { ok: false, message: preparation.message, status: preparation.status };

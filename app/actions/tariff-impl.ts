@@ -1,15 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
+import { getCachedTariffs } from "@/lib/cache";
 
 export async function getAllTariffs() {
   try {
-    const tariffs = await prisma.tariff.findMany({
-      orderBy: { name: "asc" },
-    });
-    return tariffs;
+    const tariffs = await getCachedTariffs();
+    // In-memory sort by name asc
+    return [...tariffs].sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Failed to fetch tariffs:", error);
     return [];
@@ -39,6 +39,7 @@ export async function updateTariff(
       data,
     });
 
+    updateTag("tariffs");
     revalidatePath("/admin/tariffs");
     revalidatePath("/");
 

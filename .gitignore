@@ -97,3 +97,5 @@ Thumbs.db
 # One-off smoke-test artifacts created during migration verification.
 /scripts/remote-smoke.mjs
 /scripts/remote-smoke.spec.js
+
+database_dump.json

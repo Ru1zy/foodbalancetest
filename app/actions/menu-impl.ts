@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import prisma from "@/lib/prisma";
 import type { Menu } from "@prisma/client";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { type MenuItem } from "@/lib/menu-types";
+import { getCachedMenus, getCachedTariffs } from "@/lib/cache";
 
 export type JsonValue =
   | string
@@ -19,11 +20,8 @@ export async function getMenuItems(selectedPackage: string | null): Promise<Menu
     const isSushka = selectedPackage?.toLowerCase().includes("sushka") || false;
     const filterType = isSushka ? "Sushka" : "Template";
 
-    const menuItems = await prisma.menu.findMany({
-      where: {
-        packageType: filterType,
-      },
-    });
+    const allMenus = await getCachedMenus();
+    const menuItems = allMenus.filter(m => m.packageType === filterType);
 
     return menuItems.map((item: Menu) => ({
       id: item.id,
@@ -40,10 +38,15 @@ export async function getMenuItems(selectedPackage: string | null): Promise<Menu
 
 export async function getAllMenuItems(): Promise<MenuItem[]> {
   try {
-    const menuItems = await prisma.menu.findMany({
-      orderBy: [{ packageType: "asc" }, { dayOfWeek: "asc" }],
+    const menuItems = await getCachedMenus();
+    // In-memory sort by packageType asc, then dayOfWeek asc
+    const sorted = [...menuItems].sort((a, b) => {
+      const pCmp = (a.packageType || "").localeCompare(b.packageType || "");
+      if (pCmp !== 0) return pCmp;
+      return (a.dayOfWeek || 0) - (b.dayOfWeek || 0);
     });
-    return menuItems.map((item: Menu) => ({
+    
+    return sorted.map((item: Menu) => ({
       id: item.id,
       dayOfWeek: item.dayOfWeek || 0,
       packageType: item.packageType,
@@ -68,6 +71,7 @@ export async function updateMenuDishes(menuId: string, dishes: JsonValue) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: { dishes: dishes as any },
     });
+    updateTag("menus");
     revalidatePath("/admin/menu");
     revalidatePath("/");
     return { ok: true };
@@ -88,6 +92,7 @@ export async function updateMenuPhoto(menuId: string, photoUrl: string | null) {
       where: { id: menuId },
       data: { photoUrl },
     });
+    updateTag("menus");
     revalidatePath("/admin/menu");
     revalidatePath("/");
     return { ok: true };
@@ -99,10 +104,8 @@ export async function updateMenuPhoto(menuId: string, photoUrl: string | null) {
 
 export async function getTariffs() {
   try {
-    const tariffs = await prisma.tariff.findMany({
-      orderBy: { name: "asc" },
-    });
-    return tariffs;
+    const tariffs = await getCachedTariffs();
+    return [...tariffs].sort((a, b) => a.name.localeCompare(b.name));
   } catch (error) {
     console.error("Error fetching tariffs:", error);
     return [];

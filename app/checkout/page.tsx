@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
 import CheckoutPageImpl from "./page-impl";
+import { getCachedMenus, getCachedTariffs } from "@/lib/cache";
 import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
@@ -45,9 +46,7 @@ export default async function CheckoutPage() {
     }
   }
 
-  const menuRows = await prisma.menu.findMany({
-    select: { id: true, dayOfWeek: true, packageType: true },
-  });
+  const menuRows = await getCachedMenus();
   const menuDayByItemId: Record<string, number> = Object.fromEntries(
     menuRows.map((m: { id: string; dayOfWeek: number }) => [m.id, m.dayOfWeek]),
   );
@@ -59,7 +58,7 @@ export default async function CheckoutPage() {
     }
   }
 
-  const tariffs = await prisma.tariff.findMany();
+  const tariffs = await getCachedTariffs();
 
   return (
     <CheckoutPageImpl

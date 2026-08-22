@@ -91,20 +91,31 @@ export function CheckoutCustomerForm({
             <button
               type="button"
               onClick={() => setPaymentMethod("plata")}
-              className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+              className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all group ${
                 paymentMethod === "plata"
-                  ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 ring-2 ring-emerald-500/20"
-                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
+                  ? "border-slate-950 dark:border-slate-800 bg-[#141414] ring-2 ring-slate-900/20 shadow-lg"
+                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >
-              <div className="text-left">
-                <div className="font-bold text-slate-900 dark:text-slate-100">Mono Pay (Картка)</div>
-                <div className="text-xs text-slate-500">Apple Pay, Google Pay, Visa/MC</div>
+              <div className="flex items-center gap-3">
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  paymentMethod === "plata" ? "bg-white" : "bg-slate-100 dark:bg-slate-800 group-hover:bg-slate-200 dark:group-hover:bg-slate-700"
+                }`}>
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path fillRule="evenodd" clipRule="evenodd" d="M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24ZM12.0125 5.56836C12.0125 5.56836 12.043 5.56836 12.086 5.56836L16.2755 5.56836C16.8929 5.56836 17.3932 6.06899 17.3932 6.6868V17.3117C17.3932 17.9295 16.8929 18.4301 16.2755 18.4301C15.658 18.4301 15.1578 17.9295 15.1578 17.3117V9.77123C15.1578 9.77123 11.2335 13.6934 11.0261 13.9006C10.5901 14.3364 9.88339 14.3364 9.44755 13.9006C9.23992 13.6931 5.31557 9.77123 5.31557 9.77123V17.3117C5.31557 17.9295 4.81525 18.4301 4.19782 18.4301C3.58039 18.4301 3.08008 17.9295 3.08008 17.3117V6.6868C3.08008 6.06899 3.58039 5.56836 4.19782 5.56836H8.38875C8.42851 5.56836 8.46199 5.56836 8.46199 5.56836L10.2366 7.34217L12.0125 5.56836Z" fill={paymentMethod === "plata" ? "#141414" : "currentColor"} className={paymentMethod === "plata" ? "" : "text-slate-900 dark:text-slate-100"}/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <div className={`font-extrabold ${paymentMethod === "plata" ? "text-white" : "text-slate-900 dark:text-slate-100"}`}>
+                    Plata <span className="font-normal opacity-70">by mono</span>
+                  </div>
+                  <div className={`text-xs ${paymentMethod === "plata" ? "text-slate-400" : "text-slate-500"}`}>Apple Pay, Google Pay, Картка</div>
+                </div>
               </div>
-              <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                paymentMethod === "plata" ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
+              <div className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                paymentMethod === "plata" ? "border-white bg-white" : "border-slate-300 dark:border-slate-600"
               }`}>
-                {paymentMethod === "plata" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
+                {paymentMethod === "plata" && <div className="h-2 w-2 rounded-full bg-[#141414]" />}
               </div>
             </button>
             <button

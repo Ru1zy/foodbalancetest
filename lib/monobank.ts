@@ -4,7 +4,9 @@ const APP_BASE_URL = process.env.APP_BASE_URL || (process.env.VERCEL_URL ? `http
 
 // The percentage the payment gateway takes (e.g. 1.3% = 0.013).
 // We pass this fee to the customer so the merchant receives the exact net amount.
-export const PLATA_FEE_PERCENT = 0.013;
+export const PLATA_FEE_PERCENT = process.env.PLATA_FEE_PERCENT 
+  ? parseFloat(process.env.PLATA_FEE_PERCENT) 
+  : 0.013;
 
 /**
  * Calculates the gross amount to charge the user so that after the gateway fee,
