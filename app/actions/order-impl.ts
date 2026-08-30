@@ -1038,10 +1038,9 @@ export async function submitOrders(
       if (totalAmount > 0) {
         const grossAmount = calculateAmountWithFee(totalAmount);
         const invoice = await createMonobankInvoice({
-          // amount: grossAmount * 100, // convert UAH to kopecks
-          amount: 100, // TEMP: Override to 1 UAH for testing!
+          amount: grossAmount * 100, // convert UAH to kopecks
           reference: idempotencyKey, // Using the checkout key to identify the batch
-          destination: `Оплата замовлень (${results.length} шт.) [TEST]`,
+          destination: `Оплата замовлень (${results.length} шт.)`,
           redirectPath: "/profile",
         });
         pageUrl = invoice.pageUrl;

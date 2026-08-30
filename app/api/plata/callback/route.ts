@@ -89,6 +89,18 @@ export async function POST(request: Request) {
 
       if (idempotency && idempotency.orderIds.length > 0) {
         if (status === "success") {
+          // Check if orders are already paid
+          const existingOrders = await tx.order.findMany({
+            where: { id: { in: idempotency.orderIds } },
+            select: { isPaid: true }
+          });
+          
+          const allPaid = existingOrders.length > 0 && existingOrders.every(o => o.isPaid);
+          if (allPaid) {
+            console.log(`Monobank webhook: Checkout ${reference} is already paid. Idempotent return.`);
+            return;
+          }
+
           await tx.order.updateMany({
             where: { id: { in: idempotency.orderIds } },
             data: { isPaid: true },
