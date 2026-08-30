@@ -553,6 +553,7 @@ export default function CheckoutPageImpl({
 
           <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
             <CheckoutSummaryAside
+              isAuthenticated={customerProfile.isAuthenticated}
               cartData={cartData}
               selectedPackageRaw={selectedPackageRaw}
               fiatPrice={fiatPrice}

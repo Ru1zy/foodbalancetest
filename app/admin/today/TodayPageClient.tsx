@@ -252,21 +252,80 @@ const handleExportToKitchen = () => {
                         {order.notes ? (
                           <div className="max-w-xs text-xs italic text-slate-500">
                             {order.notes}
+                      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
+                        {order.user.name}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        {order.user.phone}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        {order.deliveryAddress || order.user.address || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        {order.packageType}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        {order.cutlery}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        {order.notes ? (
+                          <div className="max-w-xs text-xs italic text-slate-500">
+                            {order.notes}
                           </div>
                         ) : (
                           "—"
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <input
-                          type="text"
+                        <select
                           value={order.deliveryTime || ""}
                           onChange={(e) =>
                             handleFieldUpdate(order.id, order.orderDayId, "deliveryTime", e.target.value)
                           }
-                          placeholder="10:00 - 11:00"
-                          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
-                        />
+                          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                        >
+                          <option value="">Не обрано</option>
+                          <optgroup label="Вечір">
+                            <option value="17:00-17:30">17:00-17:30</option>
+                            <option value="17:30-18:00">17:30-18:00</option>
+                            <option value="18:00-18:30">18:00-18:30</option>
+                            <option value="18:30-19:00">18:30-19:00</option>
+                            <option value="19:00-19:30">19:00-19:30</option>
+                            <option value="19:30-20:00">19:30-20:00</option>
+                            <option value="20:00-20:30">20:00-20:30</option>
+                            <option value="20:30-21:00">20:30-21:00</option>
+                            <option value="21:00-21:30">21:00-21:30</option>
+                            <option value="21:30-22:00">21:30-22:00</option>
+                            <option value="22:00-22:30">22:00-22:30</option>
+                            <option value="22:30-23:00">22:30-23:00</option>
+                          </optgroup>
+                          <optgroup label="Ранок">
+                            <option value="06:00-06:30">06:00-06:30</option>
+                            <option value="06:30-07:00">06:30-07:00</option>
+                            <option value="07:00-07:30">07:00-07:30</option>
+                            <option value="07:30-08:00">07:30-08:00</option>
+                            <option value="08:00-08:30">08:00-08:30</option>
+                            <option value="08:30-09:00">08:30-09:00</option>
+                            <option value="09:00-09:30">09:00-09:30</option>
+                            <option value="09:30-10:00">09:30-10:00</option>
+                            <option value="10:00-10:30">10:00-10:30</option>
+                            <option value="10:30-11:00">10:30-11:00</option>
+                            <option value="11:00-11:30">11:00-11:30</option>
+                            <option value="11:30-12:00">11:30-12:00</option>
+                          </optgroup>
+                          <optgroup label="День">
+                            <option value="12:00-12:30">12:00-12:30</option>
+                            <option value="12:30-13:00">12:30-13:00</option>
+                            <option value="13:00-13:30">13:00-13:30</option>
+                            <option value="13:30-14:00">13:30-14:00</option>
+                            <option value="14:00-14:30">14:00-14:30</option>
+                            <option value="14:30-15:00">14:30-15:00</option>
+                            <option value="15:00-15:30">15:00-15:30</option>
+                            <option value="15:30-16:00">15:30-16:00</option>
+                            <option value="16:00-16:30">16:00-16:30</option>
+                            <option value="16:30-17:00">16:30-17:00</option>
+                          </optgroup>
+                        </select>
                       </td>
                       <td className="px-4 py-3">
                         <input

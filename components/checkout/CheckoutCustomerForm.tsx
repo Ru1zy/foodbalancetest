@@ -58,21 +58,7 @@ export function CheckoutCustomerForm({
         </p>
       </div>
 
-      {!isAuthenticated && (
-        <div className="mb-8 rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 p-6 shadow-sm">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-red-900">Увага! Ви не авторизовані</h3>
-              <p className="mt-1 text-sm leading-relaxed text-red-700">
-                Щоб отримати знижки на пакети та доступ до абонементів, будь ласка, авторизуйтесь через Telegram.
-              </p>
-            </div>
-            <div className="shrink-0">
-              <TelegramDeepLinkAuth />
-            </div>
-          </div>
-        </div>
-      )}
+
 
       <div className="mb-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-6">
         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>

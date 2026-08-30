@@ -43,7 +43,7 @@ export default function RootLayout({
       <body className="flex min-h-[100dvh] flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >

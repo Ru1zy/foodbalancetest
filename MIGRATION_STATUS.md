@@ -403,6 +403,14 @@ Current research as of 2026-08-09:
 ~~8. Sheet destinations~~ — Resolved and documented in Phase 1.
 ~~9. Delivery time~~ — Resolved: sent after explicit admin `Notify` action.
 
+## Next Steps (Tomorrow / Finalization)
+
+- [ ] Connect custom domain to Railway and update `APP_BASE_URL` & `NEXT_PUBLIC_APP_URL` in `.env`.
+- [ ] Finalize Monobank API token and Webhook URL setup (once approved by Mono).
+- [ ] Set up AWS S3 / Cloudflare R2 tokens for image uploads (`AWS_S3_*` env vars).
+- [ ] Add Railway billing (credit card) to keep the service running.
+- [ ] Set up a proper external cron service (like cron-job.org or GitHub Actions) and configure `CRON_SECRET`.
+
 ## Deferred: gradual Google account migration
 
 - [ ] Do not start until Railway production and all integrations are green.

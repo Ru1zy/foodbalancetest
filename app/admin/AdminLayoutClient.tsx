@@ -87,7 +87,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 pt-[120px] lg:pt-0">
+      <main className="flex-1 min-w-0 pt-[120px] lg:pt-0">
         {children}
       </main>
     </div>

@@ -4,7 +4,10 @@ import { isIndivPackage } from "@/lib/order-selection";
 import { CartItem } from "@/lib/orderStore";
 import { SummaryDay } from "./types";
 
+import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
+
 type Props = {
+  isAuthenticated?: boolean;
   cartData: OrderCartData;
   selectedPackageRaw: string | null;
   fiatPrice: number;
@@ -28,6 +31,7 @@ type Props = {
 };
 
 export function CheckoutSummaryAside({
+  isAuthenticated,
   cartData,
   selectedPackageRaw,
   fiatPrice,
@@ -198,6 +202,20 @@ export function CheckoutSummaryAside({
               </span>
             )}
           </span>
+        </div>
+      )}
+
+      {isAuthenticated === false && (
+        <div className="mt-6 rounded-2xl border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-5 shadow-sm text-center">
+          <h3 className="text-base font-bold text-emerald-800 dark:text-emerald-400">
+            Хочете замовляти зі знижкою до 15%? 🍏
+          </h3>
+          <p className="mt-2 text-sm text-emerald-700 dark:text-emerald-300">
+            Авторизуйтесь через Telegram, щоб купувати вигідні абонементи та керувати своїм розкладом!
+          </p>
+          <div className="mt-4 flex justify-center">
+            <TelegramDeepLinkAuth />
+          </div>
         </div>
       )}
 

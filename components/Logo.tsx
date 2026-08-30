@@ -21,7 +21,7 @@ export default function Logo() {
           <img src="/foodbalancelogo.png" alt="Food Balance" className="h-full w-full object-cover mix-blend-multiply dark:mix-blend-normal" />
         </div>
       </div>
-      <div>
+      <div className="hidden sm:block">
         <div className="text-2xl font-black flex gap-1">
           <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent drop-shadow-sm">Food</span>
           <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent drop-shadow-sm">Balance</span>
