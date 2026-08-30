@@ -196,7 +196,10 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("plata")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span className="text-gray-900 dark:text-slate-100 font-medium">Mono Pay (Картка, Apple Pay, Google Pay)</span>
+              <div className="flex items-center text-gray-900 dark:text-slate-100 font-medium">
+                <img src="/images/mono/plata_light_bg.svg" alt="Plata by mono" className="h-5 object-contain block dark:hidden mr-2" />
+                <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-5 object-contain hidden dark:block mr-2" />
+              </div>
             </label>
             {paymentMethod === "plata" && (
               <p className="ml-6 text-sm text-orange-600 dark:text-orange-500 italic">

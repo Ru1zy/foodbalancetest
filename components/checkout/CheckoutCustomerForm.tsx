@@ -84,10 +84,15 @@ export function CheckoutCustomerForm({
               }`}
             >
               <div className="text-left">
-                <div className={`font-extrabold text-lg ${paymentMethod === "plata" ? "text-white" : "text-slate-900 dark:text-slate-100"}`}>
-                  Plata <span className="font-normal opacity-70">by mono</span>
-                </div>
-                <div className={`text-xs mt-1 ${paymentMethod === "plata" ? "text-slate-400" : "text-slate-500"}`}>Apple Pay, Google Pay, Картка</div>
+                {paymentMethod === "plata" ? (
+                  <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-6 object-contain" />
+                ) : (
+                  <>
+                    <img src="/images/mono/plata_light_bg.svg" alt="Plata by mono" className="h-6 object-contain block dark:hidden" />
+                    <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-6 object-contain hidden dark:block" />
+                  </>
+                )}
+                <div className={`text-xs mt-2 ${paymentMethod === "plata" ? "text-slate-400" : "text-slate-500"}`}>Apple Pay, Google Pay, Картка</div>
               </div>
               <div className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
                 paymentMethod === "plata" ? "border-white bg-white" : "border-slate-300 dark:border-slate-600"

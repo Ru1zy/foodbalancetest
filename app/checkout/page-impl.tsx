@@ -499,6 +499,22 @@ export default function CheckoutPageImpl({
         ? formatDisplayDate(new Date(cartItems[0].deliveryDate))
         : null;
 
+      if (result.pageUrl) {
+        setCustomerProfile({
+          address: data.address,
+          cutlery: data.cutlery,
+          name: data.name,
+          notes: data.comment,
+          phone: data.phone,
+          userId: result.userId,
+        });
+        clearSelections();
+        resetWizard();
+        clearCart();
+        window.location.href = result.pageUrl;
+        return;
+      }
+
       setSubmitted({
         deliveryDateLabel: firstDeliveryLabel,
         packageType: result.orderCount > 1 ? "Декілька раціонів" : cartData.packageType,
