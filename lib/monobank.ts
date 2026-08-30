@@ -1,6 +1,8 @@
 import crypto from "crypto";
 const MONOBANK_API_TOKEN = process.env.MONOBANK_API_TOKEN || "";
-const APP_BASE_URL = process.env.APP_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+const APP_BASE_URL = process.env.APP_BASE_URL 
+  || (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null)
+  || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
 // The percentage the payment gateway takes (e.g. 1.3% = 0.013).
 // We pass this fee to the customer so the merchant receives the exact net amount.
