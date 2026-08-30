@@ -97,9 +97,10 @@ export async function createSubscriptionPurchaseAction(
         // Monobank integration
         const grossAmount = calculateAmountWithFee(totalDiscounted);
         const invoice = await createMonobankInvoice({
-          amount: grossAmount * 100, // convert UAH to kopecks
+          // amount: grossAmount * 100, // convert UAH to kopecks
+          amount: 100, // TEMP: Override to 1 UAH for testing!
           reference: p.id,
-          destination: `Оплата підписки на ${days} днів (${packageId})`,
+          destination: `Оплата підписки на ${days} днів (${packageId}) [TEST]`,
           redirectPath: "/profile",
         });
         pageUrl = invoice.pageUrl;
