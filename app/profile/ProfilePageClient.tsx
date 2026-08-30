@@ -277,6 +277,11 @@ export default function ProfilePageClient({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
 
+  // Accordion states
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
+  const [isBalancesOpen, setIsBalancesOpen] = useState(false);
+
   const handlePageChange = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', page.toString());
@@ -330,170 +335,208 @@ export default function ProfilePageClient({
         </header>
 
         {/* Settings Section */}
-        <div className="mb-10 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-6 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition-all">
+          <button 
+            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+            className="flex w-full items-center justify-between p-6 sm:p-8"
+          >
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors group-hover:bg-slate-200">
                 <Settings className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Налаштування</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">Налаштування</h2>
             </div>
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-slate-800 sm:w-auto active:scale-95"
-            >
-              <span>{isEditing ? "✕" : "✏️"}</span>
-              <span>{isEditing ? "Скасувати" : "Редагувати"}</span>
-            </button>
-          </div>
-
-          {error && (
-            <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 p-4 text-sm text-red-700">
-              <AlertCircle className="w-4 h-4" />
-              {error}
+            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 transition">
+              {isSettingsOpen ? <ChevronUp className="w-5 h-5 text-slate-500" /> : <ChevronDown className="w-5 h-5 text-slate-500" />}
             </div>
-          )}
-
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              <div className="sm:col-span-1">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Ім&apos;я</label>
-                <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    name="name"
-                    defaultValue={user.name}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="sm:col-span-1">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Телефон</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">📞</span>
-                  <input
-                    name="phone"
-                    defaultValue={user.phone || ""}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Адреса за замовчуванням</label>
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input
-                    name="address"
-                    defaultValue={user.address || ""}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                  />
-                </div>
-              </div>
-              <div className="sm:col-span-1">
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Прибори за замовчуванням</label>
-                <div className="relative">
-                  <Utensils className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <select
-                    name="cutlery"
-                    defaultValue={user.defaultCutlery || 0}
-                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 appearance-none transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                  >
-                    <option value={0}>0</option>
-                    <option value={1}>1</option>
-                    <option value={2}>2</option>
-                    <option value={3}>3</option>
-                    <option value={4}>4</option>
-                  </select>
-                </div>
-              </div>
-              <div className="sm:col-span-2 mt-2">
+          </button>
+          
+          {isSettingsOpen && (
+            <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-slate-100 dark:border-slate-800 mt-4">
+              <div className="mb-8 flex justify-end">
                 <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto active:scale-95"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-bold text-white shadow-lg transition hover:bg-slate-800 sm:w-auto active:scale-95"
                 >
-                  <span>{isSaving ? "Збереження..." : "Зберегти зміни"}</span>
+                  <span>{isEditing ? "✕" : "✏️"}</span>
+                  <span>{isEditing ? "Скасувати" : "Редагувати"}</span>
                 </button>
               </div>
-            </form>
-          ) : (
-            <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100">
-                <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ім&apos;я</dt>
-                <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.name}</dd>
-              </div>
-              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100">
-                <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Телефон</dt>
-                <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.phone || "Не вказано"}</dd>
-              </div>
-              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 sm:col-span-2">
-                <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Адреса доставки</dt>
-                <dd className="text-base font-bold text-slate-900 dark:text-slate-100 break-words">{user.address || "Не вказано"}</dd>
-              </div>
-              <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100">
-                <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Прибори</dt>
-                <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.defaultCutlery || 0} шт</dd>
-              </div>
-            </dl>
+
+              {error && (
+                <div className="mb-6 flex items-center gap-2 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 p-4 text-sm text-red-700">
+                  <AlertCircle className="w-4 h-4" />
+                  {error}
+                </div>
+              )}
+
+              {isEditing ? (
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="sm:col-span-1">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Ім&apos;я</label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        name="name"
+                        defaultValue={user.name}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Телефон</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">📞</span>
+                      <input
+                        name="phone"
+                        defaultValue={user.phone || ""}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Адреса за замовчуванням</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <input
+                        name="address"
+                        defaultValue={user.address || ""}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Прибори за замовчуванням</label>
+                    <div className="relative">
+                      <Utensils className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <select
+                        name="cutlery"
+                        defaultValue={user.defaultCutlery || 0}
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 appearance-none transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                      >
+                        <option value={0}>0</option>
+                        <option value={1}>1</option>
+                        <option value={2}>2</option>
+                        <option value={3}>3</option>
+                        <option value={4}>4</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2 mt-2">
+                    <button
+                      type="submit"
+                      disabled={isSaving}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto active:scale-95"
+                    >
+                      <span>{isSaving ? "Збереження..." : "Зберегти зміни"}</span>
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ім&apos;я</dt>
+                    <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.name}</dd>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Телефон</dt>
+                    <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.phone || "Не вказано"}</dd>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800 sm:col-span-2">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Адреса доставки</dt>
+                    <dd className="text-base font-bold text-slate-900 dark:text-slate-100 break-words">{user.address || "Не вказано"}</dd>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Прибори</dt>
+                    <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.defaultCutlery || 0} шт</dd>
+                  </div>
+                </dl>
+              )}
+            </div>
           )}
         </div>
 
         {/* Purchase Subscription Section */}
-        <div className="mb-10 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 p-6 sm:p-8">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
-              <RefreshCw className="w-5 h-5" />
+        <div className="mb-6 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm transition-all">
+          <button 
+            onClick={() => setIsPurchaseOpen(!isPurchaseOpen)}
+            className="flex w-full items-center justify-between p-6 sm:p-8"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-400">
+                <RefreshCw className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl sm:text-2xl font-bold text-blue-900 dark:text-blue-100">Придбати абонемент</h2>
             </div>
-            <h2 className="text-2xl font-bold text-blue-900">Придбати абонемент</h2>
-          </div>
+            <div className="flex items-center justify-center h-10 w-10 rounded-full bg-blue-100/50 dark:bg-blue-900/50 transition">
+              {isPurchaseOpen ? <ChevronUp className="w-5 h-5 text-blue-500" /> : <ChevronDown className="w-5 h-5 text-blue-500" />}
+            </div>
+          </button>
           
-          <div className="mb-8 flex flex-wrap gap-2">
-            {tariffs
-              .filter(t => t.name !== "Template" && !t.name.toLowerCase().includes("indiv"))
-              .map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
-                    activeTab === t.id
-                      ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
-                      : "bg-white dark:bg-slate-900 text-blue-600 hover:bg-blue-50 border border-blue-100 dark:border-blue-800/50"
-                  }`}
-                >
-                  {t.name}
-                </button>
-              ))}
-          </div>
+          {isPurchaseOpen && (
+            <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-blue-100/50 dark:border-blue-800/30 mt-4">
+              <div className="mb-8 flex flex-wrap gap-2">
+                {tariffs
+                  .filter(t => t.name !== "Template" && !t.name.toLowerCase().includes("indiv"))
+                  .map((t) => (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
+                        activeTab === t.id
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-200"
+                          : "bg-white dark:bg-slate-900 text-blue-600 hover:bg-blue-50 border border-blue-100 dark:border-blue-800/50"
+                      }`}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
+              </div>
 
-          {tariffs.find(t => t.id === activeTab) && (
-            <SubscriptionOptions 
-              pkg={tariffs.find(t => t.id === activeTab)!} 
-              isNewClient={isNewClient}
-            />
+              {tariffs.find(t => t.id === activeTab) && (
+                <SubscriptionOptions 
+                  pkg={tariffs.find(t => t.id === activeTab)!} 
+                  isNewClient={isNewClient}
+                />
+              )}
+            </div>
           )}
         </div>
 
         {/* Balances Section */}
         {balances.length > 0 && (
-          <div className="mb-10 rounded-xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 p-6 sm:p-8">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-                <CreditCard className="w-5 h-5" />
-              </div>
-              <h2 className="text-2xl font-bold text-emerald-900">Мої абонементи</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {balances.map((balance) => (
-                <div key={balance.packageId} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-emerald-100 transition hover:shadow-md">
-                  <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">{balance.packageId}</div>
-                  <div className="text-3xl font-black text-slate-900 dark:text-slate-100 leading-none">
-                    {balance.remainingDays} <span className="text-lg font-bold text-slate-500">днів</span>
-                  </div>
-                  <p className="text-xs text-slate-400 mt-3 font-medium">Доступно для замовлення</p>
+          <div className="mb-10 rounded-xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 shadow-sm transition-all">
+            <button 
+              onClick={() => setIsBalancesOpen(!isBalancesOpen)}
+              className="flex w-full items-center justify-between p-6 sm:p-8"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400">
+                  <CreditCard className="w-5 h-5" />
                 </div>
-              ))}
-            </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-emerald-900 dark:text-emerald-100">Мої абонементи</h2>
+              </div>
+              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-emerald-100/50 dark:bg-emerald-900/50 transition">
+                {isBalancesOpen ? <ChevronUp className="w-5 h-5 text-emerald-600" /> : <ChevronDown className="w-5 h-5 text-emerald-600" />}
+              </div>
+            </button>
+            
+            {isBalancesOpen && (
+              <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-emerald-100/50 dark:border-emerald-800/30 mt-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {balances.map((balance) => (
+                    <div key={balance.packageId} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-emerald-100 dark:ring-emerald-800/50 transition hover:shadow-md">
+                      <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">{balance.packageId}</div>
+                      <div className="text-3xl font-black text-slate-900 dark:text-slate-100 leading-none">
+                        {balance.remainingDays} <span className="text-lg font-bold text-slate-500">днів</span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-3 font-medium">Доступно для замовлення</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
