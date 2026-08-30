@@ -7,8 +7,10 @@ import { revalidatePath } from "next/cache";
 export async function POST(request: Request) {
   try {
     const signature = request.headers.get("X-Sign");
-    const rawBody = await request.text();
-    const body = JSON.parse(rawBody);
+    const rawBodyBuffer = await request.arrayBuffer();
+    const rawBody = Buffer.from(rawBodyBuffer);
+    const bodyText = rawBody.toString('utf-8');
+    const body = JSON.parse(bodyText);
 
     // Basic verification - this can be expanded with ECDSA check
     if (!signature) {
@@ -16,8 +18,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing signature" }, { status: 400 });
     }
 
-    const isValid = await verifyMonobankWebhook(signature, Buffer.from(rawBody));
+    const isValid = await verifyMonobankWebhook(signature, rawBody);
     if (!isValid) {
+      console.warn("Monobank webhook signature invalid for body:", bodyText);
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
@@ -133,6 +136,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Monobank webhook failed:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const errObj = error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) };
+    return NextResponse.json({ error: "Internal Server Error", details: errObj }, { status: 500 });
   }
 }
