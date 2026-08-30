@@ -1033,8 +1033,7 @@ export async function submitOrders(
 
     let pageUrl: string | undefined;
 
-    const firstPrepared = prepared[0];
-    if (firstPrepared && firstPrepared.paymentMethod === "plata" && idempotencyKey) {
+    if (isPlata && idempotencyKey) {
       const totalAmount = results.reduce((sum: number, r: any) => sum + (r.order.price ?? 0), 0);
       if (totalAmount > 0) {
         const grossAmount = calculateAmountWithFee(totalAmount);
