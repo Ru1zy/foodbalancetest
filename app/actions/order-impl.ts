@@ -1014,11 +1014,16 @@ export async function submitOrders(
     revalidatePath("/");
     revalidatePath("/admin/orders");
 
-    await Promise.allSettled(
-      results.map((r: { order: Order; user: User; prepared: PreparedOrder }) =>
-        dispatchOrderSideEffects(r.order, r.user, r.prepared.validatedData, r.prepared.sanitizedCartData),
-      ),
-    );
+    const firstPrepared = prepared[0];
+    const isPlata = firstPrepared && firstPrepared.paymentMethod === "plata";
+
+    if (!isPlata) {
+      await Promise.allSettled(
+        results.map((r: { order: Order; user: User; prepared: PreparedOrder }) =>
+          dispatchOrderSideEffects(r.order, r.user, r.prepared.validatedData, r.prepared.sanitizedCartData),
+        ),
+      );
+    }
 
     // Fire processing of queued outbox jobs asynchronously
     processAllOutboxJobs().catch((err) => {

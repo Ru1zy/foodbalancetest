@@ -100,6 +100,35 @@ export async function processOutboxJob(jobId: string) {
            await sendSubscriptionRejectedAlert(purchase, purchase.user);
         }
       }
+    } else if (job.type === "TELEGRAM_NOTIFICATION") {
+      const payload = job.payload as { orderIds?: string[] };
+      if (payload.orderIds && payload.orderIds.length > 0) {
+        const { sendOrderNotification } = await import('./telegram');
+        const orders = await prisma.order.findMany({
+          where: { id: { in: payload.orderIds } },
+          include: { user: true },
+        });
+        
+        for (const order of orders) {
+          let sheetMissing = false;
+          try {
+            const { orderHasMissingSheetConfig } = await import("@/lib/monthlySheets");
+            sheetMissing = await orderHasMissingSheetConfig(order);
+          } catch (configError) {
+            console.error("orderHasMissingSheetConfig failed in outbox", configError);
+          }
+
+          try {
+            await sendOrderNotification(
+              order as any,
+              order.user as any,
+              sheetMissing ? { warningPrefix: "[🔴 ТАБЛИЦА НЕ НАЙДЕНА - ВНЕСТИ ВРУЧНУЮ]" } : {}
+            );
+          } catch (error) {
+            console.error(`sendOrderNotification failed in outbox for order ${order.id}:`, error);
+          }
+        }
+      }
     } else {
       throw new Error(`Unknown job type: ${job.type}`);
     }
