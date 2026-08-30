@@ -106,7 +106,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                   <div>
                     <span className="block text-gray-500 dark:text-slate-400 mb-1">Спосіб:</span>
                     <span className="font-semibold capitalize">
-                      {purchase.paymentMethod === 'bank_transfer' ? 'Переказ на картку' : (
+                      {purchase.paymentMethod === 'bank_transfer' ? 'Переказ на рахунок (IBAN)' : (
                         isHistory ? 'Готівка' : (
                           <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
                             ГОТІВКА - ПЕРЕВІРИТИ ОПЛАТУ

@@ -462,7 +462,7 @@ export async function sendSubscriptionPendingAlert(
   }
 
   const adminIds = adminChatId.split(",").map((id) => id.trim());
-  const method = purchase.paymentMethod === 'bank_transfer' ? '💳 Переказ на картку' : '💵 Готівка';
+  const method = purchase.paymentMethod === 'bank_transfer' ? '💳 Переказ на рахунок (IBAN)' : '💵 Готівка';
   const isAutoApproved = purchase.status === 'PAID';
 
   const text = isAutoApproved 

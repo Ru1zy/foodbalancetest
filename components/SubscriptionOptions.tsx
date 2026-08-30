@@ -215,7 +215,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
                 onChange={() => setPaymentMethod("bank_transfer")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на картку (ФОП)</span>
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на розрахунковий рахунок (IBAN)</span>
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
               <input 
