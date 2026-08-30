@@ -53,6 +53,9 @@ export function CheckoutSummaryAside({
   decrementQuantity,
   incrementQuantity,
 }: Props) {
+  const totalDaysInCart = cartItems.reduce((acc, item) => acc + (item.dayCount * item.quantity), 0);
+  const grandTotalDays = cartData.totalDays + totalDaysInCart;
+
   return (
     <aside className="h-fit rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8 lg:sticky lg:top-24">
       <div className="flex items-start justify-between gap-4">
@@ -64,51 +67,12 @@ export function CheckoutSummaryAside({
         </div>
         <div className="rounded-2xl bg-slate-100 dark:bg-slate-800 px-4 py-3 text-right">
           <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Днів</div>
-          <div className="mt-1 text-2xl font-black text-slate-950 dark:text-slate-50">{cartData.totalDays}</div>
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-xl bg-slate-950 px-5 py-5 text-white">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-sm text-slate-300">Тариф</span>
-          <span className="text-sm font-semibold text-white">{selectedPackageRaw ?? "—"}</span>
-        </div>
-        <div className="mt-3 flex items-center justify-between gap-3">
-          <span className="text-sm text-slate-300">До сплати</span>
-          <span className={`${isIndivCurrent ? "text-xl" : "text-3xl"} font-black text-white`}>
-            {isIndivCurrent ? (
-              "Індивідуальний розрахунок"
-            ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
-              "0 ₴"
-            ) : fiatPrice > 0 ? (
-              `${fiatPrice} ₴`
-            ) : (
-              "—"
-            )}
-          </span>
-        </div>
-        {availableDays > 0 && balanceDaysToUse > 0 && (
-          <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500 dark:border-emerald-400/30">
-            {fiatPrice === 0
-              ? `Ви використовуєте свій абонемент. З балансу буде списано ${balanceDaysToUse} дні(в).`
-              : `Часткова оплата: з балансу буде списано ${balanceDaysToUse} дні(в). Залишок до сплати: ${fiatPrice} ₴.`}
-          </div>
-        )}
-        <input
-          type="hidden"
-          name="paymentMethod"
-          value={fiatPrice === 0 ? "balance" : paymentMethod}
-        />
-        <div className="mt-3 flex items-start justify-between gap-3">
-          <span className="text-sm text-slate-300">Перша доставка</span>
-          <span className="text-right text-sm font-semibold text-white">
-            {deliveryDate ? formatDisplayDate(deliveryDate) : "—"}
-          </span>
+          <div className="mt-1 text-2xl font-black text-slate-950 dark:text-slate-50">{grandTotalDays}</div>
         </div>
       </div>
 
       {cartItems.length > 0 && (
-        <div className="mt-6">
+        <div className="mt-8">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
               Додані раціони
@@ -183,6 +147,90 @@ export function CheckoutSummaryAside({
         </div>
       )}
 
+      <div className="mt-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Раціон, що формується
+          </h3>
+          {summaryDays.length > 0 && (
+            <span className="text-xs font-medium text-slate-500">{summaryDays.length} поз.</span>
+          )}
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+          <div className="bg-slate-950 px-5 py-5 text-white">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-slate-300">Тариф</span>
+              <span className="text-sm font-semibold text-white">{selectedPackageRaw ?? "—"}</span>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <span className="text-sm text-slate-300">До сплати</span>
+              <span className={`${isIndivCurrent ? "text-xl" : "text-3xl"} font-black text-white`}>
+                {isIndivCurrent ? (
+                  "Індивідуальний розрахунок"
+                ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
+                  "0 ₴"
+                ) : fiatPrice > 0 ? (
+                  `${fiatPrice} ₴`
+                ) : (
+                  "—"
+                )}
+              </span>
+            </div>
+            {availableDays > 0 && balanceDaysToUse > 0 && (
+              <div className="mt-4 rounded-xl bg-emerald-500/20 p-3 text-xs font-semibold text-emerald-200 border border-emerald-500 dark:border-emerald-400/30">
+                {fiatPrice === 0
+                  ? `Ви використовуєте свій абонемент. З балансу буде списано ${balanceDaysToUse} дні(в).`
+                  : `Часткова оплата: з балансу буде списано ${balanceDaysToUse} дні(в). Залишок до сплати: ${fiatPrice} ₴.`}
+              </div>
+            )}
+            <input
+              type="hidden"
+              name="paymentMethod"
+              value={fiatPrice === 0 ? "balance" : paymentMethod}
+            />
+            <div className="mt-3 flex items-start justify-between gap-3">
+              <span className="text-sm text-slate-300">Перша доставка</span>
+              <span className="text-right text-sm font-semibold text-white">
+                {deliveryDate ? formatDisplayDate(deliveryDate) : "—"}
+              </span>
+            </div>
+          </div>
+          
+          <div className="bg-slate-50 dark:bg-slate-900 px-5 py-4">
+            {summaryDays.length === 0 ? (
+              <div className="text-sm text-slate-600 dark:text-slate-400 text-center py-2">
+                Поки що немає повністю зібраних днів. Поверніться до меню та додайте хоча б один день.
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {summaryDays.map((day) => (
+                  <li key={day.dayId} className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-3 last:border-0 last:pb-0">
+                    <div className="min-w-0 pr-4">
+                      <p className="break-words text-sm font-bold text-slate-900 dark:text-slate-100">{day.dayName}</p>
+                      <p className="mt-0.5 break-words text-xs text-slate-500">{day.scheduleLabel}</p>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => handleRemoveDay(day)} 
+                      className="text-xs font-semibold text-red-500 hover:text-red-700 transition"
+                    >
+                      Видалити
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {incompleteDaysCount > 0 && (
+        <div className="mt-5 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Неповністю зібрані дні не потраплять у замовлення. Зараз таких днів: {incompleteDaysCount}.
+        </div>
+      )}
+
       <button
         type="button"
         onClick={handleAddAnotherPackage}
@@ -192,7 +240,7 @@ export function CheckoutSummaryAside({
       </button>
 
       {(cartItems.length > 0 || (currentDraftValid && grandGrossTotal > 0)) && (
-        <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-100 dark:bg-slate-800 px-5 py-4">
+        <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-100 dark:bg-slate-800 px-5 py-4 border border-slate-200 dark:border-slate-700">
           <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">Разом за всі раціони</span>
           <span className="text-xl font-black text-slate-950 dark:text-slate-50">
             {grandGrossTotal > 0 ? `${grandGrossTotal} ₴` : "—"}
@@ -216,54 +264,6 @@ export function CheckoutSummaryAside({
           <div className="mt-4 flex justify-center">
             <TelegramDeepLinkAuth />
           </div>
-        </div>
-      )}
-
-      <div className="mt-6">
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-            {currentDraftValid ? "Поточний раціон" : "Обрані дні"}
-          </h3>
-          {summaryDays.length > 0 && (
-            <span className="text-xs font-medium text-slate-500">{summaryDays.length} позицій</span>
-          )}
-        </div>
-
-        {summaryDays.length === 0 ? (
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20 px-4 py-5 text-sm text-slate-600 dark:text-slate-400">
-            Поки що немає повністю зібраних днів. Поверніться до меню та додайте хоча б один день.
-          </div>
-        ) : (
-          <ul className="space-y-3">
-            {summaryDays.map((day) => (
-              <li
-                key={day.dayId}
-                className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-4 py-4"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="break-words text-sm font-bold text-slate-900 dark:text-slate-100">
-                      {day.dayName} - {cartData.packageType}
-                    </p>
-                    <p className="mt-1 break-words text-sm text-slate-500">{day.scheduleLabel}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveDay(day)}
-                    className="inline-flex shrink-0 items-center self-start rounded-lg px-2.5 py-1.5 text-xs font-semibold text-red-600 transition hover:bg-red-50 active:scale-95"
-                  >
-                    Видалити
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {incompleteDaysCount > 0 && (
-        <div className="mt-5 rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Неповністю зібрані дні не потраплять у замовлення. Зараз таких днів: {incompleteDaysCount}.
         </div>
       )}
     </aside>
