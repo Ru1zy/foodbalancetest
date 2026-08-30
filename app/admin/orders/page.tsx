@@ -357,15 +357,22 @@ export default async function AdminOrdersPage({
                             <div className="text-xs text-slate-600 dark:text-slate-400">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
                             <div className="text-xs text-slate-600 dark:text-slate-400">🍴 Прибори: {order.cutlery}</div>
                             {order.packageType && (
-                              <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">
-                                <span>💰</span>
-                                <span>
-                                  {order.price !== null && order.price > 0 
-                                    ? `${order.price} ₴` 
-                                    : order.packageType.toLowerCase().includes("ind") 
-                                      ? "Індивідуально" 
-                                      : "0 ₴"}
-                                </span>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">
+                                  <span>💰</span>
+                                  <span>
+                                    {order.price !== null && order.price > 0 
+                                      ? `${order.price} ₴` 
+                                      : order.packageType.toLowerCase().includes("ind") 
+                                        ? "Індивідуально" 
+                                        : "0 ₴"}
+                                  </span>
+                                </div>
+                                <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                  {order.paymentMethod === 'cash' && "💵 Готівка"}
+                                  {order.paymentMethod === 'bank_transfer' && "🏦 Переказ"}
+                                  {order.paymentMethod === 'plata' && "💳 Plata by mono"}
+                                </div>
                               </div>
                             )}
                             {order.menuDetails && (

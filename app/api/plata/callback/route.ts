@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { verifyMonobankWebhook } from "@/lib/monobank";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
+import { revalidatePath } from "next/cache";
 
 export async function POST(request: Request) {
   try {
@@ -123,6 +124,11 @@ export async function POST(request: Request) {
     processAllOutboxJobs().catch((err) => {
       console.error("processAllOutboxJobs error after Monobank webhook:", err);
     });
+
+    // Clear the cache so the UI updates
+    revalidatePath("/admin/orders");
+    revalidatePath("/admin/today");
+    revalidatePath("/");
 
     return NextResponse.json({ success: true });
   } catch (error) {
