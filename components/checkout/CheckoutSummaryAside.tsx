@@ -22,7 +22,7 @@ type Props = {
   incompleteDaysCount: number;
   currentDraftValid: boolean;
   availableDays: number;
-  paymentMethod: "plata" | "cash";
+  paymentMethod: "plata" | "cash" | "bank_transfer";
   handleAddAnotherPackage: () => void;
   handleRemoveDay: (day: SummaryDay) => void;
   removeCartItem: (id: string) => void;

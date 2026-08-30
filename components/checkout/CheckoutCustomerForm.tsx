@@ -8,8 +8,10 @@ type Props = {
   isAuthenticated: boolean;
   fiatPrice: number;
   balanceDaysToUse: number;
-  paymentMethod: "plata" | "cash";
-  setPaymentMethod: (m: "plata" | "cash") => void;
+  paymentMethod: "plata" | "cash" | "bank_transfer";
+  setPaymentMethod: (m: "plata" | "cash" | "bank_transfer") => void;
+  file?: File | null;
+  setFile?: (file: File | null) => void;
   cartItems: CartItem[];
   grandGrossTotal: number;
   hasIndivInCart: boolean;
@@ -30,6 +32,8 @@ export function CheckoutCustomerForm({
   balanceDaysToUse,
   paymentMethod,
   setPaymentMethod,
+  file,
+  setFile,
   cartItems,
   grandGrossTotal,
   hasIndivInCart,
