@@ -34,7 +34,8 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
   // Validate day input boundaries
   const handleDaysChange = (newDays: number) => {
     if (newDays < 2) newDays = 2;
-    if (newDays > 30) newDays = 30; // maximum 30 days
+    const maxDays = pkg.name.toLowerCase().includes("sushka") ? 14 : 30;
+    if (newDays > maxDays) newDays = maxDays;
     setDays(newDays);
   };
 
@@ -155,7 +156,7 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
             <input
               type="number"
               min={2}
-              max={90}
+              max={pkg.name.toLowerCase().includes("sushka") ? 14 : 30}
               value={days}
               onChange={(e) => handleDaysChange(parseInt(e.target.value) || 2)}
               className="w-16 text-center text-xl font-bold rounded-lg border border-gray-200 dark:border-slate-700 py-1 bg-transparent text-gray-900 dark:text-slate-100"

@@ -48,18 +48,28 @@ export async function createSubscriptionPurchaseAction(
     return { ok: false, error: "Максимальна кількість днів: 30" };
   }
 
-  // Trial restriction: max once per user
+  // Trial restriction: max once per user, and ONLY for new clients
   if (days === 2) {
-    const existingTrial = await prisma.subscriptionPurchase.findFirst({
+    const existingOrder = await prisma.order.findFirst({
       where: {
         userId,
-        days: 2,
         status: { not: "CANCELLED" },
       },
     });
-    if (existingTrial) {
+    const existingSubscription = await prisma.subscriptionPurchase.findFirst({
+      where: {
+        userId,
+        status: { not: "CANCELLED" },
+      },
+    });
+    if (existingOrder || existingSubscription) {
       return { ok: false, error: "Пробний тариф на 2 дні доступний лише один раз для нових клієнтів." };
     }
+  }
+
+  // Sushka restriction: max 14 days
+  if (packageId.toLowerCase().includes("sushka") && days > 14) {
+    return { ok: false, error: "Для програми Сушка максимальна кількість днів: 14" };
   }
 
   // Check if user has Telegram connected
