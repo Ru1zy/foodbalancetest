@@ -73,7 +73,7 @@ export function CheckoutCustomerForm({
             <div className="font-bold text-emerald-900">Повністю оплачено з абонемента</div>
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <button
               type="button"
               onClick={() => setPaymentMethod("plata")}
@@ -120,6 +120,26 @@ export function CheckoutCustomerForm({
                 {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
               </div>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setPaymentMethod("bank_transfer")}
+              className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
+                paymentMethod === "bank_transfer"
+                  ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/40 ring-2 ring-blue-500/20"
+                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
+              }`}
+            >
+              <div className="text-left">
+                <div className="font-bold text-slate-900 dark:text-slate-100">Переказ IBAN</div>
+                <div className="text-xs text-slate-500">За реквізитами</div>
+              </div>
+              <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
+                paymentMethod === "bank_transfer" ? "border-blue-500 dark:border-blue-400 bg-blue-500" : "border-slate-300 dark:border-slate-600"
+              }`}>
+                {paymentMethod === "bank_transfer" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
+              </div>
+            </button>
           </div>
         )}
 
@@ -127,6 +147,27 @@ export function CheckoutCustomerForm({
           <p className="mt-3 px-1 text-sm text-orange-600 dark:text-orange-500 italic">
             * Платіжні системи можуть стягувати додаткову комісію (1.3%).
           </p>
+        )}
+
+        {paymentMethod === "bank_transfer" && fiatPrice > 0 && (
+          <div className="mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-800">
+            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
+              Для оплати переказом, будь ласка, надішліть кошти на цей рахунок:
+            </p>
+            <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border border-blue-100 dark:border-blue-800 text-sm">
+              XXXX XXXX XXXX XXXX (ФОП Іванов І.І.)
+            </p>
+            
+            <label className="block text-sm font-medium text-gray-900 dark:text-slate-100 mb-2">
+              Завантажте скріншот квитанції про оплату
+            </label>
+            <input 
+              type="file" 
+              accept="image/*"
+              onChange={(e) => setFile?.(e.target.files?.[0] || null)}
+              className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+            />
+          </div>
         )}
 
         {balanceDaysToUse > 0 && fiatPrice > 0 && (
@@ -293,9 +334,9 @@ export function CheckoutCustomerForm({
             </div>
             <button
               type="submit"
-              disabled={isPending || (cartTotalDays === 0 && cartItems.length === 0)}
+              disabled={isPending || (cartTotalDays === 0 && cartItems.length === 0) || (paymentMethod === "bank_transfer" && !file)}
               className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition-all duration-200 ease-out active:scale-95 sm:w-full ${
-                isPending || (cartTotalDays === 0 && cartItems.length === 0)
+                isPending || (cartTotalDays === 0 && cartItems.length === 0) || (paymentMethod === "bank_transfer" && !file)
                   ? "cursor-not-allowed bg-slate-200 text-slate-400"
                   : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
               }`}

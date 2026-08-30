@@ -15,6 +15,7 @@ import {
   type CartOrderInput,
   type OrderCartData,
 } from "@/app/actions/order-impl";
+import { uploadReceiptAction } from "@/app/actions/upload-receipt";
 import {
   dateForMenuDayOfWeek,
   earliestMenuDeliveryDateFromCartDays,
@@ -93,7 +94,9 @@ export default function CheckoutPageImpl({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
-  const [paymentMethod, setPaymentMethod] = useState<"plata" | "cash">("plata");
+  const [paymentMethod, setPaymentMethod] = useState<"plata" | "cash" | "bank_transfer">("plata");
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
   // Stable idempotency key for this checkout session — prevents duplicate orders
@@ -455,6 +458,38 @@ export default function CheckoutPageImpl({
     setFeedback(null);
 
     startTransition(async () => {
+      let finalReceiptUrl = null;
+
+      if (paymentMethod === "bank_transfer") {
+        if (!file) {
+          setFeedback({
+            message: "Будь ласка, завантажте скріншот квитанції про оплату.",
+            tone: "error",
+          });
+          return;
+        }
+
+        setIsUploading(true);
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", file);
+        
+        try {
+          const uploadRes = await uploadReceiptAction(uploadFormData);
+          if (!uploadRes.ok || !uploadRes.url) {
+            throw new Error(uploadRes.error || "Не вдалося завантажити квитанцію");
+          }
+          finalReceiptUrl = uploadRes.url;
+        } catch (err: any) {
+          setFeedback({
+            message: err.message || "Помилка при завантаженні квитанції.",
+            tone: "error",
+          });
+          setIsUploading(false);
+          return;
+        }
+        setIsUploading(false);
+      }
+
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
@@ -462,6 +497,9 @@ export default function CheckoutPageImpl({
       // The server applies balance per individual order, so always pass the
       // user's chosen fiat method; balance-covered orders resolve to 0 ₴ there.
       formData.set("paymentMethod", paymentMethod);
+      if (finalReceiptUrl) {
+        formData.set("receiptUrl", finalReceiptUrl);
+      }
 
       // Build the order list: previously added packages + the current draft.
       const items: CartOrderInput[] = cartItems.map((item) => ({
@@ -598,6 +636,8 @@ export default function CheckoutPageImpl({
               balanceDaysToUse={balanceDaysToUse}
               paymentMethod={paymentMethod}
               setPaymentMethod={setPaymentMethod}
+              file={file}
+              setFile={setFile}
               cartItems={cartItems}
               grandGrossTotal={grandGrossTotal}
               hasIndivInCart={hasIndivInCart}

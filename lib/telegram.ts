@@ -21,6 +21,8 @@ type TelegramOrder = {
   notes: string | null;
   packageType: string;
   price?: number | null;
+  paymentMethod?: string | null;
+  receiptUrl?: string | null;
   sendEmailReceipt?: boolean;
   receiptEmail?: string | null;
 };
@@ -321,11 +323,13 @@ export async function sendOrderNotification(
     "🚨 <b>Нове замовлення!</b>",
     `👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone)})`,
     `📦 <b>Пакет:</b> ${escapeHtml(order.packageType)}`,
+    `💰 <b>Спосіб оплати:</b> ${order.paymentMethod === 'bank_transfer' ? 'Переказ (IBAN)' : (order.paymentMethod === 'plata' ? 'Plata' : (order.paymentMethod === 'cash' ? 'Готівкою' : order.paymentMethod))}`,
+    order.receiptUrl ? `🧾 <b>Квитанція:</b> <a href="${order.receiptUrl}">Переглянути</a>` : null,
     `📍 <b>Адреса:</b> ${escapeHtml(user.address || "Не вказано")}`,
-    `🍴 <b>Прибори:</b> ${escapeHtml(order.cutlery || "Не вказано")}`,
+    `🍴 <b>Прибори:</b> ${escapeHtml(order.cutlery?.toString() || "Не вказано")}`,
     `💬 <b>Коментар:</b> ${escapeHtml(order.notes || user.notes || "Без коментаря")}`,
     `📅 <b>Дні:</b>\n${daysText}`,
-  ].join("\n").replace(/&nbsp;/g, ' ');
+  ].filter(Boolean).join("\n").replace(/&nbsp;/g, ' ');
 
   const sendPromises = adminIds.map((chatId) =>
     fetch(`https://api.telegram.org/bot${token}/sendMessage`, {

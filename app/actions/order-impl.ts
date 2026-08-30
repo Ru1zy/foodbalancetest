@@ -376,6 +376,7 @@ async function prepareOrderForSubmission(
     comment: formData.get("comment"),
     cutlery: Number(formData.get("cutlery") ?? 0),
     paymentMethod: formData.get("paymentMethod"),
+    receiptUrl: formData.get("receiptUrl") || undefined,
     sendEmailReceipt: formData.get("sendEmailReceipt") === "true",
     receiptEmail: formData.get("receiptEmail") || "",
   };
@@ -596,6 +597,7 @@ async function persistOrderInTransaction(
           cutlery: validatedData.cutlery,
           sendEmailReceipt: validatedData.sendEmailReceipt ?? false,
           receiptEmail: validatedData.receiptEmail || null,
+          receiptUrl: validatedData.receiptUrl || null,
           items: sanitizedCartData,
           notes: validatedData.comment || null,
           packageType: sanitizedCartData.packageType,
@@ -670,6 +672,7 @@ async function persistOrderInTransaction(
       cutlery: validatedData.cutlery,
       sendEmailReceipt: validatedData.sendEmailReceipt ?? false,
       receiptEmail: validatedData.receiptEmail || null,
+      receiptUrl: validatedData.receiptUrl || null,
       items: sanitizedCartData,
       notes: validatedData.comment || null,
       packageType: sanitizedCartData.packageType,

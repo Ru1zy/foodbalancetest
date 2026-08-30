@@ -11,7 +11,8 @@ export const checkoutSchema = z.object({
   address: z.string().min(5, "Введіть повну адресу доставки"),
   comment: z.string(),
   cutlery: z.number().int().min(0).max(10),
-  paymentMethod: z.enum(["balance", "card", "cash", "fiat", "plata"]),
+  paymentMethod: z.enum(["balance", "card", "cash", "fiat", "plata", "bank_transfer"]),
+  receiptUrl: z.string().optional(),
   sendEmailReceipt: z.boolean().optional(),
   receiptEmail: z.string().email("Невірний формат email").optional().or(z.literal('')),
 });
