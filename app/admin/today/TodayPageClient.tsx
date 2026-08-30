@@ -239,19 +239,6 @@ const handleExportToKitchen = () => {
                       <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                         {order.user.phone}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.deliveryAddress || order.user.address || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.packageType}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.cutlery}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.notes ? (
-                          <div className="max-w-xs text-xs italic text-slate-500">
-                            {order.notes}
                       <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
                         {order.user.name}
                       </td>
