@@ -144,21 +144,21 @@ export default function CheckoutPageImpl({
   }, [pkg]);
 
   useEffect(() => {
-    if (!authenticatedUser || customerProfile.isAuthenticated) {
-      return;
+    if (authenticatedUser && !customerProfile.isAuthenticated) {
+      setCustomerProfile({
+        address: authenticatedUser.address || "",
+        cutlery: authenticatedUser.defaultCutlery || 0,
+        isAuthenticated: true,
+        name: authenticatedUser.name,
+        phone: authenticatedUser.phone || "",
+        userId: "",
+        chatId: "",
+        notes: "",
+        username: "",
+      });
+    } else if (!authenticatedUser && customerProfile.isAuthenticated) {
+      setCustomerProfile({ isAuthenticated: false });
     }
-
-    setCustomerProfile({
-      address: authenticatedUser.address || "",
-      cutlery: authenticatedUser.defaultCutlery || 0,
-      isAuthenticated: true,
-      name: authenticatedUser.name,
-      phone: authenticatedUser.phone || "",
-      userId: "",
-      chatId: "",
-      notes: "",
-      username: "",
-    });
   }, [authenticatedUser, customerProfile.isAuthenticated, setCustomerProfile]);
 
   useEffect(() => {
