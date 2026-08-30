@@ -103,9 +103,8 @@ export async function verifyMonobankWebhook(
   try {
     const pubKeyBase64 = await getMonobankPublicKey();
     
-    // The key from API is raw base64. It needs to be strictly PEM formatted in 64-char chunks for some Node.js versions.
-    const chunkedKey = pubKeyBase64.match(/.{1,64}/g)?.join('\n') || pubKeyBase64;
-    const pemKey = `-----BEGIN PUBLIC KEY-----\n${chunkedKey}\n-----END PUBLIC KEY-----`;
+    // The key from Monobank API is a base64 encoded PEM string.
+    const pemKey = Buffer.from(pubKeyBase64, 'base64').toString('utf-8');
 
     const verify = crypto.createVerify("SHA256");
     verify.update(rawBody);
