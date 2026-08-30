@@ -352,7 +352,7 @@ export default function ProfilePageClient({
           </button>
           
           {isSettingsOpen && (
-            <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-slate-100 dark:border-slate-800 mt-4">
+            <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-6 sm:pt-8 border-t border-slate-100 dark:border-slate-800">
               <div className="mb-8 flex justify-end">
                 <button
                   onClick={() => setIsEditing(!isEditing)}
@@ -475,7 +475,7 @@ export default function ProfilePageClient({
           </button>
           
           {isPurchaseOpen && (
-            <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-blue-100/50 dark:border-blue-800/30 mt-4">
+            <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-6 sm:pt-8 border-t border-blue-100/50 dark:border-blue-800/30">
               <div className="mb-8 flex flex-wrap gap-2">
                 {tariffs
                   .filter(t => t.name !== "Template" && !t.name.toLowerCase().includes("indiv"))
@@ -523,7 +523,7 @@ export default function ProfilePageClient({
             </button>
             
             {isBalancesOpen && (
-              <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-0 border-t border-emerald-100/50 dark:border-emerald-800/30 mt-4">
+              <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-6 sm:pt-8 border-t border-emerald-100/50 dark:border-emerald-800/30">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {balances.map((balance) => (
                     <div key={balance.packageId} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-emerald-100 dark:ring-emerald-800/50 transition hover:shadow-md">
