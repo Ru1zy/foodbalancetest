@@ -7,6 +7,7 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import GradientOrbs from "@/components/GradientOrbs";
 import ConditionalWrapper from "@/components/ConditionalWrapper";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
 const comfortaa = Comfortaa({
@@ -61,6 +62,13 @@ export default function RootLayout({
           <ConditionalWrapper>
             <Footer />
           </ConditionalWrapper>
+          <Toaster 
+            position="bottom-center"
+            toastOptions={{
+              className: 'dark:bg-slate-800 dark:text-slate-100',
+              duration: 4000,
+            }}
+          />
         </ThemeProvider>
       </body>
     </html>

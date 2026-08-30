@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm, FormProvider } from "react-hook-form";
+import { toast } from "react-hot-toast";
 import { CheckoutSuccessView } from "@/components/checkout/CheckoutSuccessView";
 import { CheckoutSummaryAside } from "@/components/checkout/CheckoutSummaryAside";
 import { CheckoutCustomerForm } from "@/components/checkout/CheckoutCustomerForm";
@@ -410,6 +411,10 @@ export default function CheckoutPageImpl({
     }
     clearSelections();
     resetWizard();
+    toast.success("Раціон додано до кошика. Оберіть наступний!", {
+      duration: 5000,
+      icon: '🛒',
+    });
     router.push("/");
   };
 
