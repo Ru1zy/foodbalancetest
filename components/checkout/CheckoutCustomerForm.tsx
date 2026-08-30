@@ -1,4 +1,5 @@
 import { useFormContext } from "react-hook-form";
+import { useEffect, useRef } from "react";
 import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
 import { isIndivPackage } from "@/lib/order-selection";
 import { CartItem } from "@/lib/orderStore";
@@ -51,6 +52,14 @@ export function CheckoutCustomerForm({
     watch,
     formState: { errors },
   } = useFormContext<CheckoutSchema>();
+
+  const feedbackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (feedback) {
+      feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [feedback]);
 
   return (
     <section className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
@@ -183,6 +192,7 @@ export function CheckoutCustomerForm({
 
       {feedback && (
         <div
+          ref={feedbackRef}
           className={`mb-6 rounded-2xl border px-4 py-3 text-sm font-medium ${
             feedback.tone === "success"
               ? "border-green-200 bg-green-50 text-green-800"

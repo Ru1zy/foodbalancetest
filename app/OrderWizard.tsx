@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import type { MenuItem } from "@/lib/menu-types";
 import { getSelectableMenuDayNumbers } from "@/lib/order-logic";
 import { useOrderStore } from "@/lib/orderStore";
@@ -25,6 +27,7 @@ type Props = {
 
 export default function OrderWizard({ menuItems, tariffs }: Props) {
   const step = useOrderStore((s) => s.step);
+  const cartItems = useOrderStore((s) => s.cartItems);
 
   if (!menuItems.length) {
     return (
@@ -104,6 +107,22 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
             ))}
           </div>
           <PackageSelector tariffs={tariffs} />
+
+          {cartItems.length > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-lg flex items-center justify-between dark:bg-emerald-900/90 dark:border-emerald-700">
+                <div className="text-emerald-800 dark:text-emerald-100 text-sm font-semibold">
+                  У кошику {cartItems.length} {cartItems.length === 1 ? "раціон" : cartItems.length >= 5 ? "раціонів" : "раціони"}
+                </div>
+                <Link
+                  href="/checkout"
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm"
+                >
+                  Оформити
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       );
     case 2:
