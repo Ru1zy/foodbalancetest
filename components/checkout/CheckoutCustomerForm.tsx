@@ -86,80 +86,51 @@ export function CheckoutCustomerForm({
             <div className="font-bold text-emerald-900">Повністю оплачено з абонемента</div>
           </div>
         ) : (
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("plata")}
-              className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all group ${
-                paymentMethod === "plata"
-                  ? "border-slate-950 dark:border-slate-800 bg-[#141414] ring-2 ring-slate-900/20 shadow-lg"
-                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800"
-              }`}
-            >
-              <div className="text-left">
-                {paymentMethod === "plata" ? (
-                  <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-6 object-contain" />
-                ) : (
-                  <>
-                    <img src="/images/mono/plata_light_bg.svg" alt="Plata by mono" className="h-6 object-contain block dark:hidden" />
-                    <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-6 object-contain hidden dark:block" />
-                  </>
-                )}
-                <div className={`text-xs mt-2 ${paymentMethod === "plata" ? "text-slate-400" : "text-slate-500"}`}>Apple Pay, Google Pay, Картка</div>
+          <div className="mt-4 flex flex-col gap-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="plata"
+                checked={paymentMethod === "plata"}
+                onChange={() => setPaymentMethod("plata")}
+                className="w-4 h-4 text-emerald-600"
+              />
+              <div className="flex items-center text-gray-900 dark:text-slate-100 font-medium">
+                <img src="/images/mono/plata_light_bg.svg" alt="Plata by mono" className="h-5 object-contain block dark:hidden mr-2" />
+                <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-5 object-contain hidden dark:block mr-2" />
               </div>
-              <div className={`h-6 w-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
-                paymentMethod === "plata" ? "border-white bg-white" : "border-slate-300 dark:border-slate-600"
-              }`}>
-                {paymentMethod === "plata" && <div className="h-2 w-2 rounded-full bg-[#141414]" />}
-              </div>
-            </button>
+            </label>
+            {paymentMethod === "plata" && fiatPrice > 0 && (
+              <p className="ml-6 text-sm text-orange-600 dark:text-orange-500 italic">
+                * Платіжні системи можуть стягувати додаткову комісію (1.3%).
+              </p>
+            )}
 
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("cash")}
-              className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
-                paymentMethod === "cash"
-                  ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 ring-2 ring-emerald-500/20"
-                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
-              }`}
-            >
-              <div className="text-left">
-                <div className="font-bold text-slate-900 dark:text-slate-100">Готівкою</div>
-                <div className="text-xs text-slate-500">При отриманні кур&apos;єру</div>
-              </div>
-              <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                paymentMethod === "cash" ? "border-emerald-500 dark:border-emerald-400 bg-emerald-500" : "border-slate-300 dark:border-slate-600"
-              }`}>
-                {paymentMethod === "cash" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
-              </div>
-            </button>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="cash"
+                checked={paymentMethod === "cash"}
+                onChange={() => setPaymentMethod("cash")}
+                className="w-4 h-4 text-emerald-600"
+              />
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Готівкою при отриманні кур&apos;єру</span>
+            </label>
 
-            <button
-              type="button"
-              onClick={() => setPaymentMethod("bank_transfer")}
-              className={`flex items-center justify-between rounded-2xl border px-5 py-4 transition-all ${
-                paymentMethod === "bank_transfer"
-                  ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/40 ring-2 ring-blue-500/20"
-                  : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-300 dark:border-slate-600"
-              }`}
-            >
-              <div className="text-left">
-                <div className="font-bold text-slate-900 dark:text-slate-100">Переказ IBAN</div>
-                <div className="text-xs text-slate-500">За реквізитами</div>
-              </div>
-              <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center ${
-                paymentMethod === "bank_transfer" ? "border-blue-500 dark:border-blue-400 bg-blue-500" : "border-slate-300 dark:border-slate-600"
-              }`}>
-                {paymentMethod === "bank_transfer" && <div className="h-2 w-2 rounded-full bg-white dark:bg-slate-900" />}
-              </div>
-            </button>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="radio" 
+                name="paymentMethod" 
+                value="bank_transfer"
+                checked={paymentMethod === "bank_transfer"}
+                onChange={() => setPaymentMethod("bank_transfer")}
+                className="w-4 h-4 text-emerald-600"
+              />
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на розрахунковий рахунок (IBAN)</span>
+            </label>
           </div>
-        )}
-
-        {paymentMethod === "plata" && fiatPrice > 0 && (
-          <p className="mt-3 px-1 text-sm text-orange-600 dark:text-orange-500 italic">
-            * Платіжні системи можуть стягувати додаткову комісію (1.3%).
-          </p>
         )}
 
         {paymentMethod === "bank_transfer" && fiatPrice > 0 && (
