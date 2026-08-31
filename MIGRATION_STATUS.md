@@ -1,6 +1,6 @@
 # FoodBalance: migration and product roadmap
 
-Last updated: 2026-08-16
+Last updated: 2026-08-31
 
 This is the live project tracker. Read it before making changes and update the
 checkboxes and notes after every completed step. Never put credentials, tokens,
@@ -349,7 +349,7 @@ Current research as of 2026-08-09:
 - [x] Add email duplication of admin Telegram alerts only after an email provider,
   sender domain, recipients, and delivery policy are selected. (Implemented via Gmail API over HTTPS to bypass Railway SMTP blocks)
 
-### UI/UX improvements (2026-08-14 – 2026-08-22)
+### UI/UX improvements (2026-08-14 – 2026-08-31)
 
 - [x] Implement light/dark mode toggle using `next-themes` (class strategy) with
   an animated Sun / Moon switch in the header.
@@ -368,6 +368,9 @@ Current research as of 2026-08-09:
 - [x] Add Telegram link to footer, reorder social links: Instagram -> Telegram -> TikTok.
 - [x] Fix subscription day-input contrast in dark mode.
 - [x] Improve mobile view of checkout form (ensure inputs scroll into view) and login modal.
+- [x] **Redesign Checkout Cart UI (31.08):** Unify draft and cart items into a single, cohesive cart summary grouped by package, replacing clunky action buttons with clean links.
+- [x] **Add Floating Cart Indicator (31.08):** Add a persistent floating cart button on the main layout to guide users back to checkout.
+- [x] **Redesign Profile Page (31.08):** Wrap Settings, Subscriptions, and Balances in collapsible accordions to save vertical space and improve usability.
 
 ## Phase 6: verification and release
 
@@ -406,8 +409,8 @@ Current research as of 2026-08-09:
 ## Next Steps (Tomorrow / Finalization)
 
 - [ ] Connect custom domain to Railway and update `APP_BASE_URL` & `NEXT_PUBLIC_APP_URL` in `.env`.
-- [ ] Finalize Monobank API token and Webhook URL setup (once approved by Mono).
-- [ ] Set up AWS S3 / Cloudflare R2 tokens for image uploads (`AWS_S3_*` env vars).
+- [x] Finalize Monobank API token and Webhook URL setup (Fixed PEM format requirement; waiting for final Mono approval).
+- [ ] Set up Cloudflare R2 bucket (`foodbalance-storage`) for image uploads, generate API tokens, and configure `S3_*` env vars in Railway.
 - [ ] Add Railway billing (credit card) to keep the service running.
 - [ ] Set up a proper external cron service (like cron-job.org or GitHub Actions) and configure `CRON_SECRET`.
 
