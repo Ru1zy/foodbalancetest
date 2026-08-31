@@ -34,8 +34,10 @@ type OrderItemsPayload = {
 };
 
 async function resolveOrderDishes(order: {
+  id: string;
   deliveryDate: Date;
   items: unknown;
+  days?: { id: string; deliveryDate: Date; status: string }[];
 }): Promise<ResolvedDay[]> {
   if (!order.items || typeof order.items !== "object") {
     return [];
@@ -160,9 +162,19 @@ async function resolveOrderDishes(order: {
       }
     }
 
+    // Match with actual OrderDay from DB
+    const matchingOrderDay = order.days?.find(
+      (d) =>
+        d.deliveryDate.getUTCFullYear() === actualDate.getUTCFullYear() &&
+        d.deliveryDate.getUTCMonth() === actualDate.getUTCMonth() &&
+        d.deliveryDate.getUTCDate() === actualDate.getUTCDate()
+    );
+
     resolvedDays.push({
       date: actualDate,
       dishes: dayDishes,
+      orderDayId: matchingOrderDay?.id,
+      status: matchingOrderDay?.status,
     });
   }
 
@@ -252,7 +264,10 @@ export default async function ProfilePage(
   const purchaseIds = paginatedActions.filter(a => a.type === 'PURCHASE').map(a => a.id);
 
   const [rawOrders, rawPurchases] = await Promise.all([
-    orderIds.length > 0 ? prisma.order.findMany({ where: { id: { in: orderIds } } }) : Promise.resolve([]),
+    orderIds.length > 0 ? prisma.order.findMany({ 
+      where: { id: { in: orderIds } }, 
+      include: { days: { select: { id: true, deliveryDate: true, status: true } } } 
+    }) : Promise.resolve([]),
     purchaseIds.length > 0 ? prisma.subscriptionPurchase.findMany({ where: { id: { in: purchaseIds } } }) : Promise.resolve([])
   ]);
 

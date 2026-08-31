@@ -489,3 +489,89 @@ export async function syncOrderToMonthlySheets(order: Order, user: User): Promis
     console.error("syncOrderToMonthlySheets failed:", error);
   }
 }
+
+/**
+ * Strikes through and highlights an order's row in red to mark it as cancelled.
+ * It searches the 'L' column (OrderId) on the specified tab.
+ */
+export async function markOrderCancelledInSheet(
+  orderId: string,
+  monthKey: string,
+  tabName: string
+): Promise<void> {
+  try {
+    const sheets = getSheetsClient();
+    if (!sheets) return;
+
+    const spreadsheetId = await getSheetIdForMonth(monthKey);
+    if (!spreadsheetId) {
+      console.warn(`markOrderCancelledInSheet: no sheet for ${monthKey}.`);
+      return;
+    }
+
+    // Resolve sheetId for formatting
+    const meta = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: "sheets.properties(sheetId,title)",
+    });
+    const sheetId = meta.data.sheets?.find(
+      (s: sheets_v4.Schema$Sheet) => s.properties?.title === tabName
+    )?.properties?.sheetId;
+
+    if (sheetId == null) {
+      console.warn(`markOrderCancelledInSheet: tab ${tabName} not found.`);
+      return;
+    }
+
+    // Find the row by OrderId in column L
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${tabName}!L:L`,
+    });
+
+    const rows = response.data.values || [];
+    let rowIndex = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][0] === orderId) {
+        rowIndex = i;
+        break;
+      }
+    }
+
+    if (rowIndex === -1) {
+      console.warn(`markOrderCancelledInSheet: order ${orderId} not found in ${tabName}.`);
+      return;
+    }
+
+    // Apply red background and strikethrough
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId,
+                startRowIndex: rowIndex,
+                endRowIndex: rowIndex + 1,
+                startColumnIndex: 1, // Column B (index 1)
+                endColumnIndex: 12, // Column L (index 11 + 1)
+              },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColor: { red: 1.0, green: 0.9, blue: 0.9 }, // Light red
+                  textFormat: { strikethrough: true },
+                },
+              },
+              fields: "userEnteredFormat(backgroundColor,textFormat)",
+            },
+          },
+        ],
+      },
+    });
+
+    console.log(`markOrderCancelledInSheet: marked order ${orderId} in ${tabName} row ${rowIndex + 1}.`);
+  } catch (error) {
+    console.error("markOrderCancelledInSheet failed:", error);
+  }
+}

@@ -228,6 +228,9 @@ const handleExportToKitchen = () => {
                     <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Telegram
                     </th>
+                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Дії
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -333,6 +336,26 @@ const handleExportToKitchen = () => {
                           <span className="text-green-600 text-lg">✓</span>
                         ) : (
                           <span className="text-red-600 text-lg">✗</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {order.orderDayId && (
+                          <button
+                            onClick={async () => {
+                              if (!confirm("Ви впевнені, що хочете скасувати це замовлення? Клієнту буде повернуто 1 день на баланс, а рядок в Google Sheets стане червоним.")) return;
+                              try {
+                                const { adminCancelOrderDay } = await import('@/app/actions/order-cancel');
+                                await adminCancelOrderDay(order.orderDayId!);
+                                setOrders(prev => prev.filter(o => o.orderDayId !== order.orderDayId));
+                              } catch (err: any) {
+                                alert(err.message || "Помилка при скасуванні");
+                              }
+                            }}
+                            className="inline-flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
+                            title="Скасувати день"
+                          >
+                            ❌ Скасувати
+                          </button>
                         )}
                       </td>
                     </tr>

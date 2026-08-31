@@ -34,6 +34,8 @@ type User = {
 export type ResolvedDay = {
   date: Date;
   dishes: string[];
+  orderDayId?: string;
+  status?: string;
 };
 
 export type OrderWithResolvedDishes = {
@@ -164,6 +166,52 @@ function PaginationControls({
 
 function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [cancellingDayId, setCancellingDayId] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleCancelDay = async (dayId: string) => {
+    if (!confirm("Ви впевнені, що хочете скасувати цей день?")) return;
+    setCancellingDayId(dayId);
+    try {
+      const { userCancelOrderDay } = await import('@/app/actions/order-cancel');
+      await userCancelOrderDay(dayId);
+      router.refresh();
+    } catch (err: any) {
+      alert(err.message || "Помилка при скасуванні");
+    } finally {
+      setCancellingDayId(null);
+    }
+  };
+
+  const handleCancelAllDays = async () => {
+    if (!confirm("Ви впевнені, що хочете скасувати ВСІ активні дні цього замовлення?")) return;
+    const cancellableDays = order.resolvedDays
+      .filter(d => d.orderDayId && d.status !== "cancelled" && new Date().getTime() < new Date(d.date).getTime())
+      .map(d => d.orderDayId!);
+
+    if (cancellableDays.length === 0) {
+      alert("Немає доступних днів для скасування.");
+      return;
+    }
+
+    setCancellingDayId("all");
+    try {
+      const { userCancelOrderDay } = await import('@/app/actions/order-cancel');
+      for (const dayId of cancellableDays) {
+        await userCancelOrderDay(dayId);
+      }
+      router.refresh();
+    } catch (err: any) {
+      alert(err.message || "Помилка при скасуванні");
+    } finally {
+      setCancellingDayId(null);
+    }
+  };
+
+  const isWholeOrderCancelled = order.status === "cancelled";
+  const hasCancellableDays = !isWholeOrderCancelled && order.resolvedDays.some(d => 
+    d.orderDayId && d.status !== "cancelled" && new Date().getTime() < new Date(d.date).getTime()
+  );
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition hover:shadow-md">
@@ -175,7 +223,16 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
               <Package className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">{order.packageType}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">
+                  {order.packageType}
+                </h3>
+                {isWholeOrderCancelled && (
+                  <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/10 dark:ring-red-500/20">
+                    Скасовано
+                  </span>
+                )}
+              </div>
               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-slate-400 mt-1">
                 <Calendar className="w-4 h-4" />
                 <span>{formatDate(order.createdAt)}</span>
@@ -225,6 +282,16 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
               </>
             )}
           </button>
+          
+          {hasCancellableDays && (
+            <button
+              onClick={handleCancelAllDays}
+              disabled={cancellingDayId !== null}
+              className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+            >
+              {cancellingDayId === "all" ? "Скасування..." : "❌ Скасувати все"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -232,14 +299,39 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
       {isExpanded && (
         <div className="bg-gray-50 dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800 p-5 sm:p-6">
           <div className="space-y-4">
-            {order.resolvedDays.map((day, idx) => (
-              <div key={idx} className="rounded-xl bg-white dark:bg-slate-900 p-4 shadow-sm ring-1 ring-gray-200/50">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-sm font-bold text-gray-900 dark:text-slate-100">
-                    День {idx + 1} — {formatShortDate(day.date)}
-                  </p>
-                  <ForkKnife className="w-4 h-4 text-gray-400" />
-                </div>
+            {order.resolvedDays.map((day, idx) => {
+              const isCancelled = day.status === "cancelled";
+              const isPastCutoff = new Date().getTime() >= new Date(day.date).getTime();
+              const canCancel = day.orderDayId && !isCancelled && !isPastCutoff;
+
+              return (
+                <div key={idx} className={`rounded-xl p-4 shadow-sm ring-1 ${
+                  isCancelled 
+                    ? "bg-red-50 dark:bg-red-900/10 ring-red-100 dark:ring-red-900/30 opacity-75" 
+                    : "bg-white dark:bg-slate-900 ring-gray-200/50"
+                }`}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className={`text-sm font-bold ${
+                      isCancelled ? "text-red-800 dark:text-red-300 line-through" : "text-gray-900 dark:text-slate-100"
+                    }`}>
+                      День {idx + 1} — {formatShortDate(day.date)}
+                    </p>
+                    <div className="flex items-center gap-3">
+                      {isCancelled && (
+                        <span className="text-xs font-semibold text-red-600 dark:text-red-400">Скасовано</span>
+                      )}
+                      {canCancel && (
+                        <button
+                          onClick={() => handleCancelDay(day.orderDayId!)}
+                          disabled={cancellingDayId === day.orderDayId}
+                          className="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+                        >
+                          {cancellingDayId === day.orderDayId ? "Скасування..." : "❌ Скасувати"}
+                        </button>
+                      )}
+                      <ForkKnife className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {day.dishes.map((dish, dishIdx) => (
                     <div key={dishIdx} className="flex items-center gap-2 text-sm text-gray-600 dark:text-slate-400">
@@ -249,7 +341,8 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
                   ))}
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
       )}

@@ -100,6 +100,13 @@ export async function processOutboxJob(jobId: string) {
            await sendSubscriptionRejectedAlert(purchase, purchase.user);
         }
       }
+    } else if (job.type === "CANCEL_ORDER_IN_SHEETS") {
+      const payload = job.payload as { orderId: string, monthKey: string, tabName: string };
+      if (!payload.orderId || !payload.monthKey || !payload.tabName) {
+        throw new Error("Missing payload fields for CANCEL_ORDER_IN_SHEETS");
+      }
+      const { markOrderCancelledInSheet } = await import('./monthlySheets');
+      await markOrderCancelledInSheet(payload.orderId, payload.monthKey, payload.tabName);
     } else if (job.type === "TELEGRAM_NOTIFICATION") {
       const payload = job.payload as { orderIds?: string[] };
       if (payload.orderIds && payload.orderIds.length > 0) {
