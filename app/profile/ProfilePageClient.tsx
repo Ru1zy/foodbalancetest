@@ -210,9 +210,12 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   };
 
   const isWholeOrderCancelled = order.status === "cancelled";
-  const hasCancellableDays = !isWholeOrderCancelled && order.resolvedDays.some(d => 
+  const cancelledDaysCount = order.resolvedDays.filter(d => d.status === "cancelled").length;
+  const totalDaysCount = order.resolvedDays.length;
+  const isPartiallyCancelled = !isWholeOrderCancelled && cancelledDaysCount > 0;
+  const cancellableDaysCount = order.resolvedDays.filter(d => 
     d.orderDayId && d.status !== "cancelled" && isDeliveryDayCancellable(new Date(d.date))
-  );
+  ).length;
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm transition hover:shadow-md">
@@ -229,8 +232,13 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
                   {order.packageType}
                 </h3>
                 {isWholeOrderCancelled && (
-                  <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/20 px-2 py-1 text-xs font-medium text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/10 dark:ring-red-500/20">
+                  <span className="inline-flex items-center rounded-md bg-red-50 dark:bg-red-900/20 px-2.5 py-1 text-xs font-semibold text-red-700 dark:text-red-400 ring-1 ring-inset ring-red-600/10 dark:ring-red-500/20">
                     Скасовано
+                  </span>
+                )}
+                {isPartiallyCancelled && (
+                  <span className="inline-flex items-center rounded-md bg-amber-50 dark:bg-amber-900/30 px-2.5 py-1 text-xs font-semibold text-amber-800 dark:text-amber-300 ring-1 ring-inset ring-amber-600/20">
+                    Скасовано частково ({cancelledDaysCount}/{totalDaysCount})
                   </span>
                 )}
               </div>
@@ -284,13 +292,13 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
             )}
           </button>
           
-          {hasCancellableDays && (
+          {cancellableDaysCount > 1 && (
             <button
               onClick={handleCancelAllDays}
               disabled={cancellingDayId !== null}
               className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
             >
-              {cancellingDayId === "all" ? "Скасування..." : "❌ Скасувати все"}
+              {cancellingDayId === "all" ? "Скасування..." : "❌ Скасувати всі дні"}
             </button>
           )}
         </div>
@@ -302,12 +310,13 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
           <div className="space-y-4">
             {order.resolvedDays.map((day, idx) => {
               const isCancelled = day.status === "cancelled";
-              const canCancel = day.orderDayId && !isCancelled && isDeliveryDayCancellable(new Date(day.date));
+              const isCutoffPassed = !isDeliveryDayCancellable(new Date(day.date));
+              const canCancel = day.orderDayId && !isCancelled && !isCutoffPassed;
 
               return (
                 <div key={idx} className={`rounded-xl p-4 shadow-sm ring-1 ${
                   isCancelled 
-                    ? "bg-red-50 dark:bg-red-900/10 ring-red-100 dark:ring-red-900/30 opacity-75" 
+                    ? "bg-red-50/70 dark:bg-red-900/10 ring-red-100 dark:ring-red-900/30 opacity-75" 
                     : "bg-white dark:bg-slate-900 ring-gray-200/50"
                 }`}>
                   <div className="mb-3 flex items-center justify-between">
@@ -316,17 +325,25 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
                     }`}>
                       День {idx + 1} — {formatShortDate(day.date)}
                     </p>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {isCancelled && (
-                        <span className="text-xs font-semibold text-red-600 dark:text-red-400">Скасовано</span>
+                        <span className="rounded-md bg-red-100 dark:bg-red-900/30 px-2 py-0.5 text-xs font-semibold text-red-700 dark:text-red-400">
+                          Скасовано
+                        </span>
+                      )}
+                      {!isCancelled && isCutoffPassed && (
+                        <span className="text-[11px] sm:text-xs text-slate-400 dark:text-slate-500 font-medium" title="Скасування можливе лише до 23:59 попереднього дня">
+                          Час скасування минув
+                        </span>
                       )}
                       {canCancel && (
                         <button
                           onClick={() => handleCancelDay(day.orderDayId!)}
                           disabled={cancellingDayId === day.orderDayId}
-                          className="text-xs font-semibold text-red-600 hover:text-red-700 disabled:opacity-50"
+                          className="inline-flex items-center gap-1 rounded-lg bg-red-50 dark:bg-red-900/20 px-2.5 py-1 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition disabled:opacity-50"
+                          title="Скасувати доставку на цей день"
                         >
-                          {cancellingDayId === day.orderDayId ? "Скасування..." : "❌ Скасувати"}
+                          {cancellingDayId === day.orderDayId ? "Скасування..." : "❌ Скасувати день"}
                         </button>
                       )}
                       <ForkKnife className="w-4 h-4 text-gray-400" />
