@@ -191,6 +191,22 @@ export function isDeliveryDayCancellable(deliveryDate: Date, now = new Date()): 
   return now.getTime() < cutoffUtc.getTime();
 }
 
+/**
+ * Determines if cancelling this day qualifies for restoring 1 balance day.
+ * Returns true only if the total cancelled count does not exceed balanceDaysUsed.
+ */
+export function shouldRefundBalanceDay(cancelledCount: number, balanceDaysUsed: number): boolean {
+  if (balanceDaysUsed <= 0) return false;
+  return cancelledCount <= balanceDaysUsed;
+}
+
+/**
+ * Calculates updated usedDays after restoring 1 day to the user balance.
+ */
+export function calculateNewUsedDays(currentUsedDays: number): number {
+  return Math.max(0, currentUsedDays - 1);
+}
+
 // Production time-based logic: next menu week opens Saturday afternoon / Sunday (Kyiv).
 export const NEXT_WEEK_OPEN = (() => {
   const nowKyiv = getKyivParts(new Date());

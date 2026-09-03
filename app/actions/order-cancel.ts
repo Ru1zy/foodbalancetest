@@ -6,7 +6,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { cookies } from "next/headers";
 import { enqueueOutboxJob } from "@/lib/outbox";
 import { revalidatePath } from "next/cache";
-import { isDeliveryDayCancellable } from "@/lib/order-logic";
+import { isDeliveryDayCancellable, shouldRefundBalanceDay, calculateNewUsedDays } from "@/lib/order-logic";
 
 async function getUserId(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -77,8 +77,8 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
 
     const cancelledCount = allDays.filter(d => d.status === "cancelled" || d.id === orderDayId).length;
     
-    // Only refund if we haven't refunded more than we spent
-    if (cancelledCount <= order.balanceDaysUsed) {
+    // Only refund if we haven't refunded more than we spent from balance
+    if (shouldRefundBalanceDay(cancelledCount, order.balanceDaysUsed)) {
       const balance = await tx.userBalance.findFirst({
         where: { userId: order.userId, packageId: order.packageType }
       });
@@ -87,7 +87,7 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
         await tx.userBalance.update({
           where: { id: balance.id },
           data: {
-            usedDays: Math.max(0, balance.usedDays - 1)
+            usedDays: calculateNewUsedDays(balance.usedDays)
           }
         });
       }

@@ -80,7 +80,7 @@ interface CachedKey {
 let cachedMonobankKey: CachedKey | null = null;
 const MONOBANK_KEY_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-async function getMonobankPublicKey(): Promise<string> {
+export async function getMonobankPublicKey(): Promise<string> {
   const now = Date.now();
   if (cachedMonobankKey && now - cachedMonobankKey.fetchedAt < MONOBANK_KEY_TTL_MS) {
     return cachedMonobankKey.key;
@@ -102,6 +102,18 @@ async function getMonobankPublicKey(): Promise<string> {
   const data = await response.json();
   cachedMonobankKey = { key: data.key, fetchedAt: now };
   return data.key;
+}
+
+export function _resetMonobankKeyCacheForTesting() {
+  cachedMonobankKey = null;
+}
+
+export function _setMonobankKeyCacheForTesting(key: string, fetchedAt: number) {
+  cachedMonobankKey = { key, fetchedAt };
+}
+
+export function _getMonobankKeyCacheForTesting() {
+  return cachedMonobankKey;
 }
 
 /**
