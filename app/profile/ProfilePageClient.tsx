@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { updateUserProfile } from "../actions/profile";
 import { cancelSubscriptionPurchaseAction } from "../actions/subscription";
@@ -165,7 +165,13 @@ function PaginationControls({
   );
 }
 
-function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
+function OrderCard({ 
+  order, 
+  onDayCancelled 
+}: { 
+  order: OrderWithResolvedDishes;
+  onDayCancelled?: (orderId: string, dayId: string) => void;
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [cancellingDayId, setCancellingDayId] = useState<string | null>(null);
   const router = useRouter();
@@ -176,6 +182,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
     try {
       const { userCancelOrderDay } = await import('@/app/actions/order-cancel');
       await userCancelOrderDay(dayId);
+      onDayCancelled?.(order.id, dayId);
       router.refresh();
     } catch (err: any) {
       alert(err.message || "Помилка при скасуванні");
@@ -200,6 +207,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
       const { userCancelOrderDay } = await import('@/app/actions/order-cancel');
       for (const dayId of cancellableDays) {
         await userCancelOrderDay(dayId);
+        onDayCancelled?.(order.id, dayId);
       }
       router.refresh();
     } catch (err: any) {
@@ -387,10 +395,89 @@ export default function ProfilePageClient({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>(tariffs[0]?.id || "");
 
+  // Optimistic local state for snappy, zero-delay UI updates
+  const [actionList, setActionList] = useState(actions);
+  const [balanceList, setBalanceList] = useState(balances);
+
+  useEffect(() => {
+    setActionList(actions);
+  }, [actions]);
+
+  useEffect(() => {
+    setBalanceList(balances);
+  }, [balances]);
+
   // Accordion states
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isBalancesOpen, setIsBalancesOpen] = useState(false);
+
+  const handlePurchaseSuccess = useCallback((purchase: SubscriptionPurchase, days: number, packageId: string) => {
+    // 1. Instantly prepend new purchase to local action list
+    setActionList((prev) => [
+      { type: 'PURCHASE', data: purchase },
+      ...prev,
+    ]);
+
+    // 2. Instantly update local balance
+    setBalanceList((prev) => {
+      const existing = prev.find((b) => b.packageId === packageId);
+      if (existing) {
+        return prev.map((b) =>
+          b.packageId === packageId ? { ...b, remainingDays: b.remainingDays + days } : b
+        );
+      }
+      return [...prev, { packageId, remainingDays: days }];
+    });
+
+    // 3. Smoothly scroll to action history
+    setTimeout(() => {
+      document.getElementById('action-history')?.scrollIntoView({ behavior: 'smooth' });
+    }, 150);
+  }, []);
+
+  const handleOrderDayCancelled = useCallback((orderId: string, dayId: string) => {
+    setActionList((prev) =>
+      prev.map((a) => {
+        if (a.type === 'ORDER' && a.data.id === orderId) {
+          return {
+            ...a,
+            data: {
+              ...a.data,
+              resolvedDays: a.data.resolvedDays.map((d) =>
+                d.orderDayId === dayId ? { ...d, status: 'cancelled' } : d
+              ),
+            },
+          };
+        }
+        return a;
+      })
+    );
+  }, []);
+
+  const handlePurchaseCancelled = useCallback((purchaseId: string) => {
+    setActionList((prev) =>
+      prev.map((a) =>
+        a.type === 'PURCHASE' && a.data.id === purchaseId
+          ? { ...a, data: { ...a.data, status: 'CANCELLED' } }
+          : a
+      )
+    );
+    // Deduct credited balance
+    const item = actionList.find((a) => a.type === 'PURCHASE' && a.data.id === purchaseId);
+    if (item && item.type === 'PURCHASE') {
+      const p = item.data;
+      setBalanceList((prev) =>
+        prev
+          .map((b) =>
+            b.packageId === p.packageId
+              ? { ...b, remainingDays: Math.max(0, b.remainingDays - p.days) }
+              : b
+          )
+          .filter((b) => b.remainingDays > 0)
+      );
+    }
+  }, [actionList]);
 
   const handlePageChange = useCallback((page: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -608,6 +695,7 @@ export default function ProfilePageClient({
                 <SubscriptionOptions 
                   pkg={tariffs.find(t => t.id === activeTab)!} 
                   isNewClient={isNewClient}
+                  onPurchaseSuccess={handlePurchaseSuccess}
                 />
               )}
             </div>
@@ -615,7 +703,7 @@ export default function ProfilePageClient({
         </div>
 
         {/* Balances Section */}
-        {balances.length > 0 && (
+        {balanceList.length > 0 && (
           <div className="mb-10 rounded-xl border border-emerald-100 dark:border-emerald-800/50 bg-emerald-50/50 dark:bg-emerald-900/20 shadow-sm transition-all">
             <button 
               onClick={() => setIsBalancesOpen(!isBalancesOpen)}
@@ -635,7 +723,7 @@ export default function ProfilePageClient({
             {isBalancesOpen && (
               <div className="px-6 pb-6 sm:px-8 sm:pb-8 pt-6 sm:pt-8 border-t border-emerald-100/50 dark:border-emerald-800/30">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {balances.map((balance) => (
+                  {balanceList.map((balance) => (
                     <div key={balance.packageId} className="rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm ring-1 ring-emerald-100 dark:ring-emerald-800/50 transition hover:shadow-md">
                       <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-2">{balance.packageId}</div>
                       <div className="text-3xl font-black text-slate-900 dark:text-slate-100 leading-none">
@@ -655,9 +743,9 @@ export default function ProfilePageClient({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Історія дій</h2>
-              {totalActions > 0 && (
+              {Math.max(totalActions, actionList.length) > 0 && (
                 <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-black text-slate-600 dark:text-slate-400">
-                  {totalActions}
+                  {Math.max(totalActions, actionList.length)}
                 </span>
               )}
             </div>
@@ -680,7 +768,7 @@ export default function ProfilePageClient({
             )}
           </div>
 
-          {actions.length === 0 ? (
+          {actionList.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-solid border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-16 text-center shadow-sm">
               <div className="mb-6 rounded-xl bg-slate-50 dark:bg-slate-950 p-8">
                 <Package className="h-16 w-16 text-slate-200" />
@@ -692,10 +780,10 @@ export default function ProfilePageClient({
             </div>
           ) : (
             <div className="space-y-6">
-              {actions.map((action, idx) => (
+              {actionList.map((action, idx) => (
                 action.type === 'ORDER' 
-                  ? <OrderCard key={`order-${action.data.id}-${idx}`} order={action.data as any} />
-                  : <PurchaseCard key={`purchase-${action.data.id}-${idx}`} purchase={action.data as any} />
+                  ? <OrderCard key={`order-${action.data.id}-${idx}`} order={action.data as any} onDayCancelled={handleOrderDayCancelled} />
+                  : <PurchaseCard key={`purchase-${action.data.id}-${idx}`} purchase={action.data as any} onCancelled={handlePurchaseCancelled} />
               ))}
               <PaginationControls 
                 currentPage={currentPage} 
@@ -710,7 +798,13 @@ export default function ProfilePageClient({
   );
 }
 
-function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
+function PurchaseCard({ 
+  purchase, 
+  onCancelled 
+}: { 
+  purchase: SubscriptionPurchase;
+  onCancelled?: (purchaseId: string) => void;
+}) {
   const [isCancelling, setIsCancelling] = useState(false);
   const router = useRouter();
 
@@ -720,6 +814,7 @@ function PurchaseCard({ purchase }: { purchase: SubscriptionPurchase }) {
     try {
       const res = await cancelSubscriptionPurchaseAction(purchase.id);
       if (res.ok) {
+        onCancelled?.(purchase.id);
         router.refresh();
       } else {
         alert(res.error || "Помилка при скасуванні");

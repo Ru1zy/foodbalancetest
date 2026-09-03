@@ -18,9 +18,10 @@ type Pkg = {
 type Props = {
   pkg: Pkg;
   isNewClient?: boolean;
+  onPurchaseSuccess?: (purchase: any, days: number, packageId: string) => void;
 };
 
-export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) {
+export default function SubscriptionOptions({ pkg, isNewClient = true, onPurchaseSuccess }: Props) {
   const router = useRouter();
   const [days, setDays] = useState<number>(14);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash" | "plata">("plata");
@@ -95,6 +96,10 @@ export default function SubscriptionOptions({ pkg, isNewClient = true }: Props) 
           : `Успішно оформлено покупку на ${days} днів! Дні зараховано на ваш баланс. Адміністратор перевірить вашу оплату найближчим часом.`
       );
       setFile(null);
+
+      if (result.purchase) {
+        onPurchaseSuccess?.(result.purchase, days, pkg.name);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Сталася помилка");
     } finally {

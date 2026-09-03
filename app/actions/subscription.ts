@@ -147,7 +147,19 @@ export async function createSubscriptionPurchaseAction(
       });
     }
 
-    return { ok: true, purchaseId: purchase.id, pageUrl };
+    return { 
+      ok: true, 
+      purchaseId: purchase.id, 
+      pageUrl,
+      purchase: {
+        id: purchase.id,
+        packageId: purchase.packageId,
+        days: purchase.days,
+        finalPrice: purchase.finalPrice,
+        status: purchase.status,
+        createdAt: purchase.createdAt,
+      }
+    };
   } catch (error: any) {
     console.error("Failed to create subscription purchase:", error);
     return { ok: false, error: error.message || "Internal Server Error" };
