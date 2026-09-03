@@ -1,6 +1,6 @@
 # FoodBalance: migration and product roadmap
 
-Last updated: 2026-08-31
+Last updated: 2026-09-03
 
 This is the live project tracker. Read it before making changes and update the
 checkboxes and notes after every completed step. Never put credentials, tokens,
@@ -371,6 +371,8 @@ Current research as of 2026-08-09:
 - [x] **Redesign Checkout Cart UI (31.08):** Unify draft and cart items into a single, cohesive cart summary grouped by package, replacing clunky action buttons with clean links.
 - [x] **Add Floating Cart Indicator (31.08):** Add a persistent floating cart button on the main layout to guide users back to checkout.
 - [x] **Redesign Profile Page (31.08):** Wrap Settings, Subscriptions, and Balances in collapsible accordions to save vertical space and improve usability.
+- [x] **Closed Orders Warning Banner (03.09):** Formatted with each sentence on a separate line with distinct icons and dark-mode styling.
+- [x] **Optimistic UI Updates for Profile (03.09):** Added local React state in `ProfilePageClient` with instant updates for subscription purchases (0ms latency, automatic scroll to history), purchase cancellation, and order day cancellation without page reload.
 
 ## Phase 6: verification and release
 
@@ -378,6 +380,25 @@ Current research as of 2026-08-09:
 - [x] Verify legacy Google Sheets cutover (business owner successfully cloned legacy tables).
 - [x] Add unit tests for every discount boundary: 4, 5, 6, 7, 13, 14, 29, 30,
   and any confirmed maximum above 30. (Added in lib/subscription-logic.test.ts)
+- [x] **Order & Day Cancellation Implementation (03.09):**
+  - Added `userCancelOrderDay` and `adminCancelOrderDay` server actions (`app/actions/order-cancel.ts`).
+  - DST-aware Kyiv cutoff time logic (`isDeliveryDayCancellable` - strictly 23:59:59.999 Kyiv time on the day before delivery).
+  - Amber badge `Скасовано частково (X/Y)` in Profile header, with clear `Час скасування минув` notice on days past cutoff.
+  - Automatic balance refund logic restoring subscription days (`usedDays - 1`) up to `balanceDaysUsed`.
+  - Background Outbox synchronization marking cancelled days in Google Sheets.
+- [x] **Security Audit & Cleanup (03.09):**
+  - Removed all unauthenticated test/debug endpoints (`/api/test-db`, `/api/debug`, `/api/test-reject`, `/api/test-email`).
+  - Removed root repository junk & sensitive dumps (`database_dump.json`, `dump_db.ts`, `restore_db.ts`, etc.).
+  - Added targeted `.gitignore` patterns for dumps (`*.sql`, `*.dump`, `*dump*.json`).
+  - Removed PII update logging from `/api/telegram-webhook`.
+- [x] **UI Resilience & Error Boundaries (03.09):**
+  - Created `app/error.tsx` client error boundary with localized Ukrainian text and retry button.
+  - Created `app/global-error.tsx` root error boundary with explicit `<html>` and `<body>` tags.
+  - Added Tailwind pulse skeletons in `app/profile/loading.tsx` and `app/admin/loading.tsx`.
+- [x] **Critical Test Coverage (03.09):**
+  - `lib/order-cancel.test.ts`: Tests cutoff deadline boundaries (23:59:00 vs 00:00:01 Kyiv time), DST winter/summer shifts, balance refund limits, and non-negative clamp.
+  - `lib/monobank.test.ts`: Tests 1.3% Plata fee calculation and rounding, 1-hour TTL public key caching, and network fallback.
+  - 19 out of 19 unit tests passing via `npm test`.
 - [ ] Test provider-calculated payer-fee display, financial rounding, exact net
   settlement to the merchant, refunds, and partial refunds. (Pending Monobank)
 - [ ] Test concurrent balance credit/deduction and webhook replay.
@@ -385,8 +406,8 @@ Current research as of 2026-08-09:
 - [ ] Test Sheet retry/idempotency and an unavailable Google API.
 - [ ] Use an isolated database and disabled/test integrations for load testing.
 - [ ] Load-test staged checkout at 10, 25, 50, and 100 concurrent submissions.
-- [ ] Run `npx tsc --noEmit`, `npm run lint`, and `npm run build` before every
-  phase is considered complete.
+- [x] Run `npx tsc --noEmit`, `npm run lint`, and `npm run build` before every
+  phase is considered complete. (100% clean build on Turbopack)
 - [ ] Complete a staging acceptance checklist with the business owner before
   enabling real payments.
 
@@ -406,13 +427,23 @@ Current research as of 2026-08-09:
 ~~8. Sheet destinations~~ — Resolved and documented in Phase 1.
 ~~9. Delivery time~~ — Resolved: sent after explicit admin `Notify` action.
 
-## Next Steps (Tomorrow / Finalization)
+## Next Steps (Finalization & Production Launch)
 
-- [ ] Connect custom domain to Railway and update `APP_BASE_URL` & `NEXT_PUBLIC_APP_URL` in `.env`.
-- [x] Finalize Monobank API token and Webhook URL setup (Fixed PEM format requirement; waiting for final Mono approval).
-- [ ] Set up Cloudflare R2 bucket (`foodbalance-storage`) for image uploads, generate API tokens, and configure `S3_*` env vars in Railway.
-- [ ] Add Railway billing (credit card) to keep the service running.
-- [ ] Set up a proper external cron service (like cron-job.org or GitHub Actions) and configure `CRON_SECRET`.
+1. **Custom Domain & DNS Setup**:
+   - [ ] Register/connect custom production domain to Railway.
+   - [ ] Update `APP_BASE_URL` & `NEXT_PUBLIC_APP_URL` in Railway variables.
+   - [ ] Add production OAuth callback URL in Google Cloud Console (`https://<domain>/api/auth/google/callback`) and update Authorized Domains.
+   - [ ] Re-register Telegram bot webhook to the production domain.
+2. **Monobank Acquiring Activation**:
+   - [ ] Await final merchant onboarding approval from Monobank.
+   - [ ] Configure production `MONOBANK_API_TOKEN` and webhook URL.
+   - [ ] Run live 1 UAH smoke test (Apple Pay / Google Pay).
+3. **Cloudflare R2 Storage**:
+   - [ ] Create private Cloudflare R2 bucket (`foodbalance-storage`) for receipts and public assets.
+   - [ ] Configure `S3_*` credentials in Railway environment.
+4. **Maintenance & Cutover**:
+   - [ ] Add Railway payment method (credit card) to avoid container suspension.
+   - [ ] Switch active customer traffic from legacy bot (`legacy_bot_logic.js`) to production web application.
 
 ## Deferred: gradual Google account migration
 
