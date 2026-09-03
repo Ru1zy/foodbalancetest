@@ -72,22 +72,35 @@ export async function createMonobankInvoice(
   };
 }
 
-let cachedMonobankPubKey: string | null = null;
+interface CachedKey {
+  key: string;
+  fetchedAt: number;
+}
+
+let cachedMonobankKey: CachedKey | null = null;
+const MONOBANK_KEY_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 async function getMonobankPublicKey(): Promise<string> {
-  if (cachedMonobankPubKey) return cachedMonobankPubKey;
+  const now = Date.now();
+  if (cachedMonobankKey && now - cachedMonobankKey.fetchedAt < MONOBANK_KEY_TTL_MS) {
+    return cachedMonobankKey.key;
+  }
 
   const response = await fetch("https://api.monobank.ua/api/merchant/pubkey", {
     headers: { "X-Token": MONOBANK_API_TOKEN },
-    next: { revalidate: 3600 } // cache for 1 hour
+    next: { revalidate: 3600 },
   });
 
   if (!response.ok) {
+    if (cachedMonobankKey) {
+      console.warn("Failed to refresh Monobank public key, using stale cached key");
+      return cachedMonobankKey.key;
+    }
     throw new Error("Failed to fetch Monobank public key");
   }
 
   const data = await response.json();
-  cachedMonobankPubKey = data.key;
+  cachedMonobankKey = { key: data.key, fetchedAt: now };
   return data.key;
 }
 

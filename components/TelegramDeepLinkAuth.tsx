@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useOrderStore } from "@/lib/orderStore";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
@@ -15,19 +15,29 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   const router = useRouter();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(false);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
 
   const [error, setError] = useState<string | null>(null);
+  const isFetchingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!authToken || !isPolling) return;
 
     const pollInterval = setInterval(async () => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         const response = await fetch("/api/auth/telegram-deeplink", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "check", token: authToken }),
+          signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -62,8 +72,11 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           setIsPolling(false);
           setError("Помилка при перевірці статусу. Спробуйте ще раз.");
         }
-      } catch (err) {
+      } catch (err: any) {
+        if (err.name === "AbortError") return;
         console.error("Polling error:", err);
+      } finally {
+        isFetchingRef.current = false;
       }
     }, 2000);
 
@@ -78,11 +91,14 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
     return () => {
       clearInterval(pollInterval);
       clearTimeout(timeout);
+      abortControllerRef.current?.abort();
+      isFetchingRef.current = false;
     };
   }, [authToken, isPolling, setCustomerProfile, router, onSuccess]);
 
   const handleLogin = async () => {
     try {
+      setIsLoadingAuth(true);
       setError(null);
       const response = await fetch("/api/auth/telegram-deeplink", {
         method: "POST",
@@ -96,11 +112,26 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
       setAuthToken(data.token);
       setIsPolling(true);
 
-      // Try automatic open in new tab
-      window.open(`https://t.me/${BOT_USERNAME}?start=${data.token}`, "_blank", "noopener,noreferrer");
+      const telegramUrl = `https://t.me/${BOT_USERNAME}?start=${data.token}`;
+
+      // On mobile devices, window.open after an async await is blocked by iOS Safari / Android Chrome.
+      // Direct navigation via window.location.href seamlessly opens the native Telegram app
+      // while keeping the browser tab active with polling enabled in the background.
+      const isMobile = typeof navigator !== "undefined" && /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        window.location.href = telegramUrl;
+      } else {
+        const opened = window.open(telegramUrl, "_blank", "noopener,noreferrer");
+        if (!opened) {
+          window.location.href = telegramUrl;
+        }
+      }
     } catch (err) {
       console.error("Login error:", err);
       setError("Не вдалося ініціювати вхід. Спробуйте ще раз.");
+    } finally {
+      setIsLoadingAuth(false);
     }
   };
 
@@ -173,12 +204,13 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           <button
             type="button"
             onClick={handleLogin}
-            className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-[#0088cc] hover:bg-[#0077b5] text-white font-semibold rounded-xl transition-all shadow-sm active:scale-95"
+            disabled={isLoadingAuth}
+            className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-[#0088cc] hover:bg-[#0077b5] text-white font-semibold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18 1.897-.962 6.502-1.359 8.627-.168.9-.5 1.201-.82 1.23-.697.064-1.226-.461-1.901-.903-1.056-.692-1.653-1.123-2.678-1.799-1.185-.781-.417-1.21.258-1.911.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.139-5.062 3.345-.479.329-.913.489-1.302.481-.428-.008-1.252-.241-1.865-.44-.752-.244-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.831-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635.099-.002.321.023.465.14.121.099.155.232.171.326.016.093.036.306.02.472z"/>
             </svg>
-            <span>Увійти через Telegram</span>
+            <span>{isLoadingAuth ? "З'єднання..." : "Увійти через Telegram"}</span>
           </button>
         </div>
       )}

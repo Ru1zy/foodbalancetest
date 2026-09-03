@@ -180,6 +180,17 @@ export function kyivTodayParts(reference: Date = new Date()): { year: number; mo
   return { year: parts.year, month: parts.month, day: parts.day };
 }
 
+/**
+ * Checks whether a delivery day can still be cancelled.
+ * Rule: strictly up to 23:59:59.999 of the day BEFORE delivery in Europe/Kyiv time.
+ * Once the clock strikes 00:00:00 on the delivery day (Kyiv time), cancellation is forbidden.
+ */
+export function isDeliveryDayCancellable(deliveryDate: Date, now = new Date()): boolean {
+  const parts = getKyivParts(deliveryDate);
+  const cutoffUtc = kyivWallClockToUtc(parts.year, parts.month, parts.day, 0, 0, 0, 0);
+  return now.getTime() < cutoffUtc.getTime();
+}
+
 // Production time-based logic: next menu week opens Saturday afternoon / Sunday (Kyiv).
 export const NEXT_WEEK_OPEN = (() => {
   const nowKyiv = getKyivParts(new Date());

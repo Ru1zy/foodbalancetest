@@ -5,6 +5,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { updateUserProfile } from "../actions/profile";
 import { cancelSubscriptionPurchaseAction } from "../actions/subscription";
 import { isIndivPackage } from "@/lib/order-selection";
+import { isDeliveryDayCancellable } from "@/lib/order-logic";
 import SubscriptionOptions from "@/components/SubscriptionOptions";
 import { 
   Package, 
@@ -186,7 +187,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
   const handleCancelAllDays = async () => {
     if (!confirm("Ви впевнені, що хочете скасувати ВСІ активні дні цього замовлення?")) return;
     const cancellableDays = order.resolvedDays
-      .filter(d => d.orderDayId && d.status !== "cancelled" && new Date().getTime() < new Date(d.date).getTime())
+      .filter(d => d.orderDayId && d.status !== "cancelled" && isDeliveryDayCancellable(new Date(d.date)))
       .map(d => d.orderDayId!);
 
     if (cancellableDays.length === 0) {
@@ -210,7 +211,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
 
   const isWholeOrderCancelled = order.status === "cancelled";
   const hasCancellableDays = !isWholeOrderCancelled && order.resolvedDays.some(d => 
-    d.orderDayId && d.status !== "cancelled" && new Date().getTime() < new Date(d.date).getTime()
+    d.orderDayId && d.status !== "cancelled" && isDeliveryDayCancellable(new Date(d.date))
   );
 
   return (
@@ -301,8 +302,7 @@ function OrderCard({ order }: { order: OrderWithResolvedDishes }) {
           <div className="space-y-4">
             {order.resolvedDays.map((day, idx) => {
               const isCancelled = day.status === "cancelled";
-              const isPastCutoff = new Date().getTime() >= new Date(day.date).getTime();
-              const canCancel = day.orderDayId && !isCancelled && !isPastCutoff;
+              const canCancel = day.orderDayId && !isCancelled && isDeliveryDayCancellable(new Date(day.date));
 
               return (
                 <div key={idx} className={`rounded-xl p-4 shadow-sm ring-1 ${

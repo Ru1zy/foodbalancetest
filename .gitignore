@@ -46,10 +46,13 @@ __pycache__/
 *.dump
 *.backup
 *.bak
+*.sql
 *.sqlite
 *.sqlite3
 service-account*.json
 *credentials*.json
+*dump*.json
+database_dump*.json
 
 # Hosting-provider local state
 /.vercel/

@@ -45,7 +45,6 @@ export async function POST(request: Request) {
     }
 
     const update: TelegramUpdate = await request.json();
-    console.log("Webhook received:", JSON.stringify(update, null, 2));
 
     // Handle /start <uuid> — auth deep link from the site
     const startText = update.message?.text ?? "";

@@ -6,6 +6,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { cookies } from "next/headers";
 import { enqueueOutboxJob } from "@/lib/outbox";
 import { revalidatePath } from "next/cache";
+import { isDeliveryDayCancellable } from "@/lib/order-logic";
 
 async function getUserId(): Promise<string | null> {
   const cookieStore = await cookies();
@@ -16,17 +17,6 @@ async function getUserId(): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-/**
- * Common logic to check if a delivery day can still be cancelled.
- */
-function isCancelAllowed(deliveryDate: Date): boolean {
-  // Cutoff is the day before deliveryDate at 23:59:59.999 (Kyiv time)
-  // Since deliveryDate is stored as UTC midnight representing Kyiv midnight,
-  // we just compare the current time to that UTC midnight.
-  const now = new Date();
-  return now.getTime() < deliveryDate.getTime();
 }
 
 /**
@@ -65,7 +55,7 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
     if (userId && orderDay.order.userId !== userId) throw new Error("Unauthorized for this order");
     if (orderDay.status === "cancelled") throw new Error("Already cancelled");
 
-    if (!isAdmin && !isCancelAllowed(orderDay.deliveryDate)) {
+    if (!isAdmin && !isDeliveryDayCancellable(orderDay.deliveryDate)) {
       throw new Error("Час для скасування цього дня вже минув");
     }
 
