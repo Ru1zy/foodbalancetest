@@ -287,9 +287,15 @@ export default function MenuGridClient({ menuItems }: Props) {
   if (allClosed) {
     return (
       <div className="mx-auto max-w-7xl p-4 sm:p-6">
-        <div className="rounded-xl border border-yellow-300 dark:border-yellow-700 bg-yellow-50 p-4 text-sm font-semibold text-yellow-800">
-          ⚠️ Наразі замовлення закриті. Меню на наступний тиждень публікується в суботу о 12:00 (приблизно). У
-          п&apos;ятницю замовлення не приймаються.
+        <div className="rounded-xl border border-yellow-300 dark:border-yellow-700/60 bg-yellow-50 dark:bg-yellow-950/40 p-4 text-sm font-semibold text-yellow-800 dark:text-yellow-200">
+          <div className="flex items-start gap-2.5">
+            <span className="text-base select-none">⚠️</span>
+            <div className="space-y-1">
+              <p className="font-bold text-yellow-900 dark:text-yellow-100">Наразі замовлення закриті.</p>
+              <p>Меню на наступний тиждень публікується в суботу о 12:00 (приблизно).</p>
+              <p>У п&apos;ятницю замовлення не приймаються.</p>
+            </div>
+          </div>
         </div>
       </div>
     );
