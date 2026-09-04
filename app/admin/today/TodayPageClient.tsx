@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { updateOrderDeliveryInfo, notifyTodayOrders, exportToKitchenSheet } from "@/app/actions/admin";
+import SyncedHorizontalScroll from "@/components/admin/SyncedHorizontalScroll";
 
 type Order = {
   id: string;
@@ -194,7 +195,7 @@ const handleExportToKitchen = () => {
           </div>
         ) : (
           <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+            <SyncedHorizontalScroll>
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-slate-950">
                   <tr>
@@ -357,7 +358,7 @@ const handleExportToKitchen = () => {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </SyncedHorizontalScroll>
           </div>
         )}
 

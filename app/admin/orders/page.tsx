@@ -3,6 +3,7 @@ import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import OrderActionButtons from "@/components/admin/OrderActionButtons";
 import KitchenExport from "./KitchenExport";
 import ArchiveOrdersButton from "@/components/admin/ArchiveOrdersButton";
+import SyncedHorizontalScroll from "@/components/admin/SyncedHorizontalScroll";
 import prisma from "@/lib/prisma";
 import { orderHasMissingSheetConfig } from "@/lib/monthlySheets";
 import type { Prisma } from "@prisma/client";
@@ -298,7 +299,7 @@ export default async function AdminOrdersPage({
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">Нові замовлення з&apos;являться тут</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <SyncedHorizontalScroll>
               <table className="min-w-full border-collapse">
                 <thead className="bg-gray-50 dark:bg-slate-950 text-left text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-slate-400">
                   <tr>
@@ -438,7 +439,7 @@ export default async function AdminOrdersPage({
                   })}
                 </tbody>
               </table>
-            </div>
+            </SyncedHorizontalScroll>
           )}
         </div>
       </section>
