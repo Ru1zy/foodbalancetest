@@ -440,12 +440,11 @@ Current research as of 2026-08-09:
    - [ ] Add production OAuth callback URL in Google Cloud Console (`https://<domain>/api/auth/google/callback`) and update Authorized Domains.
    - [ ] Re-register Telegram bot webhook to the production domain.
 2. **Monobank Acquiring Activation**:
-   - [ ] Await final merchant onboarding approval from Monobank.
-   - [ ] Configure production `MONOBANK_API_TOKEN` and webhook URL.
-   - [ ] Run live 1 UAH smoke test (Apple Pay / Google Pay).
+   - [x] Production merchant token configured (`MONOBANK_API_TOKEN`).
+   - [x] Gross Plata fee calculation (1.3%) and webhook callback URL configured (`/api/plata/callback`).
 3. **Cloudflare R2 Storage**:
-   - [ ] Create private Cloudflare R2 bucket (`foodbalance-storage`) for receipts and public assets.
-   - [ ] Configure `S3_*` credentials in Railway environment.
+   - [x] Created Cloudflare R2 bucket (`foodbalance`) with public dev URL for receipts and menu assets.
+   - [x] Configured `S3_*` credentials in Railway environment.
 4. **Maintenance & Cutover**:
    - [ ] Add Railway payment method (credit card) to avoid container suspension.
    - [ ] Switch active customer traffic from legacy bot (`legacy_bot_logic.js`) to production web application.
