@@ -245,6 +245,7 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
 
 async function resolveServerDeliveryDays(
   sanitizedCartData: OrderCartData,
+  orderingMode?: string,
 ): Promise<PreparedOrderDay[] | null> {
   const uniqueIds = [...new Set(sanitizedCartData.days.map((d) => d.dayId))];
   if (uniqueIds.length === 0 || uniqueIds.length !== sanitizedCartData.days.length) {
@@ -278,7 +279,7 @@ async function resolveServerDeliveryDays(
     }
 
     return {
-      deliveryDate: dateForMenuDayOfWeek(menu.dayOfWeek, reference),
+      deliveryDate: dateForMenuDayOfWeek(menu.dayOfWeek, reference, orderingMode),
       weekday: menu.dayOfWeek,
       menuId: menu.id,
       items: day,
@@ -437,8 +438,20 @@ async function prepareOrderForSubmission(
     }
   }
 
+  const modeSetting = await prisma.systemSetting.findUnique({
+    where: { key: "orderingMode" },
+  });
+  const orderingMode = modeSetting?.value?.trim() || "AUTO";
+  if (orderingMode === "FORCE_CLOSED") {
+    return {
+      ok: false,
+      message: "Наразі прийом замовлень тимчасово призупинено адміністратором.",
+      status: 400,
+    };
+  }
+
   const submittedDeliveryDate = normalizeDeliveryDateInput(deliveryDate);
-  const deliveryDays = await resolveServerDeliveryDays(sanitizedCartData);
+  const deliveryDays = await resolveServerDeliveryDays(sanitizedCartData, orderingMode);
   const serverDeliveryDate = deliveryDays?.[0]?.deliveryDate ?? null;
 
   if (!submittedDeliveryDate || !deliveryDays || !serverDeliveryDate) {

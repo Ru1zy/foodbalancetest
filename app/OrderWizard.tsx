@@ -23,9 +23,16 @@ type Tariff = {
 type Props = {
   menuItems: MenuItem[];
   tariffs: Tariff[];
+  orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
+  orderingCustomMessage?: string;
 };
 
-export default function OrderWizard({ menuItems, tariffs }: Props) {
+export default function OrderWizard({
+  menuItems,
+  tariffs,
+  orderingMode = "AUTO",
+  orderingCustomMessage = "",
+}: Props) {
   const step = useOrderStore((s) => s.step);
   const cartItems = useOrderStore((s) => s.cartItems);
 
@@ -37,15 +44,29 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
     );
   }
 
-  if (getSelectableMenuDayNumbers().length === 0) {
+  const selectableDays = getSelectableMenuDayNumbers(orderingMode);
+
+  if (selectableDays.length === 0 || orderingMode === "FORCE_CLOSED") {
     return (
-      <div className="rounded-xl border border-yellow-300 dark:border-yellow-700/60 bg-yellow-50 dark:bg-yellow-950/40 p-4 text-sm font-semibold text-yellow-800 dark:text-yellow-200">
-        <div className="flex items-start gap-2.5">
-          <span className="text-base select-none">⚠️</span>
-          <div className="space-y-1">
-            <p className="font-bold text-yellow-900 dark:text-yellow-100">Наразі замовлення закриті.</p>
-            <p>Меню на наступний тиждень публікується в суботу о 12:00 (приблизно).</p>
-            <p>У п&apos;ятницю замовлення не приймаються.</p>
+      <div className="rounded-xl border border-yellow-300 dark:border-yellow-700/60 bg-yellow-50 dark:bg-yellow-950/40 p-6 text-sm font-semibold text-yellow-800 dark:text-yellow-200 max-w-2xl mx-auto my-8 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="text-2xl select-none">⚠️</span>
+          <div className="space-y-2">
+            <p className="font-bold text-lg text-yellow-900 dark:text-yellow-100">
+              {orderingMode === "FORCE_CLOSED"
+                ? "Прийом замовлень тимчасово призупинено"
+                : "Наразі замовлення закриті."}
+            </p>
+            {orderingCustomMessage ? (
+              <p className="whitespace-pre-line text-yellow-950 dark:text-yellow-100 font-medium text-base">
+                {orderingCustomMessage}
+              </p>
+            ) : (
+              <>
+                <p>Меню на наступний тиждень публікується в суботу о 12:00 (приблизно).</p>
+                <p>У п&apos;ятницю замовлення не приймаються.</p>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -145,7 +166,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
               />
             ))}
           </div>
-          <DateSelector menuItems={menuItems} />
+          <DateSelector menuItems={menuItems} orderingMode={orderingMode} />
         </div>
       );
     case 3:
@@ -162,7 +183,7 @@ export default function OrderWizard({ menuItems, tariffs }: Props) {
               />
             ))}
           </div>
-          <MenuGridClient menuItems={menuItems} />
+          <MenuGridClient menuItems={menuItems} orderingMode={orderingMode} />
         </div>
       );
     default:

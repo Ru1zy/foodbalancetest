@@ -17,7 +17,15 @@ type Tariff = {
   imageUrl: string | null;
 };
 
-export default function OrderStoreWrapper() {
+type Props = {
+  orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
+  orderingCustomMessage?: string;
+};
+
+export default function OrderStoreWrapper({
+  orderingMode = "AUTO",
+  orderingCustomMessage = "",
+}: Props) {
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [tariffs, setTariffs] = useState<Tariff[]>([]);
@@ -59,7 +67,12 @@ export default function OrderStoreWrapper() {
             <p className="text-lg text-gray-500 dark:text-slate-400">Незабаром з’являться нові смачні страви</p>
           </div>
         ) : (
-          <OrderWizard menuItems={menuItems} tariffs={tariffs} />
+          <OrderWizard
+            menuItems={menuItems}
+            tariffs={tariffs}
+            orderingMode={orderingMode}
+            orderingCustomMessage={orderingCustomMessage}
+          />
         )}
       </section>
     </main>

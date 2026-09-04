@@ -6,7 +6,7 @@ import { getMenuRowIdsForPackageDay } from "@/lib/menu-for-package";
 import {
   getMenuWeekMonday,
   getSelectableMenuDayNumbers,
-  NEXT_WEEK_OPEN,
+  isNextWeekOpen,
 } from "@/lib/order-logic";
 import { parsePackageType } from "@/lib/package-coerce";
 import { useOrderStore } from "@/lib/orderStore";
@@ -23,27 +23,30 @@ const dayNames: Record<number, string> = {
 
 type Props = {
   menuItems: MenuItem[];
+  orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
 };
 
-export default function DateSelector({ menuItems }: Props) {
+export default function DateSelector({ menuItems, orderingMode = "AUTO" }: Props) {
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
   const selectedDates = useOrderStore((s) => s.selectedDates);
   const setStep = useOrderStore((s) => s.setStep);
   const setSelectedDates = useOrderStore((s) => s.setSelectedDates);
   const clearDaySelections = useOrderStore((s) => s.clearDaySelections);
 
-  /** Same menu-week anchor as `isDaySelectable` / deadlines: `getTargetMonday` + `NEXT_WEEK_OPEN`. */
+  const isNextOpen = isNextWeekOpen(orderingMode);
+
+  /** Same menu-week anchor as `isDaySelectable` / deadlines: `getTargetMonday` + `orderingMode`. */
   const menuWeekMondayLabel = useMemo(() => {
-    const monday = getMenuWeekMonday();
+    const monday = getMenuWeekMonday(new Date(), orderingMode);
     return new Intl.DateTimeFormat("uk-UA", {
       weekday: "long",
       day: "numeric",
       month: "long",
       timeZone: "Europe/Kyiv",
     }).format(monday);
-  }, []);
+  }, [orderingMode]);
 
-  const selectableDays = getSelectableMenuDayNumbers();
+  const selectableDays = getSelectableMenuDayNumbers(orderingMode);
   const pkg = parsePackageType(selectedPackage);
 
   const toggleDay = useCallback(
@@ -84,7 +87,7 @@ export default function DateSelector({ menuItems }: Props) {
       <p className="mb-8 text-center text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">
         Доступні лише дні поточного тижня меню, для яких ще не минув дедлайн (
         <span className="font-semibold text-gray-900 dark:text-slate-100">{menuWeekMondayLabel}</span>
-        {NEXT_WEEK_OPEN ? ", замовлення на наступний тиждень" : ""}).
+        {isNextOpen ? ", замовлення на наступний тиждень" : ""}).
       </p>
       <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-4xl mx-auto w-full">
         {selectableDays.map((dow) => {

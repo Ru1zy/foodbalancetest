@@ -207,22 +207,33 @@ export function calculateNewUsedDays(currentUsedDays: number): number {
   return Math.max(0, currentUsedDays - 1);
 }
 
-// Production time-based logic: next menu week opens Saturday afternoon / Sunday (Kyiv).
-export const NEXT_WEEK_OPEN = (() => {
-  const nowKyiv = getKyivParts(new Date());
+/**
+ * Dynamic check whether next week's menu is open.
+ * If orderingMode is:
+ * - "FORCE_OPEN": true (admin manually opened next week early)
+ * - "FORCE_CLOSED": false (admin manually stopped all orders)
+ * - "AUTO" or omitted: default production timing (opens Saturday 12:00 / Sunday Kyiv).
+ */
+export function isNextWeekOpen(orderingMode?: string, reference: Date = new Date()): boolean {
+  if (orderingMode === "FORCE_OPEN") return true;
+  if (orderingMode === "FORCE_CLOSED") return false;
+  const nowKyiv = getKyivParts(reference);
   const isSaturdayAfterNoon = nowKyiv.weekday === 6 && nowKyiv.hour >= 12;
   const isSunday = nowKyiv.weekday === 0;
   return isSaturdayAfterNoon || isSunday;
-})();
+}
+
+// Backward-compatible export for static references
+export const NEXT_WEEK_OPEN = isNextWeekOpen();
 
 function getKyivMidnight(parts: { year: number; month: number; day: number; }) {
   return constructUTCFromKyiv({ year: parts.year, month: parts.month, day: parts.day, hour: 0, minute: 0, second: 0 });
 }
 
-function getTargetMonday(nowKyivParts: ReturnType<typeof getKyivParts>) {
+function getTargetMonday(nowKyivParts: ReturnType<typeof getKyivParts>, orderingMode?: string) {
   const currentDayOffset = nowKyivParts.weekday === 0 ? -6 : 1 - nowKyivParts.weekday;
   const baseMonday = new Date(getKyivMidnight(nowKyivParts).getTime() + currentDayOffset * 24 * 60 * 60 * 1000);
-  if (NEXT_WEEK_OPEN) {
+  if (isNextWeekOpen(orderingMode)) {
     return new Date(baseMonday.getTime() + 7 * 24 * 60 * 60 * 1000);
   }
   return baseMonday;
@@ -234,26 +245,31 @@ function getTargetDate(dayOfWeek: number, targetMonday: Date) {
 }
 
 /** Monday that starts the menu week (same rule as day selectability). */
-export function getMenuWeekMonday(reference: Date = new Date()): Date {
-  return getTargetMonday(getKyivParts(reference));
+export function getMenuWeekMonday(reference: Date = new Date(), orderingMode?: string): Date {
+  return getTargetMonday(getKyivParts(reference), orderingMode);
 }
 
 /** Calendar date for a menu day index 1–7 within the current menu week. */
-export function dateForMenuDayOfWeek(dayOfWeek: number, reference: Date = new Date()): Date {
-  return getTargetDate(dayOfWeek, getMenuWeekMonday(reference));
+export function dateForMenuDayOfWeek(
+  dayOfWeek: number,
+  reference: Date = new Date(),
+  orderingMode?: string,
+): Date {
+  return getTargetDate(dayOfWeek, getMenuWeekMonday(reference, orderingMode));
 }
 
 /** Earliest delivery day among the given weekday indices. */
 export function earliestDeliveryDateFromDayOfWeeks(
   dayOfWeeks: number[],
   reference: Date = new Date(),
+  orderingMode?: string,
 ): Date | null {
   const valid = dayOfWeeks.filter((d) => Number.isInteger(d) && d >= 1 && d <= 7);
   if (valid.length === 0) {
     return null;
   }
   const minDay = Math.min(...valid);
-  return dateForMenuDayOfWeek(minDay, reference);
+  return dateForMenuDayOfWeek(minDay, reference, orderingMode);
 }
 
 /**
@@ -263,12 +279,13 @@ export function earliestMenuDeliveryDateFromCartDays(
   days: Array<{ dayId: string }>,
   menuDayByItemId: Record<string, number>,
   reference: Date = new Date(),
+  orderingMode?: string,
 ): Date | null {
   const weeks = days.map((d) => menuDayByItemId[d.dayId]);
   if (weeks.length === 0 || weeks.some((n) => !Number.isInteger(n) || n < 1 || n > 7)) {
     return null;
   }
-  return earliestDeliveryDateFromDayOfWeeks(weeks, reference);
+  return earliestDeliveryDateFromDayOfWeeks(weeks, reference, orderingMode);
 }
 
 export function getDeadlineForDay(target: Date): Date {
@@ -302,14 +319,16 @@ export function getDeadlineForDay(target: Date): Date {
   return deadlineKyiv;
 }
 
-export function isDaySelectable(dayOfWeek: number): boolean {
+export function isDaySelectable(dayOfWeek: number, orderingMode?: string): boolean {
   // Production time-based validation logic.
   if (!dayOfWeek || dayOfWeek < 1 || dayOfWeek > 7) return false;
+  if (orderingMode === "FORCE_CLOSED") return false;
+  if (orderingMode === "FORCE_OPEN") return true;
 
   const nowKyivParts = getKyivParts(new Date());
   const nowKyiv = constructUTCFromKyiv(nowKyivParts);
 
-  const targetMonday = getTargetMonday(nowKyivParts);
+  const targetMonday = getTargetMonday(nowKyivParts, orderingMode);
   const targetDate = getTargetDate(dayOfWeek, targetMonday);
 
   const deadline = getDeadlineForDay(targetDate);
@@ -317,6 +336,6 @@ export function isDaySelectable(dayOfWeek: number): boolean {
 }
 
 /** Weekday indices 1–7 still open for the current menu week (same rules as `isDaySelectable`). */
-export function getSelectableMenuDayNumbers(): number[] {
-  return [1, 2, 3, 4, 5, 6, 7].filter((d) => isDaySelectable(d));
+export function getSelectableMenuDayNumbers(orderingMode?: string): number[] {
+  return [1, 2, 3, 4, 5, 6, 7].filter((d) => isDaySelectable(d, orderingMode));
 }

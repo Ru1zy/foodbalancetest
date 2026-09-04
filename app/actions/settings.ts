@@ -5,12 +5,16 @@ import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { SITE_CONFIG } from "@/lib/site-config";
 
+export type OrderingMode = "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
+
 export interface PublicSettings {
   ibanDetails: string;
   contactPhone: string | null;
   instagramUrl: string;
   telegramUrl: string;
   tiktokUrl: string;
+  orderingMode: OrderingMode;
+  orderingCustomMessage: string;
 }
 
 export interface AdminSettingsFormData {
@@ -19,6 +23,8 @@ export interface AdminSettingsFormData {
   instagramUrl: string;
   telegramUrl: string;
   tiktokUrl: string;
+  orderingMode: OrderingMode;
+  orderingCustomMessage: string;
 }
 
 /**
@@ -30,7 +36,15 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     const settings = await prisma.systemSetting.findMany({
       where: {
         key: {
-          in: ["ibanDetails", "contactPhone", "instagramUrl", "telegramUrl", "tiktokUrl"],
+          in: [
+            "ibanDetails",
+            "contactPhone",
+            "instagramUrl",
+            "telegramUrl",
+            "tiktokUrl",
+            "orderingMode",
+            "orderingCustomMessage",
+          ],
         },
       },
     });
@@ -38,12 +52,18 @@ export async function getPublicSettings(): Promise<PublicSettings> {
     const map = new Map<string, string>();
     settings.forEach((s) => map.set(s.key, s.value));
 
+    const rawMode = map.get("orderingMode")?.trim();
+    const orderingMode: OrderingMode =
+      rawMode === "FORCE_OPEN" || rawMode === "FORCE_CLOSED" ? rawMode : "AUTO";
+
     return {
       ibanDetails: map.get("ibanDetails")?.trim() || SITE_CONFIG.ibanDetails,
       contactPhone: map.get("contactPhone")?.trim() || SITE_CONFIG.phone,
       instagramUrl: map.get("instagramUrl")?.trim() || SITE_CONFIG.instagram,
       telegramUrl: map.get("telegramUrl")?.trim() || SITE_CONFIG.telegram,
       tiktokUrl: map.get("tiktokUrl")?.trim() || SITE_CONFIG.tiktok,
+      orderingMode,
+      orderingCustomMessage: map.get("orderingCustomMessage")?.trim() || "",
     };
   } catch (error) {
     console.error("Failed to load public settings from DB, using fallback:", error);
@@ -53,6 +73,8 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       instagramUrl: SITE_CONFIG.instagram,
       telegramUrl: SITE_CONFIG.telegram,
       tiktokUrl: SITE_CONFIG.tiktok,
+      orderingMode: "AUTO",
+      orderingCustomMessage: "",
     };
   }
 }
@@ -75,6 +97,10 @@ export async function getAdminSettingsAction(): Promise<{
     const map = new Map<string, string>();
     settings.forEach((s) => map.set(s.key, s.value));
 
+    const rawMode = map.get("orderingMode")?.trim();
+    const orderingMode: OrderingMode =
+      rawMode === "FORCE_OPEN" || rawMode === "FORCE_CLOSED" ? rawMode : "AUTO";
+
     return {
       ok: true,
       settings: {
@@ -83,6 +109,8 @@ export async function getAdminSettingsAction(): Promise<{
         instagramUrl: map.get("instagramUrl") ?? SITE_CONFIG.instagram,
         telegramUrl: map.get("telegramUrl") ?? SITE_CONFIG.telegram,
         tiktokUrl: map.get("tiktokUrl") ?? SITE_CONFIG.tiktok,
+        orderingMode,
+        orderingCustomMessage: map.get("orderingCustomMessage") ?? "",
       },
     };
   } catch (error: unknown) {
@@ -111,6 +139,8 @@ export async function updateAdminSettingsAction(data: Partial<AdminSettingsFormD
       ["instagramUrl", data.instagramUrl],
       ["telegramUrl", data.telegramUrl],
       ["tiktokUrl", data.tiktokUrl],
+      ["orderingMode", data.orderingMode],
+      ["orderingCustomMessage", data.orderingCustomMessage],
     ];
 
     await prisma.$transaction(

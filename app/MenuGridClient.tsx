@@ -29,6 +29,7 @@ const dayNames: Record<number, string> = {
 
 type Props = {
   menuItems: MenuItem[];
+  orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
 };
 
 const PACKAGES: PackageType[] = ["Slim", "Balance", "Active", "Sport", "Sushka XS", "Sushka S", "Indiv"];
@@ -186,7 +187,7 @@ function MealSection({
   );
 }
 
-export default function MenuGridClient({ menuItems }: Props) {
+export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Props) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [zoomScale, setZoomScale] = useState(1);
 
@@ -271,7 +272,7 @@ export default function MenuGridClient({ menuItems }: Props) {
     };
   }, [packageLimit, pkg, selections, selectedDatesFromStore.length, sorted, step, isSushka]);
 
-  const allClosed = [1, 2, 3, 4, 5, 6, 7].every((day) => !isDaySelectable(day));
+  const allClosed = [1, 2, 3, 4, 5, 6, 7].every((day) => !isDaySelectable(day, orderingMode));
 
   const hidePackageSwitcher = step === 3;
   const wizardFilterActive = step === 3 && selectedDatesFromStore.length > 0;
@@ -388,7 +389,7 @@ export default function MenuGridClient({ menuItems }: Props) {
               <div
                 key={currentDayItem.id}
                 className={`w-full max-w-2xl group flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden transition-all duration-200 ease-out ${
-                  isDaySelectable(currentDayItem.dayOfWeek) ? "hover:shadow-md" : "opacity-50"
+                  isDaySelectable(currentDayItem.dayOfWeek, orderingMode) ? "hover:shadow-md" : "opacity-50"
                 }`}
               >
                 {currentDayItem.photoUrl && (
@@ -426,7 +427,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                     </button>
                   )}
 
-                  {!isDaySelectable(currentDayItem.dayOfWeek) && (
+                  {!isDaySelectable(currentDayItem.dayOfWeek, orderingMode) && (
                     <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-600">
                       Вибір этого дня закритий за дедлайном
                     </div>
@@ -445,7 +446,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                       category="breakfast"
                       title="Сніданок"
                       options={currentDayItem.dishes.breakfast}
-                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek, orderingMode)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -461,7 +462,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                       category="lunch"
                       title="Обід"
                       options={currentDayItem.dishes.lunch}
-                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek, orderingMode)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -477,7 +478,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                       category="dinner"
                       title="Вечеря"
                       options={currentDayItem.dishes.dinner}
-                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek, orderingMode)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
@@ -494,7 +495,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                         category="snack"
                         title="Перекус"
                         options={currentDayItem.dishes.snack}
-                        disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
+                        disabled={!isDaySelectable(currentDayItem.dayOfWeek, orderingMode)}
                         pkg={pkg}
                         isSushka={isSushka}
                         indivSelected={indivSelected}
@@ -511,7 +512,7 @@ export default function MenuGridClient({ menuItems }: Props) {
                       category="extra"
                       title="Додаткова страва (Sport)"
                       options={currentDayItem.dishes.extra}
-                      disabled={!isDaySelectable(currentDayItem.dayOfWeek)}
+                      disabled={!isDaySelectable(currentDayItem.dayOfWeek, orderingMode)}
                       pkg={pkg}
                       isSushka={isSushka}
                       indivSelected={indivSelected}
