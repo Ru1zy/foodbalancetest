@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { updateOrderDeliveryInfo, notifyTodayOrders, exportToKitchenSheet } from "@/app/actions/admin";
+import { updateOrderDeliveryInfo, notifyTodayOrders, notifySingleTodayOrder, exportToKitchenSheet } from "@/app/actions/admin";
 import SyncedHorizontalScroll from "@/components/admin/SyncedHorizontalScroll";
 import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
@@ -34,6 +34,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
   const [selectedDate, setSelectedDate] = useState(initialDate);
   const [orders, setOrders] = useState(initialOrders);
   const [isPending, startTransition] = useTransition();
+  const [isSendingId, setIsSendingId] = useState<string | null>(null);
   const [notifyMessage, setNotifyMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -129,6 +130,35 @@ const handleExportToKitchen = () => {
     });
   };
 
+  const handleNotifySingle = async (orderId: string, clientName: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    if (!order.deliveryTime && !order.deliveryNote) {
+      alert(`Вкажіть час доставки або напишіть нотатку для клієнта ${clientName} перед відправкою.`);
+      return;
+    }
+
+    setIsSendingId(orderId);
+    setNotifyMessage(null);
+
+    try {
+      const res = await notifySingleTodayOrder(orderId);
+      setNotifyMessage({
+        type: res.ok ? "success" : "error",
+        text: res.message,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Помилка при відправці";
+      setNotifyMessage({
+        type: "error",
+        text: `✗ ${message}`,
+      });
+    } finally {
+      setIsSendingId(null);
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 p-6">
       <div className="mx-auto max-w-7xl">
@@ -161,7 +191,7 @@ const handleExportToKitchen = () => {
             {
               icon: "📢",
               title: "Telegram-сповіщення",
-              text: "Кнопка відправляє повідомлення з персональним часом доставки всім клієнтам, у яких підключений Telegram-бот.",
+              text: "Кнопка відправляє сповіщення з часом доставки та/або персональною нотаткою адміна всім клієнтам з Telegram.",
             },
             {
               icon: "🍳",
@@ -175,8 +205,8 @@ const handleExportToKitchen = () => {
             },
           ]}
           tips={[
-            "Для відправки Telegram-сповіщень обов'язково заповніть точний час доставки в колонці.",
-            "Якщо клієнт оформлював замовлення через сайт без Telegram, у стовпчику 'Чат' буде позначка про відсутність зв'язку.",
+            "Сповіщення можна надіслати як з часом доставки, так і з самою лише нотаткою (або з обома полями).",
+            "Можна надіслати сповіщення всім клієнтам разом кнопкою вгорі, або точково конкретному клієнту кнопкою 'Надіслати' у рядку таблиці.",
           ]}
         />
 
@@ -371,9 +401,21 @@ const handleExportToKitchen = () => {
                       </td>
                       <td className="px-4 py-3 text-center">
                         {order.user.chatId ? (
-                          <span className="text-green-600 text-lg">✓</span>
+                          <div className="flex flex-col items-center gap-1.5">
+                            <span className="text-green-600 font-bold text-base leading-none" title="Telegram підключено">✓</span>
+                            <button
+                              type="button"
+                              onClick={() => handleNotifySingle(order.id, order.user.name)}
+                              disabled={isSendingId === order.id}
+                              className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition active:scale-95 disabled:opacity-50"
+                              title="Надіслати сповіщення (час та/або нотатку) тільки цьому клієнту"
+                            >
+                              <span>{isSendingId === order.id ? "⏳" : "📢"}</span>
+                              <span>Надіслати</span>
+                            </button>
+                          </div>
                         ) : (
-                          <span className="text-red-600 text-lg">✗</span>
+                          <span className="text-red-500 font-bold text-base" title="Немає Telegram ChatID">✗</span>
                         )}
                       </td>
                       <td className="px-4 py-3">

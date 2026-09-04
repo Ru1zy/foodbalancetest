@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/admin/orders", label: "Замовлення", icon: "📦" },
   { href: "/admin/today", label: "Сьогодні", icon: "📅" },
   { href: "/admin/clients", label: "Клієнти (CRM)", icon: "👥" },
+  { href: "/admin/broadcast", label: "Сповіщення", icon: "📢" },
   { href: "/admin/menu", label: "Меню", icon: "🍽️" },
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
   { href: "/admin/pending-payments", label: "Оплати", icon: "💳" },

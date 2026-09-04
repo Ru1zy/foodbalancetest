@@ -531,18 +531,22 @@ export async function notifyTodayOrders(dateStr: string) {
         continue;
       }
 
-      // Skip if no delivery time
-      if (!order.deliveryTime) {
+      // Skip if neither delivery time nor delivery note is provided
+      if (!order.deliveryTime && !order.deliveryNote) {
         skipped++;
-        skippedReasons.push(`${order.user.name}: немає часу доставки`);
+        skippedReasons.push(`${order.user.name}: немає часу доставки або нотатки`);
         continue;
       }
 
       // Build message
-      let message = `Сьогодні у вас доставка:\nПІБ: <b>${escapeTelegramHtml(order.user.name)}</b>\nЧас доставки: ${escapeTelegramHtml(order.deliveryTime)} ⏰`;
+      let message = `🚚 <b>Доставка FoodBalance</b>\nКлієнт: <b>${escapeTelegramHtml(order.user.name)}</b>`;
+
+      if (order.deliveryTime) {
+        message += `\nЧас доставки: <b>${escapeTelegramHtml(order.deliveryTime)}</b> ⏰`;
+      }
 
       if (order.deliveryNote) {
-        message += `\n\nНотатка для Вас: ${escapeTelegramHtml(order.deliveryNote)}`;
+        message += `\n\n💬 <b>Нотатка від адміністратора:</b>\n${escapeTelegramHtml(order.deliveryNote)}`;
       }
 
       // Send Telegram message
@@ -589,6 +593,76 @@ export async function notifyTodayOrders(dateStr: string) {
       sent: 0,
       skipped: 0,
     };
+  }
+}
+
+export async function notifySingleTodayOrder(orderId: string): Promise<{ ok: boolean; message: string }> {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Недостатньо прав для відправки сповіщень" };
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    return { ok: false, message: "TELEGRAM_BOT_TOKEN не налаштовано" };
+  }
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: {
+          select: {
+            name: true,
+            chatId: true,
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      return { ok: false, message: "Замовлення не знайдено" };
+    }
+
+    if (!order.user.chatId) {
+      return { ok: false, message: `У клієнта ${order.user.name} немає Telegram ChatID` };
+    }
+
+    if (!order.deliveryTime && !order.deliveryNote) {
+      return { ok: false, message: "Вкажіть час доставки або напишіть нотатку перед відправкою" };
+    }
+
+    let message = `🚚 <b>Доставка FoodBalance</b>\nКлієнт: <b>${escapeTelegramHtml(order.user.name)}</b>`;
+
+    if (order.deliveryTime) {
+      message += `\nЧас доставки: <b>${escapeTelegramHtml(order.deliveryTime)}</b> ⏰`;
+    }
+
+    if (order.deliveryNote) {
+      message += `\n\n💬 <b>Нотатка від адміністратора:</b>\n${escapeTelegramHtml(order.deliveryNote)}`;
+    }
+
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: order.user.chatId,
+          text: message,
+          parse_mode: "HTML",
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      return { ok: false, message: `Помилка Telegram API (${response.status})` };
+    }
+
+    return { ok: true, message: `Сповіщення успішно надіслано для ${order.user.name}!` };
+  } catch (error) {
+    console.error("notifySingleTodayOrder error:", error);
+    return { ok: false, message: "Помилка мережі при відправці сповіщення" };
   }
 }
 
