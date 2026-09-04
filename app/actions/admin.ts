@@ -9,10 +9,10 @@ import {
 } from "@/lib/delivery-orders";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
-import { sendEmail } from "@/lib/email";
 import { normalizePhoneForLegacy } from "@/lib/googleSheets";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
+import { syncOrderToMonthlySheets } from "@/lib/monthlySheets";
 import type { Prisma } from "@prisma/client";
 
 // Explicit shapes so callbacks over Prisma results never collapse to implicit
@@ -771,21 +771,8 @@ export async function exportToKitchenSheet(
   const adminUser = await getAuthenticatedAdminUser();
   if (!adminUser) return { ok: false, message: "Недостатньо прав для експорту." };
 
-  const sheetId = process.env.EXTERNAL_SHEET_ID;
-  const sheets = createGoogleSheetsClient();
-
-  if (!sheets || !sheetId) {
-    return { ok: false, message: "Не налаштовано Google Sheets API." };
-  }
-
   const dateRange = parseTargetDate(targetDateStr);
   if (!dateRange) return { ok: false, message: "Некоректний формат дати DD.MM" };
-
-  // CRITICAL: Determine day of week strictly from the TARGET date.
-  const startDay = dateRange.start;
-  const midDay = new Date(startDay.getTime() + 12 * 60 * 60 * 1000);
-  let targetDayOfWeek = midDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
-  targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
   try {
     const orders = await findDeliveryOrdersForRange(dateRange.start, dateRange.end, {
@@ -793,6 +780,45 @@ export async function exportToKitchenSheet(
     });
 
     if (orders.length === 0) return { ok: false, message: `Не знайдено замовлень на ${targetDateStr}.` };
+
+    const [, monthStr] = targetDateStr.split(".");
+    const year = dateRange.start.getUTCFullYear();
+    const monthKey = `${monthStr.padStart(2, "0")}.${year}`;
+
+    // Prefer dynamic monthly sheet configured in SheetConfig
+    const sheetConfig = await prisma.sheetConfig.findUnique({
+      where: { monthKey },
+    });
+
+    if (sheetConfig) {
+      for (const order of orders) {
+        await syncOrderToMonthlySheets(order, order.user);
+      }
+
+      await prisma.order.updateMany({
+        where: { id: { in: orders.map((o: { id: string }) => o.id) } },
+        data: { status: "Передано в учёт" },
+      });
+
+      return { ok: true, exported: orders.length };
+    }
+
+    // Fallback: Legacy separate external sheet
+    const sheetId = process.env.EXTERNAL_SHEET_ID;
+    const sheets = createGoogleSheetsClient();
+
+    if (!sheets || !sheetId) {
+      return { 
+        ok: false, 
+        message: `Не налаштовано таблицю для місяця ${monthKey} в розділі «Таблиці» (/admin/settings/sheets).` 
+      };
+    }
+
+    // CRITICAL: Determine day of week strictly from the TARGET date.
+    const startDay = dateRange.start;
+    const midDay = new Date(startDay.getTime() + 12 * 60 * 60 * 1000);
+    let targetDayOfWeek = midDay.getUTCDay(); // 0 (Sun) - 6 (Sat)
+    targetDayOfWeek = targetDayOfWeek === 0 ? 7 : targetDayOfWeek;
 
     // Fetch all relevant Menu records
     const dayIds = new Set<string>();
