@@ -2,6 +2,7 @@ import { getAllMenuItems } from "@/app/actions/menu-impl";
 import { MenuItem } from "@/lib/menu-types";
 import MenuPhotoUpload from "./MenuPhotoUpload";
 import MenuDishesEditor from "./MenuDishesEditor";
+import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 const dayNames: Record<number, string> = {
   1: "Понеділок",
@@ -25,6 +26,47 @@ export default async function AdminMenuPage() {
             Завантажте зображення та редагуйте страви для кожного дня меню
           </p>
         </div>
+
+        <AdminHelpBanner
+          id="menu"
+          title="Керування щотижневим меню та стравами"
+          description="Налаштування 7-денного циклу раціонів харчування, редагування страв та завантаження фотографій."
+          items={[
+            {
+              icon: "📅",
+              title: "Цикл 7 днів",
+              text: "Меню розбито за днями тижня (Понеділок — Неділя). На сайті автоматично відображаються страви поточного дня.",
+            },
+            {
+              icon: "🥗",
+              title: "Тарифи раціонів",
+              text: "Кожен день налаштовується під конкретний пакет харчування (наприклад, Template або Sushka) з відповідною калорійністю.",
+            },
+            {
+              icon: "📸",
+              title: "Фотографії дня",
+              text: "Завантажуйте соковиті та апетитні фото готових страв для наочної презентації клієнтам у каруселі меню.",
+            },
+            {
+              icon: "🍲",
+              title: "Редактор страв",
+              text: "Натискайте 'Редагувати страви', щоб додавати, перейменовувати або змінювати склад сніданків, обідів та вечерь.",
+            },
+            {
+              icon: "⚖️",
+              title: "КБЖВ та грамажі",
+              text: "Вказуйте калорійність, білки, жири, вуглеводи та вагу кожної позиції для прозорого контролю споживачем.",
+            },
+            {
+              icon: "🚀",
+              title: "Миттєве оновлення",
+              text: "Будь-які зміни страв чи фото негайно стають видимими відвідувачам сайту та користувачам бота.",
+            },
+          ]}
+          tips={[
+            "Рекомендоване співвідношення сторін для фотографій страв: 16:9 або 4:3 для найкращого вигляду на смартфонах.",
+          ]}
+        />
 
         <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200 dark:ring-slate-800">
           <div className="overflow-x-auto">

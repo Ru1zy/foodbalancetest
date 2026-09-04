@@ -4,6 +4,7 @@ import OrderActionButtons from "@/components/admin/OrderActionButtons";
 import KitchenExport from "./KitchenExport";
 import ArchiveOrdersButton from "@/components/admin/ArchiveOrdersButton";
 import SyncedHorizontalScroll from "@/components/admin/SyncedHorizontalScroll";
+import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 import prisma from "@/lib/prisma";
 import { orderHasMissingSheetConfig } from "@/lib/monthlySheets";
 import type { Prisma } from "@prisma/client";
@@ -284,6 +285,48 @@ export default async function AdminOrdersPage({
             </div>
           </div>
         </div>
+
+        <AdminHelpBanner
+          id="orders"
+          title="Журнал замовлень FoodBalance"
+          description="Центральний реєстр замовлень: відстеження статусів, контроль оплат, деталізація раціонів та експорт у Google Таблиці."
+          items={[
+            {
+              icon: "🔄",
+              title: "Статуси виконання",
+              text: "Перемикайте поточний стан замовлення: 'Очікує', 'В обробці', 'Доставлено' або 'Скасовано' прямо у випадаючому списку.",
+            },
+            {
+              icon: "💳",
+              title: "Контроль оплати",
+              text: "Відображає спосіб розрахунку (онлайн WayForPay або переказ за реквізитами) та статус надходження коштів.",
+            },
+            {
+              icon: "📊",
+              title: "Синхронізація таблиць",
+              text: "Стовпчик 'Таблиця' показує прив'язку до щомісячної Google Таблиці та дозволяє відправити замовлення в один клік.",
+            },
+            {
+              icon: "🍱",
+              title: "Деталізація меню",
+              text: "Переглядайте обраний раціон, кілокалорії, кількість днів доставки, прилади та всі дні замовлення розгорнуто.",
+            },
+            {
+              icon: "🍳",
+              title: "Швидкий експорт на кухню",
+              text: "Панель 'Експорт на кухню' нижче збирає всі страви на задану дату для виробничого цеху кухарів.",
+            },
+            {
+              icon: "📦",
+              title: "Архівування",
+              text: "Кнопка 'Архівувати старі' переносить неактивні або доставлені замовлення в архів для прискорення завантаження списку.",
+            },
+          ]}
+          tips={[
+            "Якщо біля замовлення світиться жовте попередження про таблицю — перевірте вкладку 'Таблиці' та активуйте конфігурацію на відповідний місяць.",
+            "Для перегляду раціонів конкретно на сьогодні скористайтеся вкладкою '📅 Доставки сьогодні'.",
+          ]}
+        />
 
         <KitchenExport />
 

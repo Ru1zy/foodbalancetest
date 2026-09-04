@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import ClientEditModal from "@/components/admin/ClientEditModal";
 import SyncedHorizontalScroll from "@/components/admin/SyncedHorizontalScroll";
+import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 type Client = {
   id: string;
@@ -60,6 +61,48 @@ export default function ClientsPageClient({ clients }: Props) {
 
   return (
     <>
+      <AdminHelpBanner
+        id="clients"
+        title="Клієнтська база (CRM) та абонементи"
+        description="Керування профілями клієнтів, балансами абонементів, контактними даними та історією замовлень."
+        items={[
+          {
+            icon: "🔍",
+            title: "Швидкий пошук",
+            text: "Знаходьте клієнта за іменем, телефоном, адресою або числовим Telegram ChatID у реальному часі.",
+          },
+          {
+            icon: "🎟️",
+            title: "Баланси абонементів",
+            text: "Зелені бейджі під ім'ям показують залишок сплачених днів по кожному підключеному тарифу (наприклад, 1800: 7д).",
+          },
+          {
+            icon: "✈️",
+            title: "Telegram ChatID",
+            text: "Ідентифікатор зв'язку з Telegram-ботом. Якщо клієнт авторизувався через бота, тут відображається його ID для доставки сповіщень.",
+          },
+          {
+            icon: "✏️",
+            title: "Редагування даних",
+            text: "Кнопка 'Редагувати' відкриває вікно зміни ПІБ, телефону, адреси доставки та персональних нотаток адміна.",
+          },
+          {
+            icon: "⚖️",
+            title: "Коригування балансу",
+            text: "У модальному вікні редагування можна вручну додавати чи списувати доступні дні харчування за абонементом.",
+          },
+          {
+            icon: "📈",
+            title: "Історія активності",
+            text: "Колонка 'Замовлень' фіксує сумарну кількість оформлених доставок за весь час роботи з клієнтом.",
+          },
+        ]}
+        tips={[
+          "Якщо клієнт змінив номер телефону або адресу, оновіть їх тут — зміни автоматично застосуються до наступних замовлень.",
+          "Для пошуку користувачів без телефону введіть ChatID або ім'я з Telegram.",
+        ]}
+      />
+
       <div className="mb-6 rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex-1">

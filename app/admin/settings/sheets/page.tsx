@@ -5,6 +5,7 @@ import {
 } from "@/lib/google-drive";
 import GoogleDriveAutomation from "./GoogleDriveAutomation";
 import SheetConfigManager from "./SheetConfigManager";
+import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 type SearchParams = Promise<{
   drive?: string;
@@ -70,45 +71,47 @@ export default async function SheetSettingsPage({
           notice={connectionNotice(params)}
         />
 
-        <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-slate-800/50 p-5 text-sm text-slate-700 dark:text-slate-300">
-          <h2 className="font-bold text-slate-900 dark:text-slate-100">Ручний резервний варіант</h2>
-          <p className="mt-2">
-            Потрібен лише якщо автоматизація Google Drive не підключена або тимчасово недоступна.
-          </p>
-          <ol className="mt-3 list-decimal space-y-2 pl-5">
-            <li>Створіть окрему Google-таблицю для потрібного місяця.</li>
-            <li>
-              Надайте сервісному Google-акаунту FoodBalance{" "}
-              {process.env.GOOGLE_CLIENT_EMAIL ? (
-                <code className="rounded bg-white dark:bg-slate-900 px-1 py-0.5 text-slate-900 dark:text-slate-100 break-all select-all">
-                  {process.env.GOOGLE_CLIENT_EMAIL}
-                </code>
-              ) : (
-                "права редактора"
-              )}
-              {" "}права редактора.
-            </li>
-            <li>
-              Створіть у ній лист із точним іменем{" "}
-              <code className="rounded bg-white dark:bg-slate-900 px-1 py-0.5 text-slate-900 dark:text-slate-100">_Template</code>.
-              Заголовки та форматування можна оформити як потрібно;
-              замовлення записуються з рядка 5 у колонки B–K.
-            </li>
-            <li>
-              Колонки B–K: №, ім’я, телефон, адреса, Telegram Chat ID,
-              пакет, страви, прибори, коментар, ціна. Дата денної
-              вкладки автоматично записується в B2.
-            </li>
-            <li>
-              Вставте URL цієї книги нижче та вкажіть місяць у форматі{" "}
-              <code className="rounded bg-white dark:bg-slate-900 px-1 py-0.5 text-slate-900 dark:text-slate-100">MM.YYYY</code>.
-            </li>
-          </ol>
-          <p className="mt-3 text-xs text-slate-600 dark:text-slate-400">
-            FoodBalance сам створить вкладку <code>DD.MM</code> копіюванням{" "}
-            <code>_Template</code>, якщо вона ще не існує.
-          </p>
-        </div>
+        <AdminHelpBanner
+          id="sheets"
+          title="Підключення щомісячних Google Таблиць"
+          description="Словник щомісячних таблиць замовлень. Кожен місяць має власну Google Таблицю (формат MM.YYYY), куди експортуються замовлення."
+          items={[
+            {
+              icon: "🔑",
+              title: "Ключ місяця (MM.YYYY)",
+              text: "Вказуйте місяць і рік, наприклад: 09.2026. Замовлення автоматично розподіляються в потрібну таблицю за датою доставки.",
+            },
+            {
+              icon: "🤖",
+              title: "Автоматизація Drive",
+              text: "Якщо Google Drive підключено (блок вище), система автоматично створює нову таблицю на наступний місяць з майстер-шаблону.",
+            },
+            {
+              icon: "📧",
+              title: "Сервісний Google-акаунт",
+              text: `Надайте права 'Редактор' сервісному акаунту: ${process.env.GOOGLE_CLIENT_EMAIL || "сервісному акаунту FoodBalance"}.`,
+            },
+            {
+              icon: "📑",
+              title: "Шаблон аркуша (_Template)",
+              text: "У таблиці має бути лист з точним ім'ям '_Template'. З нього система клонує щоденні аркуші (наприклад, 19.04).",
+            },
+            {
+              icon: "📋",
+              title: "Структура колонок B–K",
+              text: "Замовлення записуються з рядка 5: №, ПІБ, телефон, адреса, Telegram Chat ID, пакет, страви, прилади, коментар, ціна.",
+            },
+            {
+              icon: "🔗",
+              title: "Додавання таблиці",
+              text: "Вставте посилання або Spreadsheet ID у форму нижче та вкажіть місяць у форматі MM.YYYY.",
+            },
+          ]}
+          tips={[
+            "FoodBalance сам створить денну вкладку DD.MM копіюванням _Template, якщо вона ще не існує.",
+            "Дата денної вкладки автоматично записується в клітинку B2 створеного аркуша.",
+          ]}
+        />
 
         <SheetConfigManager
           configs={configs.map((c) => ({

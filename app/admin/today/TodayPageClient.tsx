@@ -3,6 +3,7 @@
 import { useState, useTransition, useRef } from "react";
 import { updateOrderDeliveryInfo, notifyTodayOrders, exportToKitchenSheet } from "@/app/actions/admin";
 import SyncedHorizontalScroll from "@/components/admin/SyncedHorizontalScroll";
+import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 type Order = {
   id: string;
@@ -136,6 +137,48 @@ const handleExportToKitchen = () => {
             📅 Доставки на сьогодні
           </h1>
         </div>
+
+        <AdminHelpBanner
+          id="today"
+          title="Оперативне керування доставками на сьогодні"
+          description="Щоденний робочий стіл логіста й адміністратора: контроль замовлень, маршрутизація, сповіщення клієнтів і синхронізація з кухнею."
+          items={[
+            {
+              icon: "📅",
+              title: "Вибір дати",
+              text: "Введіть дату у форматі ДД.ММ (наприклад, 19.04), щоб переглянути всі раціони на цей день.",
+            },
+            {
+              icon: "⏱️",
+              title: "Час та нотатки адміна",
+              text: "Змінюйте час доставки та службову примітку прямо в клітинках таблиці — вони зберігаються автоматично на льоту.",
+            },
+            {
+              icon: "💬",
+              title: "Коментар клієнта",
+              text: "Показує вподобання клієнта (домофон, поверх, виключення продуктів тощо), вказані при замовленні.",
+            },
+            {
+              icon: "📢",
+              title: "Telegram-сповіщення",
+              text: "Кнопка відправляє повідомлення з персональним часом доставки всім клієнтам, у яких підключений Telegram-бот.",
+            },
+            {
+              icon: "🍳",
+              title: "Експорт на кухню",
+              text: "Синхронізує активні замовлення дня до щомісячної Google Таблиці кухні (створює та оновлює рядок дати).",
+            },
+            {
+              icon: "↔️",
+              title: "Синхронний скрол",
+              text: "Таблиця оснащена подвійним горизонтальним скролом (зверху і знизу) для зручного огляду на будь-яких екранах.",
+            },
+          ]}
+          tips={[
+            "Для відправки Telegram-сповіщень обов'язково заповніть точний час доставки в колонці.",
+            "Якщо клієнт оформлював замовлення через сайт без Telegram, у стовпчику 'Чат' буде позначка про відсутність зв'язку.",
+          ]}
+        />
 
         {/* Date Picker and Notify Button */}
         <div className="mb-6 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-sm">
@@ -361,18 +404,6 @@ const handleExportToKitchen = () => {
             </SyncedHorizontalScroll>
           </div>
         )}
-
-        <div className="mt-6 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-4 py-3 text-xs text-blue-800 dark:text-blue-200">
-          <p className="font-semibold mb-2">ℹ️ Як працює сторінка:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Показує всі активні замовлення на обрану дату незалежно від способу оплати</li>
-            <li>&quot;Коментар клієнта&quot; - побажання клієнта при оформленні (тільки для перегляду)</li>
-            <li>&quot;Нотатка адміна&quot; - ваше повідомлення для клієнта (автозбереження)</li>
-            <li>Редагуйте час доставки та нотатку адміна прямо в таблиці</li>
-            <li>Кнопка &quot;Відправити сповіщення&quot; надсилає Telegram повідомлення всім клієнтам з chatId та часом доставки</li>
-            <li>Формат повідомлення: ПІБ, час доставки, нотатка адміна (якщо є)</li>
-          </ul>
-        </div>
       </div>
     </div>
   );

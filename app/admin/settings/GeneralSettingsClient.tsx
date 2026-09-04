@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { CreditCard, Phone, Save, CheckCircle2, Globe } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
+import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 interface Props {
   initialSettings: AdminSettingsFormData;
@@ -65,6 +66,48 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
           </div>
         </div>
       </div>
+
+      <AdminHelpBanner
+        id="general-settings"
+        title="Загальні налаштування та контакти сайту"
+        description="Керування публічними платіжними реквізитами (IBAN), контактним телефоном та офіційними посиланнями на соцмережі."
+        items={[
+          {
+            icon: "💳",
+            title: "Реквізити IBAN",
+            text: "Вкажіть номер банківського рахунку у форматі IBAN, найменування ФОП або картку, які показуються клієнтам при оплаті переказом.",
+          },
+          {
+            icon: "📞",
+            title: "Контактний номер",
+            text: "Телефон підтримки та прийому замовлень. Відображається у шапці, підвалі сайту та клікабельний для дзвінків.",
+          },
+          {
+            icon: "✈️",
+            title: "Telegram компанії",
+            text: "Посилання на офіційний канал, чат підтримки або Telegram-бота FoodBalance.",
+          },
+          {
+            icon: "📸",
+            title: "Instagram",
+            text: "Пряме посилання на профіль бренду в Instagram для іконки у підвалі та контактних блоках.",
+          },
+          {
+            icon: "🎵",
+            title: "TikTok",
+            text: "Посилання на сторінку сервісу в TikTok для залучення нової аудиторії.",
+          },
+          {
+            icon: "📊",
+            title: "Таблиці Google Sheets",
+            text: "Кнопка 'Таблиці Sheets' у верхньому правому кутку веде до налаштування щомісячних таблиць замовлень та кухні.",
+          },
+        ]}
+        tips={[
+          "Після зміни реквізитів обов'язково натисніть кнопку 'Зберегти налаштування' внизу форми.",
+          "Для соцмереж вказуйте повне посилання з https:// (наприклад, https://t.me/foodbalance).",
+        ]}
+      />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Payment Requisites Section */}
