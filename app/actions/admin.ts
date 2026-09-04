@@ -317,6 +317,75 @@ export async function broadcastMessage(htmlContent: string): Promise<{ ok: boole
   }
 }
 
+export async function sendDirectTelegramMessage(
+  chatId: string,
+  htmlContent: string
+): Promise<{ ok: boolean; message?: string }> {
+  const adminUser = await getAuthenticatedAdminUser();
+
+  if (!adminUser) {
+    return {
+      ok: false,
+      message: "Недостатньо прав для відправки повідомлення.",
+    };
+  }
+
+  if (!(chatId || "").trim()) {
+    return {
+      ok: false,
+      message: "Не вказано Telegram Chat ID клієнта.",
+    };
+  }
+
+  if (!(htmlContent || "").trim()) {
+    return {
+      ok: false,
+      message: "Повідомлення порожнє.",
+    };
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    return {
+      ok: false,
+      message: "TELEGRAM_BOT_TOKEN не налаштовано на сервері.",
+    };
+  }
+
+  try {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId.trim(),
+        text: htmlContent.trim(),
+        parse_mode: "HTML",
+      }),
+    });
+
+    if (!response.ok) {
+      const errData = (await response.json().catch(() => ({}))) as { description?: string };
+      const desc = errData?.description || `код ${response.status}`;
+      return {
+        ok: false,
+        message: `Telegram API: ${desc}`,
+      };
+    }
+
+    return {
+      ok: true,
+      message: "Повідомлення успішно надіслано!",
+    };
+  } catch (error) {
+    console.error("sendDirectTelegramMessage failed", error);
+
+    return {
+      ok: false,
+      message: "Помилка мережі при відправці повідомлення в Telegram.",
+    };
+  }
+}
+
 // ============================================================================
 // ARCHIVE ORDERS
 // ============================================================================
