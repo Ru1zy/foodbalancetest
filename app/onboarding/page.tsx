@@ -22,7 +22,7 @@ export default function OnboardingPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.user && !data.user.phone.startsWith("google_")) {
-            router.push("/profile");
+            window.location.replace("/profile");
           }
         }
       } catch (error) {
@@ -55,7 +55,7 @@ export default function OnboardingPage() {
         setStep("otp");
         setOtpMessage(data.message || "Код відправлено в Telegram");
       } else if (data.success) {
-        router.push("/profile");
+        window.location.href = "/profile";
       }
     } catch (error) {
       console.error("Onboarding error:", error);
@@ -85,8 +85,7 @@ export default function OnboardingPage() {
       }
 
       if (data.success) {
-        router.refresh();
-        router.push("/profile");
+        window.location.href = "/profile";
       }
     } catch (error) {
       console.error("Merge error:", error);
