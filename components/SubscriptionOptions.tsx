@@ -30,9 +30,10 @@ type Props = {
   pkg: Pkg;
   isNewClient?: boolean;
   onPurchaseSuccess?: (purchase: PurchaseSuccessData, days: number, packageId: string) => void;
+  ibanDetails?: string;
 };
 
-export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = true, onPurchaseSuccess }: Props) {
+export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = true, onPurchaseSuccess, ibanDetails }: Props) {
   const router = useRouter();
   const [days, setDays] = useState<number>(14);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash" | "plata">("plata");
@@ -251,7 +252,7 @@ export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = t
             <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-4 text-sm">
               <p className="mb-2 font-semibold">Реквізити для оплати:</p>
               <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border">
-                {SITE_CONFIG.ibanDetails}
+                {ibanDetails || SITE_CONFIG.ibanDetails}
               </p>
               
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">

@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
   { href: "/admin/pending-payments", label: "Оплати", icon: "💳" },
   { href: "/admin/settings/sheets", label: "Таблиці", icon: "📊" },
+  { href: "/admin/settings", label: "Налаштування", icon: "⚙️" },
 ];
 
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {

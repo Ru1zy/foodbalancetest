@@ -9,6 +9,7 @@ import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 import { parseIndivDishId } from "@/lib/order-selection";
 import { getAllTariffs } from "@/app/actions/tariff-impl";
 import { getCachedMenus } from "@/lib/cache";
+import { getPublicSettings } from "@/app/actions/settings";
 
 const CATEGORY_LABELS: Record<string, string> = {
   breakfast: "Сніданок",
@@ -239,7 +240,7 @@ export default async function ProfilePage(
       remainingDays: b.totalDays - b.usedDays,
     }));
 
-  const [allOrders, allPurchases, tariffs] = await Promise.all([
+  const [allOrders, allPurchases, tariffs, settings] = await Promise.all([
     prisma.order.findMany({
       where: { userId },
       select: { id: true, createdAt: true },
@@ -248,7 +249,8 @@ export default async function ProfilePage(
       where: { userId },
       select: { id: true, createdAt: true },
     }),
-    getAllTariffs()
+    getAllTariffs(),
+    getPublicSettings()
   ]);
 
   const unifiedActions = [
@@ -308,6 +310,7 @@ export default async function ProfilePage(
       totalPages={totalPages}
       totalActions={totalActions}
       itemsPerPage={ITEMS_PER_PAGE}
+      ibanDetails={settings.ibanDetails}
     />
   );
 }

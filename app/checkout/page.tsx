@@ -6,6 +6,7 @@ import CheckoutPageImpl from "./page-impl";
 import { getCachedMenus, getCachedTariffs } from "@/lib/cache";
 import { parseCutleryCount } from "@/lib/checkout";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { getPublicSettings } from "@/app/actions/settings";
 
 export default async function CheckoutPage() {
   const cookieStore = await cookies();
@@ -58,7 +59,10 @@ export default async function CheckoutPage() {
     }
   }
 
-  const tariffs = await getCachedTariffs();
+  const [tariffs, settings] = await Promise.all([
+    getCachedTariffs(),
+    getPublicSettings(),
+  ]);
 
   return (
     <CheckoutPageImpl
@@ -66,6 +70,7 @@ export default async function CheckoutPage() {
       menuDayByItemId={menuDayByItemId}
       sushkaMenuIdByDay={sushkaMenuIdByDay}
       tariffs={tariffs}
+      ibanDetails={settings.ibanDetails}
     />
   );
 }

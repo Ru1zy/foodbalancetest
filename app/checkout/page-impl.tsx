@@ -56,6 +56,7 @@ type Props = {
   menuDayByItemId: Record<string, number>;
   sushkaMenuIdByDay: Record<number, string>;
   tariffs?: { name: string; basePrice: number }[];
+  ibanDetails?: string;
 };
 
 const dayNames: Record<number, string> = {
@@ -73,6 +74,7 @@ export default function CheckoutPageImpl({
   menuDayByItemId,
   sushkaMenuIdByDay,
   tariffs,
+  ibanDetails,
 }: Props) {
   const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
@@ -653,6 +655,7 @@ export default function CheckoutPageImpl({
               cartTotalDays={cartData.totalDays}
               onValidSubmit={onValidSubmit}
               feedback={feedback}
+              ibanDetails={ibanDetails}
             />
           </div>
         </section>

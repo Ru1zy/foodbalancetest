@@ -85,6 +85,7 @@ type Props = {
   totalPages: number;
   totalActions: number;
   itemsPerPage: number;
+  ibanDetails?: string;
 };
 
 function formatDate(date: Date): string {
@@ -384,7 +385,8 @@ export default function ProfilePageClient({
   currentPage,
   totalPages,
   totalActions,
-  itemsPerPage
+  itemsPerPage,
+  ibanDetails,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -696,6 +698,7 @@ export default function ProfilePageClient({
                   pkg={tariffs.find(t => t.id === activeTab)!} 
                   isNewClient={isNewClient}
                   onPurchaseSuccess={handlePurchaseSuccess}
+                  ibanDetails={ibanDetails}
                 />
               )}
             </div>

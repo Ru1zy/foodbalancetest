@@ -1,8 +1,10 @@
 import { Phone } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
-import { SITE_CONFIG } from "@/lib/site-config";
+import { getPublicSettings } from "@/app/actions/settings";
 
-export default function Footer() {
+export default async function Footer() {
+  const settings = await getPublicSettings();
+
   return (
     <footer className="bg-slate-900 dark:bg-slate-950 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
@@ -30,13 +32,13 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-bold text-white mb-4">Контакти</h3>
           <div className="flex flex-col space-y-3 text-sm text-slate-300 dark:text-slate-400">
-            {SITE_CONFIG.phone && (
-              <a href={`tel:${SITE_CONFIG.phone}`} className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
-                <Phone className="w-4 h-4" /> {SITE_CONFIG.phoneDisplay || SITE_CONFIG.phone}
+            {settings.contactPhone && (
+              <a href={`tel:${settings.contactPhone}`} className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+                <Phone className="w-4 h-4" /> {settings.contactPhone}
               </a>
             )}
             <a 
-              href={SITE_CONFIG.instagram} 
+              href={settings.instagramUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
@@ -44,7 +46,7 @@ export default function Footer() {
               <FaInstagram className="w-4 h-4" /> Instagram: @food.balance.zp
             </a>
             <a 
-              href={SITE_CONFIG.telegram} 
+              href={settings.telegramUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
@@ -52,7 +54,7 @@ export default function Footer() {
               <FaTelegram className="w-4 h-4" /> Telegram: @foodbalancezp
             </a>
             <a 
-              href={SITE_CONFIG.tiktok} 
+              href={settings.tiktokUrl} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"

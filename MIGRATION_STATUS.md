@@ -410,6 +410,7 @@ Current research as of 2026-08-09:
   - **Financial Fix:** Restored real invoice price calculation for Monobank Plata checkouts (orders and subscriptions) with gross fee calculation; made 1 UAH test mode strictly opt-in via `MONOBANK_TEST_MODE="true"`.
   - **Guest Checkout Unblocked:** Fixed `uploadReceiptAction` to permit guest order receipt attachments (with `image/*` MIME check and 10 MB limit) instead of throwing 401 Unauthorized.
   - **Brand & Metadata Centralization:** Created `lib/site-config.ts` replacing hardcoded dummy IBAN and phone numbers across `CheckoutCustomerForm`, `SubscriptionOptions`, and `Footer`.
+  - **Dynamic Admin Requisites & Contacts (`/admin/settings`):** Added `SystemSetting` PostgreSQL model and a dedicated admin interface enabling Vlad/admins to change IBAN details, contact phone, and social URLs (Telegram, Instagram, TikTok) on the fly without touching code or environment variables. All customer-facing surfaces (Checkout, Subscription Options, Footer) automatically consume these live settings with cache revalidation and fallback to `SITE_CONFIG`. Added "⚙️ Налаштування" to the admin navigation sidebar.
   - **Cloudflare R2 Safety:** Whitelisted `*.r2.dev` in `next.config.ts` image remote patterns so newly uploaded bucket images never hit host whitelist errors.
   - **SEO & 404 Resilience:** Added branded `app/not-found.tsx` and crawlers configuration in `app/robots.ts` and `app/sitemap.ts`.
   - **Code Quality Sweep:** Resolved all 38 ESLint errors across actions, clients, and tests (`npm run lint` = 0 errors).

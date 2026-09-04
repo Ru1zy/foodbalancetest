@@ -217,3 +217,11 @@ model OutboxJob {
 
   @@index([status, createdAt])
 }
+
+/// Key-value dynamic system configuration managed by administrators.
+/// Used for payment details (IBAN/card), contact phone, and social links.
+model SystemSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

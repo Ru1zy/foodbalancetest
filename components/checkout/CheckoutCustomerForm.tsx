@@ -7,6 +7,7 @@ import { SITE_CONFIG } from "@/lib/site-config";
 
 type Props = {
   isAuthenticated?: boolean;
+  ibanDetails?: string;
   fiatPrice: number;
   balanceDaysToUse: number;
   paymentMethod: "plata" | "cash" | "bank_transfer";
@@ -29,6 +30,7 @@ const CUTLERY_OPTIONS = [0, 1, 2, 3, 4] as const;
 
 export function CheckoutCustomerForm({
   isAuthenticated,
+  ibanDetails,
   fiatPrice,
   balanceDaysToUse,
   paymentMethod,
@@ -139,7 +141,7 @@ export function CheckoutCustomerForm({
               Для оплати переказом, будь ласка, надішліть кошти на цей рахунок:
             </p>
             <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border border-blue-100 dark:border-blue-800 text-sm">
-              {SITE_CONFIG.ibanDetails}
+              {ibanDetails || SITE_CONFIG.ibanDetails}
             </p>
             
             <label className="block text-sm font-medium text-gray-900 dark:text-slate-100 mb-2">
