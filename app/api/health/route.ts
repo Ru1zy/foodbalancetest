@@ -9,8 +9,9 @@ export async function GET() {
 
   try {
     await prisma.$queryRaw`SELECT 1`;
+    const tariffs = await prisma.tariff.findMany();
     return NextResponse.json(
-      { status: "ok", database: "reachable", latencyMs: Date.now() - startedAt },
+      { status: "ok", database: "reachable", latencyMs: Date.now() - startedAt, tariffs },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

@@ -430,6 +430,13 @@ async function prepareOrderForSubmission(
       !Number.isInteger(totalPrice) ||
       totalPrice !== expectedTotalPrice
     ) {
+      console.error("[PRICE MISMATCH DEBUG]", {
+        packageType: sanitizedCartData.packageType,
+        totalDays: sanitizedCartData.totalDays,
+        clientTotalPrice: totalPrice,
+        expectedTotalPrice,
+        tariffs: tariffs.map(t => ({ name: t.name, basePrice: t.basePrice })),
+      });
       return {
         ok: false,
         message: "Сума замовлення не збігається з кошиком. Оновіть сторінку та спробуйте ще раз.",
