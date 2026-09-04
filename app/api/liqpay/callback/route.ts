@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     // Use Prisma transaction to ensure idempotency and prevent double credits
-    await prisma.$transaction(async (tx: any) => {
+    await prisma.$transaction(async (tx) => {
       // Determine what type of payment this is.
       // If order_id maps to an Order record:
       const order = await tx.order.findUnique({

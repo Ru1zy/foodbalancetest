@@ -8,6 +8,8 @@ import {
 } from "@/lib/subscription-logic";
 import { createSubscriptionPurchaseAction } from "@/app/actions/subscription";
 import { uploadReceiptAction } from "@/app/actions/upload-receipt";
+import { SITE_CONFIG } from "@/lib/site-config";
+import type { SubscriptionPurchase } from "@prisma/client";
 
 type Pkg = {
   id: string;
@@ -15,13 +17,22 @@ type Pkg = {
   basePrice: number;
 };
 
+export type PurchaseSuccessData = {
+  id: string;
+  packageId: string;
+  days: number;
+  finalPrice: number;
+  status: string;
+  createdAt: Date;
+};
+
 type Props = {
   pkg: Pkg;
   isNewClient?: boolean;
-  onPurchaseSuccess?: (purchase: any, days: number, packageId: string) => void;
+  onPurchaseSuccess?: (purchase: PurchaseSuccessData, days: number, packageId: string) => void;
 };
 
-export default function SubscriptionOptions({ pkg, isNewClient = true, onPurchaseSuccess }: Props) {
+export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = true, onPurchaseSuccess }: Props) {
   const router = useRouter();
   const [days, setDays] = useState<number>(14);
   const [paymentMethod, setPaymentMethod] = useState<"bank_transfer" | "cash" | "plata">("plata");
@@ -232,14 +243,16 @@ export default function SubscriptionOptions({ pkg, isNewClient = true, onPurchas
                 onChange={() => setPaymentMethod("cash")}
                 className="w-4 h-4 text-emerald-600"
               />
-              <span className="text-gray-900 dark:text-slate-100 font-medium">Готівкою кур'єру</span>
+              <span className="text-gray-900 dark:text-slate-100 font-medium">Готівкою кур&apos;єру</span>
             </label>
           </div>
 
           {paymentMethod === "bank_transfer" && (
             <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-4 text-sm">
               <p className="mb-2 font-semibold">Реквізити для оплати:</p>
-              <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border">XXXX XXXX XXXX XXXX (ФОП Іванов І.І.)</p>
+              <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border">
+                {SITE_CONFIG.ibanDetails}
+              </p>
               
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
                 Завантажте скріншот оплати:

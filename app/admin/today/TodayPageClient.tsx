@@ -347,8 +347,9 @@ const handleExportToKitchen = () => {
                                 const { adminCancelOrderDay } = await import('@/app/actions/order-cancel');
                                 await adminCancelOrderDay(order.orderDayId!);
                                 setOrders(prev => prev.filter(o => o.orderDayId !== order.orderDayId));
-                              } catch (err: any) {
-                                alert(err.message || "Помилка при скасуванні");
+                              } catch (err: unknown) {
+                                const message = err instanceof Error ? err.message : "Помилка при скасуванні";
+                                alert(message);
                               }
                             }}
                             className="inline-flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"

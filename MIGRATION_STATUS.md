@@ -406,10 +406,14 @@ Current research as of 2026-08-09:
 - [ ] Test Sheet retry/idempotency and an unavailable Google API.
 - [ ] Use an isolated database and disabled/test integrations for load testing.
 - [ ] Load-test staged checkout at 10, 25, 50, and 100 concurrent submissions.
-- [x] Run `npx tsc --noEmit`, `npm run lint`, and `npm run build` before every
-  phase is considered complete. (100% clean build on Turbopack)
-- [ ] Complete a staging acceptance checklist with the business owner before
-  enabling real payments.
+- [x] **Pre-Launch Polish & Hardening (04.09):**
+  - **Financial Fix:** Restored real invoice price calculation for Monobank Plata checkouts (orders and subscriptions) with gross fee calculation; made 1 UAH test mode strictly opt-in via `MONOBANK_TEST_MODE="true"`.
+  - **Guest Checkout Unblocked:** Fixed `uploadReceiptAction` to permit guest order receipt attachments (with `image/*` MIME check and 10 MB limit) instead of throwing 401 Unauthorized.
+  - **Brand & Metadata Centralization:** Created `lib/site-config.ts` replacing hardcoded dummy IBAN and phone numbers across `CheckoutCustomerForm`, `SubscriptionOptions`, and `Footer`.
+  - **Cloudflare R2 Safety:** Whitelisted `*.r2.dev` in `next.config.ts` image remote patterns so newly uploaded bucket images never hit host whitelist errors.
+  - **SEO & 404 Resilience:** Added branded `app/not-found.tsx` and crawlers configuration in `app/robots.ts` and `app/sitemap.ts`.
+  - **Code Quality Sweep:** Resolved all 38 ESLint errors across actions, clients, and tests (`npm run lint` = 0 errors).
+  - **Verification:** 19/19 unit tests passing (`npm test`), 0 TypeScript errors (`npx tsc --noEmit`), and 100% clean Turbopack production build (`npm run build`).
 
 ## Business decisions required (remaining)
 

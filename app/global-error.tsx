@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -42,12 +43,12 @@ export default function GlobalError({
             >
               Перезавантажити додаток
             </button>
-            <a
+            <Link
               href="/"
               className="rounded-xl border border-slate-800 bg-slate-800 px-6 py-3 text-sm font-bold text-slate-300 transition hover:bg-slate-700 active:scale-95"
             >
               На головну
-            </a>
+            </Link>
           </div>
         </div>
       </body>

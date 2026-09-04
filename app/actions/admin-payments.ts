@@ -32,7 +32,7 @@ export async function confirmPaymentAction(purchaseId: string) {
     processAllOutboxJobs().catch(err => console.error("Async outbox error:", err));
 
     return { ok: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to confirm payment:", error);
     return { ok: false, error: "Помилка при підтвердженні оплати" };
   }
@@ -90,7 +90,7 @@ export async function rejectPaymentAction(purchaseId: string) {
     processAllOutboxJobs().catch(err => console.error("Async outbox error:", err));
 
     return { ok: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to reject payment:", error);
     return { ok: false, error: "Помилка при скасуванні оплати" };
   }

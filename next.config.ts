@@ -5,10 +5,19 @@ type RemotePattern = NonNullable<
 >[number];
 
 // Existing Vercel Blob images keep working while that store exists.
+// Cloudflare R2 and Supabase hosts are allowed by default for uploaded assets.
 const remotePatterns: RemotePattern[] = [
   {
     protocol: "https",
     hostname: "*.public.blob.vercel-storage.com",
+  },
+  {
+    protocol: "https",
+    hostname: "*.r2.dev",
+  },
+  {
+    protocol: "https",
+    hostname: "*.supabase.co",
   },
 ];
 

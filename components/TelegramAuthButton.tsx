@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import TelegramDeepLinkAuth from "./TelegramDeepLinkAuth";
 
+const subscribe = () => () => {};
+
 export default function TelegramAuthButton() {
   const [showAuth, setShowAuth] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(subscribe, () => true, () => false);
 
   useEffect(() => {
     if (showAuth) {

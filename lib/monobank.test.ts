@@ -33,7 +33,7 @@ test("monobank public key TTL cache returns fresh key without calling fetch", as
   globalThis.fetch = (async () => {
     fetchCallCount++;
     return new Response(JSON.stringify({ key: "fresh-key-from-api" }), { status: 200 });
-  }) as any;
+  }) as unknown as typeof fetch;
 
   try {
     // Set a cache timestamp from 10 minutes ago (< 1 hour)
@@ -56,7 +56,7 @@ test("monobank public key TTL cache re-fetches when key is expired (> 1 hour)", 
   globalThis.fetch = (async () => {
     fetchCallCount++;
     return new Response(JSON.stringify({ key: "new-rotated-key" }), { status: 200 });
-  }) as any;
+  }) as unknown as typeof fetch;
 
   try {
     // Set cache timestamp from 2 hours ago (> 1 hour TTL)
@@ -81,7 +81,7 @@ test("monobank public key TTL cache falls back to stale key if refresh fails", a
 
   globalThis.fetch = (async () => {
     return new Response("Internal Server Error", { status: 500 });
-  }) as any;
+  }) as unknown as typeof fetch;
 
   try {
     const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
@@ -100,7 +100,7 @@ test("monobank public key throws when no cached key exists and fetch fails", asy
 
   globalThis.fetch = (async () => {
     return new Response("Unauthorized", { status: 401 });
-  }) as any;
+  }) as unknown as typeof fetch;
 
   try {
     _resetMonobankKeyCacheForTesting();

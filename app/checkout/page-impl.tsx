@@ -10,7 +10,6 @@ import { CheckoutSummaryAside } from "@/components/checkout/CheckoutSummaryAside
 import { CheckoutCustomerForm } from "@/components/checkout/CheckoutCustomerForm";
 import type { SubmittedState, SummaryDay } from "@/components/checkout/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
 import {
   submitOrders,
   type CartOrderInput,
@@ -484,9 +483,10 @@ export default function CheckoutPageImpl({
             throw new Error(uploadRes.error || "Не вдалося завантажити квитанцію");
           }
           finalReceiptUrl = uploadRes.url;
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : "Помилка при завантаженні квитанції.";
           setFeedback({
-            message: err.message || "Помилка при завантаженні квитанції.",
+            message,
             tone: "error",
           });
           setIsUploading(false);

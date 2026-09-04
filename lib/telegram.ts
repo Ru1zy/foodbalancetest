@@ -13,7 +13,7 @@ import {
   type IndivDishQuantity,
 } from "@/lib/order-selection";
 
-type TelegramOrder = {
+export type TelegramOrder = {
   id: string;
   cutlery: number;
   deliveryAddress: string | null;
@@ -27,11 +27,30 @@ type TelegramOrder = {
   receiptEmail?: string | null;
 };
 
-type TelegramUser = {
+export type TelegramUser = {
   address: string | null;
   name: string;
   notes: string | null;
   phone: string;
+};
+
+export type TelegramSubscriptionPurchase = {
+  id?: string;
+  paymentMethod?: string;
+  status?: string;
+  packageId: string;
+  days: number;
+  finalPrice?: number;
+  receiptUrl?: string | null;
+  sendEmailReceipt?: boolean;
+  receiptEmail?: string | null;
+};
+
+export type TelegramSubscriptionUser = {
+  name?: string;
+  phone?: string;
+  chatId?: string | null;
+  email?: string | null;
 };
 
 type CartDay = {
@@ -454,8 +473,8 @@ export async function sendPaymentConfirmation(user: { chatId: string | null; ema
 }
 
 export async function sendSubscriptionPendingAlert(
-  purchase: any,
-  user: any
+  purchase: TelegramSubscriptionPurchase,
+  user: TelegramSubscriptionUser
 ) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
@@ -470,8 +489,8 @@ export async function sendSubscriptionPendingAlert(
   const isAutoApproved = purchase.status === 'PAID';
 
   const text = isAutoApproved 
-    ? `💰 <b>Оформлено абонемент (Готівка)</b>\n<i>Автоматично схвалено, дні зараховано.</i>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name)} (${escapeHtml(user.phone)})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice} ₴\nСпосіб: ${method}`
-    : `💰 <b>Нова заявка на оплату абонемента!</b>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name)} (${escapeHtml(user.phone)})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice} ₴\nСпосіб: ${method}`;
+    ? `💰 <b>Оформлено абонемент (Готівка)</b>\n<i>Автоматично схвалено, дні зараховано.</i>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone || "")})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice || 0} ₴\nСпосіб: ${method}`
+    : `💰 <b>Нова заявка на оплату абонемента!</b>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone || "")})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice || 0} ₴\nСпосіб: ${method}`;
 
   const sendPromises = adminIds.map((chatId) => {
     const endpoint = purchase.receiptUrl ? "sendPhoto" : "sendMessage";
@@ -491,14 +510,14 @@ export async function sendSubscriptionPendingAlert(
   if (purchase.sendEmailReceipt && purchase.receiptEmail) {
     try {
       const html = generateSubscriptionReceiptHtml({
-        purchaseId: purchase.id,
+        purchaseId: purchase.id || "",
         name: user.name || "Клієнт",
-        phone: user.phone,
+        phone: user.phone || "",
         packageId: purchase.packageId,
         days: purchase.days,
-        finalPrice: purchase.finalPrice,
+        finalPrice: purchase.finalPrice || 0,
         method: method,
-        status: purchase.status,
+        status: purchase.status || "PENDING",
       });
       await sendEmail(purchase.receiptEmail, "Заявка на абонемент | Food Balance", html);
     } catch (error) {
@@ -507,9 +526,12 @@ export async function sendSubscriptionPendingAlert(
   }
 }
 
-export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
+export async function sendSubscriptionApprovedAlert(
+  purchase: TelegramSubscriptionPurchase,
+  user: TelegramSubscriptionUser
+) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
-  const text = `✅ <b>Оплату абонемента підтверджено!</b>\n\n📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💰 <b>Сума:</b> ${purchase.finalPrice} ₴\n\nБаланс поповнено. Ви можете використовувати ці дні для замовлення їжі!`;
+  const text = `✅ <b>Оплату абонемента підтверджено!</b>\n\n📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💰 <b>Сума:</b> ${purchase.finalPrice || 0} ₴\n\nБаланс поповнено. Ви можете використовувати ці дні для замовлення їжі!`;
 
   if (token && user.chatId) {
     try {
@@ -532,7 +554,10 @@ export async function sendSubscriptionApprovedAlert(purchase: any, user: any) {
   }
 }
 
-export async function sendSubscriptionRejectedAlert(purchase: any, user: any) {
+export async function sendSubscriptionRejectedAlert(
+  purchase: TelegramSubscriptionPurchase,
+  user: TelegramSubscriptionUser
+) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const text = `❌ <b>Оплату абонемента скасовано</b>\n\n📅 <b>Тариф:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\nНа жаль, адміністратор відхилив вашу оплату. Якщо це помилка, будь ласка, зверніться до підтримки.`;
 

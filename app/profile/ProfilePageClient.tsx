@@ -184,8 +184,8 @@ function OrderCard({
       await userCancelOrderDay(dayId);
       onDayCancelled?.(order.id, dayId);
       router.refresh();
-    } catch (err: any) {
-      alert(err.message || "Помилка при скасуванні");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Помилка при скасуванні");
     } finally {
       setCancellingDayId(null);
     }
@@ -210,8 +210,8 @@ function OrderCard({
         onDayCancelled?.(order.id, dayId);
       }
       router.refresh();
-    } catch (err: any) {
-      alert(err.message || "Помилка при скасуванні");
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Помилка при скасуванні");
     } finally {
       setCancellingDayId(null);
     }
@@ -412,10 +412,10 @@ export default function ProfilePageClient({
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isBalancesOpen, setIsBalancesOpen] = useState(false);
 
-  const handlePurchaseSuccess = useCallback((purchase: SubscriptionPurchase, days: number, packageId: string) => {
+  const handlePurchaseSuccess = useCallback((purchase: import("@/components/SubscriptionOptions").PurchaseSuccessData, days: number, packageId: string) => {
     // 1. Instantly prepend new purchase to local action list
     setActionList((prev) => [
-      { type: 'PURCHASE', data: purchase },
+      { type: 'PURCHASE', data: purchase as unknown as SubscriptionPurchase },
       ...prev,
     ]);
 
@@ -782,8 +782,8 @@ export default function ProfilePageClient({
             <div className="space-y-6">
               {actionList.map((action, idx) => (
                 action.type === 'ORDER' 
-                  ? <OrderCard key={`order-${action.data.id}-${idx}`} order={action.data as any} onDayCancelled={handleOrderDayCancelled} />
-                  : <PurchaseCard key={`purchase-${action.data.id}-${idx}`} purchase={action.data as any} onCancelled={handlePurchaseCancelled} />
+                  ? <OrderCard key={`order-${action.data.id}-${idx}`} order={action.data} onDayCancelled={handleOrderDayCancelled} />
+                  : <PurchaseCard key={`purchase-${action.data.id}-${idx}`} purchase={action.data} onCancelled={handlePurchaseCancelled} />
               ))}
               <PaginationControls 
                 currentPage={currentPage} 
@@ -819,7 +819,7 @@ function PurchaseCard({
       } else {
         alert(res.error || "Помилка при скасуванні");
       }
-    } catch (e) {
+    } catch {
       alert("Сталася помилка при скасуванні.");
     } finally {
       setIsCancelling(false);

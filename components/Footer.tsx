@@ -1,5 +1,6 @@
 import { Phone } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 export default function Footer() {
   return (
@@ -29,11 +30,13 @@ export default function Footer() {
         <div>
           <h3 className="text-lg font-bold text-white mb-4">Контакти</h3>
           <div className="flex flex-col space-y-3 text-sm text-slate-300 dark:text-slate-400">
-            <a href="tel:+380000000000" className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
-              <Phone className="w-4 h-4" /> +38 (000) 000-00-00
-            </a>
+            {SITE_CONFIG.phone && (
+              <a href={`tel:${SITE_CONFIG.phone}`} className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
+                <Phone className="w-4 h-4" /> {SITE_CONFIG.phoneDisplay || SITE_CONFIG.phone}
+              </a>
+            )}
             <a 
-              href="https://instagram.com/food.balance.zp" 
+              href={SITE_CONFIG.instagram} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
@@ -41,7 +44,7 @@ export default function Footer() {
               <FaInstagram className="w-4 h-4" /> Instagram: @food.balance.zp
             </a>
             <a 
-              href="https://t.me/foodbalancezp" 
+              href={SITE_CONFIG.telegram} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"
@@ -49,7 +52,7 @@ export default function Footer() {
               <FaTelegram className="w-4 h-4" /> Telegram: @foodbalancezp
             </a>
             <a 
-              href="https://www.tiktok.com/@food.balance.zp" 
+              href={SITE_CONFIG.tiktok} 
               target="_blank" 
               rel="noopener noreferrer" 
               className="flex items-center gap-2 hover:text-emerald-400 transition-colors"

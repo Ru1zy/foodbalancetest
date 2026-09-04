@@ -131,11 +131,16 @@ export async function createSubscriptionPurchaseAction(
     if (isPlata) {
       // Monobank integration
       const grossAmount = calculateAmountWithFee(totalDiscounted);
+      const isTestMode = process.env.MONOBANK_TEST_MODE === "true";
+      const invoiceAmount = isTestMode ? 100 : Math.round(grossAmount * 100);
+      const destination = isTestMode
+        ? `Оплата підписки на ${days} днів (${packageId}) [TEST]`
+        : `Оплата підписки на ${days} днів (${packageId})`;
+
       const invoice = await createMonobankInvoice({
-        // amount: grossAmount * 100, // convert UAH to kopecks
-        amount: 100, // TEMP: Override to 1 UAH for testing!
+        amount: invoiceAmount,
         reference: purchase.id,
-        destination: `Оплата підписки на ${days} днів (${packageId}) [TEST]`,
+        destination,
         redirectPath: "/profile",
       });
       pageUrl = invoice.pageUrl;
@@ -160,9 +165,10 @@ export async function createSubscriptionPurchaseAction(
         createdAt: purchase.createdAt,
       }
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to create subscription purchase:", error);
-    return { ok: false, error: error.message || "Internal Server Error" };
+    const message = error instanceof Error ? error.message : "Internal Server Error";
+    return { ok: false, error: message };
   }
 }
 

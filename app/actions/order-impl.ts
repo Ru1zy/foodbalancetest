@@ -707,8 +707,8 @@ async function persistOrderInTransaction(
 async function dispatchOrderSideEffects(
   order: Order,
   user: User,
-  validatedData: CheckoutData,
-  sanitizedCartData: OrderCartData,
+  _validatedData: CheckoutData,
+  _sanitizedCartData: OrderCartData,
 ): Promise<void> {
   // REACTIVE FAILSAFE: detect up-front whether the target month's spreadsheet
   // is configured. If it is missing the order has ALREADY been persisted in
@@ -1037,14 +1037,19 @@ export async function submitOrders(
     let pageUrl: string | undefined;
 
     if (isPlata && idempotencyKey) {
-      const totalAmount = results.reduce((sum: number, r: any) => sum + (r.order.price ?? 0), 0);
+      const totalAmount = results.reduce((sum: number, r: { order: Order }) => sum + (r.order.price ?? 0), 0);
       if (totalAmount > 0) {
         const grossAmount = calculateAmountWithFee(totalAmount);
+        const isTestMode = process.env.MONOBANK_TEST_MODE === "true";
+        const invoiceAmount = isTestMode ? 100 : Math.round(grossAmount * 100);
+        const destination = isTestMode
+          ? `Оплата замовлень (${results.length} шт.) [TEST]`
+          : `Оплата замовлень (${results.length} шт.)`;
+
         const invoice = await createMonobankInvoice({
-          // amount: grossAmount * 100, // convert UAH to kopecks
-          amount: 100, // TEMP: Override to 1 UAH for testing!
+          amount: invoiceAmount,
           reference: idempotencyKey, // Using the checkout key to identify the batch
-          destination: `Оплата замовлень (${results.length} шт.) [TEST]`,
+          destination,
           redirectPath: "/profile",
         });
         pageUrl = invoice.pageUrl;

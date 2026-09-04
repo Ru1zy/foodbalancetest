@@ -72,8 +72,8 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           setIsPolling(false);
           setError("Помилка при перевірці статусу. Спробуйте ще раз.");
         }
-      } catch (err: any) {
-        if (err.name === "AbortError") return;
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name === "AbortError") return;
         console.error("Polling error:", err);
       } finally {
         isFetchingRef.current = false;

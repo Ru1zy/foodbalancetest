@@ -127,8 +127,8 @@ export async function processOutboxJob(jobId: string) {
 
           try {
             await sendOrderNotification(
-              order as any,
-              order.user as any,
+              order as unknown as import("@/lib/telegram").TelegramOrder,
+              order.user as unknown as import("@/lib/telegram").TelegramUser,
               sheetMissing ? { warningPrefix: "[🔴 ТАБЛИЦА НЕ НАЙДЕНА - ВНЕСТИ ВРУЧНУЮ]" } : {}
             );
           } catch (error) {
