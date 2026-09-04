@@ -21,7 +21,6 @@ import {
   earliestMenuDeliveryDateFromCartDays,
   getOrderTotalUah,
   getPackageLimit,
-  PACKAGE_PRICES,
 } from "@/lib/order-logic";
 import {
   formatDisplayDate,
@@ -284,20 +283,12 @@ export default function CheckoutPageImpl({
   }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay, customModeDays]);
 
   const orderTotalUah = useMemo(() => {
-    if (!pkg) {
-      return 0;
-    }
-
-    if (pkg === "Sushka XS" || pkg === "Sushka S") {
-      return PACKAGE_PRICES[pkg] * cartData.totalDays;
-    }
-
-    if (pkg === "Sushka") {
+    if (!pkg || pkg === "Sushka") {
       return 0;
     }
 
     return getOrderTotalUah(pkg, cartData.totalDays, tariffs);
-  }, [cartData.totalDays, pkg]);
+  }, [cartData.totalDays, pkg, tariffs]);
 
   const { balanceDaysToUse, fiatPrice } = useMemo(() => {
     if (!pkg || availableDays === 0) {
@@ -309,17 +300,11 @@ export default function CheckoutPageImpl({
     
     let fPrice = 0;
     if (fiatDays > 0) {
-      if (!pkg.includes("Sushka")) {
-        fPrice = getOrderTotalUah(pkg, fiatDays, tariffs);
-      } else {
-        // Calculate daily price from the full total for sushka
-        const dailyPrice = cartData.totalDays > 0 ? Math.round(orderTotalUah / cartData.totalDays) : 0;
-        fPrice = dailyPrice * fiatDays;
-      }
+      fPrice = getOrderTotalUah(pkg, fiatDays, tariffs);
     }
     
     return { balanceDaysToUse: toUse, fiatPrice: fPrice };
-  }, [availableDays, cartData.totalDays, orderTotalUah, pkg]);
+  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, tariffs]);
 
   const deliveryDate = useMemo(
     () =>

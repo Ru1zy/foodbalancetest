@@ -22,12 +22,12 @@ export function isOrderablePackageType(value: string): value is OrderablePackage
 /** Базова ціна одного дня (грн) для розрахунку замовлення. */
 export const PACKAGE_PRICES: Record<PackageType, number> = {
   Slim: 610,
-  Balance: 700,
-  Active: 800,
-  Sport: 900,
+  Balance: 670,
+  Active: 750,
+  Sport: 850,
   Sushka: 0,
-  "Sushka XS": 500,
-  "Sushka S": 600,
+  "Sushka XS": 710,
+  "Sushka S": 770,
   Indiv: 700,
   Template: 0,
 };

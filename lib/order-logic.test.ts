@@ -9,8 +9,10 @@ import {
 } from "./order-logic.ts";
 
 test("Sushka totals are derived from the trusted per-day tariff", () => {
-  assert.equal(getOrderTotalUah("Sushka XS", 2), 1000);
-  assert.equal(getOrderTotalUah("Sushka S", 3), 1800);
+  assert.equal(getOrderTotalUah("Sushka XS", 2), 1420);
+  assert.equal(getOrderTotalUah("Sushka S", 3), 2310);
+  // With custom DB tariffs override
+  assert.equal(getOrderTotalUah("Sushka XS", 2, [{ name: "Sushka XS", basePrice: 500 }]), 1000);
 });
 
 test("only customer-facing package variants are purchasable", () => {
