@@ -282,13 +282,24 @@ export default function CheckoutPageImpl({
     };
   }, [packageLimitInfo.limit, pkg, selectedDates, selectedPackageRaw, selections, sushkaMenuIdByDay, customModeDays]);
 
+  const totalDishesCount = useMemo(() => {
+    return cartData.days.reduce(
+      (sum, day) =>
+        sum +
+        (day.items && day.items.length > 0
+          ? day.items.reduce((s, it) => s + it.quantity, 0)
+          : day.selectedCount),
+      0,
+    );
+  }, [cartData.days]);
+
   const orderTotalUah = useMemo(() => {
     if (!pkg || pkg === "Sushka") {
       return 0;
     }
 
-    return getOrderTotalUah(pkg, cartData.totalDays, tariffs);
-  }, [cartData.totalDays, pkg, tariffs]);
+    return getOrderTotalUah(pkg, cartData.totalDays, tariffs, totalDishesCount);
+  }, [cartData.totalDays, pkg, tariffs, totalDishesCount]);
 
   const { balanceDaysToUse, fiatPrice } = useMemo(() => {
     if (!pkg || availableDays === 0) {
@@ -300,11 +311,11 @@ export default function CheckoutPageImpl({
     
     let fPrice = 0;
     if (fiatDays > 0) {
-      fPrice = getOrderTotalUah(pkg, fiatDays, tariffs);
+      fPrice = getOrderTotalUah(pkg, fiatDays, tariffs, totalDishesCount);
     }
     
     return { balanceDaysToUse: toUse, fiatPrice: fPrice };
-  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, tariffs]);
+  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, tariffs, totalDishesCount]);
 
   const deliveryDate = useMemo(
     () =>
@@ -368,12 +379,11 @@ export default function CheckoutPageImpl({
   const isIndivCurrent = isIndivPackage(selectedPackageRaw ?? undefined);
   const currentDraftValid = Boolean(pkg) && cartData.totalDays > 0;
 
-  /** Sum of fiat subtotals for added cart packages (Indiv items are operator-priced → excluded). */
+  /** Sum of fiat subtotals for added cart packages. */
   const cartFiatTotal = useMemo(
     () =>
       cartItems.reduce(
-        (sum, item) =>
-          sum + (isIndivPackage(item.packageType) ? 0 : item.unitPrice * item.quantity),
+        (sum, item) => sum + item.unitPrice * item.quantity,
         0,
       ),
     [cartItems],
@@ -389,9 +399,9 @@ export default function CheckoutPageImpl({
     [cartItems],
   );
 
-  /** Gross total across the current draft + all added packages (excludes Indiv). */
+  /** Gross total across the current draft + all added packages. */
   const grandGrossTotal =
-    (isIndivCurrent ? 0 : currentDraftValid ? orderTotalUah : 0) + cartFiatTotal;
+    (currentDraftValid ? orderTotalUah : 0) + cartFiatTotal;
 
   /** Snapshot the current wizard draft as a ready-to-submit cart item. */
   const buildDraftCartItem = (): CartItem | null => {

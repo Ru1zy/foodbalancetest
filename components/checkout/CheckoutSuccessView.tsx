@@ -18,10 +18,10 @@ export function CheckoutSuccessView({ submitted }: Props) {
             Замовлення прийнято
           </p>
           <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950 dark:text-slate-50">
-            {isIndivPackage(submitted.packageType) ? "Заявку прийнято" : "Дякуємо за замовлення"}
+            {isIndivPackage(submitted.packageType) && submitted.totalPrice === 0 ? "Заявку прийнято" : "Дякуємо за замовлення"}
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-400">
-            {isIndivPackage(submitted.packageType)
+            {isIndivPackage(submitted.packageType) && submitted.totalPrice === 0
               ? "Вашу заявку прийнято! З вами найближчим часом зв'яжеться оператор для погодження меню та кінцевої вартості."
               : "Ми вже зберегли ваше замовлення в системі. Найближчим часом менеджер зв'яжеться з вами для підтвердження деталей доставки."}
           </p>
@@ -39,9 +39,7 @@ export function CheckoutSuccessView({ submitted }: Props) {
           <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 px-5 py-4 text-left">
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Сума</div>
             <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">
-              {isIndivPackage(submitted.packageType) ? (
-                "—"
-              ) : submitted.totalPrice > 0 ? (
+              {submitted.totalPrice > 0 ? (
                 `${submitted.totalPrice} ₴`
               ) : (
                 "—"

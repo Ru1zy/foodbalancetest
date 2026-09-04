@@ -19,7 +19,7 @@ export function isOrderablePackageType(value: string): value is OrderablePackage
   return (ORDERABLE_PACKAGE_TYPES as readonly string[]).includes(value);
 }
 
-/** Базова ціна одного дня (грн) для розрахунку замовлення. */
+/** Базова ціна одного дня (грн) для розрахунку замовлення (для Indiv — ціна за 1 страву). */
 export const PACKAGE_PRICES: Record<PackageType, number> = {
   Slim: 610,
   Balance: 670,
@@ -28,15 +28,16 @@ export const PACKAGE_PRICES: Record<PackageType, number> = {
   Sushka: 0,
   "Sushka XS": 710,
   "Sushka S": 770,
-  Indiv: 700,
+  Indiv: 200,
   Template: 0,
 };
 
-export function getOrderTotalUah(packageType: PackageType, totalDays: number, tariffs?: { name: string; basePrice: number }[]): number {
-  if (totalDays < 1) {
-    return 0;
-  }
-  
+export function getOrderTotalUah(
+  packageType: PackageType,
+  totalDays: number,
+  tariffs?: { name: string; basePrice: number }[],
+  totalDishesCount?: number,
+): number {
   let unit = PACKAGE_PRICES[packageType] ?? 0;
   
   if (tariffs && tariffs.length > 0) {
@@ -44,6 +45,14 @@ export function getOrderTotalUah(packageType: PackageType, totalDays: number, ta
     if (tariff) {
       unit = tariff.basePrice;
     }
+  }
+
+  if (packageType === "Indiv") {
+    return (totalDishesCount ?? 0) * unit;
+  }
+  
+  if (totalDays < 1) {
+    return 0;
   }
   
   return totalDays * unit;

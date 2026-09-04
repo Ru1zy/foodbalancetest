@@ -307,13 +307,13 @@ export function CheckoutCustomerForm({
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                 {cartItems.length > 0
                   ? grandGrossTotal > 0
-                    ? `До підтвердження: ${grandGrossTotal} ₴${
-                        hasIndivInCart || isIndivCurrent ? " + інд." : ""
-                      }`
-                    : "Індивідуальний розрахунок"
+                    ? `До підтвердження: ${grandGrossTotal} ₴`
+                    : "0 ₴"
+                  : orderTotalUah > 0
+                  ? `До підтвердження: ${orderTotalUah} ₴`
                   : isIndivPackage(selectedPackageRaw ?? undefined)
                   ? "Індивідуальний розрахунок"
-                  : `До підтвердження: ${orderTotalUah} ₴`}
+                  : `До підтвердження: 0 ₴`}
               </p>
               <p className="mt-1 text-sm text-slate-500">
                 Натискаючи кнопку, ви передаєте замовлення менеджеру в обробку.
@@ -336,7 +336,7 @@ export function CheckoutCustomerForm({
                 ? fiatPrice > 0
                   ? `Оформити (${balanceDaysToUse} дні з балансу + ${fiatPrice} ₴)`
                   : `Оформити (списати ${balanceDaysToUse} дні з балансу)`
-                : isIndivPackage(selectedPackageRaw ?? undefined)
+                : isIndivPackage(selectedPackageRaw ?? undefined) && orderTotalUah === 0
                 ? "Надіслати заявку"
                 : "Підтвердити замовлення"}
             </button>

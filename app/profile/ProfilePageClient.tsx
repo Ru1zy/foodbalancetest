@@ -260,9 +260,7 @@ function OrderCard({
           
           <div className="flex flex-wrap items-center gap-3">
             <div className="text-right">
-              {isIndivPackage(order.packageType) ? (
-                <p className="text-sm font-bold text-emerald-600">Індивідуальний розрахунок</p>
-              ) : order.balanceDaysUsed > 0 ? (
+              {order.balanceDaysUsed > 0 ? (
                 <div className="flex flex-col items-end">
                   <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tight">
                     З балансу: {order.balanceDaysUsed}д
@@ -273,6 +271,10 @@ function OrderCard({
                     <p className="text-sm font-bold text-emerald-600">Оплачено днями</p>
                   )}
                 </div>
+              ) : order.price !== null && order.price > 0 ? (
+                <p className="text-lg font-black text-gray-900 dark:text-slate-100">{order.price} ₴</p>
+              ) : isIndivPackage(order.packageType) ? (
+                <p className="text-sm font-bold text-emerald-600">Індивідуальний розрахунок</p>
               ) : (
                 order.price !== null && (
                   <p className="text-lg font-black text-gray-900 dark:text-slate-100">{order.price} ₴</p>

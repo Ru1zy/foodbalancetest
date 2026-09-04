@@ -418,10 +418,20 @@ async function prepareOrderForSubmission(
   // boundary. Always derive the full package total on the server. For a pure
   // balance order we do not need the client number for charging, but storing
   // the server value keeps all future payment paths consistent.
+  const totalDishesCount = sanitizedCartData.days.reduce(
+    (sum, day) =>
+      sum +
+      (day.items && day.items.length > 0
+        ? day.items.reduce((s, it) => s + it.quantity, 0)
+        : day.selectedCount),
+    0,
+  );
+
   const expectedTotalPrice = getOrderTotalUah(
     sanitizedCartData.packageType,
     sanitizedCartData.totalDays,
-    tariffs
+    tariffs,
+    totalDishesCount,
   );
 
   if (paymentMethod !== "balance") {
@@ -537,7 +547,15 @@ async function persistOrderInTransaction(
         fiatPrice = 0;
       } else {
         const tariffs = await prisma.tariff.findMany();
-        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays, tariffs);
+        const totalDishesCount = sanitizedCartData.days.reduce(
+          (sum, day) =>
+            sum +
+            (day.items && day.items.length > 0
+              ? day.items.reduce((s, it) => s + it.quantity, 0)
+              : day.selectedCount),
+          0,
+        );
+        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays, tariffs, totalDishesCount);
       }
     }
 

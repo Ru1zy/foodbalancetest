@@ -226,6 +226,7 @@ async function resolveOrderDays(order: Order): Promise<OrderDay[]> {
  */
 function priceCell(order: Order, isCustom: boolean): string {
   if (order.balanceDaysUsed > 0) return "Абонемент";
+  if (order.price != null && order.price > 0) return String(order.price);
   if (isCustom || isIndivPackage(order.packageType)) return "Індивідуально";
   return order.price != null ? String(order.price) : "";
 }

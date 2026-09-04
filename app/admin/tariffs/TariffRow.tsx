@@ -121,6 +121,9 @@ export default function TariffRow({ tariff }: Props) {
             onChange={(e) => setFormData({ ...formData, basePrice: Number(e.target.value) })}
             className="w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
+          {tariff.name === "Indiv" && (
+            <div className="mt-1 text-[11px] text-emerald-600 font-medium">Ціна за 1 страву (грн)</div>
+          )}
         </td>
         <td className="px-6 py-4">
           <div className="flex gap-2">
@@ -164,17 +167,12 @@ export default function TariffRow({ tariff }: Props) {
       <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">{tariff.title}</td>
       <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">{tariff.kcal}</td>
       <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">
-        {tariff.name === "Indiv" ? (
-          <span className="font-semibold text-emerald-600">Індивідуально</span>
-        ) : (
-          tariff.price
-        )}
+        {tariff.price}
       </td>
       <td className="px-6 py-4 text-sm text-gray-600 dark:text-slate-400">
-        {tariff.name === "Indiv" ? (
-          <span className="font-semibold text-emerald-600">Індивідуально</span>
-        ) : (
-          `${tariff.basePrice} ₴`
+        <span className="font-semibold text-gray-900 dark:text-slate-100">{tariff.basePrice} ₴</span>
+        {tariff.name === "Indiv" && (
+          <span className="ml-1 text-xs text-emerald-600 font-medium">/ страва</span>
         )}
       </td>
       <td className="px-6 py-4">

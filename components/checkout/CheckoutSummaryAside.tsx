@@ -109,7 +109,7 @@ export function CheckoutSummaryAside({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-                      {itemIndiv ? "Інд. ціна" : `${item.unitPrice * item.quantity} ₴`}
+                      {itemIndiv && item.unitPrice === 0 ? "Інд. ціна" : `${item.unitPrice * item.quantity} ₴`}
                     </div>
                   </div>
                 </div>
@@ -180,13 +180,13 @@ export function CheckoutSummaryAside({
             <div className="bg-white dark:bg-slate-900 px-5 py-5 pt-7">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{selectedPackageRaw ?? "Оберіть раціон"}</span>
-                <span className={`${isIndivCurrent ? "text-base" : "text-xl"} font-black text-emerald-600 dark:text-emerald-400`}>
-                  {isIndivCurrent ? (
-                    "Інд. розрахунок"
-                  ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
+                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                  {fiatPrice === 0 && balanceDaysToUse > 0 ? (
                     "0 ₴"
                   ) : fiatPrice > 0 ? (
                     `${fiatPrice} ₴`
+                  ) : isIndivCurrent ? (
+                    "0 ₴"
                   ) : (
                     "—"
                   )}
@@ -257,11 +257,6 @@ export function CheckoutSummaryAside({
           <span className="text-base font-semibold text-white">До сплати</span>
           <span className="text-2xl font-black text-emerald-400">
             {grandGrossTotal > 0 ? `${grandGrossTotal} ₴` : "—"}
-            {(hasIndivInCart || isIndivCurrent) && (
-              <span className="ml-1 align-middle text-sm font-medium text-emerald-200/70">
-                + інд.
-              </span>
-            )}
           </span>
         </div>
       )}

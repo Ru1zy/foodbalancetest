@@ -15,6 +15,15 @@ test("Sushka totals are derived from the trusted per-day tariff", () => {
   assert.equal(getOrderTotalUah("Sushka XS", 2, [{ name: "Sushka XS", basePrice: 500 }]), 1000);
 });
 
+test("Indiv package calculates total by dish count * per-dish price", () => {
+  // Default base price: 200 UAH/dish. 5 dishes = 1000 UAH
+  assert.equal(getOrderTotalUah("Indiv", 2, undefined, 5), 1000);
+  // Zero dishes selected = 0 UAH
+  assert.equal(getOrderTotalUah("Indiv", 1, undefined, 0), 0);
+  // With custom DB tariffs override: 180 UAH/dish. 5 dishes = 900 UAH
+  assert.equal(getOrderTotalUah("Indiv", 2, [{ name: "Indiv", basePrice: 180 }], 5), 900);
+});
+
 test("only customer-facing package variants are purchasable", () => {
   assert.equal(isOrderablePackageType("Sushka XS"), true);
   assert.equal(isOrderablePackageType("Sushka S"), true);
