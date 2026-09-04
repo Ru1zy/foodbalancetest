@@ -111,31 +111,49 @@ export default function CheckoutPageImpl({
   const methods = useForm<CheckoutSchema>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
-      name: customerProfile.name,
-      phone: normalizedPhone,
-      address: customerProfile.address,
+      name: authenticatedUser?.name || customerProfile.name || "",
+      phone: authenticatedUser?.phone || normalizedPhone || "",
+      address: authenticatedUser?.address || customerProfile.address || "",
       comment: customerProfile.notes || "",
-      cutlery: customerProfile.cutlery,
-      paymentMethod: "balance",
+      cutlery: authenticatedUser?.defaultCutlery ?? customerProfile.cutlery ?? 0,
+      paymentMethod,
       sendEmailReceipt: false,
       receiptEmail: "",
     },
   });
 
-  // Preserve email state when payment method changes
+  // Sync payment method into react-hook-form without resetting user-entered data
   useEffect(() => {
-    const currentValues = methods.getValues();
-    methods.reset({
-      name: customerProfile.name,
-      phone: normalizedPhone,
-      address: customerProfile.address,
-      comment: customerProfile.notes || "",
-      cutlery: customerProfile.cutlery,
-      paymentMethod,
-      sendEmailReceipt: currentValues.sendEmailReceipt ?? false,
-      receiptEmail: currentValues.receiptEmail || "",
-    });
-  }, [customerProfile, normalizedPhone, paymentMethod, methods]);
+    methods.setValue("paymentMethod", paymentMethod, { shouldValidate: true });
+  }, [paymentMethod, methods]);
+
+  // Pre-fill profile into form if fields are empty and form is untouched
+  useEffect(() => {
+    if (!methods.formState.isDirty) {
+      const currentValues = methods.getValues();
+      const newName = authenticatedUser?.name || customerProfile.name || "";
+      const newPhone = authenticatedUser?.phone || normalizedPhone || "";
+      const newAddress = authenticatedUser?.address || customerProfile.address || "";
+      const newCutlery = authenticatedUser?.defaultCutlery ?? customerProfile.cutlery ?? 0;
+      const newComment = customerProfile.notes || "";
+
+      if (!currentValues.name && newName) {
+        methods.setValue("name", newName);
+      }
+      if (!currentValues.phone && newPhone) {
+        methods.setValue("phone", newPhone);
+      }
+      if (!currentValues.address && newAddress) {
+        methods.setValue("address", newAddress);
+      }
+      if (!currentValues.comment && newComment) {
+        methods.setValue("comment", newComment);
+      }
+      if (currentValues.cutlery === 0 && newCutlery > 0) {
+        methods.setValue("cutlery", newCutlery);
+      }
+    }
+  }, [customerProfile, authenticatedUser, normalizedPhone, methods]);
 
   useEffect(() => {
     if (!pkg) return;
