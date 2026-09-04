@@ -57,6 +57,7 @@ type Props = {
   sushkaMenuIdByDay: Record<number, string>;
   tariffs?: { name: string; basePrice: number }[];
   ibanDetails?: string;
+  orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
 };
 
 const dayNames: Record<number, string> = {
@@ -75,6 +76,7 @@ export default function CheckoutPageImpl({
   sushkaMenuIdByDay,
   tariffs,
   ibanDetails,
+  orderingMode = "AUTO",
 }: Props) {
   const router = useRouter();
   const customerProfile = useOrderStore((state) => state.customerProfile);
@@ -302,8 +304,14 @@ export default function CheckoutPageImpl({
   }, [availableDays, cartData.totalDays, orderTotalUah, pkg]);
 
   const deliveryDate = useMemo(
-    () => earliestMenuDeliveryDateFromCartDays(cartData.days, menuDayByItemId),
-    [cartData.days, menuDayByItemId],
+    () =>
+      earliestMenuDeliveryDateFromCartDays(
+        cartData.days,
+        menuDayByItemId,
+        undefined,
+        orderingMode,
+      ),
+    [cartData.days, menuDayByItemId, orderingMode],
   );
 
   const summaryDays = useMemo<SummaryDay[]>(() => {
@@ -316,7 +324,7 @@ export default function CheckoutPageImpl({
           return null;
         }
 
-        const date = dateForMenuDayOfWeek(dayOfWeek, referenceDate);
+        const date = dateForMenuDayOfWeek(dayOfWeek, referenceDate, orderingMode);
 
         return {
           dayId: day.dayId,
@@ -327,7 +335,7 @@ export default function CheckoutPageImpl({
       })
       .filter((day): day is SummaryDay => day !== null)
       .sort((left, right) => left.dayOfWeek - right.dayOfWeek);
-  }, [cartData.days, menuDayByItemId]);
+  }, [cartData.days, menuDayByItemId, orderingMode]);
 
   const incompleteDaysCount = useMemo(() => {
     if (!pkg || pkg.includes("Sushka")) {
@@ -509,12 +517,20 @@ export default function CheckoutPageImpl({
       }
 
       // Build the order list: previously added packages + the current draft.
-      const items: CartOrderInput[] = cartItems.map((item) => ({
-        cartData: item.cartData,
-        deliveryDate: item.deliveryDate,
-        unitPrice: item.unitPrice,
-        quantity: item.quantity,
-      }));
+      const items: CartOrderInput[] = cartItems.map((item) => {
+        const recomputedDate = earliestMenuDeliveryDateFromCartDays(
+          item.cartData.days,
+          menuDayByItemId,
+          undefined,
+          orderingMode,
+        );
+        return {
+          cartData: item.cartData,
+          deliveryDate: recomputedDate ? recomputedDate.toISOString() : item.deliveryDate,
+          unitPrice: item.unitPrice,
+          quantity: item.quantity,
+        };
+      });
 
       if (hasDraft && deliveryDate) {
         items.push({

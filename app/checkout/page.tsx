@@ -71,6 +71,7 @@ export default async function CheckoutPage() {
       sushkaMenuIdByDay={sushkaMenuIdByDay}
       tariffs={tariffs}
       ibanDetails={settings.ibanDetails}
+      orderingMode={settings.orderingMode}
     />
   );
 }
