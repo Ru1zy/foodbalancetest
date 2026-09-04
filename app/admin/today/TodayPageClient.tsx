@@ -233,15 +233,9 @@ const handleExportToKitchen = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {orders.map((order) => (
-                    <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {order.user.name}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.user.phone}
-                      </td>
+                    <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition">
                       <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
                         {order.user.name}
                       </td>
