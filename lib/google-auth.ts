@@ -16,29 +16,16 @@ type GoogleUserInfo = {
   family_name?: string;
 };
 
+import { getPublicAppUrl } from "@/lib/site-config";
+
 export function getGoogleRedirectUri(request?: Request): string {
   const configured = process.env.GOOGLE_REDIRECT_URI?.trim();
   if (configured) {
     return configured;
   }
 
-  if (request) {
-    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-    const proto = request.headers.get("x-forwarded-proto") || "https";
-    if (host) {
-      return `${proto}://${host}/api/auth/google/callback`;
-    }
-  }
-
-  const appUrl =
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.APP_BASE_URL ||
-    (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null);
-  if (appUrl) {
-    return `${appUrl.replace(/\/+$/, "")}/api/auth/google/callback`;
-  }
-
-  return "https://foodbalancetest-production-5092.up.railway.app/api/auth/google/callback";
+  const baseUrl = getPublicAppUrl(request);
+  return `${baseUrl}/api/auth/google/callback`;
 }
 
 export async function exchangeCodeForTokens(

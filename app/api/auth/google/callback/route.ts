@@ -7,6 +7,7 @@ import {
   getGoogleUserFromCode, 
   getGoogleRedirectUri 
 } from "@/lib/google-auth";
+import { createPublicRedirectUrl } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 
@@ -16,15 +17,7 @@ export async function GET(request: Request) {
   const error = searchParams.get("error");
 
   const redirectUri = getGoogleRedirectUri(request);
-
-  let publicOrigin: string;
-  try {
-    publicOrigin = new URL(redirectUri).origin;
-  } catch {
-    publicOrigin = new URL(request.url).origin;
-  }
-
-  const redirectTo = (path: string) => new URL(path, publicOrigin);
+  const redirectTo = (path: string) => createPublicRedirectUrl(path, request);
 
   if (error) {
     const errorUrl = redirectTo("/");

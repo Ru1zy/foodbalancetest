@@ -43,6 +43,8 @@ function verifyTelegramOAuth(data: TelegramOAuthData, botToken: string): boolean
   return timingSafeEqual(expectedBuffer, actualBuffer);
 }
 
+import { createPublicRedirectUrl } from "@/lib/site-config";
+
 export async function GET(request: Request) {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -66,11 +68,11 @@ export async function GET(request: Request) {
   };
 
   if (!oauthData.id || !oauthData.hash) {
-    return NextResponse.redirect(new URL("/?error=invalid_oauth_data", request.url));
+    return NextResponse.redirect(createPublicRedirectUrl("/?error=invalid_oauth_data", request));
   }
 
   if (!verifyTelegramOAuth(oauthData, botToken)) {
-    return NextResponse.redirect(new URL("/?error=invalid_oauth_signature", request.url));
+    return NextResponse.redirect(createPublicRedirectUrl("/?error=invalid_oauth_signature", request));
   }
 
   const chatId = oauthData.id;
@@ -103,10 +105,9 @@ export async function GET(request: Request) {
     });
 
     // Use full URL redirect to ensure cookies are set properly after OAuth
-    const profileUrl = new URL("/profile", request.url);
-    return NextResponse.redirect(profileUrl);
+    return NextResponse.redirect(createPublicRedirectUrl("/profile", request));
   } catch (error) {
     console.error("Telegram OAuth auth failed", error);
-    return NextResponse.redirect(new URL("/?error=auth_failed", request.url));
+    return NextResponse.redirect(createPublicRedirectUrl("/?error=auth_failed", request));
   }
 }

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { recordTelegramAuthConfirmation } from "@/lib/telegram-deeplink-auth";
 import prisma from "@/lib/prisma";
 import { createAuthToken, buildTelegramPlaceholderPhone } from "@/lib/auth-token";
-import { SITE_CONFIG } from "@/lib/site-config";
+import { SITE_CONFIG, getPublicAppUrl } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 
@@ -97,9 +97,7 @@ export async function POST(request: Request) {
         text: "✅ Вхід підтверджено!",
       });
 
-      const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
-      const proto = request.headers.get("x-forwarded-proto") || "https";
-      const baseUrl = host ? `${proto}://${host}` : SITE_CONFIG.url;
+      const baseUrl = getPublicAppUrl(request);
 
       let returnUrl = baseUrl;
       try {

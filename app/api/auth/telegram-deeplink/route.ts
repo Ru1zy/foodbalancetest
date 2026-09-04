@@ -7,6 +7,7 @@ import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { AUTH_TOKEN_MAX_AGE, createAuthToken, verifyAuthToken } from "@/lib/auth-token";
 import { buildTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { createPublicRedirectUrl } from "@/lib/site-config";
 
 const responseHeaders = {
   "Cache-Control": "no-store, max-age=0, must-revalidate",
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
         });
-        return NextResponse.redirect(new URL("/profile", request.url));
+        return NextResponse.redirect(createPublicRedirectUrl("/profile", request));
       }
     } catch (error) {
       console.error("GET session verify error:", error);
@@ -69,14 +70,14 @@ export async function GET(request: Request) {
           secure: process.env.NODE_ENV === "production",
         });
         await prisma.authToken.deleteMany({ where: { token: cleanToken } });
-        return NextResponse.redirect(new URL("/profile", request.url));
+        return NextResponse.redirect(createPublicRedirectUrl("/profile", request));
       }
     } catch (error) {
       console.error("GET token verify error:", error);
     }
   }
 
-  return NextResponse.redirect(new URL("/", request.url));
+  return NextResponse.redirect(createPublicRedirectUrl("/", request));
 }
 
 export async function POST(request: Request) {
