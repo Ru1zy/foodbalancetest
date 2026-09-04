@@ -76,7 +76,7 @@ export default function ClientsPageClient({ clients }: Props) {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse">
-              <thead className="bg-gradient-to-r from-slate-50 to-blue-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <thead className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-800/80 text-left text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 <tr>
                   <th className="px-4 py-4 sm:px-6">ПІБ</th>
                   <th className="px-4 py-4 sm:px-6">Телефон</th>
@@ -88,9 +88,9 @@ export default function ClientsPageClient({ clients }: Props) {
                   <th className="px-4 py-4 sm:px-6">Дії</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredClients.map((client) => (
-                  <tr key={client.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition-colors duration-150">
+                  <tr key={client.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-150">
                     <td className="px-4 py-5 sm:px-6">
                       <div className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
@@ -103,7 +103,7 @@ export default function ClientsPageClient({ clients }: Props) {
                               {client.balances
                                 .filter(b => b.totalDays - b.usedDays > 0)
                                 .map(b => (
-                                  <span key={b.packageId} className="inline-flex items-center rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
+                                  <span key={b.packageId} className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                                     {b.packageId}: {b.totalDays - b.usedDays}д
                                   </span>
                                 ))}
@@ -122,7 +122,7 @@ export default function ClientsPageClient({ clients }: Props) {
                     </td>
                     <td className="px-4 py-5 sm:px-6">
                       {client.chatId ? (
-                        <div className="inline-flex items-center gap-2 rounded-full bg-green-100 px-3 py-1.5 text-xs font-bold text-green-700">
+                        <div className="inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-emerald-950/60 px-3 py-1.5 text-xs font-bold text-green-700 dark:text-emerald-300">
                           <span>✓</span>
                           <span>Підключено</span>
                         </div>
@@ -142,22 +142,22 @@ export default function ClientsPageClient({ clients }: Props) {
                     </td>
                     <td className="px-4 py-5 sm:px-6">
                       {client.defaultPackage ? (
-                        <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 px-3 py-1.5">
-                          <span className="text-sm font-bold text-indigo-700">{client.defaultPackage}</span>
+                        <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1.5">
+                          <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{client.defaultPackage}</span>
                         </div>
                       ) : (
                         <span className="text-xs text-slate-400 italic">—</span>
                       )}
                     </td>
                     <td className="px-4 py-5 sm:px-6">
-                      <div className="inline-flex items-center gap-2 rounded-lg bg-blue-100 px-3 py-1.5">
-                        <span className="text-sm font-bold text-blue-700">{client._count.orders}</span>
+                      <div className="inline-flex items-center gap-2 rounded-lg bg-blue-100 dark:bg-blue-950/60 px-3 py-1.5">
+                        <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{client._count.orders}</span>
                       </div>
                     </td>
                     <td className="px-4 py-5 sm:px-6">
                       <div className="max-w-xs">
                         {client.notes ? (
-                          <div className="rounded-lg bg-amber-50 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-900">
+                          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
                             {client.notes}
                           </div>
                         ) : (

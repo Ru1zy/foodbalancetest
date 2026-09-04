@@ -148,7 +148,7 @@ export default function TariffRow({ tariff }: Props) {
             </button>
             <button
               onClick={() => setEditing(false)}
-              className="rounded bg-gray-300 px-3 py-1 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-400"
+              className="rounded bg-gray-200 dark:bg-slate-700 px-3 py-1 text-sm text-gray-700 dark:text-slate-200 hover:bg-gray-300 dark:hover:bg-slate-600"
             >
               Скасувати
             </button>

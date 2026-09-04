@@ -30,7 +30,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
           </div>
           <nav className="flex-1 space-y-2 p-4">
             {navLinks.map((link) => {
-              const isActive = pathname === link.href || (link.href.includes('?') && pathname.startsWith(link.href.split('?')[0]));
+              const isActive = pathname === link.href || (link.href !== "/admin/settings" && pathname.startsWith(link.href + "/"));
               return (
                 <Link
                   key={link.href}
@@ -60,7 +60,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
       {/* Mobile Topbar */}
       <div className="fixed inset-x-0 top-0 z-50 border-b border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm lg:hidden">
         <div className="flex items-center justify-between p-4 bg-gray-900 dark:bg-slate-800">
-          <h1 className="text-lg font-bold text-white dark:text-gray-900">🎯 Адмін-панель</h1>
+          <h1 className="text-lg font-bold text-white">🎯 Адмін-панель</h1>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <LogoutButton />
@@ -68,15 +68,15 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         </div>
         <nav className="flex overflow-x-auto border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           {navLinks.map((link) => {
-            const isActive = pathname === link.href || (link.href.includes('?') && pathname.startsWith(link.href.split('?')[0]));
+            const isActive = pathname === link.href || (link.href !== "/admin/settings" && pathname.startsWith(link.href + "/"));
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 className={`flex-shrink-0 flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-all ${
                   isActive
-                    ? "border-blue-600 text-blue-600 bg-blue-50"
-                    : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-100 hover:bg-slate-50 dark:bg-slate-950"
+                    ? "border-blue-600 text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400"
+                    : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
                 }`}
               >
                 <span>{link.icon}</span>

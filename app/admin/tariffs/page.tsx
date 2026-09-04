@@ -14,7 +14,7 @@ export default async function TariffsPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200 dark:ring-slate-800">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950">
@@ -42,7 +42,7 @@ export default async function TariffsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
                 {tariffs.map((tariff: Awaited<ReturnType<typeof getAllTariffs>>[number]) => (
                   <TariffRow key={tariff.id} tariff={tariff} />
                 ))}

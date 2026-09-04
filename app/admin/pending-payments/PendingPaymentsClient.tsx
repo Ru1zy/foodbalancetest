@@ -108,7 +108,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     <span className="font-semibold capitalize">
                       {purchase.paymentMethod === 'bank_transfer' ? 'Переказ на рахунок (IBAN)' : (
                         isHistory ? 'Готівка' : (
-                          <span className="inline-flex rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">
+                          <span className="inline-flex rounded-md bg-red-100 dark:bg-red-950/50 px-2 py-1 text-xs font-bold text-red-700 dark:text-red-300">
                             ГОТІВКА - ПЕРЕВІРИТИ ОПЛАТУ
                           </span>
                         )
@@ -119,8 +119,8 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     <div>
                       <span className="block text-gray-500 dark:text-slate-400 mb-1">Статус:</span>
                       <span className={`inline-flex rounded-md px-2 py-1 text-xs font-bold ${
-                        purchase.status === 'PAID' ? 'bg-green-100 text-green-700' :
-                        purchase.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                        purchase.status === 'PAID' ? 'bg-green-100 dark:bg-emerald-950/50 text-green-700 dark:text-emerald-300' :
+                        purchase.status === 'CANCELLED' ? 'bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300' :
                         'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300'
                       }`}>
                         {purchase.status === 'PAID' ? 'Оплачено' : 
@@ -137,7 +137,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     href={purchase.receiptUrl} 
                     target="_blank" 
                     rel="noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                    className="flex items-center justify-center gap-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40 py-2 text-sm font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                   >
                     Переглянути квитанцію ↗
                   </a>
@@ -152,7 +152,7 @@ export default function PendingPaymentsClient({ purchases, activeTab }: { purcha
                     <button
                       onClick={() => handleReject(purchase.id)}
                       disabled={processingId === purchase.id}
-                      className="flex-1 rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-slate-900 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                      className="flex-1 rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-slate-900 py-2 text-sm font-semibold text-red-600 dark:text-red-400 transition hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50"
                     >
                       Відхилити
                     </button>

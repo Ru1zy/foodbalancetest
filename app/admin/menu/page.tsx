@@ -26,7 +26,7 @@ export default async function AdminMenuPage() {
           </p>
         </div>
 
-        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200">
+        <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200 dark:ring-slate-800">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950">
@@ -45,7 +45,7 @@ export default async function AdminMenuPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
                 {menuItems.map((item: MenuItem) => (
                   <tr key={item.id} className="hover:bg-gray-50 dark:bg-slate-950">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-slate-100">

@@ -178,7 +178,7 @@ const handleExportToKitchen = () => {
             <div
               className={`mt-4 rounded-xl px-4 py-3 text-sm font-medium shadow-sm ${
                 notifyMessage.type === "success"
-                  ? "bg-green-50 text-green-800 border border-green-200"
+                  ? "bg-green-50 dark:bg-emerald-950/40 text-green-800 dark:text-emerald-300 border border-green-200 dark:border-emerald-800"
                   : "bg-red-50 dark:bg-red-900/40 text-red-800 dark:text-red-400 border border-red-200 dark:border-red-800"
               }`}
             >
@@ -367,7 +367,7 @@ const handleExportToKitchen = () => {
           </div>
         )}
 
-        <div className="mt-6 rounded-xl bg-blue-50 border border-blue-200 dark:border-blue-800 px-4 py-3 text-xs text-blue-800">
+        <div className="mt-6 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 px-4 py-3 text-xs text-blue-800 dark:text-blue-200">
           <p className="font-semibold mb-2">ℹ️ Як працює сторінка:</p>
           <ul className="list-disc list-inside space-y-1">
             <li>Показує всі активні замовлення на обрану дату незалежно від способу оплати</li>
