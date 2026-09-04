@@ -16,13 +16,41 @@ type GoogleUserInfo = {
   family_name?: string;
 };
 
-export async function exchangeCodeForTokens(code: string): Promise<GoogleTokenResponse> {
+export function getGoogleRedirectUri(request?: Request): string {
+  const configured = process.env.GOOGLE_REDIRECT_URI?.trim();
+  if (configured) {
+    return configured;
+  }
+
+  if (request) {
+    const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+    const proto = request.headers.get("x-forwarded-proto") || "https";
+    if (host) {
+      return `${proto}://${host}/api/auth/google/callback`;
+    }
+  }
+
+  const appUrl =
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_BASE_URL ||
+    (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null);
+  if (appUrl) {
+    return `${appUrl.replace(/\/+$/, "")}/api/auth/google/callback`;
+  }
+
+  return "https://foodbalancetest-production-5092.up.railway.app/api/auth/google/callback";
+}
+
+export async function exchangeCodeForTokens(
+  code: string,
+  redirectUriOverride?: string
+): Promise<GoogleTokenResponse> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = redirectUriOverride || getGoogleRedirectUri();
 
-  if (!clientId || !clientSecret || !redirectUri) {
-    throw new Error("Google OAuth credentials are not configured");
+  if (!clientId || !clientSecret) {
+    throw new Error("Google OAuth credentials (GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET) are not configured");
   }
 
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
@@ -62,8 +90,11 @@ export async function getUserInfo(accessToken: string): Promise<GoogleUserInfo> 
   return userInfoResponse.json();
 }
 
-export async function getGoogleUserFromCode(code: string): Promise<GoogleUserInfo> {
-  const tokens = await exchangeCodeForTokens(code);
+export async function getGoogleUserFromCode(
+  code: string,
+  redirectUriOverride?: string
+): Promise<GoogleUserInfo> {
+  const tokens = await exchangeCodeForTokens(code, redirectUriOverride);
   return getUserInfo(tokens.access_token);
 }
 

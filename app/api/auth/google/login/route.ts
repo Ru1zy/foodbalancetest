@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
+import { getGoogleRedirectUri } from "@/lib/google-auth";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(request: Request) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+  const redirectUri = getGoogleRedirectUri(request);
 
-  if (!clientId || !redirectUri) {
+  if (!clientId) {
     return NextResponse.json(
-      { message: "Google OAuth is not configured", ok: false },
+      { message: "Google OAuth is not configured: GOOGLE_CLIENT_ID is missing", ok: false },
       { status: 500 }
     );
   }

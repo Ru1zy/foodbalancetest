@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
-import { AUTH_TOKEN_MAX_AGE, createAuthToken } from "@/lib/auth-token";
+import { AUTH_TOKEN_MAX_AGE, createAuthToken, verifyAuthToken } from "@/lib/auth-token";
 import { buildTelegramPlaceholderPhone, sanitizeTelegramPhone } from "@/lib/telegram-phone";
 
 const responseHeaders = {
@@ -14,6 +14,70 @@ const responseHeaders = {
   Expires: "0",
   "X-FoodBalance-Telegram-Auth": "2",
 };
+
+/**
+ * Handle direct return links from Telegram (e.g., button in the bot).
+ * Automatically sets the session cookie and redirects user to their profile/site.
+ */
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const session = searchParams.get("session");
+  const token = searchParams.get("token");
+
+  // 1. Direct signed session JWT passed from bot
+  if (session) {
+    try {
+      const userId = await verifyAuthToken(session);
+      if (userId) {
+        const cookieStore = await cookies();
+        cookieStore.set("auth_token", session, {
+          httpOnly: true,
+          maxAge: AUTH_TOKEN_MAX_AGE,
+          path: "/",
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+        return NextResponse.redirect(new URL("/profile", request.url));
+      }
+    } catch (error) {
+      console.error("GET session verify error:", error);
+    }
+  }
+
+  // 2. Deeplink token passed
+  if (token) {
+    try {
+      const cleanToken = String(token).trim();
+      const authData = await prisma.authToken.findUnique({ where: { token: cleanToken } });
+      if (authData && authData.expiresAt >= new Date()) {
+        const user = await prisma.user.upsert({
+          where: { chatId: authData.chatId },
+          update: { name: authData.userName },
+          create: {
+            chatId: authData.chatId,
+            name: authData.userName,
+            phone: buildTelegramPlaceholderPhone(authData.chatId),
+          },
+        });
+        const sessionToken = await createAuthToken(user.id);
+        const cookieStore = await cookies();
+        cookieStore.set("auth_token", sessionToken, {
+          httpOnly: true,
+          maxAge: AUTH_TOKEN_MAX_AGE,
+          path: "/",
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+        });
+        await prisma.authToken.deleteMany({ where: { token: cleanToken } });
+        return NextResponse.redirect(new URL("/profile", request.url));
+      }
+    } catch (error) {
+      console.error("GET token verify error:", error);
+    }
+  }
+
+  return NextResponse.redirect(new URL("/", request.url));
+}
 
 export async function POST(request: Request) {
   let payload: { action?: string; token?: string };

@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { AUTH_TOKEN_MAX_AGE, createAuthToken } from "@/lib/auth-token";
-import { buildGooglePlaceholderPhone, getGoogleUserFromCode } from "@/lib/google-auth";
+import { 
+  buildGooglePlaceholderPhone, 
+  getGoogleUserFromCode, 
+  getGoogleRedirectUri 
+} from "@/lib/google-auth";
 
 export const runtime = "nodejs";
 
@@ -11,24 +15,13 @@ export async function GET(request: Request) {
   const code = searchParams.get("code");
   const error = searchParams.get("error");
 
-  const configuredCallback = process.env.GOOGLE_REDIRECT_URI;
-  if (!configuredCallback) {
-    console.error("GOOGLE_REDIRECT_URI is not configured");
-    return NextResponse.json(
-      { message: "Google OAuth is not configured", ok: false },
-      { status: 500 },
-    );
-  }
+  const redirectUri = getGoogleRedirectUri(request);
 
   let publicOrigin: string;
   try {
-    publicOrigin = new URL(configuredCallback).origin;
+    publicOrigin = new URL(redirectUri).origin;
   } catch {
-    console.error("GOOGLE_REDIRECT_URI is not a valid URL");
-    return NextResponse.json(
-      { message: "Google OAuth is not configured", ok: false },
-      { status: 500 },
-    );
+    publicOrigin = new URL(request.url).origin;
   }
 
   const redirectTo = (path: string) => new URL(path, publicOrigin);
@@ -45,7 +38,7 @@ export async function GET(request: Request) {
 
   try {
     // Exchange code for user info
-    const googleUser = await getGoogleUserFromCode(code);
+    const googleUser = await getGoogleUserFromCode(code, redirectUri);
 
     if (!googleUser.email || !googleUser.sub) {
       return NextResponse.redirect(redirectTo("/?error=invalid_google_user"));

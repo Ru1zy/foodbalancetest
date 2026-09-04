@@ -5,7 +5,11 @@
 export const SITE_CONFIG = {
   name: "Food Balance",
   tagline: "Здорове харчування з доставкою",
-  url: process.env.NEXT_PUBLIC_APP_URL || "https://foodbalancetest-production.up.railway.app",
+  url:
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.APP_BASE_URL ||
+    (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : null) ||
+    "https://foodbalancetest-production-5092.up.railway.app",
   phone: process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || null,
   phoneDisplay: process.env.NEXT_PUBLIC_CONTACT_PHONE?.trim() || null,
   instagram: "https://instagram.com/food.balance.zp",

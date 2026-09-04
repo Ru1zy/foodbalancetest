@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 import { recordTelegramAuthConfirmation } from "@/lib/telegram-deeplink-auth";
+import prisma from "@/lib/prisma";
+import { createAuthToken, buildTelegramPlaceholderPhone } from "@/lib/auth-token";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 export const runtime = "nodejs";
 
@@ -94,11 +97,42 @@ export async function POST(request: Request) {
         text: "✅ Вхід підтверджено!",
       });
 
+      const host = request.headers.get("x-forwarded-host") || request.headers.get("host");
+      const proto = request.headers.get("x-forwarded-proto") || "https";
+      const baseUrl = host ? `${proto}://${host}` : SITE_CONFIG.url;
+
+      let returnUrl = baseUrl;
+      try {
+        const user = await prisma.user.upsert({
+          where: { chatId },
+          update: { name: userName },
+          create: {
+            chatId,
+            name: userName,
+            phone: buildTelegramPlaceholderPhone(chatId),
+          },
+        });
+        const sessionToken = await createAuthToken(user.id);
+        returnUrl = `${baseUrl}/api/auth/telegram-deeplink?session=${encodeURIComponent(sessionToken)}`;
+      } catch (userErr) {
+        console.error("Failed to generate direct session link for telegram return:", userErr);
+      }
+
       if (update.callback_query.message) {
         await sendTelegramRequest("editMessageText", {
           chat_id: update.callback_query.message.chat.id,
           message_id: update.callback_query.message.message_id,
-          text: "✅ Ви успішно авторизувалися на сайті FoodBalance!",
+          text: "✅ Ви успішно авторизувалися на сайті FoodBalance!\n\nТепер ви можете повернутися на сайт і продовжити оформлення замовлення.",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "🌐 Перейти на сайт FoodBalance",
+                  url: returnUrl,
+                },
+              ],
+            ],
+          },
         });
       }
 
