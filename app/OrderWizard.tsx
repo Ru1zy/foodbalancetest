@@ -103,13 +103,13 @@ export default function OrderWizard({
             <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
               <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
                 <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
-                  500+
+                  1 000+
                 </div>
                 <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Задоволених клієнтів</div>
               </div>
               <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
                 <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
-                  1000+
+                  75 000+
                 </div>
                 <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Доставлених страв</div>
               </div>

@@ -384,7 +384,28 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
             Для обраного тарифу немає карток меню на вибрані дні. Поверніться назад і змініть набір днів або тариф.
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-6 w-full max-w-6xl mx-auto">
+          <div className="flex flex-col items-center gap-4 w-full max-w-6xl mx-auto">
+            {currentDayItem?.photoUrl && (
+              <div
+                onClick={() => {
+                  setZoomedImage(currentDayItem.photoUrl || null);
+                  setZoomScale(1);
+                }}
+                className="w-full max-w-2xl flex items-center justify-between gap-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3.5 sm:px-5 sm:py-3 cursor-pointer text-amber-900 dark:text-amber-200 transition hover:bg-amber-100/80 shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-200/80 dark:bg-amber-800/60 text-base">
+                    💡
+                  </span>
+                  <div className="text-xs sm:text-sm font-medium">
+                    <span className="font-bold">Хочете роздивитися меню детальніше?</span> Натисніть на фотографію нижче — вона відкриється на весь екран з можливістю наближення!
+                  </div>
+                </div>
+                <span className="hidden sm:inline-flex shrink-0 rounded-lg bg-amber-600 dark:bg-amber-500 text-white px-2.5 py-1 text-xs font-bold shadow-sm whitespace-nowrap">
+                  🔍 Відкрити
+                </span>
+              </div>
+            )}
             {currentDayItem && (
               <div
                 key={currentDayItem.id}
@@ -393,18 +414,50 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                 }`}
               >
                 {currentDayItem.photoUrl && (
-                  <div
-                    className="relative h-64 w-full overflow-hidden bg-gray-50 dark:bg-slate-950 cursor-pointer"
-                    onClick={() => {
-                      setZoomedImage(currentDayItem.photoUrl || null);
-                      setZoomScale(1);
-                    }}
-                  >
-                    <img
-                      src={currentDayItem.photoUrl}
-                      alt={`${dayNames[currentDayItem.dayOfWeek]} menu`}
-                      className="h-full w-full object-contain"
-                    />
+                  <div className="w-full overflow-hidden bg-gray-50 dark:bg-slate-950 border-b border-gray-100 dark:border-slate-800">
+                    <div
+                      className="group/img relative h-64 sm:h-72 w-full cursor-pointer overflow-hidden bg-slate-900/5 dark:bg-slate-950 flex items-center justify-center"
+                      onClick={() => {
+                        setZoomedImage(currentDayItem.photoUrl || null);
+                        setZoomScale(1);
+                      }}
+                      title="Натисніть, щоб розгорнути меню на весь екран"
+                    >
+                      <img
+                        src={currentDayItem.photoUrl}
+                        alt={`${dayNames[currentDayItem.dayOfWeek]} menu`}
+                        className="h-full w-full object-contain transition-transform duration-300 group-hover/img:scale-[1.03]"
+                      />
+
+                      {/* Top-right expand icon */}
+                      <div className="absolute top-3 right-3 z-10 pointer-events-none">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/75 text-white shadow-lg backdrop-blur-md">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                        </span>
+                      </div>
+
+                      {/* Bottom floating badge on the image */}
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none w-[92%] sm:w-auto text-center">
+                        <span className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-900/85 px-4 py-2 text-xs font-bold text-white shadow-xl backdrop-blur-md border border-white/20 transition-transform group-hover/img:scale-105">
+                          <span>🔍</span>
+                          <span>Натисніть на фото, щоб відкрити на весь екран</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Highly visible callout bar below thumbnail */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setZoomedImage(currentDayItem.photoUrl || null);
+                        setZoomScale(1);
+                      }}
+                      className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white py-2.5 px-4 text-xs sm:text-sm font-bold shadow-sm transition-colors text-center"
+                    >
+                      <span className="text-base animate-bounce">👆</span>
+                      <span>Натисніть сюди або на фото вище, щоб розгорнути меню на весь екран!</span>
+                      <span className="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider">Фулскрін</span>
+                    </button>
                   </div>
                 )}
                 <div className="p-6 sm:p-8">
