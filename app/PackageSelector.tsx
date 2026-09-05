@@ -73,6 +73,49 @@ const SUSHKA_INFO_SLIDES = [
   },
 ];
 
+// Default meal photos for package cards
+const DEFAULT_PREVIEWS: Record<string, string> = {
+  Slim: "/images/meals/slim-meals.jpg",
+  Balance: "/images/meals/balance-meals.jpg",
+  Active: "/images/meals/active-meals.jpg",
+  Sport: "/images/meals/sport-meals.jpg",
+  "Sushka XS": "/images/meals/sushka-xs-meals.jpg",
+  "Sushka S": "/images/meals/sushka-s-meals.jpg",
+  Indiv: "/images/meals/individual-meals.jpg",
+};
+
+// Showcase items for real delivery photos gallery
+const SHOWCASE_ITEMS = [
+  {
+    id: "sealed-boxes",
+    image: "/images/meals/delivery-sealed-boxes.jpg",
+    tag: "📦 Герметична упаковка",
+    title: "Ланч-бокси з маркуванням",
+    description: "Кожна страва герметично запакована та має фірмовий стикер із назвою, часом прийому та КБЖВ. Зручно брати з собою в офіс чи спортзал.",
+  },
+  {
+    id: "chef-meals",
+    image: "/images/meals/sport-meals.jpg",
+    tag: "👨‍🍳 Шеф-меню щодня",
+    title: "Ресторанна якість страв",
+    description: "Різноманітний раціон без повторень: ніжні запіканки, соковите м'ясо, корисні десерти та домашні соуси без хімії.",
+  },
+  {
+    id: "fresh-balance",
+    image: "/images/meals/balance-topdown.jpg",
+    tag: "🥗 100% свіжість",
+    title: "Збалансовані макронутрієнти",
+    description: "Точний баланс білків, жирів та складних вуглеводів під вашу ціль: безпечне схуднення, рельєф чи підтримка форми.",
+  },
+  {
+    id: "convenient-heating",
+    image: "/images/meals/active-stew.jpg",
+    tag: "♨️ Готово за 2 хвилини",
+    title: "Зручний розігрів у мікрохвильовці",
+    description: "Екологічні бокси підходять для швидкого розігріву. Смачна тепла їжа завжди під рукою без зайвого миття посуду.",
+  },
+];
+
 // Official flyers and metadata for standard ration packages
 const RATION_FLYERS: Record<string, { flyer: string; mealsBadge: string; details: string; minPriceDay: string }> = {
   Slim: {
@@ -556,17 +599,19 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
             {/* Card 1: Sushka XS */}
             {xsOption && (() => {
               const xsFlyer = xsOption.imageUrl || "/images/sushka/prices-xs.jpg";
+              const xsPreview = xsOption.previewImageUrl || DEFAULT_PREVIEWS["Sushka XS"] || "/images/meals/sushka-xs-meals.jpg";
               return (
                 <div className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300">
                   <div
-                    className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                    className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
                     onClick={() => openLightbox(xsFlyer, "Ціни та знижки: Сушка XS")}
                   >
                     <img
-                      src={xsFlyer}
-                      alt="Сушка XS ціни"
-                      className="h-full w-auto max-w-full object-contain py-2 drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                      src={xsPreview}
+                      alt="Сушка XS"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                       3 прийоми їжі
                     </div>
@@ -574,10 +619,17 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                       <span className="text-xs font-black text-white">{xsOption.price}</span>{" "}
                       <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                     </div>
-                    <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLightbox(xsFlyer, "Ціни та знижки: Сушка XS");
+                      }}
+                      className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                    >
                       <span>🔍</span>
                       <span>Таблиця цін</span>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
@@ -620,17 +672,19 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
             {/* Card 2: Sushka S */}
             {sOption && (() => {
               const sFlyer = sOption.imageUrl || "/images/sushka/prices-s.jpg";
+              const sPreview = sOption.previewImageUrl || DEFAULT_PREVIEWS["Sushka S"] || "/images/meals/sushka-s-meals.jpg";
               return (
                 <div className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-400/50 dark:hover:border-blue-500/40 transition-all duration-300">
                   <div
-                    className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                    className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
                     onClick={() => openLightbox(sFlyer, "Ціни та знижки: Сушка S")}
                   >
                     <img
-                      src={sFlyer}
-                      alt="Сушка S ціни"
-                      className="h-full w-auto max-w-full object-contain py-2 drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                      src={sPreview}
+                      alt="Сушка S"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-blue-300 shadow-sm">
                       4 прийоми їжі
                     </div>
@@ -638,10 +692,17 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                       <span className="text-xs font-black text-white">{sOption.price}</span>{" "}
                       <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                     </div>
-                    <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLightbox(sFlyer, "Ціни та знижки: Сушка S");
+                      }}
+                      className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-blue-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                    >
                       <span>🔍</span>
                       <span>Таблиця цін</span>
-                    </div>
+                    </button>
                   </div>
 
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
@@ -732,14 +793,15 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               >
                 {/* Top visual banner */}
                 <div
-                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
                   onClick={openSushka}
                 >
                   <img
-                    src={forWhomSlide}
+                    src="/images/meals/sushka-xs-meals.jpg"
                     alt="Сушка Light програма"
-                    className="h-full w-auto max-w-full object-contain py-2 drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                     🔥 Експрес-програма
                   </div>
@@ -749,9 +811,9 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     </span>{" "}
                     <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                   </div>
-                  <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
-                    <span>🔍</span>
-                    <span>Презентація</span>
+                  <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 backdrop-blur-md border border-emerald-500/30 text-[11px] font-semibold text-emerald-200 opacity-95 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                    <span>Деталі та тарифи</span>
+                    <span>→</span>
                   </div>
                 </div>
 
@@ -792,15 +854,27 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
           const pkg = item as Tariff;
           const rationMeta = RATION_FLYERS[pkg.name];
           const flyerUrl = pkg.imageUrl || rationMeta?.flyer;
+          const previewUrl = pkg.previewImageUrl || DEFAULT_PREVIEWS[pkg.name] || flyerUrl;
 
           if (pkg.name.toLowerCase().includes("indiv")) {
+            const indivPreview = pkg.previewImageUrl || DEFAULT_PREVIEWS["Indiv"] || "/images/meals/individual-meals.jpg";
             return (
               <div
                 key={pkg.id}
                 className="w-full flex flex-col rounded-3xl border border-purple-200/80 dark:border-purple-900/40 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-purple-400/50 dark:hover:border-purple-500/40 transition-all duration-300"
               >
                 {/* Top visual banner */}
-                <div className="relative h-48 sm:h-52 w-full bg-gradient-to-b from-purple-950/90 via-slate-900 to-slate-950 flex flex-col items-center justify-center p-4 overflow-hidden border-b border-purple-900/30">
+                <div
+                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-purple-900/30"
+                  onClick={() => openLightbox(overviewFlyer, "Огляд програм Balance Food та калоражу")}
+                >
+                  <img
+                    src={indivPreview}
+                    alt={pkg.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
+
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-purple-300 shadow-sm">
                     🌟 Персональний
                   </div>
@@ -808,32 +882,20 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     <span className="text-xs font-black text-white">За меню</span>
                   </div>
 
-                  <div className="text-center z-10">
-                    <span className="text-3xl mb-1 block">🥗</span>
-                    <p className="text-xs font-bold text-purple-200">Гнучкий підбір страв</p>
-                    <p className="text-[11px] text-purple-300/70">від 1 до 10 страв на день</p>
-                  </div>
-
-                  <div className="flex items-center gap-2 mt-3 z-10">
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-purple-200 drop-shadow-sm">
+                      🥗 Конструктор (1–10 страв)
+                    </span>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         openLightbox(overviewFlyer, "Огляд програм Balance Food та калоражу");
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-purple-900/70 hover:bg-purple-800 border border-purple-400/30 text-[11px] font-bold text-purple-200 transition backdrop-blur-sm active:scale-95"
+                      className="px-2 py-1 rounded-lg bg-purple-900/80 hover:bg-purple-700 backdrop-blur-md border border-purple-300/30 text-[11px] font-semibold text-purple-100 transition-all flex items-center gap-1 shadow-sm active:scale-95"
                     >
-                      📋 Калораж
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openLightbox(extraCaloriesFlyer, "Раціони понад 2500 ккал (+35 грн/100 ккал)");
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-purple-900/70 hover:bg-purple-800 border border-purple-400/30 text-[11px] font-bold text-purple-200 transition backdrop-blur-sm active:scale-95"
-                    >
-                      ⚡ &gt;2500 ккал
+                      <span>📋</span>
+                      <span>Калораж</span>
                     </button>
                   </div>
                 </div>
@@ -877,17 +939,19 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               key={pkg.id}
               className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300"
             >
-              {/* Top flyer visual banner */}
-              {flyerUrl && (
+              {/* Top visual banner */}
+              {previewUrl && (
                 <div
-                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-gradient-to-b from-slate-900 to-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
-                  onClick={() => openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`)}
+                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                  onClick={() => flyerUrl && openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`)}
                 >
                   <img
-                    src={flyerUrl}
-                    alt={`${pkg.title} ціни`}
-                    className="h-full w-auto max-w-full object-contain py-2 drop-shadow-md transition-transform duration-300 group-hover:scale-105"
+                    src={previewUrl}
+                    alt={`${pkg.title} раціон`}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
+
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                     {rationMeta?.mealsBadge || "4 прийоми їжі"}
                   </div>
@@ -895,10 +959,19 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     <span className="text-xs font-black text-white">{pkg.price}</span>{" "}
                     <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                   </div>
-                  <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
-                    <span>🔍</span>
-                    <span>Таблиця цін</span>
-                  </div>
+                  {flyerUrl && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`);
+                      }}
+                      className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                    >
+                      <span>🔍</span>
+                      <span>Таблиця цін</span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -956,6 +1029,58 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
             </div>
           );
         })}
+      </div>
+
+      {/* Showcase / Gallery of real delivery meals */}
+      <div className="mt-16 sm:mt-20 border-t border-gray-200/80 dark:border-slate-800/80 pt-12">
+        <div className="text-center mb-10">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/50 px-3.5 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-3 shadow-sm">
+            ✨ Реальні фото щоденного раціону
+          </span>
+          <h3 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-slate-100">
+            Як виглядає ваша щоденна доставка
+          </h3>
+          <p className="mt-2 text-sm sm:text-base text-gray-500 dark:text-slate-400 max-w-xl mx-auto">
+            Щоранку готуємо зі свіжих відбірних продуктів та доставляємо у фірмових крафтових пакетах по Запоріжжю.
+          </p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {SHOWCASE_ITEMS.map((item) => (
+            <div
+              key={item.id}
+              onClick={() => openLightbox(item.image, item.title)}
+              className="group cursor-pointer flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300"
+            >
+              <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+                <img
+                  src={item.image}
+                  alt={item.title}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
+                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
+                  {item.tag}
+                </div>
+                <div className="absolute bottom-2.5 right-2.5 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-semibold text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                  <span>🔍</span>
+                  <span>Збільшити</span>
+                </div>
+              </div>
+
+              <div className="p-4 flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-bold text-gray-900 dark:text-white text-base leading-snug">
+                    {item.title}
+                  </h4>
+                  <p className="mt-1.5 text-xs text-gray-600 dark:text-slate-400 leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {renderLightboxModal()}

@@ -48,6 +48,7 @@ type AuthenticatedUser = {
   phone: string | null;
   address: string | null;
   defaultCutlery: number | null;
+  notes?: string | null;
 } | null;
 
 type Props = {
@@ -123,7 +124,7 @@ export default function CheckoutPageImpl({
       name: authenticatedUser?.name || customerProfile.name || "",
       phone: authenticatedUser?.phone || normalizedPhone || "",
       address: authenticatedUser?.address || customerProfile.address || "",
-      comment: customerProfile.notes || "",
+      comment: authenticatedUser?.notes || customerProfile.notes || "",
       cutlery: authenticatedUser?.defaultCutlery ?? customerProfile.cutlery ?? 0,
       paymentMethod,
       sendEmailReceipt: false,
@@ -144,7 +145,7 @@ export default function CheckoutPageImpl({
       const newPhone = authenticatedUser?.phone || normalizedPhone || "";
       const newAddress = authenticatedUser?.address || customerProfile.address || "";
       const newCutlery = authenticatedUser?.defaultCutlery ?? customerProfile.cutlery ?? 0;
-      const newComment = customerProfile.notes || "";
+      const newComment = authenticatedUser?.notes || customerProfile.notes || "";
 
       if (!currentValues.name && newName) {
         methods.setValue("name", newName);
@@ -187,7 +188,7 @@ export default function CheckoutPageImpl({
         phone: authenticatedUser.phone || "",
         userId: "",
         chatId: "",
-        notes: "",
+        notes: authenticatedUser.notes || "",
         username: "",
       });
     } else if (!authenticatedUser && customerProfile.isAuthenticated) {

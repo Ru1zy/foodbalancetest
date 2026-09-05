@@ -183,7 +183,7 @@ export default function OrderWizard({
               />
             ))}
           </div>
-          <DateSelector menuItems={menuItems} orderingMode={orderingMode} />
+          <DateSelector menuItems={menuItems} orderingMode={orderingMode} tariffs={tariffs} />
         </div>
       );
     case 3:

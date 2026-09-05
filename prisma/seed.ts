@@ -247,13 +247,13 @@ async function main() {
   console.log("🌱 Seeding tariffs...");
 
   const tariffs = [
-    { name: "Slim", title: "Slim", kcal: "1200–1300 ккал", price: "610 ₴", basePrice: 610, imageUrl: "" },
-    { name: "Balance", title: "Balance", kcal: "1500–1600 ккал", price: "670 ₴", basePrice: 670, imageUrl: "" },
-    { name: "Active", title: "Active", kcal: "1800–2000 ккал", price: "750 ₴", basePrice: 750, imageUrl: "" },
-    { name: "Sport", title: "Sport Active+", kcal: "2200–2400 ккал", price: "850 ₴", basePrice: 850, imageUrl: "" },
-    { name: "Sushka XS", title: "Сушка XS", kcal: "1200–1300 ккал", price: "710 ₴", basePrice: 710, imageUrl: "" },
-    { name: "Sushka S", title: "Сушка S", kcal: "1500–1600 ккал", price: "770 ₴", basePrice: 770, imageUrl: "" },
-    { name: "Indiv", title: "Індивідуальний", kcal: "За вашим планом", price: "Індивідуально", basePrice: 0, imageUrl: "" },
+    { name: "Slim", title: "Slim", kcal: "1200–1300 ккал", price: "610 ₴", basePrice: 610, previewImageUrl: "/images/meals/slim-meals.jpg", imageUrl: "/images/rations/slim-prices.jpg" },
+    { name: "Balance", title: "Balance", kcal: "1500–1600 ккал", price: "670 ₴", basePrice: 670, previewImageUrl: "/images/meals/balance-meals.jpg", imageUrl: "/images/rations/balance-prices.jpg" },
+    { name: "Active", title: "Active", kcal: "1800–2000 ккал", price: "750 ₴", basePrice: 750, previewImageUrl: "/images/meals/active-meals.jpg", imageUrl: "/images/rations/active-prices.jpg" },
+    { name: "Sport", title: "Sport Active+", kcal: "2200–2400 ккал", price: "850 ₴", basePrice: 850, previewImageUrl: "/images/meals/sport-meals.jpg", imageUrl: "/images/rations/sport-prices.jpg" },
+    { name: "Sushka XS", title: "Сушка XS", kcal: "1200–1300 ккал", price: "710 ₴", basePrice: 710, previewImageUrl: "/images/meals/sushka-xs-meals.jpg", imageUrl: "/images/sushka/prices-xs.jpg" },
+    { name: "Sushka S", title: "Сушка S", kcal: "1500–1600 ккал", price: "770 ₴", basePrice: 770, previewImageUrl: "/images/meals/sushka-s-meals.jpg", imageUrl: "/images/sushka/prices-s.jpg" },
+    { name: "Indiv", title: "Індивідуальний", kcal: "За вашим планом", price: "Індивідуально", basePrice: 0, previewImageUrl: "/images/meals/individual-meals.jpg", imageUrl: "/images/rations/programs-overview.jpg" },
   ];
 
   for (const tariff of tariffs) {
@@ -264,6 +264,8 @@ async function main() {
         kcal: tariff.kcal,
         price: tariff.price,
         basePrice: tariff.basePrice,
+        previewImageUrl: tariff.previewImageUrl,
+        imageUrl: tariff.imageUrl,
       },
       create: tariff,
     });

@@ -30,6 +30,7 @@ type User = {
   phone: string | null;
   address: string | null;
   defaultCutlery: number | null;
+  notes: string | null;
 };
 
 export type ResolvedDay = {
@@ -645,6 +646,18 @@ export default function ProfilePageClient({
                       </select>
                     </div>
                   </div>
+                  <div className="sm:col-span-1">
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Коментар до доставки</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm">💬</span>
+                      <input
+                        name="notes"
+                        defaultValue={user.notes || ""}
+                        placeholder="Код домофону, поверх, примітки..."
+                        className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-11 py-3 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 transition focus:bg-white dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                    </div>
+                  </div>
                   <div className="sm:col-span-2 mt-2">
                     <button
                       type="submit"
@@ -672,6 +685,10 @@ export default function ProfilePageClient({
                   <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">
                     <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Прибори</dt>
                     <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.defaultCutlery || 0} шт</dd>
+                  </div>
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Останній коментар</dt>
+                    <dd className="text-base font-bold text-slate-900 dark:text-slate-100 break-words">{user.notes || "Не вказано"}</dd>
                   </div>
                 </dl>
               )}

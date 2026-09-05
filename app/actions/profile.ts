@@ -38,6 +38,7 @@ export async function updateUserProfile(
   const phone = formData.get("phone") as string;
   const address = formData.get("address") as string;
   const cutlery = parseInt(formData.get("cutlery") as string) || 0;
+  const notes = (formData.get("notes") as string || "").trim();
 
   const cleanName = (name || "").trim();
   const normalizedPhone = phone ? normalizePhone(phone) : "";
@@ -72,6 +73,7 @@ export async function updateUserProfile(
         phone: normalizedPhone || undefined,
         address: (address || "").trim() || undefined,
         defaultCutlery: String(cutlery),
+        notes: notes || null,
       },
     });
   } catch (error) {

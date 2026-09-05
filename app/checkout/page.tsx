@@ -29,6 +29,7 @@ export default async function CheckoutPage() {
           phone: true,
           address: true,
           defaultCutlery: true,
+          notes: true,
         },
       });
 
@@ -42,6 +43,7 @@ export default async function CheckoutPage() {
           phone: sanitizeTelegramPhone(dbUser.phone),
           address: dbUser.address,
           defaultCutlery: parseCutleryCount(dbUser.defaultCutlery),
+          notes: dbUser.notes,
         };
       }
     }

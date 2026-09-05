@@ -2,7 +2,8 @@
 
 # 🥗 FoodBalance
 
-**A meal-subscription & delivery platform with a weekly menu wizard, prepaid day-balances, Telegram & Google integrations, and an admin back office.**
+**Сервіс підписки та доставки збалансованого харчування у м. Запоріжжя**  
+**Healthy meal subscription & delivery platform with an order wizard, prepaid day-balances, Monobank acquiring, Telegram & Google integrations, and an admin back office.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-149eca?logo=react)](https://react.dev/)
@@ -10,6 +11,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-7-2d3748?logo=prisma)](https://www.prisma.io/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Monobank](https://img.shields.io/badge/Payment-Monobank%20Plata-ff4b4b)](https://www.monobank.ua/)
 [![Deploy: Railway](https://img.shields.io/badge/Deploy-Railway-black?logo=railway)](https://railway.app/)
 
 **🇬🇧 [English](#-english)  ·  🇺🇦 [Українська](#-українська)**
@@ -22,129 +24,167 @@
 
 ### Overview
 
-**FoodBalance** is a full-stack web application for a healthy-meal subscription and delivery service. Customers pick a weekly package, choose dishes day by day through a guided **order wizard**, and pay either per order or from a **prepaid day-balance**. Orders flow automatically to the kitchen team via **Telegram notifications** and **Google Sheets**, while an **admin dashboard** handles the menu, tariffs, clients, and daily fulfillment.
+**FoodBalance** is a production-grade, full-stack web application built for a healthy-meal delivery service in Zaporizhzhia, Ukraine ([@food.balance.zp](https://instagram.com/food.balance.zp)). 
 
-The app runs as a regular web app and as a **Telegram Mini App (TMA)**, with sign-in via Telegram or Google.
+Customers choose a nutrition program (**Slim**, **Balance**, **Active**, **Sport**, specialized **Sushka Light**, or a custom **Individual** meal builder), select delivery days, customize dishes day by day through a guided **order wizard**, and pay securely online via **Monobank acquiring (Plata)**, bank transfer, cash, or atomically deduct days from a **prepaid subscription balance**.
 
-### Key features
+Orders sync in real time to the kitchen team via **Telegram bot alerts**, **Google Sheets**, and an **interactive admin dashboard** for daily kitchen and courier fulfillment.
 
-- 🧙 **Order wizard** — step-by-step flow: choose package → pick delivery days → assemble meals per day (standard sets or **Individual** custom assembly), with live per-day validation.
-- 🛒 **Multi-package cart** — add several packages with quantities and check out in one fully transactional submission (all-or-nothing, no partial fulfillment).
-- 💳 **Prepaid day-balances** — customers buy a package of days; each order atomically deducts days from the matching balance, with safe fiat (card/cash) fallback.
-- 🔒 **Idempotent checkout** — duplicate submissions are detected and safely replayed, so a double click never creates double orders.
-- 📲 **Telegram integration** — Telegram Mini App + bot, login via Telegram, and automatic order notifications to the kitchen/admin chat.
-- 🔑 **Google integration** — Google OAuth sign-in and order export to Google Sheets for the operations team.
-- 🍽️ **Kitchen export & daily view** — admin "today" view and a kitchen export endpoint that always agree on the day's order set (DST-aware, Kyiv-timezone correct).
-- 🛠️ **Admin back office** — manage menu, tariffs, clients, daily orders, and broadcast messages ("megaphone").
-- 🎨 **Premium UI & Dark Mode** — fluid responsive design, smooth micro-animations, glassmorphism, and a seamless light/dark mode toggle.
-- ⏰ **Scheduled jobs** — nightly cron to archive completed orders.
+The platform works as a responsive web app and as a **Telegram Mini App (TMA)**, supporting one-click sign-in via Telegram or Google OAuth.
 
-### Tech stack
+---
+
+### Key Features
+
+- 🧙 **Order Wizard** — multi-step guided experience: choose nutrition package → select delivery days → assemble meals per day with live validation and dish details.
+- 💳 **Monobank Acquiring (Plata)** — seamless online card checkout (Apple Pay / Google Pay / cards) with automatic payment status webhooks and cryptographic ECDSA/SHA-256 signature verification.
+- 🎟️ **Prepaid Day-Balances & Subscriptions** — customers buy meal packages upfront at tiered discount rates (-5%, -10%, -15%); each order atomically deducts days from their active balance.
+- 🛒 **Multi-Package Cart** — add several packages and quantities in one transaction with safe rollback on payment cancellation.
+- 🔒 **Idempotent Checkout** — duplicate submission guards guarantee a double click never charges or creates duplicate orders.
+- 📲 **Telegram Mini App & Bot** — native TMA experience (`@twa-dev/sdk`), passwordless Telegram login, and instant order broadcast notifications to kitchen & manager chat groups.
+- 🔑 **Google Ecosystem Integration** — Google OAuth 2.0 customer sign-in, real-time Google Sheets two-way order sync, and automated monthly Google Drive spreadsheet generation with AES-256 encrypted refresh tokens.
+- 🍽️ **Kitchen & Courier Daily View** — dedicated admin dashboard and export endpoints synchronized with Europe/Kyiv timezone (DST-aware).
+- 🛠️ **Admin Management Suite** — comprehensive back office for tariffs, weekly menus, promo marketing materials/flyers, client balances, and mass broadcasts.
+- ☁️ **Cloudflare R2 / S3 Storage** — high-performance S3-compatible cloud storage for meal photos and marketing flyers.
+- 🎨 **Modern Design & Dark Mode** — fluid responsive layout, glassmorphism, tailored typography, and a seamless light/dark theme switch.
+- 🧪 **Automated Testing** — test suite with Jest verifying checkout idempotency, balance deduction, and Monobank integration.
+
+---
+
+### Tech Stack
 
 | Layer | Technology |
 | --- | --- |
-| Framework | Next.js 16 (App Router, Server Actions) |
-| UI | React 19, Tailwind CSS 4, lucide-react / react-icons |
+| Framework | Next.js 16 (App Router, Server Actions, Turbopack) |
+| UI | React 19, Tailwind CSS 4, Lucide React, react-icons |
 | Language | TypeScript 5 |
-| State | Zustand (with persistence) |
-| Forms & validation | react-hook-form + Zod |
+| Payments | Monobank Acquiring (Plata API) |
 | Database | PostgreSQL via Prisma 7 (`@prisma/adapter-pg`) |
-| Auth | JWT sessions with `jose`; Telegram + Google OAuth |
-| Integrations | Telegram Bot / TMA (`@twa-dev/sdk`), Google APIs (`googleapis`) |
-| Theming | `next-themes` (class strategy, light/dark toggle) |
-| Email | Gmail API via OAuth2 (Railway blocks SMTP ports) |
-| File storage | Cloudflare R2 (S3-compatible via `@aws-sdk/client-s3`) |
-| Hosting | Railway (primary), GitHub Actions cron |
+| State | Zustand (with localStorage persistence) |
+| Forms & validation | react-hook-form + Zod |
+| Auth & Security | JWT sessions (`jose`), Telegram Auth, Google OAuth, AES-256 encryption |
+| Cloud Storage | Cloudflare R2 / S3 (`@aws-sdk/client-s3`) |
+| Integrations | Telegram Bot / TMA (`@twa-dev/sdk`), Google Sheets & Drive (`googleapis`) |
+| Testing | Jest, ts-jest, React Testing Library |
+| Theming | `next-themes` (class strategy, light/dark modes) |
+| Hosting & Cron | Railway (primary host), GitHub Actions (automated cron) |
 
-### Data model (Prisma)
+---
 
-`User` · `UserBalance` (prepaid days per package) · `SubscriptionPurchase` · `Menu` · `Tariff` · `Order` · `OrderDay` · `CheckoutIdempotency` · `SheetConfig` · `GoogleDriveConnection` · `AuthToken` · `MergeToken` · `OutboxJob`
+### Data Model (Prisma)
 
-### Getting started
+- **`User`** — customer profile, contacts, default delivery address, cutlery preference, delivery notes.
+- **`UserBalance`** — prepaid day balances grouped by package type.
+- **`SubscriptionPurchase`** — subscription purchase history and payment tracking.
+- **`Tariff`** — package rules, pricing, calories, flyer images, and meal configuration.
+- **`Menu`** — weekly scheduled dish choices per package and day.
+- **`Order` & `OrderDay`** — orders, delivery dates, dish selections, and fulfillment statuses.
+- **`CheckoutIdempotency`** — anti-duplicate submission transaction records.
+- **`GoogleDriveConnection`** — encrypted Drive OAuth credentials for monthly spreadsheets.
+- **`AdminSettings` & `PromoMaterial`** — dynamic flyers, promotional materials, and site config.
+- **`OutboxJob`** — reliable asynchronous delivery for external webhooks and notifications.
+
+---
+
+### Getting Started
 
 **Prerequisites:** Node.js **22.12+** (required by Prisma 7) and a PostgreSQL database.
 
 ```bash
-# 1. Install dependencies (runs `prisma generate` via postinstall)
+# 1. Install dependencies (triggers prisma generate via postinstall)
 npm install
 
-# 2. Configure environment
-cp .env.example .env   # then fill in the values (see below)
+# 2. Configure environment variables
+cp .env.example .env   # fill in your values (see table below)
 
-# 3. Sync the database schema (this repo uses db push, not migrations)
+# 3. Sync database schema
 npx prisma db push
 
-# 4. (optional) Seed sample data
+# 4. (Optional) Seed initial tariff and promo data
 npx prisma db seed
 
-# 5. Run the dev server
+# 5. Run tests
+npm test
+
+# 6. Start development server
 npm run dev            # http://localhost:3000
 ```
 
-### Available scripts
+---
+
+### Available Scripts
 
 | Script | Description |
 | --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Production build (`next build`) |
-| `npm run start` | Run the production server |
-| `npm run lint` | Lint with ESLint |
+| `npm run dev` | Starts local Next.js development server |
+| `npm run build` | Builds optimized production bundle (`next build`) |
+| `npm run start` | Runs built production server |
+| `npm run lint` | Checks code formatting and ESLint rules |
+| `npm test` | Runs Jest unit and integration test suite |
 
-> 💡 Always validate with a **full `next build`** before deploying — `tsc --noEmit` can pass while the production build breaks.
+> 💡 Always validate with **`npm run build`** before pushing code — Next.js production builds verify strict server action rules and route configurations.
 
-### Environment variables
+---
 
-| Variable | Purpose |
+### Environment Variables
+
+| Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | PostgreSQL connection string |
-| `AUTH_SECRET` | Secret for signing JWT sessions |
-| `CRON_SECRET` | Protects the cron endpoints |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token |
-| `TELEGRAM_ADMIN_CHAT_ID` | Chat that receives order notifications |
-| `TELEGRAM_WEBHOOK_SECRET` | Validates incoming Telegram webhooks |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
-| `GOOGLE_REDIRECT_URI` | Google OAuth callback URL |
-| `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service account for Sheets access |
-| `GOOGLE_SHEET_ID` | Global CRM workbook (`Info` and `Orders` tabs) |
-| `EXTERNAL_SHEET_ID` | Separate manual kitchen/delivery export workbook |
-| `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Separate admin-only OAuth client for automatic monthly workbook creation |
-| `GOOGLE_DRIVE_REDIRECT_URI` | Exact admin Drive callback: `/api/admin/google-drive/callback` |
-| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Base64 32-byte key that encrypts the stored Drive refresh token |
-| `GAS_WEBAPP_URL` | Google Apps Script web app endpoint (optional) |
-| `S3_ENDPOINT` | S3-compatible storage endpoint (Supabase/R2/B2/MinIO) |
-| `S3_BUCKET` | Bucket name for uploaded images |
-| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | Storage credentials |
-| `S3_PUBLIC_BASE_URL` | Public URL prefix used to build returned file URLs |
-| `S3_REGION` / `S3_FORCE_PATH_STYLE` | Optional: default `auto` / `true` |
+| `DATABASE_URL` | PostgreSQL connection URL |
+| `AUTH_SECRET` | Secret key used to sign and verify customer JWT sessions |
+| `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | Public production base URL (e.g. `https://your-domain.railway.app`) |
+| `MONOBANK_API_TOKEN` | Merchant token from Monobank Plata dashboard |
+| `PLATA_FEE_PERCENT` | Gateway acquiring fee percentage (default: `0.013` = 1.3%) |
+| `TELEGRAM_BOT_TOKEN` | Token for the Telegram Bot |
+| `TELEGRAM_ADMIN_CHAT_ID` | Comma-separated list of Telegram chat IDs for order notifications |
+| `TELEGRAM_WEBHOOK_SECRET` | Secret token to authenticate Telegram webhook calls |
+| `NEXT_PUBLIC_BOT_USERNAME` | Telegram Bot username (without `@`) for Mini App links |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 credentials for customer sign-in |
+| `GOOGLE_REDIRECT_URI` | Google OAuth callback URL (`/api/auth/google/callback`) |
+| `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service Account credentials for Google Sheets operations |
+| `GOOGLE_SHEET_ID` | Global CRM spreadsheet ID (`Info` & `Orders` sheets) |
+| `EXTERNAL_SHEET_ID` | Kitchen/delivery daily export spreadsheet ID |
+| `GOOGLE_DRIVE_CLIENT_ID` / `SECRET` | Admin OAuth client for monthly Drive spreadsheet generator |
+| `GOOGLE_DRIVE_REDIRECT_URI` | Callback URL: `/api/admin/google-drive/callback` |
+| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Base64-encoded 32-byte AES key for encrypting Drive refresh token |
+| `S3_ENDPOINT` | S3-compatible storage API endpoint (Cloudflare R2, Supabase, MinIO) |
+| `S3_BUCKET` | S3 bucket name for dish and flyer uploads |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | S3 access keys |
+| `S3_PUBLIC_BASE_URL` | Public CDN URL prefix for stored files |
+| `CRON_SECRET` | Secret bearer token protecting scheduled `/api/cron/*` endpoints |
+| `SMTP_EMAIL` / `SMTP_PASSWORD` | Optional SMTP credentials for email delivery |
 
-### Deployment (Vercel)
+---
 
-1. Connect the repository to Vercel.
-2. Add all environment variables in the project settings.
-3. Run `npx prisma db push` against the production database.
-4. Copy `vercel.json.example` → `vercel.json` to enable the nightly archive cron.
-5. Register the Telegram webhook with the `TELEGRAM_WEBHOOK_SECRET` as `secret_token`.
+### Deployment on Railway
 
-### Deployment (Railway)
+The application is deployed on **Railway**:
 
-1. Deploy from GitHub; add a Railway PostgreSQL and reference it as `DATABASE_URL`.
-2. Add all environment variables, including the `S3_*` object-storage vars
-   (Vercel Blob is not available off Vercel — see `lib/storage.ts`).
-3. Run `npx prisma db push` against the Railway database.
-4. Crons: `vercel.json` does not run on Railway. Use the included
-   `.github/workflows/cron.yml` (GitHub Actions) — set repo secrets
-   `APP_BASE_URL` and `CRON_SECRET`.
-5. Point the Google OAuth redirect URI (`/api/auth/google/callback`) and the
-   Telegram webhook (`/api/telegram-webhook`) at the new domain.
+1. **Create Project**: Connect this GitHub repository to Railway.
+2. **Add Database**: Provision a Railway PostgreSQL database service. The `DATABASE_URL` variable will be linked automatically.
+3. **Set Environment Variables**: In Railway service settings, add all required variables listed above.
+4. **Deploy**: Railway runs `npm run build` and starts the app with `npm run start`.
+5. **Database Sync**: If updating schema, run `npx prisma db push` (or configure a pre-deploy release command).
+6. **Configure Webhooks**:
+   - **Telegram**: Call `https://api.telegram.org/bot<TOKEN>/setWebhook?url=<YOUR_DOMAIN>/api/telegram-webhook&secret_token=<SECRET>`
+   - **Monobank**: Monobank automatically registers the callback URL provided with each invoice (`/api/plata/callback`).
+   - **Google OAuth**: Add `<YOUR_DOMAIN>/api/auth/google/callback` to authorized redirect URIs in Google Cloud Console.
+7. **Automated Scheduled Jobs (Cron)**:
+   - Configured via GitHub Actions in `.github/workflows/cron.yml`.
+   - Set repository secrets in GitHub: `APP_BASE_URL` and `CRON_SECRET`.
+   - Runs nightly order status checks and fulfillment archival.
 
-### Project structure
+---
+
+### Project Structure
 
 ```
-app/        Next.js routes (wizard, checkout, profile, onboarding, admin, api, server actions)
-components/  Shared UI components
-lib/        Core logic: order/balance rules, order store, auth, Google & Telegram helpers
-prisma/     Prisma schema & seed
-public/     Static assets
+app/              Next.js routes (wizard, checkout, profile, admin, api, server actions)
+components/       Shared UI components (PackageSelector, SubscriptionOptions, modals, theme)
+lib/              Business logic (order rules, Monobank, Google APIs, Telegram, auth)
+prisma/           Database schema (`schema.prisma`) and seed scripts
+public/           Static images, flyers, and branding assets
+tests/            Automated Jest test suite
 ```
 
 ---
@@ -153,116 +193,154 @@ public/     Static assets
 
 ### Огляд
 
-**FoodBalance** — це повноцінний вебзастосунок для сервісу підписки та доставки здорового харчування. Клієнти обирають тижневий пакет, складають страви день за днем через покроковий **майстер замовлення** і оплачують або за кожне замовлення, або з **передплаченого балансу днів**. Замовлення автоматично надходять кухні через **сповіщення в Telegram** і **Google Таблиці**, а **адмін-панель** керує меню, тарифами, клієнтами та щоденним виконанням.
+**FoodBalance** — це повнофункціональний вебзастосунок для сервісу щоденної доставки здорового та збалансованого харчування у м. Запоріжжя ([@food.balance.zp](https://instagram.com/food.balance.zp)).
 
-Застосунок працює як звичайний вебзастосунок і як **Telegram Mini App (TMA)**, з входом через Telegram або Google.
+Клієнти обирають раціон (**Slim**, **Balance**, **Active**, **Sport**, експрес-програму **Сушка Light** або персональний конструктор **Індивідуальний**), обирають дні доставки, гнучко налаштовують меню день за днем через зручний **майстер замовлення** та безпечно оплачують карткою онлайн через **інтернет-еквайринг Monobank (Plata)**, банківським переказом, готівкою або списують дні з **передплаченого балансу абонемента**.
+
+Замовлення миттєво надходять команді кухні та менеджеру через **сповіщення Telegram-бота**, експортуються у **Google Таблиці** та відображаються в інтерактивній **адмін-панелі**.
+
+Застосунок працює як звичайний вебсайт і як **Telegram Mini App (TMA)**, підтримуючи швидкий вхід в один клік через Telegram або Google.
+
+---
 
 ### Ключові можливості
 
-- 🧙 **Майстер замовлення** — покроковий процес: вибір пакета → вибір днів доставки → складання страв на кожен день (стандартні набори або **Індивідуальне** складання) з перевіркою валідності для кожного дня в реальному часі.
-- 🛒 **Кошик на кілька пакетів** — додавайте кілька пакетів із кількістю та оформлюйте все в одній повністю транзакційній операції (усе або нічого, без часткового виконання).
-- 💳 **Передплачений баланс днів** — клієнт купує пакет днів; кожне замовлення атомарно списує дні з відповідного балансу з безпечним переходом на оплату карткою/готівкою.
-- 🔒 **Ідемпотентне оформлення** — повторні надсилання розпізнаються та безпечно відтворюються, тож подвійний клік ніколи не створить подвійне замовлення.
-- 📲 **Інтеграція з Telegram** — Telegram Mini App + бот, вхід через Telegram і автоматичні сповіщення про замовлення в чат кухні/адміна.
-- 🔑 **Інтеграція з Google** — вхід через Google OAuth та експорт замовлень у Google Таблиці для операційної команди.
-- 🍽️ **Експорт для кухні та денний огляд** — адмін-перегляд «сьогодні» та ендпоінт експорту для кухні, які завжди узгоджені щодо набору замовлень дня (коректний київський час із урахуванням переходу на літній/зимовий).
-- 🛠️ **Адмін-панель** — керування меню, тарифами, клієнтами, щоденними замовленнями та масовими розсилками («мегафон»).
-- 🎨 **Преміальний дизайн та темна тема** — плавна адаптивність, сучасні анімації, гласморфізм та легке перемикання між світлою та темною темами.
-- ⏰ **Заплановані задачі** — нічний cron для архівації виконаних замовлень.
+- 🧙 **Майстер замовлення** — покроковий процес: вибір пакета → вибір днів доставки → складання страв на кожен день з онлайн-перевіркою та підрахунком КБЖВ.
+- 💳 **Еквайринг Monobank (Plata)** — швидка онлайн-оплата картками, Apple Pay та Google Pay, автоматична обробка вебхуків та перевірка криптографічного цифрового підпису (ECDSA/SHA-256).
+- 🎟️ **Передплачені абонементи та баланс днів** — придбання пакетів днів зі знижками (-5%, -10%, -15%); кожне замовлення атомарно списує дні без ризику подвійного списання.
+- 🛒 **Кошик на кілька пакетів** — можливість додавати кілька різних раціонів в одне замовлення з безпечним поверненням у разі скасування.
+- 🔒 **Ідемпотентне оформлення** — надійний захист від дублювання: навіть багаторазовий клік ніколи не створить повторне списання коштів чи дублікат замовлення.
+- 📲 **Telegram Mini App та бот** — безшовна робота всередині Telegram через `@twa-dev/sdk`, вхід без паролів та миттєві сповіщення кухні/адміністратора про нові замовлення.
+- 🔑 **Інтеграція з Google** — авторизація через Google OAuth 2.0, двостороння синхронізація з Google Таблицями та автоматичне створення щомісячних книг на Google Диску із захищеним шифруванням токенів (AES-256).
+- 🍽️ **Щоденний експорт для кухні та кур'єрів** — окремий адмін-модуль «сьогодні» та ендпоінти вивантаження з точним урахуванням київського часу (Europe/Kyiv) та переходу на літній/зимовий час.
+- 🛠️ **Адмін-панель** — повне керування меню, тарифами, промо-матеріалами та флаєрами, балансами користувачів та розсилками («Мегафон»).
+- ☁️ **Хмарне сховище Cloudflare R2 / S3** — швидке завантаження та роздача фотографій страв і рекламних матеріалів.
+- 🎨 **Сучасний дизайн та темна тема** — плавна адаптивна верстка, гласморфізм, продумана типографіка та перемикання світлої/темної теми.
+- 🧪 **Автоматизовані тести** — набір тестів на базі Jest для перевірки логіки оплат, списання балансів та ідемпотентності.
+
+---
 
 ### Технологічний стек
 
 | Рівень | Технологія |
 | --- | --- |
-| Фреймворк | Next.js 16 (App Router, Server Actions) |
-| Інтерфейс | React 19, Tailwind CSS 4, lucide-react / react-icons |
+| Фреймворк | Next.js 16 (App Router, Server Actions, Turbopack) |
+| Інтерфейс | React 19, Tailwind CSS 4, Lucide React, react-icons |
 | Мова | TypeScript 5 |
-| Стан | Zustand (зі збереженням) |
-| Форми та валідація | react-hook-form + Zod |
+| Оплата | Monobank Acquiring (API Plata) |
 | База даних | PostgreSQL через Prisma 7 (`@prisma/adapter-pg`) |
-| Автентифікація | JWT-сесії на `jose`; Telegram + Google OAuth |
-| Інтеграції | Telegram Bot / TMA (`@twa-dev/sdk`), Google APIs (`googleapis`) |
-| Тема | `next-themes` (class strategy, перемикач light/dark) |
-| Email | Gmail API через OAuth2 (Railway блокує SMTP порти) |
-| Сховище файлів | Cloudflare R2 (S3-compatible через `@aws-sdk/client-s3`) |
-| Хостинг | Railway (основний), GitHub Actions cron |
+| Стан | Zustand (зі збереженням у localStorage) |
+| Форми та валідація | react-hook-form + Zod |
+| Безпека та Auth | JWT-сесії (`jose`), Telegram Auth, Google OAuth, AES-256 |
+| Хмарне сховище | Cloudflare R2 / S3 (`@aws-sdk/client-s3`) |
+| Інтеграції | Telegram Bot / TMA (`@twa-dev/sdk`), Google Sheets & Drive (`googleapis`) |
+| Тестування | Jest, ts-jest, React Testing Library |
+| Теми оформлення | `next-themes` (класова стратегія, light/dark) |
+| Хостинг і Cron | Railway (основний продакшн), GitHub Actions (автоматичний cron) |
 
-### Модель даних (Prisma)
-
-`User` · `UserBalance` (передплачені дні за пакетом) · `SubscriptionPurchase` · `Menu` · `Tariff` · `Order` · `OrderDay` · `CheckoutIdempotency` · `SheetConfig` · `GoogleDriveConnection` · `AuthToken` · `MergeToken` · `OutboxJob`
+---
 
 ### Початок роботи
 
-**Вимоги:** Node.js **22.12+** (необхідно для Prisma 7) та база даних PostgreSQL.
+**Вимоги:** Node.js **22.12+** (вимога Prisma 7) та база даних PostgreSQL.
 
 ```bash
-# 1. Встановити залежності (через postinstall запускається `prisma generate`)
+# 1. Встановити залежності (після інсталяції автоматично запускається prisma generate)
 npm install
 
-# 2. Налаштувати оточення
-cp .env.example .env   # потім заповніть значення (див. нижче)
+# 2. Налаштувати змінні оточення
+cp .env.example .env   # заповніть параметри згідно таблиці нижче
 
-# 3. Синхронізувати схему БД (цей репозиторій використовує db push, а не міграції)
+# 3. Синхронізувати схему бази даних
 npx prisma db push
 
-# 4. (опційно) Заповнити тестовими даними
+# 4. (Опційно) Наповнити базовими тарифами та налаштуваннями
 npx prisma db seed
 
-# 5. Запустити сервер розробки
+# 5. Запустити тести
+npm test
+
+# 6. Запустити сервер розробки
 npm run dev            # http://localhost:3000
 ```
+
+---
 
 ### Доступні скрипти
 
 | Скрипт | Опис |
 | --- | --- |
 | `npm run dev` | Запуск сервера розробки |
-| `npm run build` | Продакшн-збірка (`next build`) |
-| `npm run start` | Запуск продакшн-сервера |
-| `npm run lint` | Перевірка коду ESLint |
+| `npm run build` | Оптимізована продакшн-збірка (`next build`) |
+| `npm run start` | Запуск зібраного продакшн-сервера |
+| `npm run lint` | Перевірка коду через ESLint |
+| `npm test` | Запуск тестів Jest |
 
-> 💡 Перед деплоєм завжди перевіряйте **повним `next build`** — `tsc --noEmit` може пройти, тоді як продакшн-збірка ламається.
+---
 
 ### Змінні оточення
 
 | Змінна | Призначення |
 | --- | --- |
 | `DATABASE_URL` | Рядок підключення до PostgreSQL |
-| `AUTH_SECRET` | Секрет для підпису JWT-сесій |
-| `CRON_SECRET` | Захист cron-ендпоінтів |
+| `AUTH_SECRET` | Секретний ключ для підпису JWT-сесій клієнтів |
+| `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | Публічний URL сайту (наприклад, `https://foodbalance.up.railway.app`) |
+| `MONOBANK_API_TOKEN` | Токен мерчанта з кабінету еквайрингу Monobank Plata |
+| `PLATA_FEE_PERCENT` | Комісія еквайрингу (за замовчуванням `0.013` = 1.3%) |
 | `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота |
-| `TELEGRAM_ADMIN_CHAT_ID` | Чат, що отримує сповіщення про замовлення |
-| `TELEGRAM_WEBHOOK_SECRET` | Перевірка вхідних вебхуків Telegram |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Облікові дані Google OAuth |
-| `GOOGLE_REDIRECT_URI` | URL зворотного виклику Google OAuth |
-| `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для доступу до Таблиць |
-| `GOOGLE_SHEET_ID` | Глобальна CRM-книга (вкладки `Info` і `Orders`) |
-| `EXTERNAL_SHEET_ID` | Окрема книга ручного експорту для кухні/доставки |
-| `GOOGLE_DRIVE_CLIENT_ID` / `GOOGLE_DRIVE_CLIENT_SECRET` | Окремий адмінський OAuth-клієнт для автоматичного створення місячних книг |
-| `GOOGLE_DRIVE_REDIRECT_URI` | Точний callback адмінського Drive: `/api/admin/google-drive/callback` |
-| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | 32-байтний base64-ключ для шифрування збереженого Drive refresh token |
-| `GAS_WEBAPP_URL` | Ендпоінт вебзастосунку Google Apps Script |
+| `TELEGRAM_ADMIN_CHAT_ID` | ID чатів адмінів/кухні для сповіщень (через кому) |
+| `TELEGRAM_WEBHOOK_SECRET` | Секретний токен перевірки вебхуків Telegram |
+| `NEXT_PUBLIC_BOT_USERNAME` | Юзернейм бота без `@` для посилань Mini App |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Ключі Google OAuth 2.0 для входу клієнтів |
+| `GOOGLE_REDIRECT_URI` | Callback-адреса Google OAuth (`/api/auth/google/callback`) |
+| `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для роботи з Google Таблицями |
+| `GOOGLE_SHEET_ID` | ID головної таблиці CRM (вкладки `Info` та `Orders`) |
+| `EXTERNAL_SHEET_ID` | ID таблиці експорту для кухні та кур'єрів |
+| `GOOGLE_DRIVE_CLIENT_ID` / `SECRET` | OAuth-клієнт для генератора щомісячних книг на Google Диску |
+| `GOOGLE_DRIVE_REDIRECT_URI` | Callback-адреса: `/api/admin/google-drive/callback` |
+| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | Base64-ключ (32 байти) для AES-256 шифрування токена Drive |
+| `S3_ENDPOINT` | API ендпоінт S3-сховища (Cloudflare R2, Supabase, MinIO) |
+| `S3_BUCKET` | Назва бакета для завантаження зображень |
+| `S3_ACCESS_KEY_ID` / `S3_SECRET_ACCESS_KEY` | Ключі доступу до S3 |
+| `S3_PUBLIC_BASE_URL` | Публічний URL для доступу до файлів через CDN |
+| `CRON_SECRET` | Токен для захисту викликів розкладу `/api/cron/*` |
+| `SMTP_EMAIL` / `SMTP_PASSWORD` | Дані поштового сервера (опційно) |
 
-### Розгортання (Vercel)
+---
 
-1. Підключіть репозиторій до Vercel.
-2. Додайте всі змінні оточення в налаштуваннях проєкту.
-3. Виконайте `npx prisma db push` для продакшн-бази даних.
-4. Скопіюйте `vercel.json.example` → `vercel.json`, щоб увімкнути нічний cron архівації.
-5. Зареєструйте Telegram-вебхук з `TELEGRAM_WEBHOOK_SECRET` як `secret_token`.
+### Розгортання на Railway
+
+Проєкт повністю налаштовано для роботи на **Railway**:
+
+1. **Підключення репозиторію**: Створіть новий проєкт на Railway та виберіть цей GitHub-репозиторій.
+2. **База даних**: Додайте сервіс PostgreSQL у Railway. Змінна `DATABASE_URL` прив'язується автоматично.
+3. **Налаштування оточення**: У налаштуваннях сервісу (Variables) додайте всі змінні з таблиці вище.
+4. **Збірка**: Railway автоматично запустить `npm run build` і підніме додаток командою `npm run start`.
+5. **Синхронізація БД**: При оновленні структури виконайте `npx prisma db push`.
+6. **Налаштування вебхуків**:
+   - **Telegram**: `https://api.telegram.org/bot<TOKEN>/setWebhook?url=<URL>/api/telegram-webhook&secret_token=<SECRET>`
+   - **Monobank**: URL зворотного виклику передається автоматично при створенні рахунку (`/api/plata/callback`).
+   - **Google OAuth**: Вкажіть `<URL>/api/auth/google/callback` у дозволених redirect URI в Google Cloud Console.
+7. **Автоматичні задачі (Cron)**:
+   - Задачі виконуються через GitHub Actions (`.github/workflows/cron.yml`).
+   - Додайте секрети `APP_BASE_URL` та `CRON_SECRET` у налаштуваннях GitHub репозиторію.
+   - Розклад запускає щонічну архівацію та перевірку статусів замовлень.
+
+---
 
 ### Структура проєкту
 
 ```
-app/        Маршрути Next.js (майстер, оформлення, профіль, онбординг, адмін, api, server actions)
-components/  Спільні UI-компоненти
-lib/        Основна логіка: правила замовлень/балансу, стор замовлення, авторизація, помічники Google і Telegram
-prisma/     Схема Prisma та сід
-public/     Статичні файли
+app/              Маршрути Next.js (майстер замовлення, оплата, профіль, адмінка, API, server actions)
+components/       Компоненти інтерфейсу (PackageSelector, SubscriptionOptions, модалки)
+lib/              Логіка (правила замовлень, Monobank, Google API, Telegram, сесії)
+prisma/           Схема бази даних (`schema.prisma`) та сід
+public/           Статичні файли, фотографії страв та флаєри
+tests/            Набір автоматичних тестів Jest
 ```
 
 ---
 
 <div align="center">
-<sub>Built with Next.js · Prisma · Telegram · Google · Vercel</sub>
+<sub>Розроблено для FoodBalance · Next.js · Prisma · Monobank · Telegram · Google · Railway</sub>
 </div>
