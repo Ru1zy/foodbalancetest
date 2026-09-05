@@ -103,3 +103,4 @@ Thumbs.db
 /scripts/remote-smoke.spec.js
 
 database_dump.json
+/scratch/

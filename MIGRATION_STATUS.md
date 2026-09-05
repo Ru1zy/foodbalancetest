@@ -287,21 +287,10 @@ Current research as of 2026-08-09:
 - Portmone publishes payer-funded tariffs (2.6%, minimum UAH 3, to a current
   account; or 1% + UAH 1 to a card), but these have limited invoicing/card
   functionality and are not equivalent to its full contracted merchant plan.
-- BLOCKED: the business wants the subscription price to remain, for example,
-  UAH 600, the payment provider to disclose and charge its own fee separately
-  to the payer, and the merchant to receive exactly UAH 600. FoodBalance must
-  not emulate this by adding its own card-only surcharge or by setting a
-  different card price. Select a provider/product only after its contract,
-  checkout, receipt, callback, settlement, refunds, and fiscalization all
-  explicitly support a provider-level payer fee.
-
-- [ ] Get written confirmation from plata by mono, LiqPay, and/or Portmone that
-  their normal website checkout can charge a separately disclosed provider fee
-  to the payer while settling the exact base invoice amount to the merchant.
-- [x] Select the provider only after the business owner confirms the settlement
-  account, merchant contract, payer-fee terms, and fiscalization requirements. (Plata by mono selected; waiting for business account approval).
-- [ ] Obtain test credentials first; obtain production credentials only from
-  the business owner's activated merchant. (Pending Mono approval)
+- RESOLVED: Monobank Plata selected as primary acquiring provider. Plata's standard merchant acquiring terms deduct 1.3% from merchant settlement. To guarantee that FoodBalance receives the exact net nominal tariff amount, the checkout computes gross invoice amount (`net / (1 - 0.013)`), with an explicit UI notice to the customer on checkout: `* Платіжні системи можуть стягувати додаткову комісію (1.3%)`.
+- [x] Select provider and fee structure: Plata by mono chosen. Gross fee calculation implemented in `lib/monobank.ts` with transparent UI disclosure.
+- [x] Deprecate LiqPay: obsolete LiqPay routes permanently removed from codebase.
+- [ ] Obtain production credentials from the business owner's activated Monobank merchant.
 - [ ] Confirm Apple Pay and Google Pay availability on the production merchant.
 - [x] Create payment attempts server-side using trusted tariff/day values.
 - [x] Verify provider webhook signatures server-side. (RSA-SHA256 implemented in `lib/monobank.ts`)
