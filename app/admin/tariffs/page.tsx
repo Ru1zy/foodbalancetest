@@ -1,9 +1,13 @@
-import { getAllTariffs } from "@/app/actions/tariff-impl";
+import { getAllTariffs, getPromoMaterialsAction } from "@/app/actions/tariff-impl";
 import TariffRow from "./TariffRow";
+import PromoMaterialsManager from "./PromoMaterialsManager";
 import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 export default async function TariffsPage() {
-  const tariffs = await getAllTariffs();
+  const [tariffs, promoMaterials] = await Promise.all([
+    getAllTariffs(),
+    getPromoMaterialsAction(),
+  ]);
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 p-6">
@@ -92,6 +96,8 @@ export default async function TariffsPage() {
             </table>
           </div>
         </div>
+
+        <PromoMaterialsManager initialItems={promoMaterials} />
 
         {tariffs.length === 0 && (
           <div className="mt-8 rounded-2xl border border-solid border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-950 p-8 text-center">

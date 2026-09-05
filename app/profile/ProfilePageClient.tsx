@@ -425,7 +425,7 @@ export default function ProfilePageClient({
         const cleanParam = pkgParam.toLowerCase().replace(/[\s\-_]/g, "");
         const matched = tariffs.find((t) => {
           const cleanName = t.name.toLowerCase().replace(/[\s\-_]/g, "");
-          return cleanName.includes(cleanParam);
+          return cleanName.includes(cleanParam) || cleanParam.includes(cleanName);
         });
         if (matched) {
           setActiveTab(matched.id);

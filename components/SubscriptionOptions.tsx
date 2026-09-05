@@ -120,25 +120,42 @@ export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = t
     }
   };
 
+  const packageIdentifier = pkg.name || pkg.id;
+  const isSushka = packageIdentifier.toLowerCase().includes("sushka") || packageIdentifier.toLowerCase().includes("сушка");
+
   const { totalOriginal, totalDiscounted, pricePerDay } = calculateSubscriptionPrice(
     pkg.basePrice,
-    pkg.id,
+    packageIdentifier,
     days
   );
-  const discountPercent = Math.round(getDiscountForPackage(pkg.id, days) * 100);
+  const discountPercent = Math.round(getDiscountForPackage(packageIdentifier, days) * 100);
 
   return (
     <div className="mt-8">
       <h3 className="mb-6 text-xl font-bold text-gray-900 dark:text-slate-100">Оберіть кількість днів ({pkg.name})</h3>
       
       {/* Discount rules display */}
-      <div className="mb-6 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50 p-4 text-sm text-blue-800">
-        <p className="font-semibold mb-2">Правила знижок:</p>
+      <div className={`mb-6 rounded-xl border p-4 text-sm ${
+        isSushka 
+          ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-200"
+          : "border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200"
+      }`}>
+        <p className="font-semibold mb-2">Правила знижок для {pkg.name}:</p>
         <ul className="list-disc list-inside space-y-1">
-          <li><strong>2 дні:</strong> знижка 10-15% (пробний тариф)</li>
-          <li><strong>7-13 днів:</strong> знижка 5%</li>
-          <li><strong>14-29 днів:</strong> знижка 10%</li>
-          <li><strong>30+ днів:</strong> знижка 15% (крім програми Сушка)</li>
+          {isSushka ? (
+            <>
+              <li><strong>2 дні:</strong> знижка 10% (пробний тест-драйв)</li>
+              <li><strong>7-13 днів:</strong> знижка 5%</li>
+              <li><strong>14 днів:</strong> знижка 10% (максимальний рекомендований курс)</li>
+            </>
+          ) : (
+            <>
+              <li><strong>2 дні:</strong> знижка 15% (пробний тариф)</li>
+              <li><strong>7-13 днів:</strong> знижка 5%</li>
+              <li><strong>14-29 днів:</strong> знижка 10%</li>
+              <li><strong>30+ днів:</strong> знижка 15%</li>
+            </>
+          )}
         </ul>
       </div>
 

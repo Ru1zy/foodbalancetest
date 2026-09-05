@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useOrderStore } from "@/lib/orderStore";
 import { getMenuItems, getTariffs } from "@/app/actions/menu-impl";
+import { getPromoMaterialsAction } from "@/app/actions/tariff-impl";
 import OrderWizard from "./OrderWizard";
 import { MenuItem } from "@/lib/menu-types";
 
@@ -17,6 +18,11 @@ type Tariff = {
   imageUrl: string | null;
 };
 
+type PromoItem = {
+  key: string;
+  url: string;
+};
+
 type Props = {
   orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
   orderingCustomMessage?: string;
@@ -29,17 +35,20 @@ export default function OrderStoreWrapper({
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [tariffs, setTariffs] = useState<Tariff[]>([]);
+  const [promoMaterials, setPromoMaterials] = useState<PromoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [items, tariffData] = await Promise.all([
+      const [items, tariffData, promoData] = await Promise.all([
         getMenuItems(selectedPackage),
         getTariffs(),
+        getPromoMaterialsAction(),
       ]);
       setMenuItems(items);
       setTariffs(tariffData as Tariff[]);
+      setPromoMaterials(promoData);
       setLoading(false);
     }
     fetchData();
@@ -70,6 +79,7 @@ export default function OrderStoreWrapper({
           <OrderWizard
             menuItems={menuItems}
             tariffs={tariffs}
+            promoMaterials={promoMaterials}
             orderingMode={orderingMode}
             orderingCustomMessage={orderingCustomMessage}
           />

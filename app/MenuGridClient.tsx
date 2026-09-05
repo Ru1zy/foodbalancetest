@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { getPackageLimit, isDaySelectable, type PackageType, type PackageLimitInfo } from "../lib/order-logic";
 import { getMenuRowsForPackage } from "@/lib/menu-for-package";
 import type { Dishes, DishOption, MenuItem } from "@/lib/menu-types";
@@ -190,6 +190,71 @@ function MealSection({
 export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Props) {
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
   const [zoomScale, setZoomScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const lastTouchTimeRef = useRef(0);
+
+  const resetZoom = () => {
+    setZoomScale(1);
+    setPan({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomScale <= 1) return;
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || zoomScale <= 1) return;
+    setPan({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (zoomScale <= 1 || e.touches.length !== 1) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || zoomScale <= 1) return;
+    setPan({
+      x: e.touches[0].clientX - dragStartRef.current.x,
+      y: e.touches[0].clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+    const now = Date.now();
+    if (now - lastTouchTimeRef.current < 300) {
+      if (zoomScale > 1) {
+        resetZoom();
+      } else {
+        setZoomScale(2);
+      }
+    }
+    lastTouchTimeRef.current = now;
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (zoomScale <= 1) return;
+    e.preventDefault();
+    setPan((prev) => ({
+      x: e.shiftKey ? prev.x - e.deltaY : prev.x,
+      y: prev.y - e.deltaY,
+    }));
+  };
 
   const step = useOrderStore((state) => state.step);
   const selectedPackageRaw = useOrderStore((state) => state.selectedPackage);
@@ -389,7 +454,7 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
               <div
                 onClick={() => {
                   setZoomedImage(currentDayItem.photoUrl || null);
-                  setZoomScale(1);
+                  resetZoom();
                 }}
                 className="w-full max-w-2xl flex items-center justify-between gap-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 p-3.5 sm:px-5 sm:py-3 cursor-pointer text-amber-900 dark:text-amber-200 transition hover:bg-amber-100/80 shadow-sm"
               >
@@ -419,7 +484,7 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                       className="group/img relative h-64 sm:h-72 w-full cursor-pointer overflow-hidden bg-slate-900/5 dark:bg-slate-950 flex items-center justify-center"
                       onClick={() => {
                         setZoomedImage(currentDayItem.photoUrl || null);
-                        setZoomScale(1);
+                        resetZoom();
                       }}
                       title="Натисніть, щоб розгорнути меню на весь екран"
                     >
@@ -444,20 +509,6 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                         </span>
                       </div>
                     </div>
-
-                    {/* Highly visible callout bar below thumbnail */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setZoomedImage(currentDayItem.photoUrl || null);
-                        setZoomScale(1);
-                      }}
-                      className="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white py-2.5 px-4 text-xs sm:text-sm font-bold shadow-sm transition-colors text-center"
-                    >
-                      <span className="text-base animate-bounce">👆</span>
-                      <span>Натисніть сюди або на фото вище, щоб розгорнути меню на весь екран!</span>
-                      <span className="rounded bg-white/20 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider">Фулскрін</span>
-                    </button>
                   </div>
                 )}
                 <div className="p-6 sm:p-8">
@@ -632,49 +683,123 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
 
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
-          onClick={() => setZoomedImage(null)}
+          className="fixed inset-0 z-[1000000] flex items-center justify-center bg-black/90 p-4 select-none"
+          onClick={() => {
+            setZoomedImage(null);
+            resetZoom();
+          }}
         >
-          <div className="relative w-full h-full flex items-center justify-center overflow-auto">
+          {/* Top Title/Hint */}
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 text-white font-bold text-xs sm:text-base bg-black/60 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 max-w-[65%] sm:max-w-[80%] truncate shadow-lg">
+            Меню {currentDayItem ? (dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`) : ""}
+          </div>
+
+          {/* Hint when zoomed */}
+          {zoomScale > 1 && (
+            <div className="absolute top-6 right-20 z-10 hidden sm:flex items-center gap-1.5 text-xs text-white/80 bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10">
+              <span>🖐️</span> Перетягуйте мишкою або скрольте колесиком
+            </div>
+          )}
+
+          <div
+            className="relative w-full h-full flex items-center justify-center overflow-hidden touch-none"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onWheel={handleWheel}
+          >
             <img
               src={zoomedImage}
               alt="Day menu details"
-              style={{ transform: `scale(${zoomScale})` }}
-              className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out"
+              style={{
+                transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoomScale})`,
+                transformOrigin: "center center",
+                cursor: zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
+                transition: isDragging ? "none" : "transform 0.15s ease-out",
+                maxHeight: "88vh",
+                maxWidth: "92vw",
+              }}
+              draggable={false}
+              className="object-contain select-none shadow-2xl"
               onClick={(e) => e.stopPropagation()}
+              onDoubleClick={() => {
+                if (zoomScale > 1) {
+                  resetZoom();
+                } else {
+                  setZoomScale(2);
+                }
+              }}
             />
           </div>
-          
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white dark:bg-slate-900/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
+
+          {/* Zoom Controls */}
+          <div
+            className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-3 bg-black/75 backdrop-blur-md rounded-full px-3.5 py-1.5 sm:px-6 sm:py-2.5 border border-white/20 shadow-2xl z-30 max-w-[95vw]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setZoomScale(prev => Math.max(0.5, prev - 0.25));
+              type="button"
+              onClick={() => {
+                setZoomScale((prev) => {
+                  const next = Math.max(1, +(prev - 0.5).toFixed(1));
+                  if (next === 1) setPan({ x: 0, y: 0 });
+                  return next;
+                });
               }}
-              className="text-white hover:text-emerald-400 p-2 transition-colors"
-              title="Zoom Out"
+              disabled={zoomScale <= 1}
+              className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
+              title="Віддалити"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
             </button>
-            <span className="text-white font-mono text-sm w-12 text-center">{Math.round(zoomScale * 100)}%</span>
+
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setZoomScale(prev => Math.min(3, prev + 0.25));
-              }}
-              className="text-white hover:text-emerald-400 p-2 transition-colors"
-              title="Zoom In"
+              type="button"
+              onClick={resetZoom}
+              className="text-white hover:text-emerald-400 font-mono text-xs sm:text-sm px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-center min-w-[54px]"
+              title="Натисніть для скидання до 100%"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+              {Math.round(zoomScale * 100)}%
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setZoomScale((prev) => Math.min(3, +(prev + 0.5).toFixed(1)));
+              }}
+              disabled={zoomScale >= 3}
+              className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
+              title="Наблизити"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+
+            {zoomScale > 1 && (
+              <button
+                type="button"
+                onClick={resetZoom}
+                className="ml-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded bg-emerald-950/60 border border-emerald-700/50"
+                title="Скинути зум і позицію"
+              >
+                Скинути
+              </button>
+            )}
           </div>
 
+          {/* Close Button */}
           <button
-            className="absolute top-6 right-6 h-12 w-12 flex items-center justify-center rounded-full bg-white dark:bg-slate-900/10 text-white text-3xl hover:bg-white dark:bg-slate-900/20 transition-colors"
+            type="button"
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 h-10 w-10 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white text-2xl sm:text-3xl border border-white/20 transition shadow-lg z-30"
             onClick={(e) => {
               e.stopPropagation();
               setZoomedImage(null);
+              resetZoom();
             }}
+            title="Закрити (Esc)"
           >
             &times;
           </button>
@@ -682,7 +807,7 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
       )}
 
       {/* Floating Bubble Button */}
-      {(!wizardFilterActive || isLastDay) && (
+      {!zoomedImage && (!wizardFilterActive || isLastDay) && (
         <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
           <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-slate-900/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 dark:border-slate-700 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
             <span className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base whitespace-nowrap">

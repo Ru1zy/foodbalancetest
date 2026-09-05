@@ -16,9 +16,15 @@ type Tariff = {
   imageUrl: string | null;
 };
 
+type PromoItem = {
+  key: string;
+  url: string;
+};
+
 type Props = {
   tariffs: Tariff[];
   onSushkaViewChange?: (isOpen: boolean) => void;
+  promoMaterials?: PromoItem[];
 };
 
 // Information slides for the Sushka intermediate presentation
@@ -26,6 +32,7 @@ const SUSHKA_INFO_SLIDES = [
   {
     id: "for-whom",
     badge: "Цільова аудиторія",
+    shortBadge: "Для кого",
     title: "Для кого Сушка «Light»?",
     image: "/images/sushka/for-whom.jpg",
     summary: "Спеціальна білкова програма для швидкого спалювання жиру та виразного рельєфу.",
@@ -39,6 +46,7 @@ const SUSHKA_INFO_SLIDES = [
   {
     id: "duration",
     badge: "Терміни курсу",
+    shortBadge: "Терміни",
     title: "Як довго можна бути на сушці?",
     image: "/images/sushka/duration.jpg",
     summary: "Оптимальна тривалість без шкоди для здоров'я та уповільнення метаболізму.",
@@ -52,6 +60,7 @@ const SUSHKA_INFO_SLIDES = [
   {
     id: "tariffs-info",
     badge: "Особливості раціону",
+    shortBadge: "Про раціон",
     title: "Як влаштована програма?",
     image: "/images/sushka/tariffs-info.jpg",
     summary: "Максимум чистого білка та мінімум простих вуглеводів у кожній страві.",
@@ -64,11 +73,52 @@ const SUSHKA_INFO_SLIDES = [
   },
 ];
 
-export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) {
+// Official flyers and metadata for standard ration packages
+const RATION_FLYERS: Record<string, { flyer: string; mealsCount: string; minPriceDay: string }> = {
+  Slim: {
+    flyer: "/images/rations/slim-prices.jpg",
+    mealsCount: "3 прийоми їжі (без перекусів)",
+    minPriceDay: "від 519 ₴/день",
+  },
+  Balance: {
+    flyer: "/images/rations/balance-prices.jpg",
+    mealsCount: "4 прийоми їжі (з перекусом)",
+    minPriceDay: "від 570 ₴/день",
+  },
+  Active: {
+    flyer: "/images/rations/active-prices.jpg",
+    mealsCount: "4 прийоми їжі (збільшені порції)",
+    minPriceDay: "від 638 ₴/день",
+  },
+  Sport: {
+    flyer: "/images/rations/sport-prices.jpg",
+    mealsCount: "5 прийомів їжі (2 перекуси, збільшені порції)",
+    minPriceDay: "від 723 ₴/день",
+  },
+};
+
+export default function PackageSelector({ tariffs, onSushkaViewChange, promoMaterials }: Props) {
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
   const selectWizardPackage = useOrderStore((s) => s.selectWizardPackage);
   const [showSushkaOptions, setShowSushkaOptions] = useState(false);
-  const [previewPkg, setPreviewPkg] = useState<Tariff | null>(null);
+
+  const promoMap = useMemo(() => {
+    const map = new Map<string, string>();
+    promoMaterials?.forEach((p) => map.set(p.key, p.url));
+    return map;
+  }, [promoMaterials]);
+
+  const overviewFlyer = promoMap.get("promo_programs_overview") || "/images/rations/programs-overview.jpg";
+  const extraCaloriesFlyer = promoMap.get("promo_extra_calories") || "/images/rations/extra-calories.jpg";
+  const forWhomSlide = promoMap.get("sushka_slide_for_whom") || "/images/sushka/for-whom.jpg";
+  const durationSlide = promoMap.get("sushka_slide_duration") || "/images/sushka/duration.jpg";
+  const tariffsInfoSlide = promoMap.get("sushka_slide_tariffs_info") || "/images/sushka/tariffs-info.jpg";
+
+  const sushkaSlides = useMemo(() => [
+    { ...SUSHKA_INFO_SLIDES[0], image: forWhomSlide },
+    { ...SUSHKA_INFO_SLIDES[1], image: durationSlide },
+    { ...SUSHKA_INFO_SLIDES[2], image: tariffsInfoSlide },
+  ], [forWhomSlide, durationSlide, tariffsInfoSlide]);
   
   // Sushka presentation states
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -78,6 +128,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef({ x: 0, y: 0 });
+  const lastTouchTimeRef = useRef(0);
 
   // Sorting and reconstruction logic
   const { sortedMainItems, sushkaOptions } = useMemo(() => {
@@ -128,7 +179,6 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
 
   const closeSushka = () => {
     setShowSushkaOptions(false);
-    setPreviewPkg(null);
     onSushkaViewChange?.(false);
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -137,7 +187,6 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
 
   const handleSelectPackage = (pkg: Tariff) => {
     selectWizardPackage(pkg.name as PackageType);
-    setPreviewPkg(null);
     setShowSushkaOptions(false);
     onSushkaViewChange?.(false);
   };
@@ -191,6 +240,15 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
 
   const handleTouchEnd = () => {
     setIsDragging(false);
+    const now = Date.now();
+    if (now - lastTouchTimeRef.current < 300) {
+      if (zoomScale > 1) {
+        resetZoom();
+      } else {
+        setZoomScale(2);
+      }
+    }
+    lastTouchTimeRef.current = now;
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -202,9 +260,134 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
     }));
   };
 
+  const renderLightboxModal = () => {
+    if (!lightboxImage) return null;
+    return (
+      <div
+        className="fixed inset-0 z-[1000000] flex items-center justify-center bg-black/90 p-4 select-none"
+        onClick={() => setLightboxImage(null)}
+      >
+        {lightboxTitle && (
+          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 text-white font-bold text-xs sm:text-base bg-black/60 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 max-w-[65%] sm:max-w-[80%] truncate shadow-lg">
+            {lightboxTitle}
+          </div>
+        )}
+
+        {/* Hint when zoomed */}
+        {zoomScale > 1 && (
+          <div className="absolute top-6 right-20 z-10 hidden sm:flex items-center gap-1.5 text-xs text-white/80 bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10">
+            <span>🖐️</span> Перетягуйте мишкою або скрольте колесиком
+          </div>
+        )}
+
+        <div
+          className="relative w-full h-full flex items-center justify-center overflow-hidden touch-none"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onWheel={handleWheel}
+        >
+          <img
+            src={lightboxImage}
+            alt={lightboxTitle || "Flyer"}
+            style={{
+              transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoomScale})`,
+              transformOrigin: "center center",
+              cursor: zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
+              transition: isDragging ? "none" : "transform 0.15s ease-out",
+              maxHeight: "88vh",
+              maxWidth: "92vw",
+            }}
+            draggable={false}
+            className="object-contain select-none shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={() => {
+              if (zoomScale > 1) {
+                resetZoom();
+              } else {
+                setZoomScale(2);
+              }
+            }}
+          />
+        </div>
+
+        {/* Zoom Controls */}
+        <div 
+          className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1.5 sm:gap-3 bg-black/75 backdrop-blur-md rounded-full px-3.5 py-1.5 sm:px-6 sm:py-2.5 border border-white/20 shadow-2xl z-30 max-w-[95vw]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setZoomScale(prev => {
+                const next = Math.max(1, +(prev - 0.5).toFixed(1));
+                if (next === 1) setPan({ x: 0, y: 0 });
+                return next;
+              });
+            }}
+            disabled={zoomScale <= 1}
+            className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
+            title="Віддалити"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+          
+          <button
+            type="button"
+            onClick={resetZoom}
+            className="text-white hover:text-emerald-400 font-mono text-xs sm:text-sm px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-center min-w-[54px]"
+            title="Натисніть для скидання до 100%"
+          >
+            {Math.round(zoomScale * 100)}%
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setZoomScale(prev => Math.min(3, +(prev + 0.5).toFixed(1)));
+            }}
+            disabled={zoomScale >= 3}
+            className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
+            title="Наблизити"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </button>
+
+          {zoomScale > 1 && (
+            <button
+              type="button"
+              onClick={resetZoom}
+              className="ml-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded bg-emerald-950/60 border border-emerald-700/50"
+              title="Скинути зум і позицію"
+            >
+              Скинути
+            </button>
+          )}
+        </div>
+
+        {/* Close Button */}
+        <button
+          type="button"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 h-11 w-11 sm:h-12 sm:w-12 flex items-center justify-center rounded-full bg-black/60 sm:bg-white/10 text-white text-2xl sm:text-3xl hover:bg-white/25 active:scale-95 transition-all z-30 border border-white/20 backdrop-blur-md"
+          onClick={(e) => {
+            e.stopPropagation();
+            setLightboxImage(null);
+          }}
+          title="Закрити"
+        >
+          &times;
+        </button>
+      </div>
+    );
+  };
+
   // Intermediate screen for Sushka Light
   if (showSushkaOptions) {
-    const currentSlide = SUSHKA_INFO_SLIDES[activeSlideIndex];
+    const currentSlide = sushkaSlides[activeSlideIndex];
     const xsOption = sushkaOptions.find(o => o.name === "Sushka XS" || o.name.toLowerCase().endsWith("xs") || o.title.toLowerCase().endsWith("xs")) || sushkaOptions[0];
     const sOption = sushkaOptions.find(o => o.name === "Sushka S" || (o.name.toLowerCase().endsWith("s") && !o.name.toLowerCase().endsWith("xs")) || (o.title.toLowerCase().endsWith("s") && !o.title.toLowerCase().endsWith("xs"))) || sushkaOptions[1];
 
@@ -244,18 +427,19 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
         <div className="rounded-3xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md overflow-hidden">
           {/* Slide Category Tabs */}
           <div className="grid grid-cols-3 border-b border-gray-100 dark:border-slate-800 bg-gray-50/70 dark:bg-slate-950/50 p-2 gap-2 text-center">
-            {SUSHKA_INFO_SLIDES.map((slide, idx) => (
+            {sushkaSlides.map((slide, idx) => (
               <button
                 key={slide.id}
                 type="button"
                 onClick={() => setActiveSlideIndex(idx)}
-                className={`rounded-2xl py-2.5 px-3 text-xs sm:text-sm font-bold transition-all duration-200 ${
+                className={`rounded-2xl py-2.5 px-2 sm:px-3 text-xs sm:text-sm font-bold transition-all duration-200 ${
                   activeSlideIndex === idx
                     ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm"
                     : "text-gray-500 dark:text-slate-400 hover:text-gray-800 dark:hover:text-slate-200"
                 }`}
               >
-                <span className="hidden sm:inline mr-1">{idx + 1}.</span> {slide.badge}
+                <span className="sm:hidden">{slide.shortBadge}</span>
+                <span className="hidden sm:inline"><span className="mr-1">{idx + 1}.</span> {slide.badge}</span>
               </button>
             ))}
           </div>
@@ -351,8 +535,8 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
 
                 <button
                   type="button"
-                  disabled={activeSlideIndex === SUSHKA_INFO_SLIDES.length - 1}
-                  onClick={() => setActiveSlideIndex(prev => Math.min(SUSHKA_INFO_SLIDES.length - 1, prev + 1))}
+                  disabled={activeSlideIndex === sushkaSlides.length - 1}
+                  onClick={() => setActiveSlideIndex(prev => Math.min(sushkaSlides.length - 1, prev + 1))}
                   className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-xs sm:text-sm font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:hover:bg-slate-700 disabled:opacity-30 active:scale-95"
                 >
                   Наступний слайд →
@@ -398,63 +582,70 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
                 </div>
 
                 {/* Price Table Trigger with flyer thumbnail */}
-                <div
-                  className="group relative mb-5 h-44 w-full cursor-pointer rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 flex items-center justify-center"
-                  onClick={() => openLightbox("/images/sushka/prices-xs.jpg", "Ціни та знижки: Сушка XS")}
-                >
-                  <img
-                    src="/images/sushka/prices-xs.jpg"
-                    alt="Сушка XS ціни"
-                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20">
-                      🔍 Відкрити таблицю цін
-                    </span>
-                  </div>
-                </div>
+                {(() => {
+                  const xsFlyer = xsOption.imageUrl || "/images/sushka/prices-xs.jpg";
+                  return (
+                    <>
+                      <div
+                        className="group relative mb-5 h-44 w-full cursor-pointer rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 flex items-center justify-center"
+                        onClick={() => openLightbox(xsFlyer, "Ціни та знижки: Сушка XS")}
+                      >
+                        <img
+                          src={xsFlyer}
+                          alt="Сушка XS ціни"
+                          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20">
+                            🔍 Відкрити таблицю цін
+                          </span>
+                        </div>
+                      </div>
 
-                {/* Subscription discount note & direct anchor link */}
-                <div className="mb-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">🎟️</span>
-                      <p className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
-                        Знижки до -10% в абонементі
-                      </p>
-                    </div>
-                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">
-                      від 639 ₴/день
-                    </span>
-                  </div>
-                  <p className="text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
-                    Курс на 2 дні (тест-драйв -10%), 7 (-5%) або 14 днів (-10%) оформлюється зі знижкою через систему абонементів.
-                  </p>
-                  <Link
-                    href="/profile?tab=subscription&pkg=Sushka+XS#purchase-subscription"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
-                  >
-                    <span>Оформити абонемент Сушка XS зі знижкою →</span>
-                  </Link>
-                </div>
+                      {/* Subscription discount note & direct anchor link */}
+                      <div className="mb-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">🎟️</span>
+                            <p className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                              Знижки до -10% в абонементі
+                            </p>
+                          </div>
+                          <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">
+                            від 639 ₴/день
+                          </span>
+                        </div>
+                        <p className="text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
+                          Курс на 2 дні (тест-драйв -10%), 7 (-5%) або 14 днів (-10%) оформлюється зі знижкою через систему абонементів.
+                        </p>
+                        <Link
+                          href="/profile?tab=subscription&pkg=Sushka+XS#purchase-subscription"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
+                        >
+                          <span>Оформити абонемент Сушка XS зі знижкою →</span>
+                        </Link>
+                      </div>
 
-                {/* Actions */}
-                <div className="mt-auto flex flex-col gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => openLightbox("/images/sushka/prices-xs.jpg", "Ціни та знижки: Сушка XS")}
-                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
-                  >
-                    <span>📊</span> Переглянути офіційний флаєр цін
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectPackage(xsOption)}
-                    className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
-                  >
-                    Обрати Сушка XS (замовлення на день) →
-                  </button>
-                </div>
+                      {/* Actions */}
+                      <div className="mt-auto flex flex-col gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => openLightbox(xsFlyer, "Ціни та знижки: Сушка XS")}
+                          className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
+                        >
+                          <span>📊</span> Переглянути офіційний флаєр цін
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPackage(xsOption)}
+                          className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
+                        >
+                          Обрати Сушка XS (замовлення на день) →
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
 
@@ -482,189 +673,76 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
                 </div>
 
                 {/* Price Table Trigger with flyer thumbnail */}
-                <div
-                  className="group relative mb-5 h-44 w-full cursor-pointer rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 flex items-center justify-center"
-                  onClick={() => openLightbox("/images/sushka/prices-s.jpg", "Ціни та знижки: Сушка S")}
-                >
-                  <img
-                    src="/images/sushka/prices-s.jpg"
-                    alt="Сушка S ціни"
-                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20">
-                      🔍 Відкрити таблицю цін
-                    </span>
-                  </div>
-                </div>
+                {(() => {
+                  const sFlyer = sOption.imageUrl || "/images/sushka/prices-s.jpg";
+                  return (
+                    <>
+                      <div
+                        className="group relative mb-5 h-44 w-full cursor-pointer rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 flex items-center justify-center"
+                        onClick={() => openLightbox(sFlyer, "Ціни та знижки: Сушка S")}
+                      >
+                        <img
+                          src={sFlyer}
+                          alt="Сушка S ціни"
+                          className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20">
+                            🔍 Відкрити таблицю цін
+                          </span>
+                        </div>
+                      </div>
 
-                {/* Subscription discount note & direct anchor link */}
-                <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/30 p-4 flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-base">🎟️</span>
-                      <p className="text-xs sm:text-sm font-bold text-blue-900 dark:text-blue-200">
-                        Знижки до -10% в абонементі
-                      </p>
-                    </div>
-                    <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">
-                      від 693 ₴/день
-                    </span>
-                  </div>
-                  <p className="text-xs text-blue-800/90 dark:text-blue-300/80 leading-relaxed">
-                    Курс на 2 дні (тест-драйв -10%), 7 (-5%) або 14 днів (-10%) оформлюється зі знижкою через систему абонементів.
-                  </p>
-                  <Link
-                    href="/profile?tab=subscription&pkg=Sushka+S#purchase-subscription"
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
-                  >
-                    <span>Оформити абонемент Сушка S зі знижкою →</span>
-                  </Link>
-                </div>
+                      {/* Subscription discount note & direct anchor link */}
+                      <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/30 p-4 flex flex-col gap-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">🎟️</span>
+                            <p className="text-xs sm:text-sm font-bold text-blue-900 dark:text-blue-200">
+                              Знижки до -10% в абонементі
+                            </p>
+                          </div>
+                          <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">
+                            від 693 ₴/день
+                          </span>
+                        </div>
+                        <p className="text-xs text-blue-800/90 dark:text-blue-300/80 leading-relaxed">
+                          Курс на 2 дні (тест-драйв -10%), 7 (-5%) або 14 днів (-10%) оформлюється зі знижкою через систему абонементів.
+                        </p>
+                        <Link
+                          href="/profile?tab=subscription&pkg=Sushka+S#purchase-subscription"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
+                        >
+                          <span>Оформити абонемент Сушка S зі знижкою →</span>
+                        </Link>
+                      </div>
 
-                {/* Actions */}
-                <div className="mt-auto flex flex-col gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => openLightbox("/images/sushka/prices-s.jpg", "Ціни та знижки: Сушка S")}
-                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
-                  >
-                    <span>📊</span> Переглянути офіційний флаєр цін
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleSelectPackage(sOption)}
-                    className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
-                  >
-                    Обрати Сушка S (замовлення на день) →
-                  </button>
-                </div>
+                      {/* Actions */}
+                      <div className="mt-auto flex flex-col gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => openLightbox(sFlyer, "Ціни та знижки: Сушка S")}
+                          className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
+                        >
+                          <span>📊</span> Переглянути офіційний флаєр цін
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectPackage(sOption)}
+                          className="w-full rounded-2xl bg-blue-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-blue-700 active:scale-95 transition-all text-center"
+                        >
+                          Обрати Сушка S (замовлення на день) →
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
             )}
           </div>
         </div>
 
-        {/* Lightbox Modal for any slide or flyer */}
-        {lightboxImage && (
-          <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 select-none"
-            onClick={() => setLightboxImage(null)}
-          >
-            {lightboxTitle && (
-              <div className="absolute top-6 left-6 z-10 text-white font-bold text-sm sm:text-base bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 max-w-[80%] truncate shadow-lg">
-                {lightboxTitle}
-              </div>
-            )}
-
-            {/* Hint when zoomed */}
-            {zoomScale > 1 && (
-              <div className="absolute top-6 right-20 z-10 hidden sm:flex items-center gap-1.5 text-xs text-white/80 bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10">
-                <span>🖐️</span> Перетягуйте мишкою або скрольте колесиком
-              </div>
-            )}
-
-            <div
-              className="relative w-full h-full flex items-center justify-center overflow-hidden"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onMouseLeave={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onWheel={handleWheel}
-            >
-              <img
-                src={lightboxImage}
-                alt={lightboxTitle || "Sushka flyer"}
-                style={{
-                  transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoomScale})`,
-                  transformOrigin: "center center",
-                  cursor: zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
-                  transition: isDragging ? "none" : "transform 0.15s ease-out",
-                  maxHeight: "88vh",
-                  maxWidth: "92vw",
-                }}
-                draggable={false}
-                className="object-contain select-none shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-                onDoubleClick={() => {
-                  if (zoomScale > 1) {
-                    resetZoom();
-                  } else {
-                    setZoomScale(2);
-                  }
-                }}
-              />
-            </div>
-
-            {/* Zoom Controls */}
-            <div 
-              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 bg-black/60 backdrop-blur-md rounded-full px-4 py-2 sm:px-6 sm:py-2.5 border border-white/20 shadow-2xl z-20"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  setZoomScale(prev => {
-                    const next = Math.max(1, +(prev - 0.5).toFixed(1));
-                    if (next === 1) setPan({ x: 0, y: 0 });
-                    return next;
-                  });
-                }}
-                disabled={zoomScale <= 1}
-                className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
-                title="Віддалити"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-              </button>
-              
-              <button
-                type="button"
-                onClick={resetZoom}
-                className="text-white hover:text-emerald-400 font-mono text-xs sm:text-sm px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-center min-w-[54px]"
-                title="Натисніть для скидання до 100%"
-              >
-                {Math.round(zoomScale * 100)}%
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setZoomScale(prev => Math.min(3, +(prev + 0.5).toFixed(1)));
-                }}
-                disabled={zoomScale >= 3}
-                className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
-                title="Наблизити"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-              </button>
-
-              {zoomScale > 1 && (
-                <button
-                  type="button"
-                  onClick={resetZoom}
-                  className="ml-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded bg-emerald-950/60 border border-emerald-700/50"
-                  title="Скинути зум і позицію"
-                >
-                  Скинути
-                </button>
-              )}
-            </div>
-
-            {/* Close Button */}
-            <button
-              type="button"
-              className="absolute top-6 right-6 h-12 w-12 flex items-center justify-center rounded-full bg-white/10 text-white text-3xl hover:bg-white/25 transition-colors"
-              onClick={(e) => {
-                e.stopPropagation();
-                setLightboxImage(null);
-              }}
-            >
-              &times;
-            </button>
-          </div>
-        )}
+        {renderLightboxModal()}
       </div>
     );
   }
@@ -674,46 +752,103 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
       key={1}
       className="w-full max-w-6xl mx-auto transition-opacity duration-300 ease-out motion-reduce:transition-none"
     >
-      <h2 className="mb-10 text-3xl font-black text-gray-900 dark:text-slate-100 text-center">Оберіть тариф</h2>
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl sm:text-4xl font-black text-gray-900 dark:text-slate-100">
+          Оберіть свій раціон
+        </h2>
+        <p className="mt-2 text-sm sm:text-base text-gray-500 dark:text-slate-400 max-w-xl mx-auto">
+          Свіже та збалансоване харчування на кожен день. Оберіть готову програму або складіть власний раціон.
+        </p>
+
+        {/* General Info Buttons */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 mt-5">
+          <button
+            type="button"
+            onClick={() => openLightbox(overviewFlyer, "Огляд програм Balance Food та розрахунок калоражу")}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs sm:text-sm font-bold text-gray-700 dark:text-slate-300 shadow-sm hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition active:scale-95"
+          >
+            <span>📋</span>
+            <span>Огляд програм та калоражу</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => openLightbox(extraCaloriesFlyer, "Раціони понад 2500 ккал (+35 грн/100 ккал)")}
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs sm:text-sm font-bold text-gray-700 dark:text-slate-300 shadow-sm hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition active:scale-95"
+          >
+            <span>⚡</span>
+            <span>Раціони понад 2500 ккал (+35 ₴ / 100 ккал)</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {sortedMainItems.map((item) => {
           if ("type" in item && item.type === "sushka-folder") {
             return (
               <div
                 key="sushka-folder"
-                className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
-                  selectedPackage?.includes("Sushka") ? "border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
-                }`}
+                className="w-full flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-3xl border border-emerald-200/80 dark:border-emerald-900/40 shadow-sm hover:shadow-md transition-all p-6 sm:p-7"
               >
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                      🔥 Експрес-програма
+                    </span>
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-slate-100 mt-2">
+                      Сушка «Light»
+                    </h3>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                      XS (3 прийоми) та S (4 прийоми)
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase">Базова ціна</p>
+                    <p className="text-2xl font-black text-emerald-600">
+                      {sushkaPriceRange ? `від ${sushkaPriceRange.split("–")[0]}` : "від 710 ₴"}
+                    </p>
+                  </div>
+                </div>
+
                 <div 
-                  className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950 cursor-pointer"
+                  className="group relative mb-5 h-44 w-full overflow-hidden bg-slate-950/5 dark:bg-slate-950 rounded-2xl border border-gray-200 dark:border-slate-800 cursor-pointer flex items-center justify-center"
                   onClick={openSushka}
                 >
                   <img 
-                    src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800" 
+                    src={forWhomSlide} 
                     alt="Сушка Light програма" 
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute top-3 right-3">
-                    <span className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-md">
-                      🔥 Експрес
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20">
+                      🔍 Відкрити презентацію Сушки
                     </span>
                   </div>
                 </div>
-                <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
-                  <div>
-                    <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Сушка «Light»</h3>
-                    <p className="mt-2 text-base text-gray-500 dark:text-slate-400">Експрес-програма: XS (3 прийоми) та S (4 прийоми)</p>
-                    <p className="text-xl font-extrabold text-emerald-600 mt-4">
-                      {sushkaPriceRange ? `від ${sushkaPriceRange.split("–")[0]} / день` : "від 710 ₴ / день"}
-                    </p>
+
+                <div className="mb-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🎟️</span>
+                      <p className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                        Знижки до -10% в абонементі
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">
+                      від 639 ₴/день
+                    </span>
                   </div>
+                  <p className="text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
+                    Спеціалізоване білкове меню для виразного рельєфу та швидкого старту схуднення.
+                  </p>
+                </div>
+
+                <div className="mt-auto flex flex-col gap-2.5">
                   <button
                     type="button"
                     onClick={openSushka}
-                    className="mt-auto w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700 active:scale-95"
+                    className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
                   >
-                    Переглянути програму →
+                    Переглянути деталі та тарифи →
                   </button>
                 </div>
               </div>
@@ -721,44 +856,175 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
           }
 
           const pkg = item as Tariff;
-          const active = selectedPackage === pkg.name;
+          const rationMeta = RATION_FLYERS[pkg.name];
+          const flyerUrl = pkg.imageUrl || rationMeta?.flyer;
+
+          if (pkg.name.toLowerCase().includes("indiv")) {
+            return (
+              <div
+                key={pkg.id}
+                className="w-full flex flex-col rounded-3xl border border-purple-200/80 dark:border-purple-900/40 bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-sm transition hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <span className="rounded-full bg-purple-100 dark:bg-purple-950/60 px-3 py-1 text-xs font-bold text-purple-800 dark:text-purple-300">
+                      Індивідуальний підбір
+                    </span>
+                    <h3 className="text-2xl font-black text-gray-900 dark:text-slate-100 mt-2">
+                      {pkg.title}
+                    </h3>
+                    <p className="text-sm font-bold text-purple-600 dark:text-purple-400">
+                      {pkg.kcal}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase">Ціна</p>
+                    <p className="text-xl font-black text-purple-600">
+                      Індивідуально
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-5 rounded-2xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/70 dark:bg-purple-950/30 p-4 flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🥗</span>
+                    <p className="text-xs sm:text-sm font-bold text-purple-900 dark:text-purple-200">
+                      Гнучкий раціон під ваші цілі
+                    </p>
+                  </div>
+                  <p className="text-xs text-purple-800/90 dark:text-purple-300/80 leading-relaxed">
+                    Складайте власний щоденний раціон (до 10 страв). Розраховуємо персональний калораж та добір понад 2500 ккал (+35 ₴ за 100 ккал).
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(overviewFlyer, "Огляд програм Balance Food та калоражу")}
+                      className="text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 hover:bg-purple-200 dark:hover:bg-purple-800 px-2.5 py-1 rounded-lg transition"
+                    >
+                      📋 Розрахунок калоражу →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openLightbox(extraCaloriesFlyer, "Раціони понад 2500 ккал (+35 грн/100 ккал)")}
+                      className="text-[11px] font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/60 hover:bg-purple-200 dark:hover:bg-purple-800 px-2.5 py-1 rounded-lg transition"
+                    >
+                      ⚡ Понад 2500 ккал →
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-auto flex flex-col gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectPackage(pkg)}
+                    className="w-full rounded-2xl bg-purple-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-purple-700 active:scale-95 transition-all text-center"
+                  >
+                    Обрати Індивідуальний раціон →
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
           return (
             <div
               key={pkg.id}
-              className={`w-full max-w-sm mx-auto flex flex-col overflow-hidden bg-white dark:bg-slate-900 rounded-2xl border transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
-                active ? "border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
-              }`}
+              className="w-full flex flex-col rounded-3xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-sm transition hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-700"
             >
-              <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
-                {pkg.previewImageUrl && (
-                  <img
-                    src={pkg.previewImageUrl}
-                    alt={pkg.title}
-                    className="h-full w-full object-contain"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-4 p-6 md:p-8">
+              <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100 break-words line-clamp-2">{pkg.title}</h3>
-                  <p className="mt-2 text-base text-gray-500 dark:text-slate-400">{pkg.kcal}</p>
-                  <p className="text-xl font-extrabold text-emerald-600 mt-4">
-                    {pkg.name === "Indiv" ? (
-                      <span className="font-semibold text-emerald-600">Індивідуально</span>
-                    ) : (
-                      pkg.price
-                    )}
+                  <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/60 px-3 py-1 text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                    {rationMeta?.mealsCount || "Комплексний раціон"}
+                  </span>
+                  <h3 className="text-2xl font-black text-gray-900 dark:text-slate-100 mt-2">
+                    {pkg.title}
+                  </h3>
+                  <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                    {pkg.kcal}
                   </p>
                 </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-400 dark:text-slate-500 font-bold uppercase">Базова ціна</p>
+                  <p className="text-2xl font-black text-emerald-600">
+                    {pkg.price}
+                  </p>
+                </div>
+              </div>
+
+              {/* Price Table Trigger with flyer thumbnail */}
+              {flyerUrl && (
+                <div
+                  className="group relative mb-4 h-44 w-full cursor-pointer rounded-2xl overflow-hidden bg-slate-950/5 dark:bg-slate-950 border border-gray-200 dark:border-slate-800 flex items-center justify-center"
+                  onClick={() => openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`)}
+                >
+                  <img
+                    src={flyerUrl}
+                    alt={`${pkg.title} ціни`}
+                    className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-900/85 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20">
+                      🔍 Відкрити таблицю цін
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Special Sport extra calories callout */}
+              {pkg.name === "Sport" && (
                 <button
                   type="button"
-                  onClick={() => setPreviewPkg(pkg)}
-                  className="mt-auto w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700"
+                  onClick={() => openLightbox(extraCaloriesFlyer, "Раціони понад 2500 ккал (+35 грн/100 ккал)")}
+                  className="mb-4 w-full rounded-xl border border-amber-200 dark:border-amber-800/60 bg-amber-50/80 dark:bg-amber-950/30 px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition flex items-center justify-center gap-1.5 text-center"
                 >
-                  Обрати
+                  <span>⚡</span>
+                  <span>Потрібно понад 2500 ккал? +35 ₴ за кожні 100 ккал →</span>
+                </button>
+              )}
+
+              {/* Subscription discount note & direct anchor link */}
+              <div className="mb-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base">🎟️</span>
+                    <p className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                      Знижки до -15% в абонементі
+                    </p>
+                  </div>
+                  {rationMeta?.minPriceDay && (
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">
+                      {rationMeta.minPriceDay}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
+                  Курс на 2 дні (пробний -15%), 7 (-5%), 14 (-10%) або 30 днів (-15%) оформлюється зі знижкою через систему абонементів.
+                </p>
+                <Link
+                  href={`/profile?tab=subscription&pkg=${encodeURIComponent(pkg.name)}#purchase-subscription`}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
+                >
+                  <span>Оформити абонемент {pkg.title} зі знижкою →</span>
+                </Link>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-auto flex flex-col gap-2.5">
+                {flyerUrl && (
+                  <button
+                    type="button"
+                    onClick={() => openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`)}
+                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
+                  >
+                    <span>📊</span> Переглянути офіційний флаєр цін
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleSelectPackage(pkg)}
+                  className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
+                >
+                  Обрати {pkg.title} (замовлення на день) →
                 </button>
               </div>
             </div>
@@ -766,68 +1032,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) 
         })}
       </div>
 
-      {/* Preview Modal */}
-      {previewPkg && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          onClick={() => setPreviewPkg(null)}
-        >
-          <div
-            className="relative w-full max-w-2xl max-h-[90dvh] overflow-y-auto rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-6 text-3xl font-bold text-gray-900 dark:text-slate-100 break-words">{previewPkg.title}</h2>
-
-            {previewPkg.imageUrl ? (
-              <div className="mb-6 overflow-hidden rounded-2xl bg-gray-50 dark:bg-slate-950">
-                <img
-                  src={previewPkg.imageUrl}
-                  alt={previewPkg.title}
-                  className="w-full max-h-[50dvh] object-contain"
-                />
-              </div>
-            ) : (
-              <div className="mb-6 flex h-64 items-center justify-center rounded-2xl bg-gray-50 dark:bg-slate-950">
-                <p className="text-gray-500 dark:text-slate-400">Зображення відсутнє</p>
-              </div>
-            )}
-
-            <div className="mb-8 grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-gray-50 dark:bg-slate-950 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Калорійність</p>
-                <p className="text-lg font-bold text-gray-900 dark:text-slate-100">{previewPkg.kcal}</p>
-              </div>
-              <div className="rounded-2xl bg-gray-50 dark:bg-slate-950 p-4">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Ціна</p>
-                <p className="text-lg font-bold text-emerald-600">
-                  {previewPkg.name === "Indiv" ? (
-                    <span className="font-semibold text-emerald-600">Індивідуально</span>
-                  ) : (
-                    previewPkg.price
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <button
-                type="button"
-                onClick={() => setPreviewPkg(null)}
-                className="flex-1 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-4 text-lg font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950"
-              >
-                🔙 Назад
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectPackage(previewPkg)}
-                className="flex-1 rounded-xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700"
-              >
-                ✅ Обрати тариф
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {renderLightboxModal()}
     </div>
   );
 }

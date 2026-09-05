@@ -21,9 +21,15 @@ type Tariff = {
   imageUrl: string | null;
 };
 
+type PromoItem = {
+  key: string;
+  url: string;
+};
+
 type Props = {
   menuItems: MenuItem[];
   tariffs: Tariff[];
+  promoMaterials?: PromoItem[];
   orderingMode?: "AUTO" | "FORCE_OPEN" | "FORCE_CLOSED";
   orderingCustomMessage?: string;
 };
@@ -31,6 +37,7 @@ type Props = {
 export default function OrderWizard({
   menuItems,
   tariffs,
+  promoMaterials,
   orderingMode = "AUTO",
   orderingCustomMessage = "",
 }: Props) {
@@ -139,7 +146,11 @@ export default function OrderWizard({
               </div>
             </>
           )}
-          <PackageSelector tariffs={tariffs} onSushkaViewChange={setIsSushkaView} />
+          <PackageSelector
+            tariffs={tariffs}
+            promoMaterials={promoMaterials}
+            onSushkaViewChange={setIsSushkaView}
+          />
 
           {cartItems.length > 0 && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm">
@@ -193,6 +204,6 @@ export default function OrderWizard({
         </div>
       );
     default:
-      return <PackageSelector tariffs={tariffs} />;
+      return <PackageSelector tariffs={tariffs} promoMaterials={promoMaterials} />;
   }
 }

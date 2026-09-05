@@ -1,7 +1,8 @@
 export type PackageDuration = number;
 
 export function getDiscountForPackage(packageId: string, days: number): number {
-  const isSushka = packageId.toLowerCase().includes('sushka');
+  const lower = packageId.toLowerCase();
+  const isSushka = lower.includes('sushka') || lower.includes('сушка');
 
   if (isSushka) {
     if (days === 2) return 0.10; // 10% for Sushka 2-day trial

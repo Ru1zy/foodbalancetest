@@ -19,7 +19,7 @@ test("getDiscountForPackage returns correct percentages for standard packages", 
 test("getDiscountForPackage returns correct percentages for Sushka packages", () => {
   const pkg = "Sushka S";
   assert.equal(getDiscountForPackage(pkg, 1), 0);
-  assert.equal(getDiscountForPackage(pkg, 2), 0.10); // Trial for Sushka
+  assert.equal(getDiscountForPackage(pkg, 2), 0.10); // Trial for Sushka (10%, not 15%)
   assert.equal(getDiscountForPackage(pkg, 3), 0);
   assert.equal(getDiscountForPackage(pkg, 6), 0);
   assert.equal(getDiscountForPackage(pkg, 7), 0.05);
@@ -28,6 +28,10 @@ test("getDiscountForPackage returns correct percentages for Sushka packages", ()
   assert.equal(getDiscountForPackage(pkg, 29), 0.10);
   assert.equal(getDiscountForPackage(pkg, 30), 0.10); // Sushka max is 10%
   assert.equal(getDiscountForPackage(pkg, 31), 0.10);
+
+  // Cyrillic variant
+  assert.equal(getDiscountForPackage("Сушка XS", 2), 0.10);
+  assert.equal(getDiscountForPackage("Сушка S", 14), 0.10);
 });
 
 test("calculateSubscriptionPrice rounds correctly and computes totals", () => {
