@@ -603,33 +603,53 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               return (
                 <div className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300">
                   <div
-                    className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
-                    onClick={() => openLightbox(xsFlyer, "Ціни та знижки: Сушка XS")}
+                    className="group relative h-60 sm:h-64 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                    onClick={() => openLightbox(xsPreview, "Сушка XS (1200–1300 ккал) • приклад страв")}
                   >
+                    {/* Ambient blurred backdrop so any aspect ratio fits seamlessly */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      <img
+                        src={xsPreview}
+                        alt=""
+                        aria-hidden="true"
+                        className="h-full w-full object-cover blur-xl scale-125 opacity-35 dark:opacity-30 select-none"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                    </div>
+
+                    {/* Uncropped, centered full meal photo */}
                     <img
                       src={xsPreview}
                       alt="Сушка XS"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="relative z-10 h-full w-auto max-w-full object-contain p-2.5 drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
-                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
+
+                    <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                       3 прийоми їжі
                     </div>
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                    <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                       <span className="text-xs font-black text-white">{xsOption.price}</span>{" "}
                       <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openLightbox(xsFlyer, "Ціни та знижки: Сушка XS");
-                      }}
-                      className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
-                    >
-                      <span>🔍</span>
-                      <span>Таблиця цін</span>
-                    </button>
+
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                      <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-white/90 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                        <span>🔍</span>
+                        <span>Фото страв</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openLightbox(xsFlyer, "Ціни та знижки: Сушка XS");
+                        }}
+                        className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[10px] sm:text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                      >
+                        <span>📋</span>
+                        <span>Таблиця цін</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
@@ -676,33 +696,53 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               return (
                 <div className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-blue-400/50 dark:hover:border-blue-500/40 transition-all duration-300">
                   <div
-                    className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
-                    onClick={() => openLightbox(sFlyer, "Ціни та знижки: Сушка S")}
+                    className="group relative h-60 sm:h-64 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                    onClick={() => openLightbox(sPreview, "Сушка S (1500–1600 ккал) • приклад страв")}
                   >
+                    {/* Ambient blurred backdrop so any aspect ratio fits seamlessly */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                      <img
+                        src={sPreview}
+                        alt=""
+                        aria-hidden="true"
+                        className="h-full w-full object-cover blur-xl scale-125 opacity-35 dark:opacity-30 select-none"
+                      />
+                      <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                    </div>
+
+                    {/* Uncropped, centered full meal photo */}
                     <img
                       src={sPreview}
                       alt="Сушка S"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="relative z-10 h-full w-auto max-w-full object-contain p-2.5 drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
-                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-blue-300 shadow-sm">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
+
+                    <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-blue-300 shadow-sm">
                       4 прийоми їжі
                     </div>
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                    <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                       <span className="text-xs font-black text-white">{sOption.price}</span>{" "}
                       <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openLightbox(sFlyer, "Ціни та знижки: Сушка S");
-                      }}
-                      className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-blue-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
-                    >
-                      <span>🔍</span>
-                      <span>Таблиця цін</span>
-                    </button>
+
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                      <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-white/90 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                        <span>🔍</span>
+                        <span>Фото страв</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openLightbox(sFlyer, "Ціни та знижки: Сушка S");
+                        }}
+                        className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/70 hover:bg-blue-600 backdrop-blur-md border border-white/20 text-[10px] sm:text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                      >
+                        <span>📋</span>
+                        <span>Таблиця цін</span>
+                      </button>
+                    </div>
                   </div>
 
                   <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
@@ -793,27 +833,47 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               >
                 {/* Top visual banner */}
                 <div
-                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                  className="group relative h-60 sm:h-64 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
                   onClick={openSushka}
                 >
+                  {/* Ambient blurred backdrop so any aspect ratio fits seamlessly */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <img
+                      src="/images/meals/sushka-xs-meals.jpg"
+                      alt=""
+                      aria-hidden="true"
+                      className="h-full w-full object-cover blur-xl scale-125 opacity-35 dark:opacity-30 select-none"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                  </div>
+
+                  {/* Uncropped, centered full meal photo */}
                   <img
                     src="/images/meals/sushka-xs-meals.jpg"
                     alt="Сушка Light програма"
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="relative z-10 h-full w-auto max-w-full object-contain p-2.5 drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
+
+                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                     🔥 Експрес-програма
                   </div>
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                     <span className="text-xs font-black text-white">
                       {sushkaPriceRange ? `від ${sushkaPriceRange.split("–")[0]}` : "від 710 ₴"}
                     </span>{" "}
                     <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                   </div>
-                  <div className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 backdrop-blur-md border border-emerald-500/30 text-[11px] font-semibold text-emerald-200 opacity-95 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
-                    <span>Деталі та тарифи</span>
-                    <span>→</span>
+
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                    <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-white/90 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                      <span>🥗</span>
+                      <span>3–4 прийоми</span>
+                    </div>
+                    <div className="px-2.5 py-1 rounded-lg bg-emerald-950/85 backdrop-blur-md border border-emerald-500/30 text-[10px] sm:text-[11px] font-semibold text-emerald-200 opacity-95 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                      <span>Деталі та тарифи</span>
+                      <span>→</span>
+                    </div>
                   </div>
                 </div>
 
@@ -865,34 +925,47 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               >
                 {/* Top visual banner */}
                 <div
-                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-purple-900/30"
-                  onClick={() => openLightbox(overviewFlyer, "Огляд програм Balance Food та калоражу")}
+                  className="group relative h-60 sm:h-64 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-purple-900/30"
+                  onClick={() => openLightbox(indivPreview, "Індивідуальний раціон • приклад страв")}
                 >
+                  {/* Ambient blurred backdrop so any aspect ratio fits seamlessly */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <img
+                      src={indivPreview}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-full w-full object-cover blur-xl scale-125 opacity-35 dark:opacity-30 select-none"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                  </div>
+
+                  {/* Uncropped, centered full meal photo */}
                   <img
                     src={indivPreview}
                     alt={pkg.title}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="relative z-10 h-full w-auto max-w-full object-contain p-2.5 drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-purple-300 shadow-sm">
+                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-purple-300 shadow-sm">
                     🌟 Персональний
                   </div>
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                     <span className="text-xs font-black text-white">За меню</span>
                   </div>
 
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-purple-200 drop-shadow-sm">
-                      🥗 Конструктор (1–10 страв)
-                    </span>
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                    <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-purple-200 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                      <span>🔍</span>
+                      <span>Фото страв</span>
+                    </div>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         openLightbox(overviewFlyer, "Огляд програм Balance Food та калоражу");
                       }}
-                      className="px-2 py-1 rounded-lg bg-purple-900/80 hover:bg-purple-700 backdrop-blur-md border border-purple-300/30 text-[11px] font-semibold text-purple-100 transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                      className="pointer-events-auto px-2 py-1 rounded-lg bg-purple-900/80 hover:bg-purple-700 backdrop-blur-md border border-purple-300/30 text-[10px] sm:text-[11px] font-semibold text-purple-100 transition-all flex items-center gap-1 shadow-sm active:scale-95"
                     >
                       <span>📋</span>
                       <span>Калораж</span>
@@ -942,36 +1015,55 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               {/* Top visual banner */}
               {previewUrl && (
                 <div
-                  className="group relative h-48 sm:h-52 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
-                  onClick={() => flyerUrl && openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`)}
+                  className="group relative h-60 sm:h-64 w-full cursor-pointer overflow-hidden bg-slate-950 flex items-center justify-center border-b border-gray-100 dark:border-slate-800/80"
+                  onClick={() => openLightbox(previewUrl, `Раціон: ${pkg.title} • приклад страв щоденної доставки`)}
                 >
+                  {/* Ambient blurred backdrop so any aspect ratio fits seamlessly */}
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <img
+                      src={previewUrl}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-full w-full object-cover blur-xl scale-125 opacity-35 dark:opacity-30 select-none"
+                    />
+                    <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                  </div>
+
+                  {/* Uncropped, centered full meal photo */}
                   <img
                     src={previewUrl}
                     alt={`${pkg.title} раціон`}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="relative z-10 h-full w-auto max-w-full object-contain p-2.5 drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
+                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                     {rationMeta?.mealsBadge || "4 прийоми їжі"}
                   </div>
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                     <span className="text-xs font-black text-white">{pkg.price}</span>{" "}
                     <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                   </div>
-                  {flyerUrl && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`);
-                      }}
-                      className="absolute bottom-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
-                    >
+
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                    <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-white/90 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
                       <span>🔍</span>
-                      <span>Таблиця цін</span>
-                    </button>
-                  )}
+                      <span>Фото страв</span>
+                    </div>
+                    {flyerUrl && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`);
+                        }}
+                        className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[10px] sm:text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                      >
+                        <span>📋</span>
+                        <span>Таблиця цін</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -1052,17 +1144,29 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               onClick={() => openLightbox(item.image, item.title)}
               className="group cursor-pointer flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300"
             >
-              <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+              <div className="relative h-60 sm:h-64 w-full overflow-hidden bg-slate-950 flex items-center justify-center">
+                {/* Ambient blurred backdrop so any aspect ratio fits seamlessly */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                  <img
+                    src={item.image}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full object-cover blur-xl scale-125 opacity-35 dark:opacity-30 select-none"
+                  />
+                  <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px]" />
+                </div>
+
+                {/* Uncropped, centered full photo */}
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="relative z-10 h-full w-auto max-w-full object-contain p-2.5 drop-shadow-xl transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
-                <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent pointer-events-none z-10" />
+                <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
                   {item.tag}
                 </div>
-                <div className="absolute bottom-2.5 right-2.5 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-semibold text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                <div className="absolute bottom-2.5 right-2.5 z-20 px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] font-semibold text-white/90 opacity-90 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
                   <span>🔍</span>
                   <span>Збільшити</span>
                 </div>
