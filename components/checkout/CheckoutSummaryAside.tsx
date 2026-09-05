@@ -109,7 +109,13 @@ export function CheckoutSummaryAside({
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-black text-slate-900 dark:text-slate-100">
-                      {itemIndiv && item.unitPrice === 0 ? "Інд. ціна" : `${item.unitPrice * item.quantity} ₴`}
+                      {itemIndiv ? (
+                        <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
+                          Розрахунок менеджером
+                        </span>
+                      ) : (
+                        `${item.unitPrice * item.quantity} ₴`
+                      )}
                     </div>
                   </div>
                 </div>
@@ -181,12 +187,14 @@ export function CheckoutSummaryAside({
               <div className="flex items-center justify-between gap-3">
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{selectedPackageRaw ?? "Оберіть раціон"}</span>
                 <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-                  {fiatPrice === 0 && balanceDaysToUse > 0 ? (
+                  {isIndivCurrent ? (
+                    <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
+                      Розрахунок менеджером
+                    </span>
+                  ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
                     "0 ₴"
                   ) : fiatPrice > 0 ? (
                     `${fiatPrice} ₴`
-                  ) : isIndivCurrent ? (
-                    "0 ₴"
                   ) : (
                     "—"
                   )}
@@ -252,11 +260,21 @@ export function CheckoutSummaryAside({
       </button>
 
       {/* Grand Total */}
-      {(cartItems.length > 0 || (currentDraftValid && grandGrossTotal > 0)) && (
+      {(cartItems.length > 0 || currentDraftValid) && (
         <div className="mt-6 flex items-center justify-between rounded-2xl bg-slate-900 dark:bg-slate-800 px-5 py-4 shadow-lg">
           <span className="text-base font-semibold text-white">До сплати</span>
           <span className="text-2xl font-black text-emerald-400">
-            {grandGrossTotal > 0 ? `${grandGrossTotal} ₴` : "—"}
+            {hasIndivInCart || isIndivCurrent ? (
+              grandGrossTotal > 0 ? (
+                <span className="text-base font-bold text-emerald-400">{grandGrossTotal} ₴ + Інд.</span>
+              ) : (
+                <span className="text-sm sm:text-base font-bold text-blue-400">Уточнюється менеджером</span>
+              )
+            ) : grandGrossTotal > 0 ? (
+              `${grandGrossTotal} ₴`
+            ) : (
+              "—"
+            )}
           </span>
         </div>
       )}

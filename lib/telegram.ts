@@ -344,13 +344,21 @@ export async function sendOrderNotification(
     `👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone)})`,
     `📦 <b>Пакет:</b> ${escapeHtml(order.packageType)}`,
     `💵 <b>Сума:</b> ${
-      order.price != null && order.price > 0
-        ? `${order.price} ₴`
-        : order.balanceDaysUsed && order.balanceDaysUsed > 0
-          ? `${order.balanceDaysUsed} дн. з абонементу`
-          : "Індивідуально"
+      isIndivPackage(order.packageType)
+        ? "Індивідуальний розрахунок (уточнюється менеджером за калоражем)"
+        : order.price != null && order.price > 0
+          ? `${order.price} ₴`
+          : order.balanceDaysUsed && order.balanceDaysUsed > 0
+            ? `${order.balanceDaysUsed} дн. з абонементу`
+            : "Індивідуально"
     }`,
-    `💰 <b>Спосіб оплати:</b> ${order.paymentMethod === 'bank_transfer' ? 'Переказ (IBAN)' : (order.paymentMethod === 'plata' ? 'Plata' : (order.paymentMethod === 'cash' ? 'Готівкою' : order.paymentMethod))}`,
+    `💰 <b>Спосіб оплати:</b> ${
+      isIndivPackage(order.packageType)
+        ? "Після зв'язку з менеджером"
+        : order.paymentMethod === 'bank_transfer'
+          ? 'Переказ (IBAN)'
+          : (order.paymentMethod === 'plata' ? 'Plata' : (order.paymentMethod === 'cash' ? 'Готівкою' : order.paymentMethod))
+    }`,
     order.receiptUrl ? `🧾 <b>Квитанція:</b> <a href="${order.receiptUrl}">Переглянути</a>` : null,
     `📍 <b>Адреса:</b> ${escapeHtml(user.address || "Не вказано")}`,
     `🍴 <b>Прибори:</b> ${escapeHtml(order.cutlery?.toString() || "Не вказано")}`,

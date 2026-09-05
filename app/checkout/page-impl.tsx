@@ -394,6 +394,15 @@ export default function CheckoutPageImpl({
     [cartItems],
   );
 
+  // Indiv packages are settled offline with manager; default to "cash"
+  useEffect(() => {
+    if (hasIndivInCart || isIndivCurrent) {
+      if (paymentMethod !== "cash") {
+        setPaymentMethod("cash");
+      }
+    }
+  }, [hasIndivInCart, isIndivCurrent, paymentMethod]);
+
   const cartCopiesCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + item.quantity, 0),
     [cartItems],

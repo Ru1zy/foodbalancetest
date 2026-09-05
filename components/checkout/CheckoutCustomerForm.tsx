@@ -78,7 +78,26 @@ export function CheckoutCustomerForm({
       <div className="mb-8 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-6">
         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
 
-        {fiatPrice === 0 ? (
+        {hasIndivInCart || isIndivCurrent ? (
+          <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-5">
+            <div className="flex items-center gap-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-lg shadow-sm">
+                📞
+              </span>
+              <div>
+                <span className="font-bold text-base text-blue-950 dark:text-blue-100">
+                  Оплата після узгодження з менеджером
+                </span>
+                <span className="ml-2 rounded-full bg-blue-200/70 dark:bg-blue-800/60 px-2 py-0.5 text-[11px] font-bold text-blue-800 dark:text-blue-200">
+                  Тариф «Індивідуальний»
+                </span>
+              </div>
+            </div>
+            <p className="mt-1 text-sm leading-relaxed text-blue-900 dark:text-blue-200 pl-12">
+              У тарифі «Індивідуальний» вартість розраховується окремо залежно від підсумкового калоражу та об&apos;єму порцій. Наш менеджер зв&apos;яжеться з вами для уточнення деталей та узгодження фінальної суми.
+            </p>
+          </div>
+        ) : fiatPrice === 0 ? (
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4">
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">

@@ -253,7 +253,7 @@ async function main() {
     { name: "Sport", title: "Sport Active+", kcal: "2200–2400 ккал", price: "850 ₴", basePrice: 850, imageUrl: "" },
     { name: "Sushka XS", title: "Сушка XS", kcal: "1200–1300 ккал", price: "710 ₴", basePrice: 710, imageUrl: "" },
     { name: "Sushka S", title: "Сушка S", kcal: "1500–1600 ккал", price: "770 ₴", basePrice: 770, imageUrl: "" },
-    { name: "Indiv", title: "Індивідуальний", kcal: "За вашим планом", price: "200 ₴ / страва", basePrice: 200, imageUrl: "" },
+    { name: "Indiv", title: "Індивідуальний", kcal: "За вашим планом", price: "Індивідуально", basePrice: 0, imageUrl: "" },
   ];
 
   for (const tariff of tariffs) {
