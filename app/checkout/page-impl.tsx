@@ -102,10 +102,20 @@ export default function CheckoutPageImpl({
   const [isUploading, setIsUploading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const normalizedPhone = sanitizeTelegramPhone(customerProfile.phone);
-  // Stable idempotency key for this checkout session — prevents duplicate orders
-  // and double balance charges on network retries / double clicks. Regenerated
-  // after a successful submit so the next order gets a fresh key.
   const [idempotencyKey, setIdempotencyKey] = useState<string>(() => crypto.randomUUID());
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    const unsubHydrate = useOrderStore.persist.onHydrate(() => setHasHydrated(false));
+    const unsubFinish = useOrderStore.persist.onFinishHydration(() => setHasHydrated(true));
+
+    setHasHydrated(useOrderStore.persist.hasHydrated());
+
+    return () => {
+      unsubHydrate();
+      unsubFinish();
+    };
+  }, []);
 
   const methods = useForm<CheckoutSchema>({
     resolver: zodResolver(checkoutSchema),
@@ -375,9 +385,16 @@ export default function CheckoutPageImpl({
     [customerProfile],
   );
 
-  // ── Multi-order cart derived state ───────────────────────────────────────
   const isIndivCurrent = isIndivPackage(selectedPackageRaw ?? undefined);
   const currentDraftValid = Boolean(pkg) && cartData.totalDays > 0;
+  const hasOrderItems = currentDraftValid || cartItems.length > 0;
+
+  // If cart is empty after store hydration and order is not submitted, redirect to home
+  useEffect(() => {
+    if (hasHydrated && !hasOrderItems && !submitted) {
+      router.replace("/");
+    }
+  }, [hasHydrated, hasOrderItems, submitted, router]);
 
   /** Sum of fiat subtotals for added cart packages. */
   const cartFiatTotal = useMemo(
@@ -594,7 +611,7 @@ export default function CheckoutPageImpl({
         clearSelections();
         resetWizard();
         clearCart();
-        window.location.href = result.pageUrl;
+        window.location.replace(result.pageUrl);
         return;
       }
 
@@ -625,6 +642,19 @@ export default function CheckoutPageImpl({
 
   if (submitted) {
     return <CheckoutSuccessView submitted={submitted} />;
+  }
+
+  if (hasHydrated && !hasOrderItems) {
+    return (
+      <main className="flex-1 flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            Кошик порожній. Перенаправлення на головну...
+          </p>
+        </div>
+      </main>
+    );
   }
 
   return (
