@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifyAuthToken } from "@/lib/auth-token";
@@ -300,17 +301,19 @@ export default async function ProfilePage(
   }).filter(a => a.data !== undefined);
 
   return (
-    <ProfilePageClient 
-      user={user} 
-      actions={actions} 
-      balances={activeBalances} 
-      tariffs={tariffs} 
-      isNewClient={allOrders.length === 0}
-      currentPage={page}
-      totalPages={totalPages}
-      totalActions={totalActions}
-      itemsPerPage={ITEMS_PER_PAGE}
-      ibanDetails={settings.ibanDetails}
-    />
+    <Suspense fallback={null}>
+      <ProfilePageClient 
+        user={user} 
+        actions={actions} 
+        balances={activeBalances} 
+        tariffs={tariffs} 
+        isNewClient={allOrders.length === 0}
+        currentPage={page}
+        totalPages={totalPages}
+        totalActions={totalActions}
+        itemsPerPage={ITEMS_PER_PAGE}
+        ibanDetails={settings.ibanDetails}
+      />
+    </Suspense>
   );
 }

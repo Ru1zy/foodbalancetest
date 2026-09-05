@@ -416,6 +416,27 @@ export default function ProfilePageClient({
   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
   const [isBalancesOpen, setIsBalancesOpen] = useState(false);
 
+  useEffect(() => {
+    const tab = searchParams?.get("tab");
+    const pkgParam = searchParams?.get("pkg");
+    if (tab === "subscription" || tab === "abonoment" || pkgParam) {
+      setIsPurchaseOpen(true);
+      if (pkgParam) {
+        const cleanParam = pkgParam.toLowerCase().replace(/[\s\-_]/g, "");
+        const matched = tariffs.find((t) => {
+          const cleanName = t.name.toLowerCase().replace(/[\s\-_]/g, "");
+          return cleanName.includes(cleanParam);
+        });
+        if (matched) {
+          setActiveTab(matched.id);
+        }
+      }
+      setTimeout(() => {
+        document.getElementById("purchase-subscription")?.scrollIntoView({ behavior: "smooth" });
+      }, 250);
+    }
+  }, [searchParams, tariffs]);
+
   const handlePurchaseSuccess = useCallback((purchase: import("@/components/SubscriptionOptions").PurchaseSuccessData, days: number, packageId: string) => {
     // 1. Instantly prepend new purchase to local action list
     setActionList((prev) => [
@@ -659,7 +680,7 @@ export default function ProfilePageClient({
         </div>
 
         {/* Purchase Subscription Section */}
-        <div className="mb-6 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm transition-all">
+        <div id="purchase-subscription" className="mb-6 rounded-xl border border-blue-100 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-900/20 shadow-sm transition-all">
           <button 
             onClick={() => setIsPurchaseOpen(!isPurchaseOpen)}
             className="flex w-full items-center justify-between p-6 sm:p-8"

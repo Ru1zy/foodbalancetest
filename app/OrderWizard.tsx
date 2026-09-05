@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
 import type { MenuItem } from "@/lib/menu-types";
@@ -35,6 +36,7 @@ export default function OrderWizard({
 }: Props) {
   const step = useOrderStore((s) => s.step);
   const cartItems = useOrderStore((s) => s.cartItems);
+  const [isSushkaView, setIsSushkaView] = useState(false);
 
   if (!menuItems.length) {
     return (
@@ -77,63 +79,67 @@ export default function OrderWizard({
     case 1:
       return (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center gap-6 px-4 sm:px-6 md:px-8">
-          {/* Hero Section - Visible only on Step 1 */}
-          <div className="mb-8 text-center relative w-full">
-            <div className="inline-block mb-6">
-              <div className="mb-4 flex justify-center">
-                <div className="rounded-3xl dark:bg-white dark:p-3 drop-shadow-sm">
-                  <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain mix-blend-multiply dark:mix-blend-normal" />
+          {/* Hero Section - Visible only on Step 1 when NOT in Sushka Light program presentation */}
+          {!isSushkaView && (
+            <>
+              <div className="mb-8 text-center relative w-full">
+                <div className="inline-block mb-6">
+                  <div className="mb-4 flex justify-center">
+                    <div className="rounded-3xl dark:bg-white dark:p-3 drop-shadow-sm">
+                      <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain mix-blend-multiply dark:mix-blend-normal" />
+                    </div>
+                  </div>
+                </div>
+
+                <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
+                  <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span> <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
+                </h1>
+
+                <p className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-600 dark:text-slate-400 mb-4">
+                  Здорове харчування з доставкою
+                </p>
+
+                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
+                  Оберіть свій ідеальний раціон харчування та отримайте свіжі страви прямо до дверей
+                </p>
+
+                {/* Stats */}
+                <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
+                  <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
+                      1 000+
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Задоволених клієнтів</div>
+                  </div>
+                  <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
+                      75 000+
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Доставлених страв</div>
+                  </div>
+                  <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
+                      100%
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Свіжі продукти</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
-              <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span> <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
-            </h1>
-
-            <p className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-600 dark:text-slate-400 mb-4">
-              Здорове харчування з доставкою
-            </p>
-
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
-              Оберіть свій ідеальний раціон харчування та отримайте свіжі страви прямо до дверей
-            </p>
-
-            {/* Stats */}
-            <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
-              <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
-                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
-                  1 000+
-                </div>
-                <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Задоволених клієнтів</div>
+              <div className="flex items-center justify-center gap-2">
+                {([1, 2, 3] as const).map((n) => (
+                  <div
+                    key={n}
+                    className={`h-2 w-8 rounded-full transition-colors ${
+                      n === 1 ? "bg-emerald-500" : "bg-emerald-100"
+                    }`}
+                    aria-hidden
+                  />
+                ))}
               </div>
-              <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
-                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
-                  75 000+
-                </div>
-                <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Доставлених страв</div>
-              </div>
-              <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
-                <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
-                  100%
-                </div>
-                <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Свіжі продукти</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-center gap-2">
-            {([1, 2, 3] as const).map((n) => (
-              <div
-                key={n}
-                className={`h-2 w-8 rounded-full transition-colors ${
-                  n === 1 ? "bg-emerald-500" : "bg-emerald-100"
-                }`}
-                aria-hidden
-              />
-            ))}
-          </div>
-          <PackageSelector tariffs={tariffs} />
+            </>
+          )}
+          <PackageSelector tariffs={tariffs} onSushkaViewChange={setIsSushkaView} />
 
           {cartItems.length > 0 && (
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm">

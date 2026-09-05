@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
+import Link from "next/link";
 import type { PackageType } from "@/lib/order-logic";
 import { useOrderStore } from "@/lib/orderStore";
 
@@ -17,6 +18,7 @@ type Tariff = {
 
 type Props = {
   tariffs: Tariff[];
+  onSushkaViewChange?: (isOpen: boolean) => void;
 };
 
 // Information slides for the Sushka intermediate presentation
@@ -62,7 +64,7 @@ const SUSHKA_INFO_SLIDES = [
   },
 ];
 
-export default function PackageSelector({ tariffs }: Props) {
+export default function PackageSelector({ tariffs, onSushkaViewChange }: Props) {
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
   const selectWizardPackage = useOrderStore((s) => s.selectWizardPackage);
   const [showSushkaOptions, setShowSushkaOptions] = useState(false);
@@ -73,6 +75,9 @@ export default function PackageSelector({ tariffs }: Props) {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [lightboxTitle, setLightboxTitle] = useState<string | null>(null);
   const [zoomScale, setZoomScale] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
 
   // Sorting and reconstruction logic
   const { sortedMainItems, sushkaOptions } = useMemo(() => {
@@ -113,35 +118,104 @@ export default function PackageSelector({ tariffs }: Props) {
     return min === max ? `${min} ₴` : `${min}–${max} ₴`;
   }, [sushkaOptions]);
 
+  const openSushka = () => {
+    setShowSushkaOptions(true);
+    onSushkaViewChange?.(true);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  const closeSushka = () => {
+    setShowSushkaOptions(false);
+    setPreviewPkg(null);
+    onSushkaViewChange?.(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   const handleSelectPackage = (pkg: Tariff) => {
     selectWizardPackage(pkg.name as PackageType);
     setPreviewPkg(null);
     setShowSushkaOptions(false);
+    onSushkaViewChange?.(false);
   };
 
   const openLightbox = (imgUrl: string, title?: string) => {
     setLightboxImage(imgUrl);
     setLightboxTitle(title || null);
     setZoomScale(1);
+    setPan({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const resetZoom = () => {
+    setZoomScale(1);
+    setPan({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomScale <= 1) return;
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || zoomScale <= 1) return;
+    setPan({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (zoomScale <= 1 || e.touches.length !== 1) return;
+    setIsDragging(true);
+    dragStartRef.current = { x: e.touches[0].clientX - pan.x, y: e.touches[0].clientY - pan.y };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || zoomScale <= 1) return;
+    setPan({
+      x: e.touches[0].clientX - dragStartRef.current.x,
+      y: e.touches[0].clientY - dragStartRef.current.y,
+    });
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    if (zoomScale <= 1) return;
+    e.preventDefault();
+    setPan((prev) => ({
+      x: e.shiftKey ? prev.x - e.deltaY : prev.x,
+      y: prev.y - e.deltaY,
+    }));
   };
 
   // Intermediate screen for Sushka Light
   if (showSushkaOptions) {
     const currentSlide = SUSHKA_INFO_SLIDES[activeSlideIndex];
-    const xsOption = sushkaOptions.find(o => o.name === "Sushka XS" || o.title.includes("XS")) || sushkaOptions[0];
-    const sOption = sushkaOptions.find(o => o.name === "Sushka S" || o.title.includes("S")) || sushkaOptions[1];
+    const xsOption = sushkaOptions.find(o => o.name === "Sushka XS" || o.name.toLowerCase().endsWith("xs") || o.title.toLowerCase().endsWith("xs")) || sushkaOptions[0];
+    const sOption = sushkaOptions.find(o => o.name === "Sushka S" || (o.name.toLowerCase().endsWith("s") && !o.name.toLowerCase().endsWith("xs")) || (o.title.toLowerCase().endsWith("s") && !o.title.toLowerCase().endsWith("xs"))) || sushkaOptions[1];
 
     return (
-      <div className="w-full max-w-5xl mx-auto flex flex-col gap-10">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-8 pt-2 pb-12">
         {/* Top Back & Header */}
         <div className="flex flex-col items-center text-center gap-3">
           <button
             type="button"
-            onClick={() => {
-              setShowSushkaOptions(false);
-              setPreviewPkg(null);
-            }}
-            className="inline-flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition"
+            onClick={closeSushka}
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 px-4 py-2 text-sm font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition shadow-sm"
           >
             ← Повернутися до всіх тарифів
           </button>
@@ -340,24 +414,28 @@ export default function PackageSelector({ tariffs }: Props) {
                   </div>
                 </div>
 
-                {/* Quick breakdown list */}
-                <div className="mb-6 rounded-2xl bg-gray-50 dark:bg-slate-950 p-4 text-xs sm:text-sm text-gray-700 dark:text-slate-300 flex flex-col gap-2 border border-gray-100 dark:border-slate-800">
-                  <div className="flex justify-between font-medium">
-                    <span>1 день:</span>
-                    <span className="font-bold">710 грн</span>
+                {/* Subscription discount note & direct anchor link */}
+                <div className="mb-6 rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/30 p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🎟️</span>
+                      <p className="text-xs sm:text-sm font-bold text-emerald-900 dark:text-emerald-200">
+                        Знижки до -10% в абонементі
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">
+                      від 639 ₴/день
+                    </span>
                   </div>
-                  <div className="flex justify-between font-medium">
-                    <span>2 дні (тест-драйв):</span>
-                    <span className="font-bold text-emerald-600">1 278 грн (639 грн/день)</span>
-                  </div>
-                  <div className="flex justify-between font-medium">
-                    <span>7 днів (курс):</span>
-                    <span className="font-bold text-emerald-600">4 720 грн</span>
-                  </div>
-                  <div className="flex justify-between font-medium">
-                    <span>14 днів (максимум):</span>
-                    <span className="font-bold text-emerald-600">8 950 грн</span>
-                  </div>
+                  <p className="text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
+                    Курс на 2 дні (тест-драйв -10%), 7 (-5%) або 14 днів (-10%) оформлюється зі знижкою через систему абонементів.
+                  </p>
+                  <Link
+                    href="/profile?tab=subscription&pkg=Sushka+XS#purchase-subscription"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
+                  >
+                    <span>Оформити абонемент Сушка XS зі знижкою →</span>
+                  </Link>
                 </div>
 
                 {/* Actions */}
@@ -365,16 +443,16 @@ export default function PackageSelector({ tariffs }: Props) {
                   <button
                     type="button"
                     onClick={() => openLightbox("/images/sushka/prices-xs.jpg", "Ціни та знижки: Сушка XS")}
-                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center"
+                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
                   >
-                    📊 Переглянути офіційний флаєр цін
+                    <span>📊</span> Переглянути офіційний флаєр цін
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSelectPackage(xsOption)}
                     className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
                   >
-                    Обрати Сушка XS →
+                    Обрати Сушка XS (замовлення на день) →
                   </button>
                 </div>
               </div>
@@ -420,24 +498,28 @@ export default function PackageSelector({ tariffs }: Props) {
                   </div>
                 </div>
 
-                {/* Quick breakdown list */}
-                <div className="mb-6 rounded-2xl bg-gray-50 dark:bg-slate-950 p-4 text-xs sm:text-sm text-gray-700 dark:text-slate-300 flex flex-col gap-2 border border-gray-100 dark:border-slate-800">
-                  <div className="flex justify-between font-medium">
-                    <span>1 день:</span>
-                    <span className="font-bold">770 грн</span>
+                {/* Subscription discount note & direct anchor link */}
+                <div className="mb-6 rounded-2xl border border-blue-200 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/30 p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-base">🎟️</span>
+                      <p className="text-xs sm:text-sm font-bold text-blue-900 dark:text-blue-200">
+                        Знижки до -10% в абонементі
+                      </p>
+                    </div>
+                    <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 px-2 py-0.5 rounded-full">
+                      від 693 ₴/день
+                    </span>
                   </div>
-                  <div className="flex justify-between font-medium">
-                    <span>2 дні (тест-драйв):</span>
-                    <span className="font-bold text-emerald-600">1 386 грн (693 грн/день)</span>
-                  </div>
-                  <div className="flex justify-between font-medium">
-                    <span>7 днів (курс):</span>
-                    <span className="font-bold text-emerald-600">5 115 грн</span>
-                  </div>
-                  <div className="flex justify-between font-medium">
-                    <span>14 днів (максимум):</span>
-                    <span className="font-bold text-emerald-600">9 702 грн</span>
-                  </div>
+                  <p className="text-xs text-blue-800/90 dark:text-blue-300/80 leading-relaxed">
+                    Курс на 2 дні (тест-драйв -10%), 7 (-5%) або 14 днів (-10%) оформлюється зі знижкою через систему абонементів.
+                  </p>
+                  <Link
+                    href="/profile?tab=subscription&pkg=Sushka+S#purchase-subscription"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-3 transition shadow-sm mt-1"
+                  >
+                    <span>Оформити абонемент Сушка S зі знижкою →</span>
+                  </Link>
                 </div>
 
                 {/* Actions */}
@@ -445,16 +527,16 @@ export default function PackageSelector({ tariffs }: Props) {
                   <button
                     type="button"
                     onClick={() => openLightbox("/images/sushka/prices-s.jpg", "Ціни та знижки: Сушка S")}
-                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center"
+                    className="w-full rounded-xl border border-gray-200 dark:border-slate-700 py-2.5 text-xs font-bold text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition text-center flex items-center justify-center gap-1.5"
                   >
-                    📊 Переглянути офіційний флаєр цін
+                    <span>📊</span> Переглянути офіційний флаєр цін
                   </button>
                   <button
                     type="button"
                     onClick={() => handleSelectPackage(sOption)}
                     className="w-full rounded-2xl bg-emerald-600 py-3.5 text-base font-bold text-white shadow-md hover:bg-emerald-700 active:scale-95 transition-all text-center"
                   >
-                    Обрати Сушка S →
+                    Обрати Сушка S (замовлення на день) →
                   </button>
                 </div>
               </div>
@@ -465,50 +547,109 @@ export default function PackageSelector({ tariffs }: Props) {
         {/* Lightbox Modal for any slide or flyer */}
         {lightboxImage && (
           <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4 select-none"
             onClick={() => setLightboxImage(null)}
           >
             {lightboxTitle && (
-              <div className="absolute top-6 left-6 z-10 text-white font-bold text-lg bg-black/50 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 max-w-[80%] truncate">
+              <div className="absolute top-6 left-6 z-10 text-white font-bold text-sm sm:text-base bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 max-w-[80%] truncate shadow-lg">
                 {lightboxTitle}
               </div>
             )}
 
-            <div className="relative w-full h-full flex items-center justify-center overflow-auto">
+            {/* Hint when zoomed */}
+            {zoomScale > 1 && (
+              <div className="absolute top-6 right-20 z-10 hidden sm:flex items-center gap-1.5 text-xs text-white/80 bg-black/50 backdrop-blur-md px-3.5 py-2 rounded-full border border-white/10">
+                <span>🖐️</span> Перетягуйте мишкою або скрольте колесиком
+              </div>
+            )}
+
+            <div
+              className="relative w-full h-full flex items-center justify-center overflow-hidden"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onWheel={handleWheel}
+            >
               <img
                 src={lightboxImage}
                 alt={lightboxTitle || "Sushka flyer"}
-                style={{ transform: `scale(${zoomScale})` }}
-                className="max-w-full max-h-full object-contain transition-transform duration-200 ease-out"
+                style={{
+                  transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoomScale})`,
+                  transformOrigin: "center center",
+                  cursor: zoomScale > 1 ? (isDragging ? "grabbing" : "grab") : "zoom-in",
+                  transition: isDragging ? "none" : "transform 0.15s ease-out",
+                  maxHeight: "88vh",
+                  maxWidth: "92vw",
+                }}
+                draggable={false}
+                className="object-contain select-none shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
+                onDoubleClick={() => {
+                  if (zoomScale > 1) {
+                    resetZoom();
+                  } else {
+                    setZoomScale(2);
+                  }
+                }}
               />
             </div>
 
             {/* Zoom Controls */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/20">
+            <div 
+              className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 bg-black/60 backdrop-blur-md rounded-full px-4 py-2 sm:px-6 sm:py-2.5 border border-white/20 shadow-2xl z-20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoomScale(prev => Math.max(0.5, prev - 0.25));
+                onClick={() => {
+                  setZoomScale(prev => {
+                    const next = Math.max(1, +(prev - 0.5).toFixed(1));
+                    if (next === 1) setPan({ x: 0, y: 0 });
+                    return next;
+                  });
                 }}
-                className="text-white hover:text-emerald-400 p-1 transition-colors"
+                disabled={zoomScale <= 1}
+                className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
                 title="Віддалити"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
               </button>
-              <span className="text-white font-mono text-sm w-12 text-center">{Math.round(zoomScale * 100)}%</span>
+              
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoomScale(prev => Math.min(3, prev + 0.25));
+                onClick={resetZoom}
+                className="text-white hover:text-emerald-400 font-mono text-xs sm:text-sm px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-center min-w-[54px]"
+                title="Натисніть для скидання до 100%"
+              >
+                {Math.round(zoomScale * 100)}%
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setZoomScale(prev => Math.min(3, +(prev + 0.5).toFixed(1)));
                 }}
-                className="text-white hover:text-emerald-400 p-1 transition-colors"
+                disabled={zoomScale >= 3}
+                className="text-white hover:text-emerald-400 p-1.5 transition-colors disabled:opacity-30 disabled:hover:text-white"
                 title="Наблизити"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
               </button>
+
+              {zoomScale > 1 && (
+                <button
+                  type="button"
+                  onClick={resetZoom}
+                  className="ml-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors px-2 py-1 rounded bg-emerald-950/60 border border-emerald-700/50"
+                  title="Скинути зум і позицію"
+                >
+                  Скинути
+                </button>
+              )}
             </div>
 
             {/* Close Button */}
@@ -544,7 +685,10 @@ export default function PackageSelector({ tariffs }: Props) {
                   selectedPackage?.includes("Sushka") ? "border-emerald-500 dark:border-emerald-400 ring-4 ring-emerald-50" : "border-gray-100 dark:border-slate-800 shadow-sm"
                 }`}
               >
-                <div className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950">
+                <div 
+                  className="relative h-56 w-full overflow-hidden bg-gray-50 dark:bg-slate-950 cursor-pointer"
+                  onClick={openSushka}
+                >
                   <img 
                     src="https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&q=80&w=800" 
                     alt="Сушка Light програма" 
@@ -566,7 +710,7 @@ export default function PackageSelector({ tariffs }: Props) {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowSushkaOptions(true)}
+                    onClick={openSushka}
                     className="mt-auto w-full rounded-2xl bg-emerald-600 py-4 text-lg font-bold text-white transition hover:bg-emerald-700 active:scale-95"
                   >
                     Переглянути програму →
