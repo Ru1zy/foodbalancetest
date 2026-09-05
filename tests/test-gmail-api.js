@@ -3,7 +3,7 @@ require('dotenv').config();
 
 async function testGmailAPI() {
   // Read from .env
-  const user = process.env.SMTP_EMAIL || 'foodbalancezp@gmail.com';
+  const user = process.env.SMTP_EMAIL || 'test@example.com';
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
 

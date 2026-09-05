@@ -406,15 +406,19 @@ Current research as of 2026-08-09:
 - [ ] Test Sheet retry/idempotency and an unavailable Google API.
 - [ ] Use an isolated database and disabled/test integrations for load testing.
 - [ ] Load-test staged checkout at 10, 25, 50, and 100 concurrent submissions.
-- [x] **Pre-Launch Polish & Hardening (04.09):**
+- [x] **Pre-Launch Polish & Hardening (04.09–05.09):**
   - **Financial Fix:** Restored real invoice price calculation for Monobank Plata checkouts (orders and subscriptions) with gross fee calculation; made 1 UAH test mode strictly opt-in via `MONOBANK_TEST_MODE="true"`.
   - **Guest Checkout Unblocked:** Fixed `uploadReceiptAction` to permit guest order receipt attachments (with `image/*` MIME check and 10 MB limit) instead of throwing 401 Unauthorized.
   - **Brand & Metadata Centralization:** Created `lib/site-config.ts` replacing hardcoded dummy IBAN and phone numbers across `CheckoutCustomerForm`, `SubscriptionOptions`, and `Footer`.
   - **Dynamic Admin Requisites & Contacts (`/admin/settings`):** Added `SystemSetting` PostgreSQL model and a dedicated admin interface enabling Vlad/admins to change IBAN details, contact phone, and social URLs (Telegram, Instagram, TikTok) on the fly without touching code or environment variables. All customer-facing surfaces (Checkout, Subscription Options, Footer) automatically consume these live settings with cache revalidation and fallback to `SITE_CONFIG`. Added "⚙️ Налаштування" to the admin navigation sidebar.
+  - **Checkout Form State Preservation:** Fixed checkout form wipeout bug when switching payment methods by eliminating unnecessary `key` remounting on `FormProvider`.
+  - **Sushka Pricing Integrity:** Resolved checkout price mismatch by aligning `PACKAGE_PRICES` / `seed.ts` with database tariffs (710 ₴ for Sushka XS, 770 ₴ for Sushka S) and removing hardcoded fallback constants.
+  - **Individual Tariff Automation:** Implemented fixed per-dish pricing (default 200 ₴ / dish) for standalone «Індивідуальний» (`Indiv`) packages. Formula: `totalDishPortions × unitPrice`. Enabled automated online payment (Monobank Plata, IBAN, cash) and exact price exports to Google Sheets and Telegram.
+  - **Admin Tariff Management:** Updated `/admin/tariffs` to display per-dish prices for `Indiv` (`200 ₴ / страва`) and allow live editing of the unit price directly from the admin dashboard.
   - **Cloudflare R2 Safety:** Whitelisted `*.r2.dev` in `next.config.ts` image remote patterns so newly uploaded bucket images never hit host whitelist errors.
   - **SEO & 404 Resilience:** Added branded `app/not-found.tsx` and crawlers configuration in `app/robots.ts` and `app/sitemap.ts`.
   - **Code Quality Sweep:** Resolved all 38 ESLint errors across actions, clients, and tests (`npm run lint` = 0 errors).
-  - **Verification:** 19/19 unit tests passing (`npm test`), 0 TypeScript errors (`npx tsc --noEmit`), and 100% clean Turbopack production build (`npm run build`).
+  - **Verification:** 21/21 unit tests passing (`npm test`), 0 TypeScript errors (`npx tsc --noEmit`), and 100% clean Turbopack production build (`npm run build`).
 
 ## Business decisions required (remaining)
 
@@ -452,7 +456,7 @@ Current research as of 2026-08-09:
 ## Deferred: gradual Google account migration
 
 - [ ] Do not start until Railway production and all integrations are green.
-- [ ] Add `foodbalancezp@gmail.com` as an owner/admin of the selected Google
+- [ ] Add the business Google account as an owner/admin of the selected Google
   Cloud project where possible.
 - [ ] Create a new OAuth web client and service account under the controlled
   business setup without deleting the old credentials.

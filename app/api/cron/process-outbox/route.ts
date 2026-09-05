@@ -4,12 +4,16 @@ import { processAllOutboxJobs } from "@/lib/outbox";
 // This endpoint can be called by Vercel Cron or any other scheduler
 // Example: GET /api/cron/process-outbox
 export async function GET(request: Request) {
-  // Optional: protect via CRON_SECRET if configured
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    console.error("CRON_SECRET is not configured");
+    return NextResponse.json({ error: "Cron secret not configured" }, { status: 503 });
+  }
+
   const authHeader = request.headers.get("authorization");
   if (
-    process.env.CRON_SECRET &&
-    authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
-    request.headers.get("x-vercel-cron") !== process.env.CRON_SECRET // Vercel fallback
+    authHeader !== `Bearer ${cronSecret}` &&
+    request.headers.get("x-vercel-cron") !== cronSecret
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

@@ -136,7 +136,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Monobank webhook failed:", error);
-    const errObj = error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) };
-    return NextResponse.json({ error: "Internal Server Error", details: errObj }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

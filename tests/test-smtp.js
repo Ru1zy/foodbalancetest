@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
 
 async function test() {
-  const user = 'foodbalancezp@gmail.com';
+  const user = process.env.SMTP_EMAIL || 'test@example.com';
   const pass = 'ENTER_YOUR_APP_PASSWORD';
 
   console.log('Testing SMTP connection for:', user);
