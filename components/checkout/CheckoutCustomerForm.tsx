@@ -4,6 +4,7 @@ import { isIndivPackage } from "@/lib/order-selection";
 import { CartItem } from "@/lib/orderStore";
 import { CheckoutSchema } from "@/lib/validations";
 import { SITE_CONFIG } from "@/lib/site-config";
+import IbanPaymentDetails from "@/components/payment/IbanPaymentDetails";
 
 type Props = {
   isAuthenticated?: boolean;
@@ -155,23 +156,23 @@ export function CheckoutCustomerForm({
         )}
 
         {paymentMethod === "bank_transfer" && fiatPrice > 0 && (
-          <div className="mt-4 p-4 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/30 dark:border-blue-800">
-            <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
-              Для оплати переказом, будь ласка, надішліть кошти на цей рахунок:
-            </p>
-            <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border border-blue-100 dark:border-blue-800 text-sm">
-              {ibanDetails || SITE_CONFIG.ibanDetails}
-            </p>
+          <div className="mt-4 space-y-3">
+            <IbanPaymentDetails ibanDetails={ibanDetails} />
             
-            <label className="block text-sm font-medium text-gray-900 dark:text-slate-100 mb-2">
-              Завантажте скріншот квитанції про оплату
-            </label>
-            <input 
-              type="file" 
-              accept="image/*"
-              onChange={(e) => setFile?.(e.target.files?.[0] || null)}
-              className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-            />
+            <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+              <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">
+                Завантажте скріншот квитанції про оплату
+              </label>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                Прикріпіть файл або скріншот з банківського додатку (Monobank, Приват24 тощо)
+              </p>
+              <input 
+                type="file" 
+                accept="image/*"
+                onChange={(e) => setFile?.(e.target.files?.[0] || null)}
+                className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-950/60 dark:file:text-emerald-400 cursor-pointer"
+              />
+            </div>
           </div>
         )}
 

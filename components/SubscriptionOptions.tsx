@@ -9,6 +9,7 @@ import {
 import { createSubscriptionPurchaseAction } from "@/app/actions/subscription";
 import { uploadReceiptAction } from "@/app/actions/upload-receipt";
 import { SITE_CONFIG } from "@/lib/site-config";
+import IbanPaymentDetails from "@/components/payment/IbanPaymentDetails";
 import type { SubscriptionPurchase } from "@prisma/client";
 
 type Pkg = {
@@ -266,21 +267,23 @@ export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = t
           </div>
 
           {paymentMethod === "bank_transfer" && (
-            <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 p-4 text-sm">
-              <p className="mb-2 font-semibold">Реквізити для оплати:</p>
-              <p className="font-mono text-gray-700 dark:text-slate-300 mb-4 bg-white dark:bg-slate-900 p-2 rounded border">
-                {ibanDetails || SITE_CONFIG.ibanDetails}
-              </p>
-              
-              <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-                Завантажте скріншот оплати:
-              </label>
-              <input 
-                type="file" 
-                accept="image/*"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-              />
+            <div className="space-y-3">
+              <IbanPaymentDetails ibanDetails={ibanDetails} />
+
+              <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-sm">
+                <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">
+                  Завантажте скріншот оплати
+                </label>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                  Прикріпіть файл або скріншот з банківського додатку (Monobank, Приват24 тощо)
+                </p>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-950/60 dark:file:text-emerald-400 cursor-pointer"
+                />
+              </div>
             </div>
           )}
           

@@ -260,14 +260,14 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
               Текст реквізитів (IBAN / картка / ФОП)
             </label>
             <textarea
-              rows={3}
+              rows={6}
               value={formData.ibanDetails}
               onChange={(e) => setFormData({ ...formData, ibanDetails: e.target.value })}
-              placeholder="UA123456789012345678901234567 (ФОП Прізвище І.Б.) або номер картки"
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3.5 text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              placeholder="ОТРИМУВАЧ: ...&#10;ЄДРПОУ: ...&#10;IBAN: UA...&#10;Призначення платежу: ..."
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3.5 text-sm font-mono text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed"
             />
             <p className="mt-2 text-xs text-slate-400 leading-relaxed">
-              💡 Цей текст бачитимуть клієнти на сторінці оплати замовлення та при покупці абонементів. Можна вказати рахунок, призначення платежу або номер картки.
+              💡 Цей текст бачитимуть клієнти на сторінці оплати замовлення та при покупці абонементів. Рахунок IBAN автоматично підсвічується окремою кнопкою швидкого копіювання.
             </p>
           </div>
         </div>

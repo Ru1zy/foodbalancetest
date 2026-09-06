@@ -273,6 +273,20 @@ async function main() {
   }
 
   console.log("✅ Tariffs seeding completed!");
+
+  // Seed default system settings
+  console.log("🌱 Seeding system settings...");
+  await prisma.systemSetting.upsert({
+    where: { key: "ibanDetails" },
+    update: {
+      value: "ОТРИМУВАЧ: ВОВК СОФІЯ СТАНІСЛАВІВНА\nЄДРПОУ: 3946803829\nIBAN: UA223003350000000260072473479\nПризначення платежу: надання послуг харчування ПІБ\n\nПісля оплати надішліть, будь ласка, квитанцію❤️",
+    },
+    create: {
+      key: "ibanDetails",
+      value: "ОТРИМУВАЧ: ВОВК СОФІЯ СТАНІСЛАВІВНА\nЄДРПОУ: 3946803829\nIBAN: UA223003350000000260072473479\nПризначення платежу: надання послуг харчування ПІБ\n\nПісля оплати надішліть, будь ласка, квитанцію❤️",
+    },
+  });
+  console.log("✅ System settings seeded!");
 }
 
 main()
