@@ -414,9 +414,26 @@ export default async function AdminOrdersPage({
                                 </div>
                                 <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
                                   {order.paymentMethod === 'cash' && "💵 Готівка"}
-                                  {order.paymentMethod === 'bank_transfer' && "🏦 Переказ"}
+                                  {order.paymentMethod === 'bank_transfer' && "🏦 Переказ (IBAN)"}
                                   {order.paymentMethod === 'plata' && "💳 Plata by mono"}
                                 </div>
+                                {order.receiptUrl ? (
+                                  <a
+                                    href={order.receiptUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/80 px-2.5 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800 transition shadow-xs"
+                                    title="Переглянути прикріплену квитанцію"
+                                  >
+                                    <span>🧾</span>
+                                    <span>Квитанція</span>
+                                    <span className="text-[10px]">↗</span>
+                                  </a>
+                                ) : order.paymentMethod === 'bank_transfer' && !order.isPaid ? (
+                                  <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 px-2 py-0.5 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
+                                    Без чека
+                                  </span>
+                                ) : null}
                               </div>
                             )}
                             {order.menuDetails && (

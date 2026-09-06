@@ -95,3 +95,72 @@ export async function rejectPaymentAction(purchaseId: string) {
     return { ok: false, error: "Помилка при скасуванні оплати" };
   }
 }
+
+export async function confirmOrderPaymentAction(orderId: string) {
+  const admin = await getAuthenticatedAdminUser();
+  if (!admin) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  try {
+    const order = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        isPaid: true,
+        status: "Оплачено",
+      },
+      include: {
+        user: true,
+      },
+    });
+
+    if (order.user && (order.user.chatId || order.user.email)) {
+      try {
+        const { sendPaymentConfirmation } = await import("@/lib/telegram");
+        await sendPaymentConfirmation(order.user, {
+          date: order.deliveryDate,
+          pkg: order.packageType,
+          sendEmailReceipt: order.sendEmailReceipt,
+          receiptEmail: order.receiptEmail,
+        });
+      } catch (err) {
+        console.error("Failed to send payment confirmation notification:", err);
+      }
+    }
+
+    revalidatePath("/admin/pending-payments");
+    revalidatePath("/admin/orders");
+    revalidatePath("/admin/today");
+
+    return { ok: true };
+  } catch (error: unknown) {
+    console.error("Failed to confirm order payment:", error);
+    return { ok: false, error: "Помилка при підтвердженні оплати замовлення" };
+  }
+}
+
+export async function rejectOrderPaymentAction(orderId: string) {
+  const admin = await getAuthenticatedAdminUser();
+  if (!admin) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  try {
+    await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        status: "Скасовано",
+      },
+    });
+
+    revalidatePath("/admin/pending-payments");
+    revalidatePath("/admin/orders");
+    revalidatePath("/admin/today");
+
+    return { ok: true };
+  } catch (error: unknown) {
+    console.error("Failed to reject order payment:", error);
+    return { ok: false, error: "Помилка при відхиленні замовлення" };
+  }
+}
+
