@@ -10,8 +10,16 @@ export async function uploadReceiptAction(formData: FormData) {
     return { ok: false, error: "Файл не надано" };
   }
 
-  if (!file.type.startsWith("image/")) {
-    return { ok: false, error: "Некоректний формат файлу. Будь ласка, завантажте зображення (PNG, JPG, WEBP)." };
+  const isImage = file.type.startsWith("image/");
+  const isPdf =
+    file.type === "application/pdf" ||
+    file.name.toLowerCase().endsWith(".pdf");
+
+  if (!isImage && !isPdf) {
+    return {
+      ok: false,
+      error: "Некоректний формат файлу. Будь ласка, завантажте зображення (PNG, JPG, WEBP) або PDF-документ.",
+    };
   }
 
   if (file.size > MAX_RECEIPT_SIZE_BYTES) {

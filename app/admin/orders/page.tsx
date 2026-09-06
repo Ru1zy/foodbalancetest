@@ -425,8 +425,8 @@ export default async function AdminOrdersPage({
                                     className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/80 px-2.5 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800 transition shadow-xs"
                                     title="Переглянути прикріплену квитанцію"
                                   >
-                                    <span>🧾</span>
-                                    <span>Квитанція</span>
+                                    <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "📄" : "🧾"}</span>
+                                    <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "PDF Чек" : "Квитанція"}</span>
                                     <span className="text-[10px]">↗</span>
                                   </a>
                                 ) : order.paymentMethod === 'bank_transfer' && !order.isPaid ? (

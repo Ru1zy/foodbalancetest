@@ -509,9 +509,16 @@ export async function sendSubscriptionPendingAlert(
     : `💰 <b>Нова заявка на оплату абонемента!</b>\n\n👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone || "")})\n📦 <b>Пакет:</b> ${escapeHtml(purchase.packageId)} на ${purchase.days} днів\n💳 <b>Сума:</b> ${purchase.finalPrice || 0} ₴\nСпосіб: ${method}`;
 
   const sendPromises = adminIds.map((chatId) => {
-    const endpoint = purchase.receiptUrl ? "sendPhoto" : "sendMessage";
+    const isPdf = purchase.receiptUrl ? purchase.receiptUrl.toLowerCase().includes(".pdf") : false;
+    const endpoint = purchase.receiptUrl
+      ? isPdf
+        ? "sendDocument"
+        : "sendPhoto"
+      : "sendMessage";
     const body = purchase.receiptUrl
-      ? { chat_id: chatId, photo: purchase.receiptUrl, caption: text, parse_mode: "HTML" }
+      ? isPdf
+        ? { chat_id: chatId, document: purchase.receiptUrl, caption: text, parse_mode: "HTML" }
+        : { chat_id: chatId, photo: purchase.receiptUrl, caption: text, parse_mode: "HTML" }
       : { chat_id: chatId, text, parse_mode: "HTML" };
 
     return fetch(`https://api.telegram.org/bot${token}/${endpoint}`, {

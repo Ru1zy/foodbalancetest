@@ -274,25 +274,37 @@ export default function PendingPaymentsClient({
 
                   <div className="w-full md:w-64 flex flex-col gap-3 justify-between">
                     {purchase.receiptUrl ? (
-                      <a
-                        href={purchase.receiptUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group relative flex flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-center"
-                      >
-                        <div className="relative h-24 w-full rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={purchase.receiptUrl}
-                            alt="Квитанція"
-                            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1">
-                          <span>Переглянути квитанцію</span>
-                          <span>↗</span>
-                        </span>
-                      </a>
+                      (() => {
+                        const isPdf = purchase.receiptUrl.toLowerCase().includes(".pdf");
+                        return (
+                          <a
+                            href={purchase.receiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group relative flex flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-center"
+                          >
+                            <div className="relative h-24 w-full rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                              {isPdf ? (
+                                <div className="flex flex-col items-center justify-center gap-1 text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">
+                                  <span className="text-3xl">📄</span>
+                                  <span className="text-[11px] font-bold uppercase tracking-wider">PDF Чек</span>
+                                </div>
+                              ) : (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={purchase.receiptUrl}
+                                  alt="Квитанція"
+                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                              )}
+                            </div>
+                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                              <span>{isPdf ? "Відкрити PDF" : "Переглянути квитанцію"}</span>
+                              <span>↗</span>
+                            </span>
+                          </a>
+                        );
+                      })()
                     ) : (
                       <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 py-3 text-center text-xs text-gray-500 dark:text-slate-400 italic">
                         Без квитанції
@@ -432,25 +444,37 @@ export default function PendingPaymentsClient({
 
                   <div className="w-full md:w-64 flex flex-col gap-3 justify-between">
                     {order.receiptUrl ? (
-                      <a
-                        href={order.receiptUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="group relative flex flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-center"
-                      >
-                        <div className="relative h-24 w-full rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={order.receiptUrl}
-                            alt="Квитанція"
-                            className="h-full w-full object-cover group-hover:scale-105 transition-transform"
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1">
-                          <span>Переглянути чек</span>
-                          <span>↗</span>
-                        </span>
-                      </a>
+                      (() => {
+                        const isPdf = order.receiptUrl.toLowerCase().includes(".pdf");
+                        return (
+                          <a
+                            href={order.receiptUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group relative flex flex-col items-center justify-center gap-2 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-2.5 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all text-center"
+                          >
+                            <div className="relative h-24 w-full rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                              {isPdf ? (
+                                <div className="flex flex-col items-center justify-center gap-1 text-red-600 dark:text-red-400 group-hover:scale-105 transition-transform">
+                                  <span className="text-3xl">📄</span>
+                                  <span className="text-[11px] font-bold uppercase tracking-wider">PDF Чек</span>
+                                </div>
+                              ) : (
+                                /* eslint-disable-next-line @next/next/no-img-element */
+                                <img
+                                  src={order.receiptUrl}
+                                  alt="Квитанція"
+                                  className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                              )}
+                            </div>
+                            <span className="text-xs font-bold text-blue-700 dark:text-blue-300 flex items-center gap-1">
+                              <span>{isPdf ? "Відкрити PDF" : "Переглянути чек"}</span>
+                              <span>↗</span>
+                            </span>
+                          </a>
+                        );
+                      })()
                     ) : (
                       <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950 py-3 text-center text-xs text-gray-500 dark:text-slate-400 italic">
                         Без квитанції

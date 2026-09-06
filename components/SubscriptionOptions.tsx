@@ -272,14 +272,14 @@ export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = t
 
               <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-sm">
                 <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">
-                  Завантажте скріншот оплати
+                  Завантажте квитанцію про оплату
                 </label>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                  Прикріпіть файл або скріншот з банківського додатку (Monobank, Приват24 тощо)
+                  Прикріпіть файл або скріншот (PNG, JPG або PDF-квитанція з банку)
                 </p>
                 <input 
                   type="file" 
-                  accept="image/*"
+                  accept="image/*,application/pdf,.pdf"
                   onChange={(e) => setFile(e.target.files?.[0] || null)}
                   className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-950/60 dark:file:text-emerald-400 cursor-pointer"
                 />

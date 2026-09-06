@@ -106,12 +106,15 @@ export async function uploadPublicObject(
   const arrayBuffer = await file.arrayBuffer();
   const body = new Uint8Array(arrayBuffer);
 
+  const isPdf = file.name.toLowerCase().endsWith(".pdf") || file.type === "application/pdf";
+  const contentType = isPdf ? "application/pdf" : (file.type || "application/octet-stream");
+
   await client.send(
     new PutObjectCommand({
       Bucket: env.bucket,
       Key: key,
       Body: body,
-      ContentType: file.type || "application/octet-stream",
+      ContentType: contentType,
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
@@ -121,6 +124,6 @@ export async function uploadPublicObject(
   return {
     url,
     pathname: key,
-    contentType: file.type || "application/octet-stream",
+    contentType,
   };
 }
