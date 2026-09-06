@@ -64,6 +64,15 @@ export function CheckoutCustomerForm({
     }
   }, [feedback]);
 
+  const orderAmount =
+    cartItems.length > 0
+      ? grandGrossTotal > 0
+        ? grandGrossTotal
+        : 0
+      : orderTotalUah > 0
+      ? orderTotalUah
+      : fiatPrice;
+
   return (
     <section className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
       <div className="mb-8">
@@ -80,23 +89,25 @@ export function CheckoutCustomerForm({
         <h3 className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Спосіб оплати</h3>
 
         {hasIndivInCart || isIndivCurrent ? (
-          <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50/70 dark:bg-blue-950/40 p-5">
-            <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500 text-white font-bold text-lg shadow-sm">
+          <div className="mt-4 rounded-2xl border border-blue-200/90 dark:border-blue-800/60 bg-blue-50/70 dark:bg-blue-950/30 p-5 shadow-xs">
+            <div className="flex items-start gap-3.5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-lg shadow-xs">
                 📞
-              </span>
-              <div>
-                <span className="font-bold text-base text-blue-950 dark:text-blue-100">
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-base font-bold text-blue-950 dark:text-blue-100 leading-snug">
                   Оплата після узгодження з менеджером
-                </span>
-                <span className="ml-2 rounded-full bg-blue-200/70 dark:bg-blue-800/60 px-2 py-0.5 text-[11px] font-bold text-blue-800 dark:text-blue-200">
-                  Тариф «Індивідуальний»
-                </span>
+                </h4>
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200 border border-blue-200/80 dark:border-blue-800/60">
+                    Тариф «Індивідуальний»
+                  </span>
+                </div>
+                <p className="mt-2.5 text-sm leading-relaxed text-blue-900/85 dark:text-blue-200/80">
+                  У тарифі «Індивідуальний» вартість розраховується окремо залежно від підсумкового калоражу та об&apos;єму порцій. Наш менеджер зв&apos;яжеться з вами для уточнення деталей та узгодження фінальної суми.
+                </p>
               </div>
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-blue-900 dark:text-blue-200 pl-12">
-              У тарифі «Індивідуальний» вартість розраховується окремо залежно від підсумкового калоражу та об&apos;єму порцій. Наш менеджер зв&apos;яжеться з вами для уточнення деталей та узгодження фінальної суми.
-            </p>
           </div>
         ) : fiatPrice === 0 ? (
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4">
@@ -157,7 +168,7 @@ export function CheckoutCustomerForm({
 
         {paymentMethod === "bank_transfer" && fiatPrice > 0 && (
           <div className="mt-4 space-y-3">
-            <IbanPaymentDetails ibanDetails={ibanDetails} />
+            <IbanPaymentDetails ibanDetails={ibanDetails} amount={orderAmount} />
             
             <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
               <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">

@@ -268,7 +268,7 @@ export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = t
 
           {paymentMethod === "bank_transfer" && (
             <div className="space-y-3">
-              <IbanPaymentDetails ibanDetails={ibanDetails} />
+              <IbanPaymentDetails ibanDetails={ibanDetails} amount={totalDiscounted} />
 
               <div className="rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-sm">
                 <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">

@@ -6,11 +6,13 @@ import { SITE_CONFIG } from "@/lib/site-config";
 
 interface IbanPaymentDetailsProps {
   ibanDetails?: string;
+  amount?: number;
   className?: string;
 }
 
 export default function IbanPaymentDetails({
   ibanDetails,
+  amount,
   className = "",
 }: IbanPaymentDetailsProps) {
   const isPlaceholder =
@@ -68,6 +70,39 @@ export default function IbanPaymentDetails({
           IBAN
         </span>
       </div>
+
+      {typeof amount === "number" && amount > 0 && (
+        <div className="mb-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/80 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
+            <span className="font-semibold uppercase tracking-wider text-[10px] text-emerald-700 dark:text-emerald-400">
+              Сума до сплати
+            </span>
+            <span className="text-[10px] text-slate-400">вказати в додатку банку</span>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-xl sm:text-2xl font-black text-slate-950 dark:text-slate-50 tracking-tight">
+              {amount.toLocaleString("uk-UA")} ₴
+            </span>
+            <button
+              type="button"
+              onClick={() => copyToClipboard(String(amount), "amount")}
+              className="self-start sm:self-auto shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/70 dark:hover:bg-emerald-900 border border-emerald-200 dark:border-emerald-700/80 text-emerald-700 dark:text-emerald-300 text-xs font-semibold shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              {copiedField === "amount" ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span>Скопійовано!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>Копіювати суму</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {rawIban && (
         <div className="mb-3 p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/80 shadow-xs">
