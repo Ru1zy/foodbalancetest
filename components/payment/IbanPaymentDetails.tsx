@@ -13,7 +13,12 @@ export default function IbanPaymentDetails({
   ibanDetails,
   className = "",
 }: IbanPaymentDetailsProps) {
-  const details = ibanDetails?.trim() || SITE_CONFIG.ibanDetails;
+  const isPlaceholder =
+    !ibanDetails ||
+    ibanDetails.includes("будуть надіслані") ||
+    ibanDetails.includes("Telegram") ||
+    !ibanDetails.includes("UA");
+  const details = isPlaceholder ? SITE_CONFIG.ibanDetails : ibanDetails.trim();
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
   // Extract IBAN account number if present (UA + 27 digits)

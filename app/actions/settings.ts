@@ -31,6 +31,19 @@ export interface AdminSettingsFormData {
  * Fetch public settings for checkout, profile, and footer.
  * Fast query from DB with fallback to SITE_CONFIG defaults.
  */
+function sanitizeIban(raw?: string | null): string {
+  const val = raw?.trim();
+  if (
+    !val ||
+    val.includes("будуть надіслані") ||
+    val.includes("Telegram") ||
+    !val.includes("UA")
+  ) {
+    return SITE_CONFIG.ibanDetails;
+  }
+  return val;
+}
+
 export async function getPublicSettings(): Promise<PublicSettings> {
   try {
     const settings = await prisma.systemSetting.findMany({
@@ -57,7 +70,7 @@ export async function getPublicSettings(): Promise<PublicSettings> {
       rawMode === "FORCE_OPEN" || rawMode === "FORCE_CLOSED" ? rawMode : "AUTO";
 
     return {
-      ibanDetails: map.get("ibanDetails")?.trim() || SITE_CONFIG.ibanDetails,
+      ibanDetails: sanitizeIban(map.get("ibanDetails")),
       contactPhone: map.get("contactPhone")?.trim() || SITE_CONFIG.phone,
       instagramUrl: map.get("instagramUrl")?.trim() || SITE_CONFIG.instagram,
       telegramUrl: map.get("telegramUrl")?.trim() || SITE_CONFIG.telegram,
@@ -104,7 +117,7 @@ export async function getAdminSettingsAction(): Promise<{
     return {
       ok: true,
       settings: {
-        ibanDetails: map.get("ibanDetails") ?? SITE_CONFIG.ibanDetails,
+        ibanDetails: sanitizeIban(map.get("ibanDetails")),
         contactPhone: map.get("contactPhone") ?? (SITE_CONFIG.phone || ""),
         instagramUrl: map.get("instagramUrl") ?? SITE_CONFIG.instagram,
         telegramUrl: map.get("telegramUrl") ?? SITE_CONFIG.telegram,
