@@ -221,7 +221,18 @@ export async function cancelSubscriptionPurchaseAction(purchaseId: string) {
           },
         });
       }
+
+      // 3. If there is potential payment (receipt attached or bank transfer), notify admin about cancellation
+      const hasPotentialPayment = Boolean(purchase.receiptUrl) || purchase.paymentMethod === "bank_transfer" || purchase.status === "PAID";
+      if (hasPotentialPayment && purchase.finalPrice > 0) {
+        await enqueueOutboxJob(tx, "TELEGRAM_ALERT_SUBSCRIPTION_CANCELLATION", {
+          purchaseId: purchase.id,
+          cancelledBy: "Клієнт",
+        });
+      }
     });
+
+    processAllOutboxJobs().catch(err => console.error("Async outbox error after cancelSubscriptionPurchase:", err));
 
     revalidatePath("/profile");
     revalidatePath("/admin/pending-payments");

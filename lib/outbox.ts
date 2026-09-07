@@ -100,6 +100,30 @@ export async function processOutboxJob(jobId: string) {
            await sendSubscriptionRejectedAlert(purchase, purchase.user);
         }
       }
+    } else if (job.type === "TELEGRAM_ALERT_SUBSCRIPTION_CANCELLATION") {
+      const payload = job.payload as { purchaseId: string; cancelledBy: string };
+      if (!payload.purchaseId) throw new Error("Missing purchaseId");
+
+      const purchase = await prisma.subscriptionPurchase.findUnique({
+        where: { id: payload.purchaseId },
+        include: { user: true },
+      });
+
+      if (purchase) {
+        const { sendSubscriptionCancellationAlert } = await import('./telegram');
+        await sendSubscriptionCancellationAlert({
+          purchaseId: purchase.id,
+          clientChatId: purchase.user?.chatId,
+          clientName: purchase.user.name,
+          clientPhone: purchase.user.phone,
+          packageId: purchase.packageId,
+          days: purchase.days,
+          price: purchase.finalPrice,
+          paymentMethod: purchase.paymentMethod,
+          hasReceipt: Boolean(purchase.receiptUrl),
+          cancelledBy: payload.cancelledBy,
+        });
+      }
     } else if (job.type === "CANCEL_ORDER_IN_SHEETS") {
       const payload = job.payload as { orderId: string, monthKey: string, tabName: string };
       if (!payload.orderId || !payload.monthKey || !payload.tabName) {

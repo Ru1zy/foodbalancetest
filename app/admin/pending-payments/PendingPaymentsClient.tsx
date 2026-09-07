@@ -8,16 +8,23 @@ import {
   rejectOrderPaymentAction,
   resolveRefundWithBalanceAction,
   resolveRefundWithPayoutAction,
+  resolveRefundNoPaymentAction,
+  resolveSubscriptionRefundWithPayoutAction,
+  resolveSubscriptionRefundWithBalanceAction,
+  resolveSubscriptionRefundNoPaymentAction,
 } from "@/app/actions/admin-payments";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export type RefundItem = {
-  id: string; // orderId
+  id: string;
+  itemType: "order" | "subscription";
   packageType: string;
   totalPrice: number;
   refundAmount: number;
   paymentMethod: string;
+  receiptUrl?: string | null;
+  isPaid?: boolean;
   createdAt: Date;
   cancelledAt: Date | null;
   cancelledDaysCount: number;
@@ -77,6 +84,14 @@ interface PendingPaymentsClientProps {
   pendingRefundsCount: number;
 }
 
+type RejectTarget = {
+  id: string;
+  type: "order" | "subscription";
+  title: string;
+  clientName: string;
+  amount: number;
+};
+
 export default function PendingPaymentsClient({
   purchases,
   orders,
@@ -89,6 +104,7 @@ export default function PendingPaymentsClient({
 }: PendingPaymentsClientProps) {
   const router = useRouter();
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [rejectingTarget, setRejectingTarget] = useState<RejectTarget | null>(null);
 
   // Handlers for Subscription purchases
   const handleConfirmPurchase = async (id: string) => {
@@ -103,13 +119,16 @@ export default function PendingPaymentsClient({
     router.refresh();
   };
 
-  const handleRejectPurchase = async (id: string) => {
-    if (!confirm("Відхилити оплату? (Авансово нараховані дні будуть зняті з балансу клієнта)")) return;
-
+  const handleRejectPurchaseWithOption = async (id: string, moneyReceived: boolean) => {
     setProcessingId(id);
-    const res = await rejectPaymentAction(id);
+    setRejectingTarget(null);
+    const res = await rejectPaymentAction(id, moneyReceived);
     if (!res.ok) {
       alert(res.error || "Помилка при скасуванні");
+    } else if (moneyReceived) {
+      alert(
+        "✅ Абонемент скасовано!\n\n🚨 Оскільки кошти було отримано на рахунок, абонемент автоматично перейшов у вкладку «💸 До повернення (Refunds)», щоб ви не забули повернути кошти або нарахувати дні."
+      );
     }
     setProcessingId(null);
     router.refresh();
@@ -128,36 +147,68 @@ export default function PendingPaymentsClient({
     router.refresh();
   };
 
-  const handleRejectOrder = async (id: string) => {
-    if (!confirm("Відхилити оплату та скасувати це замовлення?")) return;
-
+  const handleRejectOrderWithOption = async (id: string, moneyReceived: boolean) => {
     setProcessingId(id);
-    const res = await rejectOrderPaymentAction(id);
+    setRejectingTarget(null);
+    const res = await rejectOrderPaymentAction(id, moneyReceived);
     if (!res.ok) {
       alert(res.error || "Помилка при відхиленні замовлення");
+    } else if (moneyReceived) {
+      alert(
+        "✅ Замовлення скасовано!\n\n🚨 Оскільки кошти було отримано на рахунок, замовлення автоматично перейшло у вкладку «💸 До повернення (Refunds)», щоб ви не забули повернути кошти або нарахувати день."
+      );
     }
     setProcessingId(null);
     router.refresh();
   };
 
   // Handlers for Refunds
-  const handleResolveRefundWithBalance = async (orderId: string, daysCount: number) => {
-    if (!confirm(`Нарахувати клієнту +${daysCount} дн. на баланс замість повернення грошей?`)) return;
-
-    setProcessingId(orderId);
-    const res = await resolveRefundWithBalanceAction(orderId, daysCount);
-    if (!res.ok) {
-      alert(res.error || "Помилка при нарахуванні днів на баланс");
+  const handleResolveRefundWithBalance = async (refund: RefundItem) => {
+    if (refund.itemType === "subscription") {
+      if (!confirm(`Активувати абонемент та нарахувати +${refund.totalDaysCount} дн. на баланс клієнту замість повернення грошей?`)) return;
+      setProcessingId(refund.id);
+      const res = await resolveSubscriptionRefundWithBalanceAction(refund.id);
+      if (!res.ok) alert(res.error || "Помилка при нарахуванні днів на баланс");
+    } else {
+      if (!confirm(`Нарахувати клієнту +${refund.fiatCancelledCount} дн. на баланс замість повернення грошей?`)) return;
+      setProcessingId(refund.id);
+      const res = await resolveRefundWithBalanceAction(refund.id, refund.fiatCancelledCount);
+      if (!res.ok) alert(res.error || "Помилка при нарахуванні днів на баланс");
     }
     setProcessingId(null);
     router.refresh();
   };
 
-  const handleResolveRefundWithPayout = async (orderId: string) => {
-    if (!confirm("Позначити це замовлення як повернуте (гроші виплачено клієнту вручну через Монобанк або IBAN)?")) return;
+  const handleResolveRefundWithPayout = async (refund: RefundItem) => {
+    if (!confirm(`Позначити як повернуте (суму ${refund.refundAmount} ₴ повернуто клієнту вручну через банк або реквізити)?`)) return;
 
-    setProcessingId(orderId);
-    const res = await resolveRefundWithPayoutAction(orderId);
+    setProcessingId(refund.id);
+    const res =
+      refund.itemType === "subscription"
+        ? await resolveSubscriptionRefundWithPayoutAction(refund.id)
+        : await resolveRefundWithPayoutAction(refund.id);
+
+    if (!res.ok) {
+      alert(res.error || "Помилка при збереженні статусу");
+    }
+    setProcessingId(null);
+    router.refresh();
+  };
+
+  const handleResolveRefundNoPayment = async (refund: RefundItem) => {
+    if (
+      !confirm(
+        `Підтвердити, що клієнт насправді НЕ здійснював оплату ${refund.refundAmount} ₴ на розрахунковий рахунок?\n\n(Заявку буде закрито без виплати повернення коштів)`
+      )
+    )
+      return;
+
+    setProcessingId(refund.id);
+    const res =
+      refund.itemType === "subscription"
+        ? await resolveSubscriptionRefundNoPaymentAction(refund.id)
+        : await resolveRefundNoPaymentAction(refund.id);
+
     if (!res.ok) {
       alert(res.error || "Помилка при збереженні статусу");
     }
@@ -386,7 +437,15 @@ export default function PendingPaymentsClient({
                     {!isHistory && (
                       <div className="flex gap-2 pt-2">
                         <button
-                          onClick={() => handleRejectPurchase(purchase.id)}
+                          onClick={() =>
+                            setRejectingTarget({
+                              id: purchase.id,
+                              type: "subscription",
+                              title: `Абонемент ${purchase.packageId}`,
+                              clientName: purchase.user?.name || "Клієнт",
+                              amount: purchase.finalPrice,
+                            })
+                          }
                           disabled={processingId === purchase.id}
                           className="flex-1 rounded-xl border border-red-200 dark:border-red-800 bg-white dark:bg-slate-900 py-2.5 text-xs font-bold text-red-600 dark:text-red-400 transition hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50 cursor-pointer"
                         >
@@ -556,7 +615,15 @@ export default function PendingPaymentsClient({
                     {!isHistory && (
                       <div className="flex gap-2 pt-2">
                         <button
-                          onClick={() => handleRejectOrder(order.id)}
+                          onClick={() =>
+                            setRejectingTarget({
+                              id: order.id,
+                              type: "order",
+                              title: `Раціон ${order.packageType}`,
+                              clientName: order.user?.name || "Клієнт",
+                              amount: order.price || 0,
+                            })
+                          }
                           disabled={processingId === order.id}
                           className="flex-1 rounded-xl border border-red-200 dark:border-red-800 bg-white dark:bg-slate-900 py-2.5 text-xs font-bold text-red-600 dark:text-red-400 transition hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50 cursor-pointer"
                         >
@@ -592,12 +659,21 @@ export default function PendingPaymentsClient({
             <div className="grid gap-6">
               {refunds.map((refund) => (
                 <div
-                  key={refund.id}
+                  key={`${refund.itemType}-${refund.id}`}
                   className="rounded-2xl border border-rose-200/80 dark:border-rose-900/50 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col md:flex-row gap-6"
                 >
                   <div className="flex-1 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
+                        <span
+                          className={`rounded-lg px-2.5 py-1 text-xs font-bold ${
+                            refund.itemType === "subscription"
+                              ? "bg-purple-100 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800"
+                              : "bg-blue-100 dark:bg-blue-950/70 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                          }`}
+                        >
+                          {refund.itemType === "subscription" ? "🎫 Абонемент" : "📦 Раціон"}
+                        </span>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">
                           {refund.user?.name || "Клієнт"}
                         </h3>
@@ -611,6 +687,8 @@ export default function PendingPaymentsClient({
                       <span className="rounded-full bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 px-3 py-1 text-xs font-bold">
                         {refund.isResolved
                           ? "✓ Врегульовано"
+                          : refund.itemType === "subscription"
+                          ? "⚠️ Скасовано (потребує дії)"
                           : `Скасовано: ${refund.cancelledDaysCount} з ${refund.totalDaysCount} дн.`}
                       </span>
                     </div>
@@ -619,9 +697,11 @@ export default function PendingPaymentsClient({
                       <p>
                         <strong>Пакет:</strong> {refund.packageType}
                       </p>
-                      <p>
-                        <strong>Адреса:</strong> {refund.user?.address || "Не вказана"}
-                      </p>
+                      {refund.user?.address && (
+                        <p>
+                          <strong>Адреса:</strong> {refund.user.address}
+                        </p>
+                      )}
                       <p>
                         <strong>Метод оплати:</strong>{" "}
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
@@ -632,7 +712,22 @@ export default function PendingPaymentsClient({
                             : refund.paymentMethod}
                         </span>
                       </p>
-                      {refund.cancelledDates.length > 0 && (
+
+                      {refund.receiptUrl && (
+                        <div className="pt-1">
+                          <a
+                            href={refund.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 px-3 py-1.5 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/60 transition"
+                          >
+                            <span>📎</span>
+                            <span>Переглянути наданий чек / квитанцію ↗</span>
+                          </a>
+                        </div>
+                      )}
+
+                      {refund.cancelledDates && refund.cancelledDates.length > 0 && (
                         <p>
                           <strong>Скасовані дати:</strong>{" "}
                           {refund.cancelledDates
@@ -675,35 +770,51 @@ export default function PendingPaymentsClient({
                   </div>
 
                   {/* Actions for Refund */}
-                  <div className="flex md:flex-col justify-end md:justify-center gap-2.5 border-t md:border-t-0 md:border-l border-gray-100 dark:border-slate-800 pt-4 md:pt-0 md:pl-6">
+                  <div className="flex md:flex-col justify-end md:justify-center gap-2 border-t md:border-t-0 md:border-l border-gray-100 dark:border-slate-800 pt-4 md:pt-0 md:pl-6 min-w-[200px]">
                     {!refund.isResolved ? (
                       <>
                         <button
-                          onClick={() =>
-                            handleResolveRefundWithBalance(refund.id, refund.fiatCancelledCount)
-                          }
+                          onClick={() => handleResolveRefundWithBalance(refund)}
                           disabled={processingId === refund.id}
-                          className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50"
-                          title="Нарахувати цей день клієнту на баланс у CRM замість повернення коштів"
+                          className="flex-1 md:flex-none flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50"
+                          title="Нарахувати дні клієнту на баланс у CRM замість повернення коштів"
                         >
                           <span>{processingId === refund.id ? "⏳" : "🟢"}</span>
-                          <span>Нарахувати баланс (+{refund.fiatCancelledCount}д)</span>
+                          <span>
+                            Нарахувати баланс (+
+                            {refund.itemType === "subscription"
+                              ? refund.totalDaysCount
+                              : refund.fiatCancelledCount}
+                            д)
+                          </span>
                         </button>
 
                         <button
-                          onClick={() => handleResolveRefundWithPayout(refund.id)}
+                          onClick={() => handleResolveRefundWithPayout(refund)}
                           disabled={processingId === refund.id}
-                          className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer disabled:opacity-50"
-                          title="Позначити, що кошти вже повернуто через кабінет Монобанку або за реквізитами"
+                          className="flex-1 md:flex-none flex items-center justify-center gap-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer disabled:opacity-50"
+                          title="Позначити, що кошти вже повернуто через кабінет банку або за реквізитами"
                         >
                           <span>{processingId === refund.id ? "⏳" : "⚪"}</span>
                           <span>Повернено вручну</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleResolveRefundNoPayment(refund)}
+                          disabled={processingId === refund.id}
+                          className="flex-1 md:flex-none flex items-center justify-center gap-1.5 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70 px-3.5 py-2 text-xs font-bold text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/50 transition cursor-pointer disabled:opacity-50"
+                          title="Клієнт насправді не платив у банк або чек фейковий — закрити без повернення"
+                        >
+                          <span>{processingId === refund.id ? "⏳" : "❌"}</span>
+                          <span>Оплати не було</span>
                         </button>
                       </>
                     ) : (
                       <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-3 py-2 rounded-xl text-center">
                         {refund.cancelReason?.includes("BALANCE_CREDITED")
                           ? "✓ Нараховано на баланс в CRM"
+                          : refund.cancelReason?.includes("NO_PAYMENT")
+                          ? "✓ Оплати не було (закрито)"
                           : "✓ Кошти повернуто вручну"}
                       </div>
                     )}
@@ -713,6 +824,75 @@ export default function PendingPaymentsClient({
             </div>
           )}
         </>
+      )}
+
+      {/* Rejection Modal with Money Received Confirmation */}
+      {rejectingTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-2xl border border-slate-700 bg-slate-900 p-6 shadow-2xl text-slate-100">
+            <div className="flex items-center gap-3 text-amber-400 mb-3">
+              <span className="text-2xl">⚠️</span>
+              <h3 className="text-lg font-bold text-white">
+                Скасування: {rejectingTarget.type === "subscription" ? "Абонемент" : "Раціон"}
+              </h3>
+            </div>
+            <p className="text-sm text-slate-300 mb-1">
+              <strong>Клієнт:</strong> {rejectingTarget.clientName}
+            </p>
+            <p className="text-sm text-slate-300 mb-3">
+              <strong>Сума:</strong> {rejectingTarget.amount} ₴
+            </p>
+
+            <div className="rounded-xl bg-slate-800/80 border border-slate-700/60 p-3.5 my-3 text-xs text-slate-300 space-y-1.5">
+              <p className="font-semibold text-white">
+                Чи надійшли фактично гроші від клієнта на розрахунковий рахунок?
+              </p>
+              <p className="text-slate-400">
+                • <strong>Ні</strong> (клієнт не платив / фейковий чек) — замовлення скасується без створення повернення.
+              </p>
+              <p className="text-slate-400">
+                • <strong>Так</strong> (гроші вже в банку) — автоматично додасться у вкладку <strong>«💸 До повернення»</strong>, щоб ви не забули повернути кошти або нарахувати дні.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                onClick={() => {
+                  if (rejectingTarget.type === "subscription") {
+                    handleRejectPurchaseWithOption(rejectingTarget.id, false);
+                  } else {
+                    handleRejectOrderWithOption(rejectingTarget.id, false);
+                  }
+                }}
+                disabled={Boolean(processingId)}
+                className="w-full rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 py-2.5 text-xs font-bold text-slate-200 transition cursor-pointer"
+              >
+                ❌ Ні, оплати не було (скасувати без виплати)
+              </button>
+
+              <button
+                onClick={() => {
+                  if (rejectingTarget.type === "subscription") {
+                    handleRejectPurchaseWithOption(rejectingTarget.id, true);
+                  } else {
+                    handleRejectOrderWithOption(rejectingTarget.id, true);
+                  }
+                }}
+                disabled={Boolean(processingId)}
+                className="w-full rounded-xl bg-amber-600 hover:bg-amber-500 py-2.5 text-xs font-bold text-white shadow-xs transition cursor-pointer"
+              >
+                💸 Так, гроші отримано (потрібне повернення)
+              </button>
+
+              <button
+                onClick={() => setRejectingTarget(null)}
+                className="w-full text-center py-1.5 text-xs text-slate-400 hover:text-slate-200 transition cursor-pointer mt-1"
+              >
+                Закрити / Не скасовувати
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

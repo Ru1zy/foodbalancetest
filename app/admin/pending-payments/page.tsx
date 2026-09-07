@@ -43,22 +43,34 @@ export default async function PendingPaymentsPage(props: {
         },
         {
           isPaid: false,
-          status: { not: "Скасовано" },
+          NOT: [
+            { status: "Скасовано" },
+            { status: "cancelled" },
+          ],
         },
       ],
     },
   });
 
   // 3. Fetch potential refund orders:
-  // Orders where money was paid (isPaid: true, price > 0)
-  // and either order.status is "cancelled" or some days are "cancelled"
+  // Orders where money was paid (isPaid: true) OR payment was IBAN/receipt,
+  // and either order.status is "cancelled"/"Скасовано" or some days are "cancelled"
   const potentialRefundOrders = await prisma.order.findMany({
     where: {
-      isPaid: true,
       price: { gt: 0 },
       OR: [
-        { status: "cancelled" },
-        { days: { some: { status: "cancelled" } } },
+        { isPaid: true },
+        { receiptUrl: { not: null } },
+        { paymentMethod: "bank_transfer" },
+      ],
+      AND: [
+        {
+          OR: [
+            { status: "cancelled" },
+            { status: "Скасовано" },
+            { days: { some: { status: "cancelled" } } },
+          ],
+        },
       ],
     },
     include: {
@@ -78,8 +90,34 @@ export default async function PendingPaymentsPage(props: {
     },
   });
 
-  // Map into structured RefundItem
-  const refundItems: RefundItem[] = potentialRefundOrders
+  // 4. Fetch potential refund subscriptions:
+  // Subscriptions that were cancelled but had payment method IBAN or receipt attached
+  const potentialRefundPurchases = await prisma.subscriptionPurchase.findMany({
+    where: {
+      status: "CANCELLED",
+      finalPrice: { gt: 0 },
+      OR: [
+        { receiptUrl: { not: null } },
+        { paymentMethod: "bank_transfer" },
+        { confirmedBy: { contains: "NEED_REFUND" } },
+      ],
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          phone: true,
+          address: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  // Map into structured RefundItem for orders
+  const orderRefundItems: RefundItem[] = potentialRefundOrders
     .map((order) => {
       const cancelledDays = order.days.filter((d) => d.status === "cancelled");
       const totalDaysCount = order.days.length || 1;
@@ -88,7 +126,7 @@ export default async function PendingPaymentsPage(props: {
       const fiatCancelledCount =
         order.days.length > 0
           ? Math.max(0, cancelledDays.length - order.balanceDaysUsed)
-          : order.status === "cancelled"
+          : order.status === "cancelled" || order.status === "Скасовано"
           ? 1
           : 0;
 
@@ -112,13 +150,16 @@ export default async function PendingPaymentsPage(props: {
 
       return {
         id: order.id,
+        itemType: "order" as const,
         packageType: order.packageType,
         totalPrice: order.price || 0,
         refundAmount,
         paymentMethod: order.paymentMethod,
+        receiptUrl: order.receiptUrl,
+        isPaid: order.isPaid,
         createdAt: order.createdAt,
         cancelledAt: latestCancelledAt,
-        cancelledDaysCount: cancelledDays.length,
+        cancelledDaysCount: cancelledDays.length || (order.status === "cancelled" || order.status === "Скасовано" ? 1 : 0),
         totalDaysCount,
         fiatCancelledCount,
         cancelledDates: cancelledDays.map((d) => d.deliveryDate),
@@ -127,7 +168,41 @@ export default async function PendingPaymentsPage(props: {
         user: order.user,
       };
     })
-    .filter((item) => item.fiatCancelledCount > 0);
+    .filter((item) => item.fiatCancelledCount > 0 || item.cancelledDaysCount > 0);
+
+  // Map into structured RefundItem for subscriptions
+  const subscriptionRefundItems: RefundItem[] = potentialRefundPurchases.map((purchase) => {
+    const isResolved = Boolean(purchase.confirmedBy?.includes("[RESOLVED"));
+    return {
+      id: purchase.id,
+      itemType: "subscription" as const,
+      packageType: `Абонемент ${purchase.packageId}`,
+      totalPrice: purchase.finalPrice,
+      refundAmount: purchase.finalPrice,
+      paymentMethod: purchase.paymentMethod,
+      receiptUrl: purchase.receiptUrl,
+      isPaid: false,
+      createdAt: purchase.createdAt,
+      cancelledAt: purchase.confirmedAt || purchase.updatedAt,
+      cancelledDaysCount: purchase.days,
+      totalDaysCount: purchase.days,
+      fiatCancelledCount: purchase.days,
+      cancelledDates: [],
+      cancelReason: purchase.confirmedBy || "Скасовано клієнтом (перевірте виписку)",
+      isResolved,
+      user: {
+        name: purchase.user.name,
+        phone: purchase.user.phone,
+        address: purchase.user.address || null,
+      },
+    };
+  });
+
+  const refundItems = [...orderRefundItems, ...subscriptionRefundItems].sort((a, b) => {
+    const dateA = a.cancelledAt ? new Date(a.cancelledAt).getTime() : new Date(a.createdAt).getTime();
+    const dateB = b.cancelledAt ? new Date(b.cancelledAt).getTime() : new Date(b.createdAt).getTime();
+    return dateB - dateA;
+  });
 
   const pendingRefunds = refundItems.filter((item) => !item.isResolved);
   const historyRefunds = refundItems.filter((item) => item.isResolved);
@@ -168,6 +243,7 @@ export default async function PendingPaymentsPage(props: {
               OR: [
                 { isPaid: true },
                 { status: "Скасовано" },
+                { status: "cancelled" },
               ],
             },
           ],
@@ -182,7 +258,10 @@ export default async function PendingPaymentsPage(props: {
             },
             {
               isPaid: false,
-              status: { not: "Скасовано" },
+              NOT: [
+                { status: "Скасовано" },
+                { status: "cancelled" },
+              ],
             },
           ],
         },

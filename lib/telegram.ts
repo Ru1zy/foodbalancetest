@@ -626,7 +626,9 @@ export async function sendOrderCancellationAlert(data: {
 
   const lines = [
     data.isRefundNeeded
-      ? "🚨 <b>СКАСУВАННЯ ОПЛАЧЕНОГО ЗАМОВЛЕННЯ!</b>"
+      ? (data.isPaid
+          ? "🚨 <b>СКАСУВАННЯ ОПЛАЧЕНОГО ЗАМОВЛЕННЯ!</b>"
+          : "🚨 <b>СКАСУВАННЯ ЗАМОВЛЕННЯ З ЧЕКОМ / IBAN!</b>")
       : "ℹ️ <b>Скасування доставки</b>",
     `👤 <b>Клієнт:</b> ${escapeHtml(data.clientName)} (${escapeHtml(data.clientPhone)})`,
     `📦 <b>Пакет:</b> ${escapeHtml(data.packageType)}`,
@@ -639,7 +641,9 @@ export async function sendOrderCancellationAlert(data: {
     data.balanceDaysRefunded
       ? "✓ <b>1 день автоматично повернуто</b> на баланс абонемента клієнта."
       : data.isRefundNeeded
-        ? "⚠️ <b>ПОТРІБНА ДІЯ АДМІНА:</b> Клієнт оплатив цей раціон коштами! Перейдіть в адмін-панель: <b>Оплати → До повернення</b>, щоб нарахувати день на баланс або повернути кошти."
+        ? (data.isPaid
+            ? "⚠️ <b>ПОТРІБНА ДІЯ АДМІНА:</b> Клієнт оплатив цей раціон коштами! Перейдіть в адмін-панель: <b>Оплати → До повернення</b>, щоб нарахувати день на баланс або повернути кошти."
+            : "⚠️ <b>ПОТРІБНА ДІЯ АДМІНА:</b> Клієнт обрав IBAN або надав квитанцію про оплату! Перевірте виписку банку та перейдіть в адмін-панель: <b>Оплати → До повернення</b>.")
         : "ℹ️ Замовлення скасовано.",
   ].filter(Boolean);
 
@@ -649,7 +653,7 @@ export async function sendOrderCancellationAlert(data: {
   if (token && data.clientChatId) {
     try {
       const clientText =
-        data.cancelledBy === "Адміністратор"
+        data.cancelledBy.includes("Адміністратор")
           ? `⚠️ <b>Доставку скасовано адміністратором</b>\n\n📅 <b>Дата:</b> ${dateFormatted}\n📦 <b>Тариф:</b> ${escapeHtml(
               data.packageType
             )}\n\n${
@@ -676,6 +680,61 @@ export async function sendOrderCancellationAlert(data: {
       });
     } catch (err) {
       console.error("Failed to notify client about cancellation:", err);
+    }
+  }
+
+  return adminDelivered;
+}
+
+export async function sendSubscriptionCancellationAlert(data: {
+  purchaseId: string;
+  clientChatId?: string | null;
+  clientName: string;
+  clientPhone: string;
+  packageId: string;
+  days: number;
+  price: number;
+  paymentMethod: string;
+  hasReceipt: boolean;
+  cancelledBy: string;
+}) {
+  const lines = [
+    data.hasReceipt || data.paymentMethod === "bank_transfer"
+      ? "🚨 <b>СКАСУВАННЯ АБОНЕМЕНТА З ЧЕКОМ / IBAN!</b>"
+      : "ℹ️ <b>Скасування заявки на абонемент</b>",
+    `👤 <b>Клієнт:</b> ${escapeHtml(data.clientName)} (${escapeHtml(data.clientPhone)})`,
+    `📦 <b>Абонемент:</b> ${escapeHtml(data.packageId)} (${data.days} дн.)`,
+    `💵 <b>Сума:</b> ${data.price} ₴ (Метод: ${escapeHtml(data.paymentMethod)})`,
+    `🛑 <b>Скасовано:</b> ${escapeHtml(data.cancelledBy)}`,
+    data.hasReceipt ? "📎 <b>Клієнт надав квитанцію про оплату!</b>" : "",
+    "",
+    "⚠️ <b>ПОТРІБНА ДІЯ АДМІНА:</b> Перевірте виписку розрахункового рахунку банку! Заявку додано для врегулювання в адмін-панель: <b>Оплати → До повернення</b>.",
+  ].filter(Boolean);
+
+  const adminDelivered = await sendAdminAlert(lines.join("\n"));
+
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (token && data.clientChatId) {
+    try {
+      const clientText = `ℹ️ <b>Скасування заявки на абонемент</b>\n\n📦 <b>Тариф:</b> ${escapeHtml(
+        data.packageId
+      )} (${data.days} дн.)\n💵 <b>Сума:</b> ${data.price} ₴\n\n${
+        data.hasReceipt || data.paymentMethod === "bank_transfer"
+          ? "Якщо ви вже здійснили переказ коштів, адміністратор перевірить виписку та поверне кошти або зв'яжеться з вами."
+          : "Заявку на абонемент скасовано."
+      }`;
+
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: data.clientChatId,
+          text: clientText.trim(),
+          parse_mode: "HTML",
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to notify client about subscription cancellation:", err);
     }
   }
 

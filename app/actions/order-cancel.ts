@@ -117,7 +117,8 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
     });
 
     // Enqueue telegram alert to admin chat
-    const isRefundNeeded = order.isPaid && (order.price ?? 0) > 0 && !willRefundBalance;
+    const hasPotentialPayment = order.isPaid || Boolean(order.receiptUrl) || order.paymentMethod === "bank_transfer";
+    const isRefundNeeded = hasPotentialPayment && (order.price ?? 0) > 0 && !willRefundBalance;
 
     await enqueueOutboxJob(tx, "TELEGRAM_ALERT_CANCELLATION", {
       orderId: order.id,
