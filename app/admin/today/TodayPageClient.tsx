@@ -16,6 +16,9 @@ type Order = {
   deliveryTime: string | null;
   deliveryNote: string | null;
   price: number | null;
+  isPaid?: boolean;
+  paymentMethod?: string | null;
+  balanceDaysUsed?: number | null;
   user: {
     id: string;
     name: string;
@@ -422,11 +425,28 @@ const handleExportToKitchen = () => {
                         {order.orderDayId && (
                           <button
                             onClick={async () => {
-                              if (!confirm("Ви впевнені, що хочете скасувати це замовлення? Клієнту буде повернуто 1 день на баланс, а рядок в Google Sheets стане червоним.")) return;
+                              const isPaidWithMoney = Boolean(
+                                order.isPaid &&
+                                (order.price ?? 0) > 0 &&
+                                !(order.balanceDaysUsed && order.balanceDaysUsed > 0)
+                              );
+
+                              const confirmMsg = isPaidWithMoney
+                                ? `⚠️ УВАГА: За це замовлення клієнт сплатив ${order.price} ₴ (${order.paymentMethod || "картка/IBAN"})!\n\nПісля скасування воно автоматично потрапить у вкладку «Оплати → 💸 До повернення», де ви повинні:\n1) Або нарахувати клієнту день на баланс (+1д компенсація)\n2) Або повернути гроші на картку вручну.\n\nВи дійсно хочете скасувати цю доставку?`
+                                : `Ви впевнені, що хочете скасувати це замовлення? 1 день буде автоматично повернуто клієнту на баланс абонемента, а рядок в Google Sheets стане червоним.`;
+
+                              if (!confirm(confirmMsg)) return;
+
                               try {
                                 const { adminCancelOrderDay } = await import('@/app/actions/order-cancel');
                                 await adminCancelOrderDay(order.orderDayId!);
                                 setOrders(prev => prev.filter(o => o.orderDayId !== order.orderDayId));
+
+                                if (isPaidWithMoney) {
+                                  alert(
+                                    `✅ Доставку скасовано!\n\n🚨 НАГАДУВАННЯ: Замовлення очікує вашого рішення у вкладці «Оплати → 💸 До повернення». Будь ласка, перейдіть туди, щоб нарахувати клієнту день або повернути кошти.`
+                                  );
+                                }
                               } catch (err: unknown) {
                                 const message = err instanceof Error ? err.message : "Помилка при скасуванні";
                                 alert(message);
