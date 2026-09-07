@@ -108,8 +108,6 @@ export default function PendingPaymentsClient({
 
   // Handlers for Subscription purchases
   const handleConfirmPurchase = async (id: string) => {
-    if (!confirm("Підтвердити отримання оплати за абонемент?")) return;
-
     setProcessingId(id);
     const res = await confirmPaymentAction(id);
     if (!res.ok) {
@@ -125,10 +123,6 @@ export default function PendingPaymentsClient({
     const res = await rejectPaymentAction(id, moneyReceived);
     if (!res.ok) {
       alert(res.error || "Помилка при скасуванні");
-    } else if (moneyReceived) {
-      alert(
-        "✅ Абонемент скасовано!\n\n🚨 Оскільки кошти було отримано на рахунок, абонемент автоматично перейшов у вкладку «💸 До повернення (Refunds)», щоб ви не забули повернути кошти або нарахувати дні."
-      );
     }
     setProcessingId(null);
     router.refresh();
@@ -136,8 +130,6 @@ export default function PendingPaymentsClient({
 
   // Handlers for Regular orders
   const handleConfirmOrder = async (id: string) => {
-    if (!confirm("Підтвердити отримання оплати за це замовлення раціону?")) return;
-
     setProcessingId(id);
     const res = await confirmOrderPaymentAction(id);
     if (!res.ok) {
@@ -153,35 +145,24 @@ export default function PendingPaymentsClient({
     const res = await rejectOrderPaymentAction(id, moneyReceived);
     if (!res.ok) {
       alert(res.error || "Помилка при відхиленні замовлення");
-    } else if (moneyReceived) {
-      alert(
-        "✅ Замовлення скасовано!\n\n🚨 Оскільки кошти було отримано на рахунок, замовлення автоматично перейшло у вкладку «💸 До повернення (Refunds)», щоб ви не забули повернути кошти або нарахувати день."
-      );
     }
     setProcessingId(null);
     router.refresh();
   };
 
-  // Handlers for Refunds
+  // Handlers for Refunds (Instant 1-click execution without blocking confirms)
   const handleResolveRefundWithBalance = async (refund: RefundItem) => {
-    if (refund.itemType === "subscription") {
-      if (!confirm(`Активувати абонемент та нарахувати +${refund.totalDaysCount} дн. на баланс клієнту замість повернення грошей?`)) return;
-      setProcessingId(refund.id);
-      const res = await resolveSubscriptionRefundWithBalanceAction(refund.id);
-      if (!res.ok) alert(res.error || "Помилка при нарахуванні днів на баланс");
-    } else {
-      if (!confirm(`Нарахувати клієнту +${refund.fiatCancelledCount} дн. на баланс замість повернення грошей?`)) return;
-      setProcessingId(refund.id);
-      const res = await resolveRefundWithBalanceAction(refund.id, refund.fiatCancelledCount);
-      if (!res.ok) alert(res.error || "Помилка при нарахуванні днів на баланс");
-    }
+    setProcessingId(refund.id);
+    const res =
+      refund.itemType === "subscription"
+        ? await resolveSubscriptionRefundWithBalanceAction(refund.id)
+        : await resolveRefundWithBalanceAction(refund.id, refund.fiatCancelledCount);
+    if (!res.ok) alert(res.error || "Помилка при нарахуванні днів на баланс");
     setProcessingId(null);
     router.refresh();
   };
 
   const handleResolveRefundWithPayout = async (refund: RefundItem) => {
-    if (!confirm(`Позначити як повернуте (суму ${refund.refundAmount} ₴ повернуто клієнту вручну через банк або реквізити)?`)) return;
-
     setProcessingId(refund.id);
     const res =
       refund.itemType === "subscription"
@@ -196,13 +177,6 @@ export default function PendingPaymentsClient({
   };
 
   const handleResolveRefundNoPayment = async (refund: RefundItem) => {
-    if (
-      !confirm(
-        `Підтвердити, що клієнт насправді НЕ здійснював оплату ${refund.refundAmount} ₴ на розрахунковий рахунок?\n\n(Заявку буде закрито без виплати повернення коштів)`
-      )
-    )
-      return;
-
     setProcessingId(refund.id);
     const res =
       refund.itemType === "subscription"
