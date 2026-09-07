@@ -107,6 +107,35 @@ export async function processOutboxJob(jobId: string) {
       }
       const { markOrderCancelledInSheet } = await import('./monthlySheets');
       await markOrderCancelledInSheet(payload.orderId, payload.monthKey, payload.tabName);
+    } else if (job.type === "TELEGRAM_ALERT_CANCELLATION") {
+      const payload = job.payload as {
+        orderId: string;
+        dayDate: string;
+        cancelledBy: string;
+        isRefundNeeded: boolean;
+        balanceDaysRefunded: boolean;
+      };
+      const order = await prisma.order.findUnique({
+        where: { id: payload.orderId },
+        include: { user: true },
+      });
+      if (order) {
+        const { sendOrderCancellationAlert } = await import('./telegram');
+        await sendOrderCancellationAlert({
+          orderId: order.id,
+          clientChatId: order.user?.chatId,
+          clientName: order.user.name,
+          clientPhone: order.user.phone,
+          packageType: order.packageType,
+          deliveryDate: new Date(payload.dayDate),
+          price: order.price,
+          paymentMethod: order.paymentMethod,
+          isPaid: order.isPaid,
+          cancelledBy: payload.cancelledBy,
+          isRefundNeeded: payload.isRefundNeeded,
+          balanceDaysRefunded: payload.balanceDaysRefunded,
+        });
+      }
     } else if (job.type === "TELEGRAM_NOTIFICATION") {
       const payload = job.payload as { orderIds?: string[] };
       if (payload.orderIds && payload.orderIds.length > 0) {

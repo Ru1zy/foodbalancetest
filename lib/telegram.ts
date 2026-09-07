@@ -604,3 +604,81 @@ export async function sendSubscriptionRejectedAlert(
     await sendEmail(user.email, "Оплату абонемента скасовано | Food Balance", html);
   }
 }
+
+export async function sendOrderCancellationAlert(data: {
+  orderId: string;
+  clientChatId?: string | null;
+  clientName: string;
+  clientPhone: string;
+  packageType: string;
+  deliveryDate: Date;
+  price: number | null;
+  paymentMethod: string;
+  isPaid: boolean;
+  cancelledBy: string;
+  isRefundNeeded: boolean;
+  balanceDaysRefunded: boolean;
+}) {
+  const dateFormatted = new Intl.DateTimeFormat("uk-UA", {
+    dateStyle: "medium",
+    timeZone: "Europe/Kyiv",
+  }).format(data.deliveryDate);
+
+  const lines = [
+    data.isRefundNeeded
+      ? "🚨 <b>СКАСУВАННЯ ОПЛАЧЕНОГО ЗАМОВЛЕННЯ!</b>"
+      : "ℹ️ <b>Скасування доставки</b>",
+    `👤 <b>Клієнт:</b> ${escapeHtml(data.clientName)} (${escapeHtml(data.clientPhone)})`,
+    `📦 <b>Пакет:</b> ${escapeHtml(data.packageType)}`,
+    `📅 <b>Дата доставки:</b> ${dateFormatted}`,
+    data.price != null && data.price > 0
+      ? `💵 <b>Сума замовлення:</b> ${data.price} ₴ (Метод: ${escapeHtml(data.paymentMethod)})`
+      : "",
+    `🛑 <b>Скасовано:</b> ${escapeHtml(data.cancelledBy)}`,
+    "",
+    data.balanceDaysRefunded
+      ? "✓ <b>1 день автоматично повернуто</b> на баланс абонемента клієнта."
+      : data.isRefundNeeded
+        ? "⚠️ <b>ПОТРІБНА ДІЯ АДМІНА:</b> Клієнт оплатив цей раціон коштами! Перейдіть в адмін-панель: <b>Оплати → До повернення</b>, щоб нарахувати день на баланс або повернути кошти."
+        : "ℹ️ Замовлення скасовано.",
+  ].filter(Boolean);
+
+  const adminDelivered = await sendAdminAlert(lines.join("\n"));
+
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (token && data.clientChatId) {
+    try {
+      const clientText =
+        data.cancelledBy === "Адміністратор"
+          ? `⚠️ <b>Доставку скасовано адміністратором</b>\n\n📅 <b>Дата:</b> ${dateFormatted}\n📦 <b>Тариф:</b> ${escapeHtml(
+              data.packageType
+            )}\n\n${
+              data.balanceDaysRefunded
+                ? "✓ <b>1 день автоматично повернуто</b> на ваш баланс абонемента."
+                : data.isRefundNeeded
+                  ? "Кошти буде компенсовано на баланс або повернено за вашими реквізитами. Наш менеджер незабаром зв'яжеться з вами."
+                  : ""
+            }`
+          : `ℹ️ <b>Ви скасували доставку</b>\n\n📅 <b>Дата:</b> ${dateFormatted}\n📦 <b>Тариф:</b> ${escapeHtml(
+              data.packageType
+            )}\n\n${
+              data.balanceDaysRefunded
+                ? "✓ <b>1 день повернено</b> на ваш баланс абонемента."
+                : data.isRefundNeeded
+                  ? "Запит на повернення коштів або перенесення дня передано адміністратору."
+                  : ""
+            }`;
+
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: data.clientChatId, text: clientText.trim(), parse_mode: "HTML" }),
+      });
+    } catch (err) {
+      console.error("Failed to notify client about cancellation:", err);
+    }
+  }
+
+  return adminDelivered;
+}
+

@@ -3,323 +3,499 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FoodBalance — Інструкція Адміністратора</title>
+<title>FoodBalance — Детальна Інструкція Адміністратора</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    color: #1e293b; line-height: 1.7; background: #f8fafc; padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1e293b; line-height: 1.65; background: #f1f5f9; padding: 24px 0;
   }
   .page {
-    max-width: 800px; margin: 0 auto; background: #fff; padding: 48px 56px;
+    max-width: 900px; margin: 0 auto; background: #fff; padding: 48px 56px;
+    border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);
   }
   @media print {
-    body { background: #fff; }
-    .page { padding: 24px 32px; max-width: 100%; }
+    body { background: #fff; padding: 0; }
+    .page { padding: 16px 20px; max-width: 100%; border-radius: 0; box-shadow: none; }
     .no-print { display: none !important; }
-    h2 { page-break-before: auto; }
-    table, .callout { page-break-inside: avoid; }
+    h2 { page-break-before: auto; break-after: avoid; }
+    table, .callout, .step-card, .rule-box { page-break-inside: avoid; break-inside: avoid; }
+    .page-break { page-break-before: always; }
   }
   .print-btn {
-    position: fixed; top: 20px; right: 20px; background: #2563eb; color: #fff;
+    position: fixed; top: 20px; right: 24px; background: #2563eb; color: #fff;
     border: none; padding: 12px 24px; border-radius: 12px; font-size: 14px;
-    font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,0.3); z-index: 100;
+    font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    z-index: 1000; transition: all 0.2s; display: flex; items-center; gap: 8px;
   }
-  .print-btn:hover { background: #1d4ed8; }
-  .header { text-align: center; padding-bottom: 32px; border-bottom: 3px solid #2563eb; margin-bottom: 32px; }
-  .header h1 { font-size: 28px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-  .header .subtitle { font-size: 14px; color: #64748b; }
-  .header .version {
-    display: inline-block; margin-top: 12px; background: #eff6ff; color: #2563eb;
-    padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  .print-btn:hover { background: #1d4ed8; transform: translateY(-1px); }
+  .header {
+    text-align: center; padding-bottom: 28px; border-bottom: 3px solid #2563eb; margin-bottom: 32px;
   }
-  .toc { background: #f1f5f9; border-radius: 12px; padding: 24px 28px; margin-bottom: 36px; }
-  .toc h3 { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #475569; margin-bottom: 12px; }
-  .toc ol { list-style: none; counter-reset: toc; padding: 0; }
-  .toc li { counter-increment: toc; padding: 6px 0; font-size: 14px; color: #334155; border-bottom: 1px solid #e2e8f0; }
-  .toc li:last-child { border-bottom: none; }
-  .toc li::before { content: counter(toc) "."; font-weight: 700; color: #2563eb; margin-right: 8px; }
-  h2 { font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 40px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; }
-  h2 .emoji { margin-right: 8px; }
+  .header h1 { font-size: 30px; font-weight: 900; color: #0f172a; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .header .subtitle { font-size: 15px; color: #64748b; font-weight: 500; }
+  .header .badge-row { display: flex; justify-content: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px;
+    border-radius: 20px; font-size: 12px; font-weight: 700;
+  }
+  .badge-blue { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+  .badge-amber { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+  .badge-green { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .toc {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px;
+    padding: 24px 28px; margin-bottom: 36px;
+  }
+  .toc h3 {
+    font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #475569; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+  .toc ol { list-style: none; counter-reset: toc; padding: 0; display: grid; grid-template-columns: 1fr; gap: 6px; }
+  @media (min-width: 640px) {
+    .toc ol { grid-template-columns: 1fr 1fr; }
+  }
+  .toc li { counter-increment: toc; font-size: 13.5px; color: #334155; }
+  .toc a { text-decoration: none; color: inherit; display: block; padding: 4px 6px; border-radius: 6px; transition: background 0.15s; }
+  .toc a:hover { background: #e2e8f0; color: #2563eb; }
+  .toc li::before { content: counter(toc) "."; font-weight: 800; color: #2563eb; margin-right: 6px; }
+  h2 {
+    font-size: 21px; font-weight: 800; color: #0f172a; margin-top: 40px; margin-bottom: 16px;
+    padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; gap: 8px;
+  }
   h3 { font-size: 16px; font-weight: 700; color: #1e293b; margin-top: 24px; margin-bottom: 10px; }
-  p { margin-bottom: 12px; font-size: 14px; }
-  .path { display: inline-block; background: #f1f5f9; color: #475569; padding: 2px 10px; border-radius: 6px; font-size: 13px; font-family: monospace; margin-bottom: 12px; }
-  ul, ol { padding-left: 20px; margin-bottom: 14px; }
-  li { font-size: 14px; margin-bottom: 6px; }
-  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
-  th { background: #1e293b; color: #fff; padding: 10px 14px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; }
-  td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+  h4 { font-size: 14.5px; font-weight: 700; color: #334155; margin-top: 16px; margin-bottom: 8px; }
+  p { margin-bottom: 12px; font-size: 14px; color: #334155; }
+  .path {
+    display: inline-block; background: #f1f5f9; color: #475569; padding: 2px 10px;
+    border-radius: 6px; font-size: 12.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-weight: 600; margin-bottom: 12px; border: 1px solid #e2e8f0;
+  }
+  ul, ol { padding-left: 22px; margin-bottom: 14px; }
+  li { font-size: 14px; margin-bottom: 6px; color: #334155; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; }
+  th { background: #1e293b; color: #fff; padding: 10px 14px; text-align: left; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px; }
+  td { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; vertical-align: top; background: #fff; }
+  tr:nth-child(even) td { background: #f8fafc; }
   tr:last-child td { border-bottom: none; }
-  .callout { border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 13px; line-height: 1.6; }
-  .callout-title { font-weight: 700; margin-bottom: 4px; font-size: 13px; }
-  .callout.important { background: #fef3c7; border-left: 4px solid #f59e0b; color: #92400e; }
-  .callout.danger { background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; }
-  .callout.info { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
-  .callout.tip { background: #f0fdf4; border-left: 4px solid #22c55e; color: #166534; }
+  .callout {
+    border-radius: 12px; padding: 16px 20px; margin: 18px 0; font-size: 13.5px; line-height: 1.6;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .callout-title { font-weight: 800; margin-bottom: 6px; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+  .callout.important { background: #fffbeb; border-left: 5px solid #f59e0b; color: #92400e; border: 1px solid #fde68a; border-left-width: 5px; }
+  .callout.danger { background: #fef2f2; border-left: 5px solid #ef4444; color: #991b1b; border: 1px solid #fecaca; border-left-width: 5px; }
+  .callout.info { background: #eff6ff; border-left: 5px solid #3b82f6; color: #1e40af; border: 1px solid #bfdbfe; border-left-width: 5px; }
+  .callout.tip { background: #f0fdf4; border-left: 5px solid #22c55e; color: #166534; border: 1px solid #bbf7d0; border-left-width: 5px; }
+  .step-card {
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 16px 20px; margin: 12px 0;
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 50%; background: #2563eb; color: #fff;
+    font-weight: 800; font-size: 12px; margin-right: 6px;
+  }
+  .btn-visual {
+    display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px;
+    border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap;
+  }
+  .btn-green { background: #22c55e; color: #fff; }
+  .btn-red { background: #ef4444; color: #fff; }
+  .btn-blue { background: #2563eb; color: #fff; }
+  .btn-gray { background: #e2e8f0; color: #334155; }
   .checklist { list-style: none; padding: 0; }
-  .checklist li { padding: 8px 0 8px 28px; position: relative; border-bottom: 1px solid #f1f5f9; }
-  .checklist li::before { content: "\2610"; position: absolute; left: 0; font-size: 16px; color: #94a3b8; }
-  code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; color: #e11d48; }
-  strong { font-weight: 700; }
-  .footer { margin-top: 48px; padding-top: 24px; border-top: 2px solid #e2e8f0; text-align: center; font-size: 12px; color: #94a3b8; }
+  .checklist li {
+    padding: 10px 12px 10px 32px; position: relative; border-bottom: 1px solid #f1f5f9;
+    font-size: 13.5px;
+  }
+  .checklist li::before {
+    content: "☐"; position: absolute; left: 8px; font-size: 16px; color: #64748b; font-weight: bold;
+  }
+  .footer {
+    margin-top: 48px; padding-top: 24px; border-top: 2px solid #e2e8f0;
+    text-align: center; font-size: 12px; color: #64748b;
+  }
+  code {
+    background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: 12.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #d97706; font-weight: 600;
+  }
+  strong { font-weight: 700; color: #0f172a; }
 </style>
 </head>
 <body>
-<button class="print-btn no-print" onclick="window.print()">&#x1F5A8;&#xFE0F; Зберегти як PDF</button>
+
+<button class="print-btn no-print" onclick="window.print()">🖨️ Зберегти як PDF / Друк</button>
+
 <div class="page">
-<div class="header">
-  <h1>&#x1F4CB; Інструкція Адміністратора</h1>
-  <div class="subtitle">Система доставки здорового харчування <strong>FoodBalance</strong></div>
-  <div class="version">Версія 1.2 · 5 вересня 2026</div>
-</div>
-<div class="toc">
-  <h3>Зміст</h3>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>📋 Інструкція Адміністратора</h1>
+    <div class="subtitle">Повне покрокове керівництво з управління системою <strong>FoodBalance</strong></div>
+    <div class="badge-row">
+      <span class="badge badge-blue">Версія 2.0</span>
+      <span class="badge badge-green">Оновлено: 7 вересня 2026</span>
+      <span class="badge badge-amber">Для щоденної роботи</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc no-print">
+    <h3>Зміст інструкції</h3>
+    <ol>
+      <li><a href="#sec-1">Вхід в адмін-панель та навігація</a></li>
+      <li><a href="#sec-2">📅 Розділ «Сьогодні» — щоденна робота</a></li>
+      <li><a href="#sec-3">💳 Розділ «Оплати» — перевірка IBAN і чеків</a></li>
+      <li><a href="#sec-4">📦 Розділ «Замовлення» — журнал та архів</a></li>
+      <li><a href="#sec-5">👥 Розділ «Клієнти (CRM)» — база та дні</a></li>
+      <li><a href="#sec-6">📢 Розділ «Сповіщення» — Telegram-повідомлення</a></li>
+      <li><a href="#sec-7">🍽️ Розділ «Меню» — страви, калорії, фото</a></li>
+      <li><a href="#sec-8">💰 Розділ «Тарифи» — ціни та програми</a></li>
+      <li><a href="#sec-9">⚙️ Розділ «Налаштування» — прийом замовлень, IBAN</a></li>
+      <li><a href="#sec-10">📊 Розділ «Таблиці» — Google Sheets</a></li>
+      <li><a href="#sec-11">⏰ Щоденний розпорядок (Чеклист)</a></li>
+      <li><a href="#sec-12">🛑 Категоричні заборони (Чого не робити)</a></li>
+      <li><a href="#sec-13">🆘 Що робити, якщо... (Типові ситуації)</a></li>
+    </ol>
+  </div>
+
+  <!-- Section 1 -->
+  <h2 id="sec-1">1. Вхід в адмін-панель та навігація</h2>
+  <div class="path">/admin</div>
+  <p>Адмін-панель доступна лише співробітникам компанії через захищену авторизацію в Telegram.</p>
+  
+  <div class="step-card">
+    <h4>Як зайти в систему:</h4>
+    <ol>
+      <li>Відкрийте браузер на комп'ютері або телефоні і перейдіть за адресою <code>/admin</code>.</li>
+      <li>Натисніть кнопку входу через Telegram і підтвердіть запит на телефоні.</li>
+      <li>Після входу ви потрапите у робочий простір.</li>
+    </ol>
+  </div>
+
+  <table>
+    <thead><tr><th>Іконка</th><th>Розділ меню</th><th>Для чого потрібен</th></tr></thead>
+    <tbody>
+      <tr><td>📅</td><td><strong>Сьогодні</strong></td><td>Головний щоденний стіл: контроль сьогоднішніх доставок, встановлення часу, нотатки кур'єра, зв'язок з кухнею.</td></tr>
+      <tr><td>💳</td><td><strong>Оплати</strong></td><td>Перевірка реальних надходжень грошей на IBAN (банківський рахунок) або готівки. Підтвердження абонементів та замовлень.</td></tr>
+      <tr><td>📦</td><td><strong>Замовлення</strong></td><td>Повний журнал усіх замовлень за весь час, архів та перевірка складу страв.</td></tr>
+      <tr><td>👥</td><td><strong>Клієнти (CRM)</strong></td><td>Телефонна книга клієнтів, їх адреси, залишкові дні на балансі, ручне нарахування бонусних днів.</td></tr>
+      <tr><td>📢</td><td><strong>Сповіщення</strong></td><td>Надсилання повідомлень клієнтам у Telegram (масова розсилка або особисте повідомлення одній людині).</td></tr>
+      <tr><td>🍽️</td><td><strong>Меню</strong></td><td>Редагування страв на кожен день тижня, калорійності та завантаження фотографій їжі.</td></tr>
+      <tr><td>💰</td><td><strong>Тарифи</strong></td><td>Налаштування вартості раціонів, ціни за 1 страву (для Індивідуального) та промо-матеріалів.</td></tr>
+      <tr><td>⚙️</td><td><strong>Налаштування</strong></td><td>Режим прийому замовлень (авто/відкрити/стоп), банківські реквізити IBAN, номер телефону та соцмережі.</td></tr>
+      <tr><td>📊</td><td><strong>Таблиці</strong></td><td>Підключення Google Sheets для автоматичного вивантаження замовлень на кухню.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- Section 2 -->
+  <h2 id="sec-2">2. 📅 Розділ «Сьогодні» — головна щоденна робота</h2>
+  <div class="path">/admin/today</div>
+  <p>Це ваш **найголовніший екран** кожного робочого дня. Тут формується графік сьогоднішніх доставок.</p>
+
+  <div class="callout tip">
+    <div class="callout-title">💡 Правило збереження:</div>
+    Усі зміни (вибір часу доставки або введення тексту нотатки) зберігаються системою <strong>АВТОМАТИЧНО</strong> через 0.8 секунди. Ніяких окремих кнопок «Зберегти» натискати не треба!
+  </div>
+
+  <h3>Покроковий алгоритм дій у розділі:</h3>
+
+  <div class="step-card">
+    <p><strong><span class="step-num">1</span> Перевірте дату доставки:</strong> Вгорі у полі «Дата доставки» за замовчуванням стоїть сьогоднішнє число. Якщо вам потрібно підготувати завтрашній день — введіть дату у форматі <code>ДД.ММ</code> (наприклад, <code>08.09</code>) і таблиця миттєво оновиться.</p>
+  </div>
+
+  <div class="step-card">
+    <p><strong><span class="step-num">2</span> Проставте час доставки кожному клієнту:</strong> У стовпчику «Час доставки» натисніть на випадаючий список і виберіть погоджений часовий слот (наприклад, <code>18:00-18:30</code> або <code>19:00-19:30</code>).</p>
+  </div>
+
+  <div class="step-card">
+    <p><strong><span class="step-num">3</span> Вкажіть нотатку клієнту (за потреби):</strong> У стовпчик «Нотатка адміна» впишіть повідомлення (наприклад: <em>«Залишимо біля консьєржа»</em> або <em>«Кур'єр буде ближче до 19:15»</em>).</p>
+  </div>
+
+  <div class="step-card">
+    <p><strong><span class="step-num">4</span> Перевірте коментарі клієнтів:</strong> Обов'язково прочитайте стовпчик «Коментар клієнта». Там можуть бути вказані коди домофонів, прохання не дзвонити у двері через сон дитини або алергії.</p>
+  </div>
+
+  <div class="step-card">
+    <p><strong><span class="step-num">5</span> Стовпчик «Telegram» (✓ або ✗):</strong></p>
+    <ul>
+      <li><strong>Зелена галочка ✓:</strong> у клієнта підключений Telegram. Поруч є кнопка <span class="btn-visual btn-blue">📢 Надіслати</span> — вона відправляє час та нотатку персонально цьому одному клієнту.</li>
+      <li><strong>Червоний хрестик ✗:</strong> у клієнта немає Telegram-бота. <strong>Йому сповіщення не надійде!</strong> Зателефонуйте йому на звичайний мобільний телефон.</li>
+    </ul>
+  </div>
+
+  <div class="step-card">
+    <p><strong><span class="step-num">6</span> Головна кнопка вгорі — масова відправка сповіщень у Telegram:</strong></p>
+    <ul>
+      <li><span class="btn-visual btn-green">📢 Відправити сповіщення (Telegram)</span> — розсилає персональні повідомлення з часом доставки та вашими коментарями <strong>ОДРАЗУ ВСІМ</strong> клієнтам сьогоднішнього дня, у кого є Telegram (зелена галочка ✓). Натискайте її ближче до вечора (16:30 – 17:00), коли всім проставлено час!</li>
+    </ul>
+    <p style="margin-top: 10px; font-size: 13px; color: #475569; background: #f1f5f9; padding: 8px 12px; border-radius: 8px;">
+      ⚡ <strong>Зверніть увагу:</strong> передача замовлень кухарям у Google Таблиці відбувається <strong>ПОВНІСТЮ АВТОМАТИЧНО 24/7</strong> в момент оформлення клієнтом! Тиснути ніяких кнопок для кухні не потрібно.
+    </p>
+  </div>
+
+  <div class="callout important">
+    <div class="callout-title">⚠️ Скасування конкретного дня доставки:</div>
+    Якщо клієнт зателефонував і попросив не привозити раціон сьогодні — знайдіть його рядок і натисніть червону кнопку <span class="btn-visual btn-red">❌ Скасувати</span>. Доставка на сьогодні зникне, а цей день <strong>автоматично повернеться клієнту назад на баланс абонемента</strong>!
+  </div>
+
+  <!-- Section 3 -->
+  <h2 id="sec-3">3. 💳 Розділ «Оплати» — перевірка IBAN, чеків та повернення коштів (Refunds)</h2>
+  <div class="path">/admin/pending-payments</div>
+  
+  <div class="callout danger">
+    <div class="callout-title">🚨 УВАГА! НАЙВАЖЛИВІШИЙ ФІНАНСОВИЙ РОЗДІЛ:</div>
+    Перевіряйте цей розділ <strong>мінімум 2-3 рази на день</strong>! Тут перевіряються вхідні платежі за IBAN, а також контролюються всі замовлення, які клієнти скасували після оплати (щоб вчасно повернути кошти або перенести дні).
+  </div>
+
+  <h3>Три головні категорії (Вкладки вгорі):</h3>
+  <table>
+    <thead><tr><th>Вкладка</th><th>Що означає</th><th>Що робити адміну</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>🎫 Абонементи (баланс)</strong></td>
+        <td>Клієнт купив пакет днів наперед (наприклад, 14 чи 30 днів) за IBAN.</td>
+        <td>Звірити виписку банку -> натиснути <span class="btn-visual btn-green">✅ Підтвердити</span>.</td>
+      </tr>
+      <tr>
+        <td><strong>🍱 Окремі раціони (чекаут)</strong></td>
+        <td>Клієнт замовив раціон на певні дати через кошик за IBAN або готівкою.</td>
+        <td>Звірити виписку банку -> натиснути <span class="btn-visual btn-green">✅ Підтвердити</span>.</td>
+      </tr>
+      <tr>
+        <td><strong>💸 До повернення (Refunds)</strong></td>
+        <td>Клієнт скасував раціон, <strong>за який вже було сплачено гроші</strong> (через Monobank або IBAN).</td>
+        <td>Зателефонувати клієнту -> натиснути <span class="btn-visual btn-green">🟢 Нарахувати баланс</span> (перенести день) або <span class="btn-visual btn-gray">⚪ Повернено вручну</span> (повернути платіж у Моно).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout important">
+    <div class="callout-title">🔔 Миттєві сповіщення в Telegram при скасуванні:</div>
+    Якщо клієнт у своєму кабінеті скасовує оплачений день, бот <strong>миттєво надсилає сигнал в адмінський Telegram-чат</strong> із прізвищем, телефоном, сумою до повернення та датою доставки. Одразу відкривайте вкладку <strong>«💸 До повернення»</strong>!
+  </div>
+
+  <h3>Як перевіряти нові надходження за IBAN:</h3>
   <ol>
-    <li>Вхід в адмін-панель</li>
-    <li>Сьогодні — щоденна робота з доставками</li>
-    <li>Оплати — підтвердження платежів</li>
-    <li>Замовлення — загальний журнал</li>
-    <li>Клієнти (CRM) — база клієнтів</li>
-    <li>Меню — управління стравами</li>
-    <li>Тарифи — пакети, ціни та індивідуальні страви</li>
-    <li>Таблиці — Google Sheets</li>
-    <li>Розсилка (Megaphone)</li>
-    <li>Налаштування — реквізити IBAN та контакти</li>
-    <li>Щоденний чеклист</li>
-    <li>Часті помилки та рішення</li>
+    <li>Подивіться, чи є помаранчевий значок з цифрою біля вкладок (наприклад, <code>[1]</code>). Якщо є — перейдіть туди.</li>
+    <li>Перевірте суму (наприклад: <code>3 420 ₴</code>), ім'я та телефон клієнта.</li>
+    <li><strong>Відкрийте квитанцію:</strong>
+      <ul>
+        <li>Якщо завантажено фото чека — клікніть по картинці, щоб відкрити на весь екран.</li>
+        <li>Якщо завантажено PDF-документ (банківська квитанція) — натисніть синю кнопку <span class="btn-visual btn-blue">📄 Відкрити PDF квитанцію</span>, вона відкриється в новій вкладці.</li>
+      </ul>
+    </li>
+    <li><strong>Звірте з додатком вашого банку (Приват24 / Моно):</strong> переконайтеся, що кошти з цим прізвищем та сумою дійсно зараховані на ваш рахунок IBAN!</li>
+    <li><strong>Натисніть кнопку:</strong>
+      <ul>
+        <li>Якщо гроші надійшли: натисніть <span class="btn-visual btn-green">✅ Підтвердити</span>.</li>
+        <li>Якщо грошей немає: обов'язково зателефонуйте клієнту і уточніть статус платежу. Якщо клієнт не платив — натисніть <span class="btn-visual btn-red">❌ Відхилити</span> (система забере авансові дні або скасує замовлення).</li>
+      </ul>
+    </li>
   </ol>
+
+  <!-- Section 4 -->
+  <h2 id="sec-4">4. 📦 Розділ «Замовлення» — журнал та архів</h2>
+  <div class="path">/admin/orders</div>
+  <p>Архів та журнал взагалі всіх замовлень від створення сервісу.</p>
+  <ul>
+    <li><strong>Вкладки «Активні» та «Архів»:</strong> перемикайтеся між поточними та виконаними замовленнями.</li>
+    <li><strong>Кнопка «Архівувати застарілі»:</strong> натискайте раз на місяць, щоб старі доставлені замовлення сховалися в архів.</li>
+    <li><strong>Статус замовлення:</strong> випадаючий список дозволяє змінити статус замовлення на <em>Очікує</em>, <em>Підтверджено</em>, <em>Доставлено</em> або <em>Скасовано</em>.</li>
+    <li><strong>Склад страв:</strong> натиснувши на замовлення, можна побачити всі страви, які обрав клієнт.</li>
+    <li><strong>Попередження ⚠️:</strong> якщо ви бачите значок «Немає таблиці для місяця», перейдіть у розділ «Таблиці» і підключіть Google Таблицю на цей місяць.</li>
+  </ul>
+
+  <!-- Section 5 -->
+  <h2 id="sec-5">5. 👥 Розділ «Клієнти (CRM)» — база покупців та баланси</h2>
+  <div class="path">/admin/clients</div>
+  <p>Тут зберігаються контакти клієнтів та кількість оплачених ними днів.</p>
+
+  <h3>Як редагувати клієнта та додавати дні вручну:</h3>
+  <div class="step-card">
+    <ol>
+      <li>Знайдіть потрібного клієнта через пошук і натисніть <span class="btn-visual btn-gray">Редагувати</span>.</li>
+      <li><strong>Адреса та нотатки:</strong> можна оновити його адресу або записати особливі примітки (алергії, побажання).</li>
+      <li><strong>Ручне керування балансом (бонусні дні / компенсації):</strong>
+        <ul>
+          <li>Виберіть тариф зі списку (наприклад, <code>Slim</code>).</li>
+          <li>Введіть кількість днів (наприклад, <code>1</code> щоб нарахувати безкоштовний день, або <code>-1</code> щоб зняти).</li>
+          <li>Натисніть кнопку <strong>«Додати дні»</strong>.</li>
+        </ul>
+      </li>
+      <li><strong>Кнопка «Відв'язати Telegram»:</strong> використовуйте, якщо клієнт змінив номер телефону або Telegram і просить підключити новий акаунт.</li>
+    </ol>
+  </div>
+
+  <!-- Section 6 -->
+  <h2 id="sec-6">6. 📢 Розділ «Сповіщення» — Telegram-повідомлення</h2>
+  <div class="path">/admin/broadcast</div>
+  <p>Інструмент для прямого спілкування з клієнтами через нашого Telegram-бота.</p>
+
+  <div class="callout danger">
+    <div class="callout-title">🛑 ПРАВИЛО БЕЗПЕКИ РОЗСИЛКИ:</div>
+    Ніколи не надсилайте тестових повідомлень (<em>«тест»</em>, <em>«123»</em>) у режимі «Масова розсилка»! Їх отримають сотні реальних людей. Тестуйте тільки в режимі «Особисте повідомлення» на свій власний номер!
+  </div>
+
+  <div class="step-card">
+    <h4>Два режими роботи:</h4>
+    <ul>
+      <li><strong>Масова розсилка (всім клієнтам):</strong> повідомлення піде всім покупцям із Telegram (акції, новини, зміни меню).</li>
+      <li><strong>Особисте повідомлення:</strong> повідомлення піде тільки одній обраній людині (знайдіть її через рядок пошуку).</li>
+    </ul>
+    <h4>Зручні помічники:</h4>
+    <ul>
+      <li>Кнопки <code>B</code> (жирний), <code>I</code> (курсив), посилання.</li>
+      <li>Каталог смайликів: 🥗 Їжа, 🚚 Доставка, 👍 Емоції, 📢 Значки.</li>
+      <li><strong>Живий перегляд (Live Preview):</strong> на екрані намальовано смартфон — ви одразу бачите, як повідомлення виглядатиме у клієнта.</li>
+    </ul>
+  </div>
+
+  <!-- Section 7 -->
+  <h2 id="sec-7">7. 🍽️ Розділ «Меню» — страви, калорії, фото</h2>
+  <div class="path">/admin/menu</div>
+  <p>Тут формується меню сайту на тиждень: від Понеділка до Неділі.</p>
+  <ul>
+    <li><strong>Редагування тексту:</strong> натисніть значок олівця біля страви, змініть назву чи калорії та натисніть «Зберегти».</li>
+    <li><strong>Завантаження фотографій:</strong> натисніть на картинку страви та виберіть файл з комп'ютера (JPG, PNG, WebP до 5 МБ). Фото з'явиться на сайті за лічені секунди.</li>
+  </ul>
+
+  <!-- Section 8 -->
+  <h2 id="sec-8">8. 💰 Розділ «Тарифи» — пакети та ціни</h2>
+  <div class="path">/admin/tariffs</div>
+  <p>Керування програмами харчування та їх вартістю.</p>
+
+  <div class="callout important">
+    <div class="callout-title">⚠️ Різниця між написами та реальною ціною:</div>
+    <ul>
+      <li><strong>Ціна (текст):</strong> це напис на картці для краси (наприклад, <code>610 ₴</code>).</li>
+      <li><strong>Базова ціна (число):</strong> це реальна цифра в гривнях, за якою програма рахує чек у кошику! Не змінюйте її без розпорядження керівництва.</li>
+      <li><strong>Тариф «Індивідуальний»:</strong> для нього базова ціна вказується <strong>за 1 страву</strong> (наприклад, <code>200 ₴</code>), яку сайт множить на обрану кількість страв.</li>
+    </ul>
+  </div>
+
+  <!-- Section 9 -->
+  <h2 id="sec-9">9. ⚙️ Розділ «Налаштування» — прийом замовлень, IBAN</h2>
+  <div class="path">/admin/settings</div>
+  
+  <h3>1. Режими прийому замовлень:</h3>
+  <table>
+    <thead><tr><th>Режим</th><th>Коли вмикати</th><th>Що робить</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>🟢 <strong>Автоматично</strong></td>
+        <td><strong>Завжди за замовчуванням (99% часу).</strong></td>
+        <td>Новий тиждень відкривається щосуботи о 12:00. Прийом на день закінчується за 2 дні о 14:00.</td>
+      </tr>
+      <tr>
+        <td>🔵 <strong>Примусово ВІДКРИТИ</strong></td>
+        <td>Якщо потрібно відкрити наступний тиждень раніше (напр. у четвер).</td>
+        <td>Негайно робить доступними всі дні наступного тижня на сайті.</td>
+      </tr>
+      <tr>
+        <td>🔴 <strong>Примусово ЗАКРИТИ</strong></td>
+        <td>Тільки при форс-мажорах (блекаут, свята, ремонт).</td>
+        <td>Повністю зупиняє прийом замовлень і показує клієнтам ваше текстове повідомлення на сайті.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>2. Реквізити IBAN та контакти:</h3>
+  <ul>
+    <li>Тут вказуються назва ФОП, код ЄДРПОУ, банківський рахунок <code>UA...</code> та призначення платежу.</li>
+    <li>Тут же вказується контактний телефон та посилання на соцмережі компанії.</li>
+    <li>Після будь-яких змін обов'язково натисніть синю кнопку <strong>«Зберегти зміни»</strong> внизу!</li>
+  </ul>
+
+  <!-- Section 10 -->
+  <h2 id="sec-10">10. 📊 Розділ «Таблиці» — Google Sheets</h2>
+  <div class="path">/admin/settings/sheets</div>
+  <p>Керування таблицями Google Sheets, у які сайт автоматично передає замовлення для кухні.</p>
+  <ul>
+    <li>Якщо вгорі горить зелений статус <strong>«Підключено»</strong> — все чудово, система сама створює нові таблиці на кожний місяць.</li>
+    <li>Якщо таблиця не створилася сама: вставте посилання на таблицю у форму, вкажіть місяць у форматі <code>ММ.РРРР</code> (наприклад, <code>10.2026</code>) і натисніть «Додати конфігурацію».</li>
+  </ul>
+
+  <!-- Section 11 -->
+  <h2 id="sec-11">11. ⏰ Щоденний розпорядок адміна — покроковий чеклист</h2>
+  <div class="step-card">
+    <ul class="checklist">
+      <li><strong>08:30 – 10:00:</strong> Відкрити розділ <strong>💳 Оплати</strong> -> перевірити квитанції та банківську виписку -> підтвердити нічні платежі за IBAN.</li>
+      <li><strong>10:00 – 11:30:</strong> Відкрити розділ <strong>📅 Сьогодні</strong> -> переглянути список доставок -> вказати <strong>Час доставки</strong> та нотатки для всіх замовлень -> прочитати коментарі клієнтів.</li>
+      <li><strong>12:00 – 14:00:</strong> Спокійна робота та контроль нових замовлень. <em>(Нагадуємо: замовлення потрапляють у Google Таблицю кухні автоматично при оформленні!)</em></li>
+      <li><strong>15:00 – 15:30:</strong> Повторно перевірити розділ <strong>💳 Оплати</strong> на наявність свіжих платежів або скасувань у вкладці «До повернення».</li>
+      <li><strong>16:30 – 17:00:</strong> Переконатися, що у всіх стоїть час доставки, і натиснути велику кнопку <span class="btn-visual btn-green">📢 Відправити сповіщення (Telegram)</span>.</li>
+      <li><strong>17:00 – 17:30:</strong> Знайти клієнтів з червоним хрестиком ✗ у стовпчику Telegram і зателефонувати їм голосом на телефон, щоб попередити про доставку.</li>
+    </ul>
+  </div>
+
+  <!-- Section 12 -->
+  <h2 id="sec-12">12. 🛑 Категоричні заборони (Чого робити НЕ МОЖНА)</h2>
+  <div class="callout danger">
+    <ol>
+      <li><strong>НЕ тисніть «Відхилити» платіж навмання!</strong> Спочатку зателефонуйте клієнту. Відхилення забирає нараховані дні або скасовує замовлення.</li>
+      <li><strong>НЕ робіть тестових масових розсилок!</strong> Їх неможливо скасувати або видалити після відправки.</li>
+      <li><strong>НЕ ставте режим «Примусово ЗАКРИТИ» без узгодження!</strong> Це вимкне прийом замовлень для всього сайту.</li>
+      <li><strong>НЕ чіпайте «Базову ціну» в тарифах!</strong> Це реальна вартість раціону, за якою люди платять гроші.</li>
+    </ol>
+  </div>
+
+  <!-- Section 13 -->
+  <h2 id="sec-13">13. 🆘 Що робити, якщо... (Відповіді на типові ситуації)</h2>
+  
+  <div class="step-card">
+    <h4>❓ Клієнт каже: «Я переказав гроші за IBAN, а дні не з'явилися на балансі!»</h4>
+    <p><strong>Відповідь:</strong> Зайдіть у розділ <strong>«💳 Оплати»</strong>. Перевірте вкладку «Абонементи» або «Окремі раціони». Знайдіть його чек, перевірте надходження грошей у своєму додатку банку і натисніть кнопку <span class="btn-visual btn-green">✅ Підтвердити</span>. Дні нарахуються миттєво.</p>
+  </div>
+
+  <div class="step-card">
+    <h4>❓ Клієнт просить: «Перенесіть мою сьогоднішню доставку на інший день!»</h4>
+    <p><strong>Відповідь:</strong> Відкрийте <strong>«📅 Сьогодні»</strong>, знайдіть рядок клієнта і натисніть кнопку <span class="btn-visual btn-red">❌ Скасувати</span>. Доставка на сьогодні зникне, а день автоматично повернеться клієнту назад на баланс абонемента. Він зможе вибрати інший день на сайті.</p>
+  </div>
+
+  <div class="step-card">
+    <h4>❓ Клієнт змінив Telegram або телефон і не отримує сповіщень:</h4>
+    <p><strong>Відповідь:</strong> Зайдіть у <strong>«👥 Клієнти (CRM)»</strong> -> знайдіть клієнта -> «Редагувати» -> натисніть <span class="btn-visual btn-gray">Відв'язати Telegram</span>. Попросіть клієнта знову зайти на сайт зі свого нового акаунта і підключити бота.</p>
+  </div>
+
+  <div class="step-card">
+    <h4>❓ Потрібно нарахувати клієнту 1 безкоштовний день (компенсація чи акція):</h4>
+    <p><strong>Відповідь:</strong> Зайдіть у <strong>«👥 Клієнти (CRM)»</strong> -> «Редагувати» -> у блоці «Керування балансом» виберіть пакет, поставте число <code>1</code> і натисніть <strong>«Додати дні»</strong>.</p>
+  </div>
+
+  <div class="step-card">
+    <h4>❓ Кухарі кажуть, що в Google Таблиці порожньо або немає вкладки:</h4>
+    <p><strong>Відповідь:</strong> Замовлення передаються в Google Таблицю автоматично 24/7. Якщо кухарі не бачать свіжих замовлень:
+      <ol style="margin-top: 6px; padding-left: 20px;">
+        <li>Відкрийте <strong>«📊 Таблиці»</strong> (/admin/settings/sheets) і перевірте, чи додано таблицю на поточний місяць. Якщо статус червоний — додайте посилання на таблицю.</li>
+        <li>Якщо потрібна екстрена вигрузка файлом: зайдіть у <strong>«📦 Замовлення»</strong>, вгорі у блоці <em>«Експорт на кухню»</em> введіть дату і натисніть <span class="btn-visual btn-blue">Завантажити CSV</span> для передачі файлу кухарям.</li>
+      </ol>
+    </p>
+  </div>
+
+  <div class="step-card">
+    <h4>❓ Клієнт скасував замовлення, яке вже оплатив карткою (Monobank) або IBAN:</h4>
+    <ol style="margin-top: 6px; padding-left: 20px;">
+      <li>Вам в Telegram одразу надійде червоне пуш-сповіщення: <code>🚨 СКАСУВАННЯ ОПЛАЧЕНОГО ЗАМОВЛЕННЯ!</code></li>
+      <li>Зайдіть у розділ <strong>«💳 Оплати»</strong> ➔ вкладка <strong>«💸 До повернення (Refunds)»</strong>.</li>
+      <li>Зателефонуйте клієнту (у картці є пряма кнопка виклику).</li>
+      <li><strong>Якщо клієнт згоден замовити іншого дня:</strong> натисніть зелену кнопку <span class="btn-visual btn-green">🟢 Нарахувати баланс (+1д)</span>. Клієнту на телефон прийде пуш, що день збережено на балансі, а гроші залишаться у вас.</li>
+      <li><strong>Якщо клієнт наполягає на поверненні коштів на картку:</strong> зайдіть у кабінет банку (Monobank Plata або IBAN), перекажіть кошти клієнту, після чого в адмінці натисніть <span class="btn-visual btn-gray">⚪ Повернено вручну</span>. Клієнту також надійде пуш-сповіщення.</li>
+    </ol>
+  </div>
+
+  <div class="step-card">
+    <h4>❓ Чому Monobank Plata не повертає гроші на картку сам автоматично при скасуванні?</h4>
+    <p><strong>Відповідь:</strong> Згідно з правилами банківської безпеки в Україні, автоматичне безконтрольне списання коштів з розрахункового рахунку ФОП назад на картки заборонено. Крім того, більшість клієнтів воліють перенести день або замовити іншим разом, аніж чекати повернення від банку кілька днів. Тому система дає адміну повний контроль: перенести день у CRM в 1 клік або повернути гривні вручну.</p>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>FoodBalance © 2026. Усі права захищено. У разі критичних технічних питань звертайтеся до розробника системи.</p>
+  </div>
+
 </div>
 
-<h2><span class="emoji">&#x1F510;</span> 1. Вхід в адмін-панель</h2>
-<p class="path">/admin</p>
-<p>Адмін-панель доступна лише для акаунтів із правами адміністратора (через Telegram-бот). Після авторизації зліва (на комп'ютері) або знизу (на телефоні) ви побачите навігаційне меню:</p>
-<table>
-  <thead><tr><th>Іконка</th><th>Розділ</th><th>Опис</th></tr></thead>
-  <tbody>
-    <tr><td>&#x1F4E6;</td><td>Замовлення</td><td>Повний журнал усіх замовлень</td></tr>
-    <tr><td>&#x1F4C5;</td><td>Сьогодні</td><td>Доставки на обрану дату</td></tr>
-    <tr><td>&#x1F465;</td><td>Клієнти (CRM)</td><td>База клієнтів і баланси</td></tr>
-    <tr><td>&#x1F37D;&#xFE0F;</td><td>Меню</td><td>Редагування страв і фото</td></tr>
-    <tr><td>&#x1F4B0;</td><td>Тарифи</td><td>Налаштування пакетів, цін та вартості страв</td></tr>
-    <tr><td>&#x1F4B3;</td><td>Оплати</td><td>Підтвердження платежів</td></tr>
-    <tr><td>&#x1F4CA;</td><td>Таблиці</td><td>Google Sheets маппінг</td></tr>
-    <tr><td>&#x2699;&#xFE0F;</td><td>Налаштування</td><td>Реквізити IBAN, контакти, соцмережі</td></tr>
-  </tbody>
-</table>
-
-<h2><span class="emoji">&#x1F4C5;</span> 2. Сьогодні — щоденна робота з доставками</h2>
-<p class="path">/admin/today</p>
-<p>Це ваш <strong>головний робочий екран</strong>. Сюди ви заходите кожного дня.</p>
-<h3>Таблиця замовлень</h3>
-<p>Показує всі активні замовлення на обрану дату:</p>
-<ul>
-  <li><strong>ПІБ клієнта</strong>, телефон, адреса доставки</li>
-  <li><strong>Пакет</strong> (Slim, Active тощо), кількість приборів</li>
-  <li><strong>Коментар клієнта</strong> — побажання при оформленні (тільки для перегляду)</li>
-  <li><strong>Ціна</strong> замовлення</li>
-</ul>
-<h3>Що потрібно заповнити</h3>
-<ul>
-  <li><strong>Час доставки</strong> — оберіть із випадаючого списку (наприклад, <code>18:00-18:30</code>). Часові слоти згруповані: Ранок, День, Вечір.</li>
-  <li><strong>Нотатка адміна</strong> — ваше повідомлення для клієнта. Текст <strong>зберігається автоматично</strong> через 0.8 секунди після введення.</li>
-</ul>
-<h3>Кнопки дій</h3>
-<table>
-  <thead><tr><th>Кнопка</th><th>Що робить</th></tr></thead>
-  <tbody>
-    <tr><td>&#x1F373; <strong>Експорт на кухню</strong></td><td>Вивантажує замовлення у Google Таблицю для кухні</td></tr>
-    <tr><td>&#x1F4E2; <strong>Відправити сповіщення</strong></td><td>Надсилає кожному клієнту Telegram-повідомлення з часом доставки та нотаткою</td></tr>
-  </tbody>
-</table>
-<div class="callout important">
-  <div class="callout-title">&#x26A0;&#xFE0F; Важливо</div>
-  <strong>Спочатку заповніть час доставки для всіх замовлень</strong>, а потім натискайте «Відправити сповіщення». Клієнтам без заповненого часу повідомлення не надійде.
-</div>
-<h3>Зміна дати</h3>
-<p>У полі «Дата доставки» введіть дату у форматі <strong>ДД.ММ</strong> (наприклад, <code>05.09</code> для 5 вересня). Таблиця автоматично оновиться.</p>
-
-<h2><span class="emoji">&#x1F4B3;</span> 3. Оплати — підтвердження платежів</h2>
-<p class="path">/admin/pending-payments</p>
-<div class="callout danger">
-  <div class="callout-title">&#x1F6A8; Критично важливо!</div>
-  Клієнти, які оплатили переказом або готівкою, вже отримали свої дні зі статусом «очікує підтвердження». Якщо ви не підтвердите оплату — виникне конфлікт. <strong>Перевіряйте цей розділ мінімум 2 рази на день.</strong>
-</div>
-<h3>Дві вкладки</h3>
-<ol>
-  <li><strong>Очікують підтвердження</strong> — нові платежі, що потребують вашої дії</li>
-  <li><strong>Історія оплат</strong> — архів усіх підтверджених та відхилених</li>
-</ol>
-<h3>Інформація по кожному платежу</h3>
-<ul>
-  <li>Ім'я та телефон клієнта</li>
-  <li>Сума (&#x20B4;), метод оплати (переказ / готівка)</li>
-  <li>Пакет і кількість днів</li>
-  <li>Дата створення</li>
-  <li><strong>Фото квитанції</strong> (натисніть для перегляду)</li>
-</ul>
-<h3>Дії</h3>
-<table>
-  <thead><tr><th>Кнопка</th><th>Дія</th></tr></thead>
-  <tbody>
-    <tr><td>&#x2705; <strong>Підтвердити</strong></td><td>Гроші отримано — статус стає «підтверджено». Дні залишаються на балансі.</td></tr>
-    <tr><td>&#x274C; <strong>Відхилити</strong></td><td>Гроші НЕ отримано — дні <strong>знімаються</strong> з балансу автоматично.</td></tr>
-  </tbody>
-</table>
-<div class="callout danger">
-  <div class="callout-title">&#x26A0;&#xFE0F; Увага</div>
-  При відхиленні дні знімаються автоматично. Якщо клієнт вже використав зараховані дні — баланс може стати від'ємним. Обов'язково зв'яжіться з клієнтом перед відхиленням.
-</div>
-
-<h2><span class="emoji">&#x1F4E6;</span> 4. Замовлення — загальний журнал</h2>
-<p class="path">/admin/orders</p>
-<p>Глобальний список <strong>усіх</strong> замовлень. Використовується для аудиту та пошуку конкретного замовлення.</p>
-<ul>
-  <li>Ім'я клієнта, телефон</li>
-  <li>Пакет, обрані дні доставки</li>
-  <li>Статус оплати та деталі страв</li>
-  <li>Попередження, якщо для місяця немає Google Таблиці</li>
-</ul>
-<div class="callout tip">
-  <div class="callout-title">&#x1F4A1; Підказка</div>
-  Якщо бачите попередження «Немає таблиці для місяця» — перейдіть у розділ <strong>Таблиці</strong> та додайте маппінг.
-</div>
-
-<h2><span class="emoji">&#x1F465;</span> 5. Клієнти (CRM) — база клієнтів</h2>
-<p class="path">/admin/clients</p>
-<p>Повна база зареєстрованих клієнтів із контактною інформацією.</p>
-<ul>
-  <li><strong>ПІБ</strong>, телефон, адреса</li>
-  <li><strong>Telegram</strong> — чи підключений бот (&#x2713; або &#x2717;)</li>
-  <li><strong>Пакет за замовчуванням</strong> — останній обраний пакет</li>
-  <li><strong>Кількість замовлень</strong></li>
-  <li><strong>Баланси</strong> — передплачені дні по кожному пакету (наприклад: <code>Slim: 12 / 15 днів</code>)</li>
-  <li><strong>Нотатки</strong> — ваші примітки по клієнту</li>
-</ul>
-
-<h2><span class="emoji">&#x1F37D;&#xFE0F;</span> 6. Меню — управління стравами</h2>
-<p class="path">/admin/menu</p>
-<p>Тут ви налаштовуєте <strong>що саме бачать клієнти</strong> при оформленні замовлення.</p>
-<table>
-  <thead><tr><th>Колонка</th><th>Опис</th></tr></thead>
-  <tbody>
-    <tr><td><strong>День тижня</strong></td><td>Понеділок — Неділя</td></tr>
-    <tr><td><strong>Тариф</strong></td><td>Для якого пакету (Slim, Active тощо)</td></tr>
-    <tr><td><strong>Фото</strong></td><td>Фотографія страви для конструктора замовлення</td></tr>
-    <tr><td><strong>Страви</strong></td><td>Список страв з калорійністю</td></tr>
-  </tbody>
-</table>
-<h3>Як редагувати страви</h3>
-<ol>
-  <li>Натисніть кнопку <strong>«Редагувати»</strong> (олівець) біля потрібного рядка.</li>
-  <li>Впишіть назву страви, калорійність.</li>
-  <li>Натисніть <strong>«Зберегти»</strong>.</li>
-</ol>
-<h3>Як завантажити фото</h3>
-<ol>
-  <li>Натисніть область з фото (або іконку завантаження).</li>
-  <li>Оберіть файл із комп'ютера (JPEG, PNG, WebP — до 5 МБ).</li>
-  <li>Фото з'явиться після завантаження. Стара фотографія буде замінена.</li>
-</ol>
-
-<h2><span class="emoji">&#x1F4B0;</span> 7. Тарифи — пакети, ціни та індивідуальні страви</h2>
-<p class="path">/admin/tariffs</p>
-<p>Налаштування програм харчування: назва, калорії, фото, маркетингова ціна та базова ставка для розрахунку замовлення.</p>
-<h3>Стандартні раціони (Slim, Balance, Active, Sport, Сушка XS, Сушка S)</h3>
-<p>Базова ціна вказується <strong>за 1 повний день раціону</strong> (наприклад, <code>610 ₴</code> або <code>710 ₴</code>).</p>
-<h3>Окремий тариф «Індивідуальний» (Indiv)</h3>
-<p>Дозволяє клієнту вільно обирати від 1 до 10 страв на день. Для цього тарифу базова ціна визначає <strong>вартість 1 страви</strong> (за замовчуванням <code>200 ₴ / страва</code>). Калькулятор кошика автоматично рахує підсумок: <em>кількість обраних порцій × ціна за страву</em>. Через кнопку «Редагувати» ви можете оперативно змінити ціну за страву (наприклад, на 180 або 220 ₴).</p>
-<div class="callout important">
-  <div class="callout-title">&#x26A0;&#xFE0F; Зверніть увагу</div>
-  Зміна ціни тарифу впливає лише на <strong>нові</strong> замовлення. Вже оформлені зберігають ціну на момент оформлення.
-</div>
-
-<h2><span class="emoji">&#x1F4CA;</span> 8. Таблиці — Google Sheets</h2>
-<p class="path">/admin/settings/sheets</p>
-<p>Система автоматично експортує замовлення у Google Sheets. Тут ви керуєте прив'язкою місяців до таблиць.</p>
-<h3>Автоматизація Google Drive</h3>
-<p>Якщо Google Drive підключено, система <strong>автоматично</strong>: створює папку, таблицю для наступного місяця і копіює шаблон <code>_Template</code>.</p>
-<h3>Ручний маппінг (резервний варіант)</h3>
-<ol>
-  <li>Створіть Google Таблицю для потрібного місяця.</li>
-  <li>Надайте сервісному акаунту FoodBalance права <strong>редактора</strong>.</li>
-  <li>Створіть у ній лист <code>_Template</code>.</li>
-  <li>У розділі «Таблиці» введіть місяць у форматі <code>MM.YYYY</code> та URL таблиці.</li>
-  <li>Натисніть <strong>«Додати»</strong>.</li>
-</ol>
-<h3>Примусова синхронізація</h3>
-<p>Натисніть <strong>«Force sync»</strong>, якщо замовлення не з'явились у таблиці.</p>
-<div class="callout important">
-  <div class="callout-title">&#x26A0;&#xFE0F; На початку кожного місяця</div>
-  Перевірте, що маппінг для нового місяця існує. Інакше замовлення не записуватимуться в Google Sheets.
-</div>
-
-<h2><span class="emoji">&#x1F4E2;</span> 9. Розсилка (Megaphone)</h2>
-<p>Масова розсилка повідомлень <strong>усім клієнтам</strong> з підключеним Telegram-ботом.</p>
-<h3>Як користуватися</h3>
-<ol>
-  <li>Введіть текст повідомлення. Підтримується HTML: <code>&lt;b&gt;жирний&lt;/b&gt;</code>, <code>&lt;i&gt;курсив&lt;/i&gt;</code>, <code>&lt;a href="..."&gt;посилання&lt;/a&gt;</code>.</li>
-  <li>Натисніть <strong>«Відправити»</strong>.</li>
-  <li>Система попросить підтвердження і покаже перші 100 символів.</li>
-  <li>Після відправки побачите кількість надісланих повідомлень.</li>
-</ol>
-<div class="callout danger">
-  <div class="callout-title">&#x1F6A8; Обережно!</div>
-  Розсилка йде <strong>УСІМ</strong> користувачам з Telegram одразу. Перевірте текст двічі. Скасувати надіслане неможливо.
-</div>
-
-<h2><span class="emoji">&#x2699;&#xFE0F;</span> 10. Налаштування — реквізити IBAN та контакти</h2>
-<p class="path">/admin/settings</p>
-<p>Онлайн-керування банківськими реквізитами та контактами FoodBalance без змін у коді сайту:</p>
-<ul>
-  <li><strong>Реквізити для IBAN:</strong> назва ФОП/ТОВ, код ЄДРПОУ/ІПН, номер рахунку IBAN (UA...), банк і призначення платежу. Оновлені реквізити миттєво з'являються у клієнтів у чекауті.</li>
-  <li><strong>Контактний телефон:</strong> офіційний телефон менеджера/підтримки (виводиться у футері сайту).</li>
-  <li><strong>Посилання на соцмережі:</strong> посилання на Telegram, Instagram та TikTok.</li>
-</ul>
-
-<h2><span class="emoji">&#x2705;</span> 11. Щоденний чеклист</h2>
-<h3>&#x1F305; Ранок</h3>
-<ul class="checklist">
-  <li>Зайти в <strong>Оплати</strong> — підтвердити нічні платежі</li>
-  <li>Перевірити <strong>Сьогодні</strong> — переглянути замовлення на сьогодні</li>
-</ul>
-<h3>&#x2600;&#xFE0F; Протягом дня</h3>
-<ul class="checklist">
-  <li>Заповнити <strong>час доставки</strong> для кожного замовлення</li>
-  <li>Натиснути <strong>Експорт на кухню</strong> — передати список кухарям</li>
-  <li>Перевірити <strong>Оплати</strong> повторно (нові платежі можуть з'явитись)</li>
-</ul>
-<h3>&#x1F697; Перед доставкою</h3>
-<ul class="checklist">
-  <li>Перевірити, що всі замовлення мають час доставки</li>
-  <li>Натиснути <strong>Відправити сповіщення (Telegram)</strong></li>
-</ul>
-<h3>&#x1F4C6; Щотижня</h3>
-<ul class="checklist">
-  <li>Оновити <strong>Меню</strong> на наступний тиждень (страви + фото)</li>
-</ul>
-<h3>&#x1F4C5; Щомісяця (на початку)</h3>
-<ul class="checklist">
-  <li>Перевірити маппінг у <strong>Таблиці</strong> для нового місяця</li>
-</ul>
-
-<h2><span class="emoji">&#x2753;</span> 12. Часті помилки та рішення</h2>
-<table>
-  <thead><tr><th>Проблема</th><th>Рішення</th></tr></thead>
-  <tbody>
-    <tr><td>Клієнт не отримав повідомлення про доставку</td><td>Перевірте <strong>час доставки</strong> та колонку <strong>Telegram</strong>. Якщо &#x2717; — клієнт не підключив бот.</td></tr>
-    <tr><td>У Google Таблиці немає замовлення</td><td>Перейдіть в <strong>Таблиці</strong>, перевірте маппінг, натисніть <strong>Force sync</strong>.</td></tr>
-    <tr><td>Клієнт оплатив, але днів немає</td><td>Перевірте <strong>Оплати</strong>. Можливо, платіж очікує підтвердження.</td></tr>
-    <tr><td>Помилка «Немає таблиці для місяця»</td><td>Додайте маппінг у <strong>Таблиці</strong> у форматі <code>MM.YYYY</code>.</td></tr>
-    <tr><td>Фото страви не завантажується</td><td>Перевірте розмір (макс. 5 МБ) і формат (JPEG, PNG, WebP).</td></tr>
-    <tr><td>Клієнт хоче скасувати замовлення на сьогодні</td><td>У розділі <strong>Сьогодні</strong> натисніть ❌ Скасувати біля замовлення. День скасується, а використаний день підписки автоматично повернеться клієнту.</td></tr>
-  </tbody>
-</table>
-
-<div class="footer">
-  <p>Інструкція Адміністратора FoodBalance · Версія 1.2 · Вересень 2026</p>
-  <p>Потрібна допомога? Зверніться до технічної підтримки або розробника.</p>
-</div>
-</div>
 </body>
 </html>

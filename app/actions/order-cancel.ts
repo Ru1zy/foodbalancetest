@@ -4,7 +4,7 @@ import prisma from "@/lib/prisma";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { verifyAuthToken } from "@/lib/auth-token";
 import { cookies } from "next/headers";
-import { enqueueOutboxJob } from "@/lib/outbox";
+import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 import { revalidatePath } from "next/cache";
 import { isDeliveryDayCancellable, shouldRefundBalanceDay, calculateNewUsedDays } from "@/lib/order-logic";
 
@@ -30,6 +30,7 @@ export async function adminCancelOrderDay(orderDayId: string) {
   const result = await performCancellation(orderDayId, true);
   revalidatePath("/admin/today");
   revalidatePath("/admin/orders");
+  revalidatePath("/admin/pending-payments");
   return result;
 }
 
@@ -41,11 +42,14 @@ export async function userCancelOrderDay(orderDayId: string) {
   if (!userId) throw new Error("Unauthorized");
   const result = await performCancellation(orderDayId, false, userId);
   revalidatePath("/profile");
+  revalidatePath("/admin/today");
+  revalidatePath("/admin/orders");
+  revalidatePath("/admin/pending-payments");
   return result;
 }
 
 async function performCancellation(orderDayId: string, isAdmin: boolean, userId?: string) {
-  return await prisma.$transaction(async (tx) => {
+  const res = await prisma.$transaction(async (tx) => {
     const orderDay = await tx.orderDay.findUnique({
       where: { id: orderDayId },
       include: { order: true },
@@ -78,7 +82,8 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
     const cancelledCount = allDays.filter(d => d.status === "cancelled" || d.id === orderDayId).length;
     
     // Only refund if we haven't refunded more than we spent from balance
-    if (shouldRefundBalanceDay(cancelledCount, order.balanceDaysUsed)) {
+    const willRefundBalance = shouldRefundBalanceDay(cancelledCount, order.balanceDaysUsed);
+    if (willRefundBalance) {
       const balance = await tx.userBalance.findFirst({
         where: { userId: order.userId, packageId: order.packageType }
       });
@@ -111,6 +116,22 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
       tabName,
     });
 
+    // Enqueue telegram alert to admin chat
+    const isRefundNeeded = order.isPaid && (order.price ?? 0) > 0 && !willRefundBalance;
+
+    await enqueueOutboxJob(tx, "TELEGRAM_ALERT_CANCELLATION", {
+      orderId: order.id,
+      dayDate: orderDay.deliveryDate.toISOString(),
+      cancelledBy: isAdmin ? "Адміністратор" : "Клієнт",
+      isRefundNeeded,
+      balanceDaysRefunded: willRefundBalance,
+    });
+
     return { success: true };
   });
+
+  // Trigger outbox processing asynchronously so sheets and alerts send immediately
+  processAllOutboxJobs().catch(err => console.error("Outbox process error after cancellation:", err));
+
+  return res;
 }

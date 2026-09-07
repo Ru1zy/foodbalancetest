@@ -6,9 +6,32 @@ import {
   rejectPaymentAction,
   confirmOrderPaymentAction,
   rejectOrderPaymentAction,
+  resolveRefundWithBalanceAction,
+  resolveRefundWithPayoutAction,
 } from "@/app/actions/admin-payments";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+
+export type RefundItem = {
+  id: string; // orderId
+  packageType: string;
+  totalPrice: number;
+  refundAmount: number;
+  paymentMethod: string;
+  createdAt: Date;
+  cancelledAt: Date | null;
+  cancelledDaysCount: number;
+  totalDaysCount: number;
+  fiatCancelledCount: number;
+  cancelledDates: Date[];
+  cancelReason: string | null;
+  isResolved: boolean;
+  user: {
+    name: string;
+    phone: string;
+    address: string | null;
+  };
+};
 
 type Purchase = {
   id: string;
@@ -46,19 +69,23 @@ type PendingOrder = {
 interface PendingPaymentsClientProps {
   purchases: Purchase[];
   orders: PendingOrder[];
-  activeType: "subscriptions" | "orders";
+  refunds: RefundItem[];
+  activeType: "subscriptions" | "orders" | "refunds";
   activeTab: "pending" | "history";
   pendingPurchasesCount: number;
   pendingOrdersCount: number;
+  pendingRefundsCount: number;
 }
 
 export default function PendingPaymentsClient({
   purchases,
   orders,
+  refunds,
   activeType,
   activeTab,
   pendingPurchasesCount,
   pendingOrdersCount,
+  pendingRefundsCount,
 }: PendingPaymentsClientProps) {
   const router = useRouter();
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -113,11 +140,36 @@ export default function PendingPaymentsClient({
     router.refresh();
   };
 
+  // Handlers for Refunds
+  const handleResolveRefundWithBalance = async (orderId: string, daysCount: number) => {
+    if (!confirm(`Нарахувати клієнту +${daysCount} дн. на баланс замість повернення грошей?`)) return;
+
+    setProcessingId(orderId);
+    const res = await resolveRefundWithBalanceAction(orderId, daysCount);
+    if (!res.ok) {
+      alert(res.error || "Помилка при нарахуванні днів на баланс");
+    }
+    setProcessingId(null);
+    router.refresh();
+  };
+
+  const handleResolveRefundWithPayout = async (orderId: string) => {
+    if (!confirm("Позначити це замовлення як повернуте (гроші виплачено клієнту вручну через Монобанк або IBAN)?")) return;
+
+    setProcessingId(orderId);
+    const res = await resolveRefundWithPayoutAction(orderId);
+    if (!res.ok) {
+      alert(res.error || "Помилка при збереженні статусу");
+    }
+    setProcessingId(null);
+    router.refresh();
+  };
+
   const isHistory = activeTab === "history";
 
   return (
     <div className="space-y-6">
-      {/* 1. Main Category Tabs: Subscriptions vs Orders */}
+      {/* 1. Main Category Tabs: Subscriptions vs Orders vs Refunds */}
       <div className="flex flex-wrap items-center gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80">
         <Link
           href={`/admin/pending-payments?type=subscriptions&tab=${activeTab}`}
@@ -150,6 +202,22 @@ export default function PendingPaymentsClient({
             </span>
           )}
         </Link>
+
+        <Link
+          href={`/admin/pending-payments?type=refunds&tab=${activeTab}`}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-pointer ${
+            activeType === "refunds"
+              ? "bg-white dark:bg-slate-900 text-rose-700 dark:text-rose-400 shadow-xs"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+          }`}
+        >
+          <span>💸 До повернення (Refunds)</span>
+          {pendingRefundsCount > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-bold rounded-full bg-rose-600 text-white animate-pulse">
+              {pendingRefundsCount}
+            </span>
+          )}
+        </Link>
       </div>
 
       {/* 2. Status Tabs: Pending vs History */}
@@ -158,21 +226,25 @@ export default function PendingPaymentsClient({
           href={`/admin/pending-payments?type=${activeType}&tab=pending`}
           className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
             !isHistory
-              ? "border-emerald-600 text-emerald-600 dark:text-emerald-400 font-bold"
+              ? activeType === "refunds"
+                ? "border-rose-600 text-rose-600 dark:text-rose-400 font-bold"
+                : "border-emerald-600 text-emerald-600 dark:text-emerald-400 font-bold"
               : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:border-slate-600"
           }`}
         >
-          Очікують підтвердження
+          {activeType === "refunds" ? "Очікують вирішення" : "Очікують підтвердження"}
         </Link>
         <Link
           href={`/admin/pending-payments?type=${activeType}&tab=history`}
           className={`px-4 py-3 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
             isHistory
-              ? "border-emerald-600 text-emerald-600 dark:text-emerald-400 font-bold"
+              ? activeType === "refunds"
+                ? "border-rose-600 text-rose-600 dark:text-rose-400 font-bold"
+                : "border-emerald-600 text-emerald-600 dark:text-emerald-400 font-bold"
               : "border-transparent text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:text-slate-300 hover:border-gray-300 dark:border-slate-600"
           }`}
         >
-          Історія оплат
+          {activeType === "refunds" ? "Історія повернень" : "Історія оплат"}
         </Link>
       </div>
 
@@ -497,6 +569,142 @@ export default function PendingPaymentsClient({
                         >
                           {processingId === order.id ? "..." : "Підтвердити"}
                         </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 4. Content Section: Refunds */}
+      {activeType === "refunds" && (
+        <>
+          {refunds.length === 0 ? (
+            <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 text-center text-gray-500 dark:text-slate-400">
+              {isHistory
+                ? "Історія повернень порожня."
+                : "🎉 Немає замовлень, що потребують повернення коштів або компенсації!"}
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {refunds.map((refund) => (
+                <div
+                  key={refund.id}
+                  className="rounded-2xl border border-rose-200/80 dark:border-rose-900/50 bg-white dark:bg-slate-900 p-6 shadow-xs flex flex-col md:flex-row gap-6"
+                >
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">
+                          {refund.user?.name || "Клієнт"}
+                        </h3>
+                        <a
+                          href={`tel:${refund.user?.phone}`}
+                          className="text-sm font-semibold text-blue-600 hover:underline"
+                        >
+                          {refund.user?.phone}
+                        </a>
+                      </div>
+                      <span className="rounded-full bg-rose-50 dark:bg-rose-950/70 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 px-3 py-1 text-xs font-bold">
+                        {refund.isResolved
+                          ? "✓ Врегульовано"
+                          : `Скасовано: ${refund.cancelledDaysCount} з ${refund.totalDaysCount} дн.`}
+                      </span>
+                    </div>
+
+                    <div className="text-sm text-gray-600 dark:text-slate-300 space-y-1">
+                      <p>
+                        <strong>Пакет:</strong> {refund.packageType}
+                      </p>
+                      <p>
+                        <strong>Адреса:</strong> {refund.user?.address || "Не вказана"}
+                      </p>
+                      <p>
+                        <strong>Метод оплати:</strong>{" "}
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {refund.paymentMethod === "plata" || refund.paymentMethod === "monobank"
+                            ? "💳 Онлайн Monobank Plata"
+                            : refund.paymentMethod === "bank_transfer"
+                            ? "🏦 Переказ IBAN"
+                            : refund.paymentMethod}
+                        </span>
+                      </p>
+                      {refund.cancelledDates.length > 0 && (
+                        <p>
+                          <strong>Скасовані дати:</strong>{" "}
+                          {refund.cancelledDates
+                            .map((d) =>
+                              new Intl.DateTimeFormat("uk-UA", {
+                                day: "2-digit",
+                                month: "2-digit",
+                              }).format(new Date(d))
+                            )
+                            .join(", ")}
+                        </p>
+                      )}
+                      {refund.cancelledAt && (
+                        <p className="text-xs text-slate-400">
+                          Дата скасування:{" "}
+                          {new Intl.DateTimeFormat("uk-UA", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          }).format(new Date(refund.cancelledAt))}
+                        </p>
+                      )}
+                      {refund.cancelReason && (
+                        <p className="text-xs italic text-slate-500">
+                          Причина / статус: {refund.cancelReason}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-2 pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-baseline gap-3">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        До повернення / компенсації:
+                      </span>
+                      <span className="text-2xl font-black text-rose-600 dark:text-rose-400">
+                        {refund.refundAmount} ₴
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        (з початкової суми {refund.totalPrice} ₴)
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions for Refund */}
+                  <div className="flex md:flex-col justify-end md:justify-center gap-2.5 border-t md:border-t-0 md:border-l border-gray-100 dark:border-slate-800 pt-4 md:pt-0 md:pl-6">
+                    {!refund.isResolved ? (
+                      <>
+                        <button
+                          onClick={() =>
+                            handleResolveRefundWithBalance(refund.id, refund.fiatCancelledCount)
+                          }
+                          disabled={processingId === refund.id}
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition cursor-pointer disabled:opacity-50"
+                          title="Нарахувати цей день клієнту на баланс у CRM замість повернення коштів"
+                        >
+                          <span>{processingId === refund.id ? "⏳" : "🟢"}</span>
+                          <span>Нарахувати баланс (+{refund.fiatCancelledCount}д)</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleResolveRefundWithPayout(refund.id)}
+                          disabled={processingId === refund.id}
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer disabled:opacity-50"
+                          title="Позначити, що кошти вже повернуто через кабінет Монобанку або за реквізитами"
+                        >
+                          <span>{processingId === refund.id ? "⏳" : "⚪"}</span>
+                          <span>Повернено вручну</span>
+                        </button>
+                      </>
+                    ) : (
+                      <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-3 py-2 rounded-xl text-center">
+                        {refund.cancelReason?.includes("BALANCE_CREDITED")
+                          ? "✓ Нараховано на баланс в CRM"
+                          : "✓ Кошти повернуто вручну"}
                       </div>
                     )}
                   </div>
