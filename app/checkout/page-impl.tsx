@@ -501,10 +501,12 @@ export default function CheckoutPageImpl({
       }
 
       if (!deliveryDate) {
-        setFeedback({
-          message: "Не вдалося визначити дату доставки за вибраними днями.",
-          tone: "error",
-        });
+        const message = "Не вдалося визначити дату доставки за вибраними днями.";
+        setFeedback({ message, tone: "error" });
+        toast.error(message);
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
         return;
       }
     }
@@ -516,10 +518,12 @@ export default function CheckoutPageImpl({
 
       if (paymentMethod === "bank_transfer") {
         if (!file) {
-          setFeedback({
-            message: "Будь ласка, завантажте скріншот квитанції про оплату.",
-            tone: "error",
-          });
+          const message = "Будь ласка, завантажте скріншот квитанції про оплату.";
+          setFeedback({ message, tone: "error" });
+          toast.error(message);
+          if (typeof window !== "undefined") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
           return;
         }
 
@@ -539,6 +543,10 @@ export default function CheckoutPageImpl({
             message,
             tone: "error",
           });
+          toast.error(message);
+          if (typeof window !== "undefined") {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }
           setIsUploading(false);
           return;
         }
@@ -587,6 +595,10 @@ export default function CheckoutPageImpl({
           message: result.message,
           tone: "error",
         });
+        toast.error(result.message);
+        if (typeof window !== "undefined") {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
         return;
       }
 
@@ -614,6 +626,10 @@ export default function CheckoutPageImpl({
         clearCart();
         window.location.replace(result.pageUrl);
         return;
+      }
+
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "instant" });
       }
 
       setSubmitted({

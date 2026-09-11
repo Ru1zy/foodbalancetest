@@ -1,4 +1,4 @@
-import { useFormContext } from "react-hook-form";
+import { useFormContext, type FieldErrors } from "react-hook-form";
 import { useEffect, useRef } from "react";
 import { isIndivPackage } from "@/lib/order-selection";
 import { CartItem } from "@/lib/orderStore";
@@ -63,6 +63,17 @@ export function CheckoutCustomerForm({
       feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [feedback]);
+
+  const onInvalid = (fieldErrors: FieldErrors<CheckoutSchema>) => {
+    const firstKey = Object.keys(fieldErrors)[0];
+    if (firstKey) {
+      const el = document.querySelector(`[name="${firstKey}"]`) as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus({ preventScroll: true });
+      }
+    }
+  };
 
   const orderAmount =
     cartItems.length > 0
@@ -207,7 +218,7 @@ export function CheckoutCustomerForm({
         </div>
       )}
 
-      <form className="space-y-6" onSubmit={handleSubmit(onValidSubmit)}>
+      <form className="space-y-6" onSubmit={handleSubmit(onValidSubmit, onInvalid)}>
         <div className="grid gap-4 md:grid-cols-2 md:gap-5">
           <label className="block">
             <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Ім&apos;я</span>

@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { isIndivPackage } from "@/lib/order-selection";
 import type { SubmittedState } from "./types";
@@ -7,6 +10,16 @@ type Props = {
 };
 
 export function CheckoutSuccessView({ submitted }: Props) {
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      const timer = setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   return (
     <main className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
       <section className="mx-auto max-w-3xl rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-8 shadow-sm sm:p-10">
