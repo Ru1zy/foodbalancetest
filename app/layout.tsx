@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import GradientOrbs from "@/components/GradientOrbs";
 import ConditionalWrapper from "@/components/ConditionalWrapper";
+import SupportWidget from "@/components/SupportWidget";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
@@ -61,6 +62,7 @@ export default function RootLayout({
 
           <ConditionalWrapper>
             <Footer />
+            <SupportWidget />
           </ConditionalWrapper>
           <Toaster 
             position="bottom-center"

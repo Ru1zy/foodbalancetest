@@ -13,6 +13,7 @@ const navLinks = [
   { href: "/admin/menu", label: "Меню", icon: "🍽️" },
   { href: "/admin/tariffs", label: "Тарифи", icon: "💰" },
   { href: "/admin/pending-payments", label: "Оплати", icon: "💳" },
+  { href: "/admin/feedback", label: "Відгуки та підтримка", icon: "⭐" },
   { href: "/admin/settings/sheets", label: "Таблиці", icon: "📊" },
   { href: "/admin/settings", label: "Налаштування", icon: "⚙️" },
 ];

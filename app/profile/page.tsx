@@ -300,6 +300,15 @@ export default async function ProfilePage(
     }
   }).filter(a => a.data !== undefined);
 
+  const [userReviews, totalEligibleOrders] = await Promise.all([
+    prisma.review.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.order.count({ where: { userId } }),
+  ]);
+  const hasEligibleOrders = totalEligibleOrders > 0 || allPurchases.length > 0;
+
   return (
     <Suspense fallback={null}>
       <ProfilePageClient 
@@ -313,6 +322,8 @@ export default async function ProfilePage(
         totalActions={totalActions}
         itemsPerPage={ITEMS_PER_PAGE}
         ibanDetails={settings.ibanDetails}
+        reviews={userReviews}
+        hasEligibleOrders={hasEligibleOrders}
       />
     </Suspense>
   );

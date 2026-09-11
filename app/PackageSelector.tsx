@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import type { PackageType } from "@/lib/order-logic";
 import { useOrderStore } from "@/lib/orderStore";
@@ -147,7 +147,12 @@ const RATION_FLYERS: Record<string, { flyer: string; mealsBadge: string; details
 export default function PackageSelector({ tariffs, onSushkaViewChange, promoMaterials }: Props) {
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
   const selectWizardPackage = useOrderStore((s) => s.selectWizardPackage);
-  const [showSushkaOptions, setShowSushkaOptions] = useState(false);
+  const showSushkaOptions = useOrderStore((s) => s.showSushkaOptions);
+  const setShowSushkaOptions = useOrderStore((s) => s.setShowSushkaOptions);
+
+  useEffect(() => {
+    onSushkaViewChange?.(showSushkaOptions);
+  }, [showSushkaOptions, onSushkaViewChange]);
 
   const promoMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -233,6 +238,9 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
   };
 
   const handleSelectPackage = (pkg: Tariff) => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
     selectWizardPackage(pkg.name as PackageType);
     setShowSushkaOptions(false);
     onSushkaViewChange?.(false);

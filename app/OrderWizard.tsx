@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import type { MenuItem } from "@/lib/menu-types";
@@ -44,6 +44,12 @@ export default function OrderWizard({
   const step = useOrderStore((s) => s.step);
   const cartItems = useOrderStore((s) => s.cartItems);
   const [isSushkaView, setIsSushkaView] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [step]);
 
   if (!menuItems.length) {
     return (

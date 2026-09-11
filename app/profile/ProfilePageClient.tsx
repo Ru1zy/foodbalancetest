@@ -7,6 +7,7 @@ import { cancelSubscriptionPurchaseAction } from "../actions/subscription";
 import { isIndivPackage } from "@/lib/order-selection";
 import { isDeliveryDayCancellable } from "@/lib/order-logic";
 import SubscriptionOptions from "@/components/SubscriptionOptions";
+import ProfileReviewsSection, { type UserReviewItem } from "@/components/ProfileReviewsSection";
 import { 
   Package, 
   Calendar, 
@@ -87,6 +88,8 @@ type Props = {
   totalActions: number;
   itemsPerPage: number;
   ibanDetails?: string;
+  reviews?: UserReviewItem[];
+  hasEligibleOrders?: boolean;
 };
 
 function formatDate(date: Date): string {
@@ -390,6 +393,8 @@ export default function ProfilePageClient({
   totalActions,
   itemsPerPage,
   ibanDetails,
+  reviews = [],
+  hasEligibleOrders = false,
 }: Props) {
   const router = useRouter();
   const pathname = usePathname();
@@ -780,6 +785,9 @@ export default function ProfilePageClient({
             )}
           </div>
         )}
+
+        {/* Reviews and Support Section */}
+        <ProfileReviewsSection reviews={reviews} hasEligibleOrders={hasEligibleOrders} />
 
         {/* Action History Section */}
         <div id="action-history" className="space-y-6 pb-12">

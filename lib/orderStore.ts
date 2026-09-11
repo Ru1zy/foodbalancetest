@@ -63,6 +63,8 @@ export interface OrderStore {
   selectedDates: string[];
   /** Wizard screen: 1 = package, 2 = days, 3 = dishes. */
   step: number;
+  showSushkaOptions: boolean;
+  setShowSushkaOptions: (show: boolean) => void;
   selections: Selections;
   cartItems: CartItem[];
   incrementDish: (dayId: string, dishId: string) => void;
@@ -115,6 +117,8 @@ export const useOrderStore = create<OrderStore>()(
       selectedPackage: null,
       selectedDates: [],
       step: 1,
+      showSushkaOptions: false,
+      setShowSushkaOptions: (showSushkaOptions) => set({ showSushkaOptions }),
       selections: {},
       cartItems: [],
 
@@ -182,6 +186,7 @@ export const useOrderStore = create<OrderStore>()(
       selectedPackage: null,
       selectedDates: [],
       customModeDays: {},
+      showSushkaOptions: false,
     }),
 
   hardReset: () =>
@@ -192,6 +197,7 @@ export const useOrderStore = create<OrderStore>()(
       customModeDays: {},
       selections: {},
       cartItems: [],
+      showSushkaOptions: false,
     }),
 
   setSelection: (dayId, category, dishIndex) =>

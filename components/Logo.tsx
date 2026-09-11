@@ -11,7 +11,12 @@ export default function Logo() {
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     hardReset();
-    router.push("/");
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    if (window.location.pathname !== "/") {
+      router.push("/");
+    }
   };
 
   return (

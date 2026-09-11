@@ -5,6 +5,7 @@ import { useOrderStore } from "@/lib/orderStore";
 import { getMenuItems, getTariffs } from "@/app/actions/menu-impl";
 import { getPromoMaterialsAction } from "@/app/actions/tariff-impl";
 import OrderWizard from "./OrderWizard";
+import LandingReviewsSection from "@/components/LandingReviewsSection";
 import { MenuItem } from "@/lib/menu-types";
 
 type Tariff = {
@@ -33,6 +34,7 @@ export default function OrderStoreWrapper({
   orderingCustomMessage = "",
 }: Props) {
   const selectedPackage = useOrderStore((s) => s.selectedPackage);
+  const step = useOrderStore((s) => s.step);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [tariffs, setTariffs] = useState<Tariff[]>([]);
   const [promoMaterials, setPromoMaterials] = useState<PromoItem[]>([]);
@@ -85,6 +87,7 @@ export default function OrderStoreWrapper({
           />
         )}
       </section>
+      {step === 1 && <LandingReviewsSection />}
     </main>
   );
 }
