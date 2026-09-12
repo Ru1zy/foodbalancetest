@@ -70,7 +70,7 @@ export default function OrderStoreWrapper({
         {menuItems.length === 0 ? (
           <div className="rounded-xl p-16 text-center border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
             <div className="mb-6 flex justify-center">
-              <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain border border-gray-200 dark:border-slate-700" />
+              <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain drop-shadow-md" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-4">
               Меню оновлюється

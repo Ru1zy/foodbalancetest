@@ -21,11 +21,9 @@ export default function Logo() {
 
   return (
     <Link href="/" onClick={handleLogoClick} className="flex items-center gap-3 group">
-      <div className="relative">
-        <div className="relative flex h-12 w-12 items-center justify-center rounded-xl drop-shadow-sm dark:bg-white dark:p-1 overflow-hidden">
-          <img src="/foodbalancelogo.png" alt="Food Balance" className="h-full w-full object-cover mix-blend-multiply dark:mix-blend-normal" />
+        <div className="relative flex h-11 w-11 items-center justify-center">
+          <img src="/foodbalancelogo.png" alt="Food Balance" className="h-full w-full object-contain drop-shadow-sm" />
         </div>
-      </div>
       <div className="hidden sm:block">
         <div className="text-2xl font-black flex gap-1">
           <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent drop-shadow-sm">Food</span>

@@ -96,13 +96,13 @@ export default function OrderWizard({
           {!isSushkaView && (
             <>
               <div className="mb-8 text-center relative w-full">
-                <div className="inline-block mb-6">
                   <div className="mb-4 flex justify-center">
-                    <div className="rounded-3xl dark:bg-white dark:p-3 drop-shadow-sm">
-                      <img src="/foodbalancelogo.png" alt="Food Balance" className="h-32 w-32 object-contain mix-blend-multiply dark:mix-blend-normal" />
-                    </div>
+                    <img
+                      src="/foodbalancelogo.png"
+                      alt="Food Balance"
+                      className="h-32 w-32 object-contain drop-shadow-md transition-transform duration-300 hover:scale-105"
+                    />
                   </div>
-                </div>
 
                 <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
                   <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span> <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
