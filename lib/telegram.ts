@@ -407,7 +407,13 @@ export async function sendOrderNotification(
   const message = warningBanner + [
     "🚨 <b>Нове замовлення!</b>",
     `👤 <b>Клієнт:</b> ${escapeHtml(user.name || "Клієнт")} (${escapeHtml(user.phone)})`,
-    `📦 <b>Пакет:</b> ${escapeHtml(order.packageType)}`,
+    (() => {
+      const extraKcal = (order.items as { extraKcal?: number } | null)?.extraKcal;
+      if (extraKcal && extraKcal > 0) {
+        return `📦 <b>Пакет:</b> ${escapeHtml(order.packageType)} (${2400 + extraKcal} ккал, +${extraKcal} ккал/день)`;
+      }
+      return `📦 <b>Пакет:</b> ${escapeHtml(order.packageType)}`;
+    })(),
     `💵 <b>Сума:</b> ${
       isIndivPackage(order.packageType)
         ? "Індивідуальний розрахунок (уточнюється менеджером за калоражем)"

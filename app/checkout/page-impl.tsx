@@ -207,6 +207,9 @@ export default function CheckoutPageImpl({
   const packageLimitInfo = getPackageLimit(pkg ?? undefined);
 
   const customModeDays = useOrderStore((state) => state.customModeDays);
+  const draftExtraKcal = useOrderStore((state) => state.draftExtraKcal);
+  const setDraftExtraKcal = useOrderStore((state) => state.setDraftExtraKcal);
+  const setCartItemExtraKcal = useOrderStore((state) => state.setCartItemExtraKcal);
 
   const cartData = useMemo<OrderCartData>(() => {
     if (!pkg) {
@@ -309,8 +312,8 @@ export default function CheckoutPageImpl({
       return 0;
     }
 
-    return getOrderTotalUah(pkg, cartData.totalDays, tariffs, totalDishesCount);
-  }, [cartData.totalDays, pkg, tariffs, totalDishesCount]);
+    return getOrderTotalUah(pkg, cartData.totalDays, tariffs, totalDishesCount, draftExtraKcal);
+  }, [cartData.totalDays, pkg, tariffs, totalDishesCount, draftExtraKcal]);
 
   const { balanceDaysToUse, fiatPrice } = useMemo(() => {
     if (!pkg || availableDays === 0) {
@@ -322,11 +325,11 @@ export default function CheckoutPageImpl({
     
     let fPrice = 0;
     if (fiatDays > 0) {
-      fPrice = getOrderTotalUah(pkg, fiatDays, tariffs, totalDishesCount);
+      fPrice = getOrderTotalUah(pkg, fiatDays, tariffs, totalDishesCount, draftExtraKcal);
     }
     
     return { balanceDaysToUse: toUse, fiatPrice: fPrice };
-  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, tariffs, totalDishesCount]);
+  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, tariffs, totalDishesCount, draftExtraKcal]);
 
   const deliveryDate = useMemo(
     () =>
@@ -436,15 +439,22 @@ export default function CheckoutPageImpl({
       return null;
     }
     return {
-      id: `${pkg}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `cart-item-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       packageType: pkg,
-      packageLabel: selectedPackageRaw ?? pkg,
-      cartData,
+      packageLabel:
+        pkg === "Sport" && draftExtraKcal > 0
+          ? `${selectedPackageRaw ?? pkg} (${2400 + draftExtraKcal} ккал)`
+          : selectedPackageRaw ?? pkg,
+      cartData: {
+        ...cartData,
+        extraKcal: pkg === "Sport" && draftExtraKcal > 0 ? draftExtraKcal : undefined,
+      },
       deliveryDate: deliveryDate.toISOString(),
       unitPrice: orderTotalUah,
       dayCount: cartData.totalDays,
       dayLabels: summaryDays.map((day) => `${day.dayName} (${day.scheduleLabel})`),
       quantity: 1,
+      extraKcal: pkg === "Sport" && draftExtraKcal > 0 ? draftExtraKcal : undefined,
     };
   };
 
@@ -582,7 +592,10 @@ export default function CheckoutPageImpl({
 
       if (hasDraft && deliveryDate) {
         items.push({
-          cartData,
+          cartData: {
+            ...cartData,
+            extraKcal: pkg === "Sport" && draftExtraKcal > 0 ? draftExtraKcal : undefined,
+          },
           deliveryDate: deliveryDate.toISOString(),
           unitPrice: orderTotalUah,
           quantity: 1,
@@ -720,6 +733,9 @@ export default function CheckoutPageImpl({
               removeCartItem={removeCartItem}
               decrementQuantity={decrementQuantity}
               incrementQuantity={incrementQuantity}
+              draftExtraKcal={draftExtraKcal}
+              setDraftExtraKcal={setDraftExtraKcal}
+              setCartItemExtraKcal={setCartItemExtraKcal}
             />
 
             <CheckoutCustomerForm

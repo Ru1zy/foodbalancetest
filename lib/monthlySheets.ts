@@ -238,13 +238,19 @@ function singleLineCell(value: string | null | undefined): string {
 /** Build columns B–L for one order/day. Column B derives its number from the appended row. */
 function buildRow(order: Order, user: User, orderDay: OrderDay): string[] {
   const normalizedPhone = normalizePhoneForLegacy(user.phone || "");
+  const extraKcal = (order.items as { extraKcal?: number } | null)?.extraKcal;
+  const packageLabel =
+    extraKcal && extraKcal > 0
+      ? `${order.packageType} (${2400 + extraKcal} ккал)`
+      : order.packageType;
+
   return [
     "=ROW()-4", // B: Race-safe sequential number for data rows starting at row 5
     singleLineCell(user.name), // C: User Name
     `'${normalizedPhone}`, // D: Phone (apostrophe keeps the leading zero)
     singleLineCell(order.deliveryAddress || user.address), // E: Address
     singleLineCell(user.chatId), // F: Telegram Chat ID
-    singleLineCell(order.packageType), // G: Package Name
+    singleLineCell(packageLabel), // G: Package Name
     orderDay.dishes, // H: Dishes
     order.cutlery > 0 ? `${order.cutlery} шт` : "", // I: Cutlery count
     (order.notes || user.notes || "").trim(), // J: Comments / Notes

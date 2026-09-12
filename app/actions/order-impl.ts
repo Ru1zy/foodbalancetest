@@ -37,6 +37,7 @@ export type OrderCartData = {
   packageLimit: number;
   packageType: PackageType;
   totalDays: number;
+  extraKcal?: number;
 };
 
 export type SubmitOrderResult =
@@ -240,6 +241,12 @@ function sanitizeCartData(cartData: OrderCartData): OrderCartData {
     packageLimit: serverPackageLimit, // Use server-calculated limit, not client's
     packageType: cartData.packageType,
     totalDays: days.length,
+    extraKcal:
+      cartData.packageType === "Sport" &&
+      typeof cartData.extraKcal === "number" &&
+      cartData.extraKcal > 0
+        ? Math.min(Math.max(0, Math.floor(Math.round(cartData.extraKcal) / 100) * 100), 1000)
+        : undefined,
   };
 }
 
@@ -432,6 +439,7 @@ async function prepareOrderForSubmission(
     sanitizedCartData.totalDays,
     tariffs,
     totalDishesCount,
+    sanitizedCartData.extraKcal,
   );
 
   if (paymentMethod !== "balance") {
@@ -555,7 +563,13 @@ async function persistOrderInTransaction(
               : day.selectedCount),
           0,
         );
-        fiatPrice = getOrderTotalUah(sanitizedCartData.packageType, fiatDays, tariffs, totalDishesCount);
+        fiatPrice = getOrderTotalUah(
+          sanitizedCartData.packageType,
+          fiatDays,
+          tariffs,
+          totalDishesCount,
+          sanitizedCartData.extraKcal,
+        );
       }
     }
 
@@ -627,6 +641,13 @@ async function persistOrderInTransaction(
         },
       });
 
+      const extraKcalNote =
+        sanitizedCartData.extraKcal && sanitizedCartData.extraKcal > 0
+          ? `[Калораж: ${2400 + sanitizedCartData.extraKcal} ккал (+${sanitizedCartData.extraKcal} ккал/день)]`
+          : "";
+      const finalNotes =
+        [validatedData.comment, extraKcalNote].filter(Boolean).join(" ").trim() || null;
+
       const order = await tx.order.create({
         data: {
           deliveryAddress: validatedData.address || null,
@@ -637,7 +658,7 @@ async function persistOrderInTransaction(
           receiptEmail: validatedData.receiptEmail || null,
           receiptUrl: validatedData.receiptUrl || null,
           items: sanitizedCartData,
-          notes: validatedData.comment || null,
+          notes: finalNotes,
           packageType: sanitizedCartData.packageType,
           price: fiatPrice,
           balanceDaysUsed: balanceDaysToUse,
@@ -702,6 +723,13 @@ async function persistOrderInTransaction(
         },
       });
 
+  const guestExtraKcalNote =
+    sanitizedCartData.extraKcal && sanitizedCartData.extraKcal > 0
+      ? `[Калораж: ${2400 + sanitizedCartData.extraKcal} ккал (+${sanitizedCartData.extraKcal} ккал/день)]`
+      : "";
+  const guestFinalNotes =
+    [validatedData.comment, guestExtraKcalNote].filter(Boolean).join(" ").trim() || null;
+
   const order = await tx.order.create({
     data: {
       deliveryAddress: validatedData.address || null,
@@ -712,7 +740,7 @@ async function persistOrderInTransaction(
       receiptEmail: validatedData.receiptEmail || null,
       receiptUrl: validatedData.receiptUrl || null,
       items: sanitizedCartData,
-      notes: validatedData.comment || null,
+      notes: guestFinalNotes,
       packageType: sanitizedCartData.packageType,
       price: fiatPrice,
       balanceDaysUsed: balanceDaysToUse,

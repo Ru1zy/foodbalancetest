@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { PackageType } from "@/lib/order-logic";
-import { getPackageLimit } from "@/lib/order-logic";
+import { getPackageLimit, getOrderTotalUah } from "@/lib/order-logic";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
 import type { OrderCartData } from "@/app/actions/order-impl";
 
@@ -35,6 +35,8 @@ export type CartItem = {
   dayLabels: string[];
   /** How many identical copies of this package to order. Default 1. */
   quantity: number;
+  /** Extra calories for Sport Active+ (0, 100..1000). */
+  extraKcal?: number;
 };
 
 export type CustomerProfile = {
@@ -67,6 +69,10 @@ export interface OrderStore {
   setShowSushkaOptions: (show: boolean) => void;
   selections: Selections;
   cartItems: CartItem[];
+  /** Extra calories for the current draft package in wizard (Sport Active+ only). */
+  draftExtraKcal: number;
+  setDraftExtraKcal: (extraKcal: number) => void;
+  setCartItemExtraKcal: (cartItemId: string, extraKcal: number) => void;
   incrementDish: (dayId: string, dishId: string) => void;
   decrementDish: (dayId: string, dishId: string) => void;
   setCustomerProfile: (profile: Partial<CustomerProfile>) => void;
@@ -121,6 +127,32 @@ export const useOrderStore = create<OrderStore>()(
       setShowSushkaOptions: (showSushkaOptions) => set({ showSushkaOptions }),
       selections: {},
       cartItems: [],
+      draftExtraKcal: 0,
+      setDraftExtraKcal: (draftExtraKcal) => set({ draftExtraKcal: Math.min(Math.max(0, draftExtraKcal), 1000) }),
+      setCartItemExtraKcal: (cartItemId, extraKcal) =>
+        set((state) => ({
+          cartItems: state.cartItems.map((item) => {
+            if (item.id !== cartItemId) return item;
+            const newExtra = Math.min(Math.max(0, extraKcal), 1000);
+            const updatedCartData = {
+              ...item.cartData,
+              extraKcal: newExtra,
+            };
+            const newUnitPrice = getOrderTotalUah(
+              item.packageType,
+              item.dayCount,
+              undefined,
+              undefined,
+              newExtra,
+            );
+            return {
+              ...item,
+              extraKcal: newExtra,
+              cartData: updatedCartData,
+              unitPrice: newUnitPrice,
+            };
+          }),
+        })),
 
   setCustomerProfile: (profile) =>
     set((state) => {
@@ -155,6 +187,7 @@ export const useOrderStore = create<OrderStore>()(
         selections: pkgChanged ? {} : state.selections,
         selectedDates: pkgChanged ? [] : state.selectedDates,
         customModeDays: pkgChanged ? {} : state.customModeDays,
+        draftExtraKcal: pkgChanged ? 0 : state.draftExtraKcal,
         step: 2,
       };
     }),
@@ -187,6 +220,7 @@ export const useOrderStore = create<OrderStore>()(
       selectedDates: [],
       customModeDays: {},
       showSushkaOptions: false,
+      draftExtraKcal: 0,
     }),
 
   hardReset: () =>
@@ -198,6 +232,7 @@ export const useOrderStore = create<OrderStore>()(
       selections: {},
       cartItems: [],
       showSushkaOptions: false,
+      draftExtraKcal: 0,
     }),
 
   setSelection: (dayId, category, dishIndex) =>

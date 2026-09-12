@@ -1084,6 +1084,12 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                     {pkg.kcal} {rationMeta?.details ? `• ${rationMeta.details}` : ""}
                   </p>
+                  {pkg.name.toLowerCase().includes("sport") && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-100/90 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-800/60 text-[11px] font-bold text-orange-800 dark:text-orange-300">
+                      <span>⚡</span>
+                      <span>До 3400 ккал (+35 ₴/100 ккал) у кошику</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-2">

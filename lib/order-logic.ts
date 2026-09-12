@@ -58,11 +58,23 @@ export function getOrderDiscount(packageType: string, totalDays: number): number
   }
 }
 
+export const SPORT_BASE_KCAL = 2400;
+export const SPORT_EXTRA_PRICE_PER_100_KCAL = 35;
+export const SPORT_MAX_EXTRA_CLICKS = 10;
+export const SPORT_MAX_KCAL = SPORT_BASE_KCAL + SPORT_MAX_EXTRA_CLICKS * 100; // 3400
+
+export function getSportExtraDailyPrice(extraKcal?: number): number {
+  if (!extraKcal || extraKcal <= 0) return 0;
+  const clamped = Math.min(Math.max(0, extraKcal), SPORT_MAX_EXTRA_CLICKS * 100);
+  return Math.round((clamped / 100) * SPORT_EXTRA_PRICE_PER_100_KCAL);
+}
+
 export function getOrderTotalUah(
   packageType: PackageType,
   totalDays: number,
   tariffs?: { name: string; basePrice: number }[],
   totalDishesCount?: number,
+  extraKcal?: number,
 ): number {
   if (packageType === "Indiv") {
     // Вартість індивідуального раціону узгоджується з менеджером за калоражем
@@ -76,6 +88,10 @@ export function getOrderTotalUah(
     if (tariff) {
       unit = tariff.basePrice;
     }
+  }
+
+  if (packageType === "Sport" && extraKcal && extraKcal > 0) {
+    unit += getSportExtraDailyPrice(extraKcal);
   }
   
   if (totalDays < 1) {
@@ -91,27 +107,53 @@ export function getOrderPriceBreakdown(
   packageType: PackageType,
   totalDays: number,
   tariffs?: { name: string; basePrice: number }[],
+  extraKcal?: number,
 ): {
   unitPrice: number;
+  baseUnitPrice: number;
+  extraKcalPricePerDay: number;
   originalTotal: number;
   discountPercent: number;
   discountAmount: number;
   finalTotal: number;
 } {
   if (packageType === "Indiv") {
-    return { unitPrice: 0, originalTotal: 0, discountPercent: 0, discountAmount: 0, finalTotal: 0 };
+    return {
+      unitPrice: 0,
+      baseUnitPrice: 0,
+      extraKcalPricePerDay: 0,
+      originalTotal: 0,
+      discountPercent: 0,
+      discountAmount: 0,
+      finalTotal: 0,
+    };
   }
 
-  let unit = PACKAGE_PRICES[packageType] ?? 0;
+  let baseUnit = PACKAGE_PRICES[packageType] ?? 0;
   if (tariffs && tariffs.length > 0) {
     const tariff = tariffs.find(t => t.name === packageType);
     if (tariff) {
-      unit = tariff.basePrice;
+      baseUnit = tariff.basePrice;
     }
   }
 
+  const extraKcalPricePerDay =
+    packageType === "Sport" && extraKcal && extraKcal > 0
+      ? getSportExtraDailyPrice(extraKcal)
+      : 0;
+
+  const unit = baseUnit + extraKcalPricePerDay;
+
   if (totalDays < 1) {
-    return { unitPrice: unit, originalTotal: 0, discountPercent: 0, discountAmount: 0, finalTotal: 0 };
+    return {
+      unitPrice: unit,
+      baseUnitPrice: baseUnit,
+      extraKcalPricePerDay,
+      originalTotal: 0,
+      discountPercent: 0,
+      discountAmount: 0,
+      finalTotal: 0,
+    };
   }
 
   const originalTotal = totalDays * unit;
@@ -120,7 +162,15 @@ export function getOrderPriceBreakdown(
   const discountPercent = Math.round(discountRate * 100);
   const discountAmount = originalTotal - finalTotal;
 
-  return { unitPrice: unit, originalTotal, discountPercent, discountAmount, finalTotal };
+  return {
+    unitPrice: unit,
+    baseUnitPrice: baseUnit,
+    extraKcalPricePerDay,
+    originalTotal,
+    discountPercent,
+    discountAmount,
+    finalTotal,
+  };
 }
 
 export type PackageLimitInfo = {

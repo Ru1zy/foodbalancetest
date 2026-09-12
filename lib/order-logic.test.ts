@@ -61,6 +61,30 @@ test("volume discounts apply for 5-6 days (3%), 7-13 days (5%), 14-29 days (10%)
   assert.equal(breakdown.discountAmount, 121);
 });
 
+test("Sport package calculates extra calories (+35 UAH per 100 kcal/day, up to 1000 kcal)", () => {
+  // Sport base price = 850 UAH/day
+  // 1 day, +300 kcal (2700 kcal): 850 + 3 * 35 = 955 UAH
+  assert.equal(getOrderTotalUah("Sport", 1, undefined, undefined, 300), 955);
+
+  // 5 days, +300 kcal: 5 * 955 = 4775 -> 3% discount = 4631.75 -> 4632 UAH
+  assert.equal(getOrderTotalUah("Sport", 5, undefined, undefined, 300), 4632);
+
+  // 10 clicks (max +1000 kcal = 3400 kcal): 850 + 350 = 1200 UAH/day
+  assert.equal(getOrderTotalUah("Sport", 1, undefined, undefined, 1000), 1200);
+
+  // Clamping over 1000 kcal
+  assert.equal(getOrderTotalUah("Sport", 1, undefined, undefined, 1500), 1200);
+
+  // Breakdown
+  const bd = getOrderPriceBreakdown("Sport", 5, undefined, 300);
+  assert.equal(bd.baseUnitPrice, 850);
+  assert.equal(bd.extraKcalPricePerDay, 105);
+  assert.equal(bd.unitPrice, 955);
+  assert.equal(bd.originalTotal, 4775);
+  assert.equal(bd.discountPercent, 3);
+  assert.equal(bd.finalTotal, 4632);
+});
+
 test("Indiv package price is 0 (negotiated individually with manager)", () => {
   assert.equal(getOrderTotalUah("Indiv", 2, undefined, 5), 0);
   assert.equal(getOrderTotalUah("Indiv", 1, undefined, 0), 0);

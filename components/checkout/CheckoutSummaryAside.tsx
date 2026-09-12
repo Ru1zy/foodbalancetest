@@ -6,6 +6,7 @@ import { CartItem } from "@/lib/orderStore";
 import { SummaryDay } from "./types";
 import { PlusCircle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { useState } from "react";
+import CartItemAddons from "./CartItemAddons";
 
 import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
 
@@ -26,6 +27,9 @@ type Props = {
   currentDraftValid: boolean;
   availableDays: number;
   paymentMethod: "plata" | "cash" | "bank_transfer";
+  draftExtraKcal?: number;
+  setDraftExtraKcal?: (extraKcal: number) => void;
+  setCartItemExtraKcal?: (id: string, extraKcal: number) => void;
   handleAddAnotherPackage: () => void;
   handleRemoveDay: (day: SummaryDay) => void;
   removeCartItem: (id: string) => void;
@@ -50,6 +54,9 @@ export function CheckoutSummaryAside({
   currentDraftValid,
   availableDays,
   paymentMethod,
+  draftExtraKcal = 0,
+  setDraftExtraKcal,
+  setCartItemExtraKcal,
   handleAddAnotherPackage,
   handleRemoveDay,
   removeCartItem,
@@ -120,6 +127,13 @@ export function CheckoutSummaryAside({
                     </div>
                   </div>
                 </div>
+
+                <CartItemAddons
+                  packageType={item.packageType}
+                  extraKcal={item.extraKcal || 0}
+                  onChangeExtraKcal={(newKcal) => setCartItemExtraKcal?.(item.id, newKcal)}
+                  dayCount={item.dayCount}
+                />
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
                   <div className="flex items-center gap-3">
@@ -224,6 +238,15 @@ export function CheckoutSummaryAside({
                   );
                 })()}
               </div>
+
+              {selectedPackageRaw && selectedPackageRaw.toLowerCase().includes("sport") && (
+                <CartItemAddons
+                  packageType={selectedPackageRaw}
+                  extraKcal={draftExtraKcal}
+                  onChangeExtraKcal={(newKcal) => setDraftExtraKcal?.(newKcal)}
+                  dayCount={summaryDays.length || 1}
+                />
+              )}
               
               {availableDays > 0 && balanceDaysToUse > 0 && (
                 <div className="mt-3 rounded-xl bg-emerald-500/10 p-2.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
