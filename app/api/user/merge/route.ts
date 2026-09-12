@@ -41,7 +41,7 @@ export async function POST(request: Request) {
 
     if (!normalizedPhone || !code) {
       return NextResponse.json(
-        { message: "Невірний формат даних", ok: false },
+        { message: "Неправильний формат даних", ok: false },
         { status: 400 }
       );
     }
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
         }).catch(() => {});
 
         return NextResponse.json(
-          { message: "Невірний код. Ліміт спроб вичерпано, запитайте новий код.", ok: false },
+          { message: "Неправильний код. Ліміт спроб вичерпано, запитайте новий код.", ok: false },
           { status: 429 }
         );
       }
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
       });
 
       return NextResponse.json(
-        { message: `Невірний код підтвердження. Залишилось спроб: ${5 - nextAttempts}`, ok: false },
+        { message: `Неправильний код підтвердження. Залишилось спроб: ${5 - nextAttempts}`, ok: false },
         { status: 400 }
       );
     }
@@ -244,7 +244,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       ok: true,
-      message: "Аккаунти успішно об'єднано",
+      message: "Акаунти успішно об'єднано",
     });
   } catch (error) {
     console.error("Merge error:", error);

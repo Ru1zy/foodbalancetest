@@ -6,7 +6,7 @@ export const checkoutSchema = z.object({
   phone: z.string()
     .transform((val) => normalizePhone(val))
     .refine((val) => /^0\d{9}$/.test(val), {
-      message: "Невірний формат телефону (наприклад: 0501234567, +380501234567 або 380501234567)",
+      message: "Неправильний формат телефону (наприклад: 0501234567, +380501234567 або 380501234567)",
     }),
   address: z.string().min(5, "Введіть повну адресу доставки"),
   comment: z.string(),
@@ -14,7 +14,7 @@ export const checkoutSchema = z.object({
   paymentMethod: z.enum(["balance", "card", "cash", "fiat", "plata", "bank_transfer"]),
   receiptUrl: z.string().optional(),
   sendEmailReceipt: z.boolean().optional(),
-  receiptEmail: z.string().email("Невірний формат email").optional().or(z.literal('')),
+  receiptEmail: z.string().email("Неправильний формат email").optional().or(z.literal('')),
 });
 
 export type CheckoutSchema = z.infer<typeof checkoutSchema>;

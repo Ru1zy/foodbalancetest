@@ -118,7 +118,7 @@ function CreateForm() {
   const handleSubmit = () => {
     setError(null);
     if (!isValidMonthKey(monthKey)) {
-      setError("Невірний формат місяця. Очікується MM.YYYY (напр. 03.2026).");
+      setError("Некоректний формат місяця. Очікується MM.YYYY (напр. 03.2026).");
       return;
     }
     if (!spreadsheetId.trim()) {

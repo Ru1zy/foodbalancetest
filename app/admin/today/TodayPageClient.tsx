@@ -108,7 +108,7 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
           : "";
         setNotifyMessage({
           type: "success",
-          text: `✓ Відправлено ${result.sent} сповіщень. Пропущено: ${result.skipped}.${reasons}`,
+          text: `✓ Надіслано ${result.sent} сповіщень. Пропущено: ${result.skipped}.${reasons}`,
         });
       } else {
         setNotifyMessage({

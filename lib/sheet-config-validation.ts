@@ -44,7 +44,7 @@ export function validateSheetConfigInput(input: SheetConfigInput): ValidationRes
   const label = input.label?.trim() ? input.label.trim() : null;
 
   if (!isValidMonthKey(monthKey)) {
-    return { ok: false, error: "Невірний формат місяця. Очікується MM.YYYY (напр. 03.2026)." };
+    return { ok: false, error: "Некоректний формат місяця. Очікується MM.YYYY (напр. 03.2026)." };
   }
 
   if (!spreadsheetId) {

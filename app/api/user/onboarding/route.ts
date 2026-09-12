@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     if (!normalizedPhone || normalizedPhone.length < 10) {
       return NextResponse.json(
-        { message: "Невірний формат телефону", ok: false },
+        { message: "Неправильний формат телефону", ok: false },
         { status: 400 }
       );
     }
@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     if (!sent) {
       return NextResponse.json(
         {
-          message: "Не вдалося відправити код підтвердження. Спробуйте пізніше.",
+          message: "Не вдалося надіслати код підтвердження. Спробуйте пізніше.",
           ok: false,
         },
         { status: 500 }
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       requireOtp: true,
       ok: true,
-      message: `Код підтвердження відправлено в Telegram на аккаунт ${existingUser.name}`,
+      message: `Код підтвердження надіслано в Telegram на акаунт ${existingUser.name}`,
     });
   } catch (error) {
     console.error("Onboarding error:", error);

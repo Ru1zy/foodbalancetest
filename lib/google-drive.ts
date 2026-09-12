@@ -680,7 +680,7 @@ export async function ensureMonthlySpreadsheet(
       ok: false,
       monthKey,
       code: "invalid_month",
-      error: "Невірний формат місяця. Очікується MM.YYYY.",
+      error: "Некоректний формат місяця. Очікується MM.YYYY.",
     };
   }
 

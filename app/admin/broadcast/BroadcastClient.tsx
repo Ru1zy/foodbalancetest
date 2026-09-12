@@ -241,7 +241,7 @@ export default function BroadcastClient({ clients }: Props) {
       setResult({
         ok: res.ok,
         message: res.ok
-          ? `Розсилку успішно завершено! Відправлено ${res.sent} повідомлень.`
+          ? `Розсилку успішно завершено! Надіслано ${res.sent} повідомлень.`
           : res.message || "Помилка при виконанні розсилки",
       });
 

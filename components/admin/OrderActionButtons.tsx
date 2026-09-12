@@ -38,7 +38,7 @@ export default function OrderActionButtons({ orderId, isPaid, hasChatId }: Props
       const result = await notifyDeliveryTime(orderId, timeWindow);
       if (result.ok) {
         setTimeWindow("");
-        alert("Повідомлення відправлено!");
+        alert("Повідомлення надіслано!");
       } else {
         alert(`Помилка: ${result.message}`);
       }

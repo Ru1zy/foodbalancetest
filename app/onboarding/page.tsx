@@ -53,7 +53,7 @@ export default function OnboardingPage() {
 
       if (data.requireOtp) {
         setStep("otp");
-        setOtpMessage(data.message || "Код відправлено в Telegram");
+        setOtpMessage(data.message || "Код надіслано в Telegram");
       } else if (data.success) {
         window.location.href = "/profile";
       }
@@ -80,7 +80,7 @@ export default function OnboardingPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Невірний код підтвердження");
+        setError(data.message || "Неправильний код підтвердження");
         return;
       }
 
@@ -108,7 +108,7 @@ export default function OnboardingPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Завершення реєстрації</h1>
           <p className="mt-2 text-sm text-gray-600 dark:text-slate-400">
             {step === "phone"
-              ? "Введіть ваш номер телефону для завершення налаштування аккаунта"
+              ? "Введіть ваш номер телефону для завершення налаштування акаунта"
               : "Введіть код підтвердження з Telegram"}
           </p>
         </div>
