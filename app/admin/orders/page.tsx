@@ -221,31 +221,104 @@ export default async function AdminOrdersPage({
   const todayStart = new Date(`${todayString}T00:00:00.000+03:00`);
   const todayEnd = new Date(`${todayString}T23:59:59.999+03:00`);
 
-  const whereClause = searchParams.filter === 'today'
-    ? {
+  const currentFilter = searchParams.filter || "active";
+
+  let whereClause: Prisma.OrderWhereInput = {};
+  if (currentFilter === "active") {
+    whereClause = {
+      status: { notIn: ["archived", "cancelled", "Скасовано"] },
+    };
+  } else if (currentFilter === "today") {
+    whereClause = {
+      deliveryDate: {
+        gte: todayStart,
+        lte: todayEnd,
+      },
+      status: { not: "archived" },
+    };
+  } else if (currentFilter === "archived") {
+    whereClause = {
+      status: "archived",
+    };
+  } else if (currentFilter === "all") {
+    whereClause = {};
+  }
+
+  const [
+    activeCount,
+    todayCount,
+    archivedCount,
+    allCount,
+    orders,
+  ] = await Promise.all([
+    prisma.order.count({
+      where: {
+        status: { notIn: ["archived", "cancelled", "Скасовано"] },
+      },
+    }),
+    prisma.order.count({
+      where: {
         deliveryDate: {
           gte: todayStart,
           lte: todayEnd,
         },
-      }
-    : {};
-
-  const orders = await prisma.order.findMany({
-    where: whereClause,
-    include: {
-      user: {
-        select: {
-          address: true,
-          chatId: true,
-          name: true,
-          phone: true,
+        status: { not: "archived" },
+      },
+    }),
+    prisma.order.count({
+      where: {
+        status: "archived",
+      },
+    }),
+    prisma.order.count(),
+    prisma.order.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            address: true,
+            chatId: true,
+            name: true,
+            phone: true,
+          },
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
+    }),
+  ]);
+
+  const tabs = [
+    {
+      id: "active",
+      label: "Активні",
+      count: activeCount,
+      href: "/admin/orders?filter=active",
+      icon: "⚡",
     },
-    orderBy: {
-      createdAt: "desc",
+    {
+      id: "today",
+      label: "Доставки сьогодні",
+      count: todayCount,
+      href: "/admin/orders?filter=today",
+      icon: "📅",
     },
-  });
+    {
+      id: "archived",
+      label: "Архів",
+      count: archivedCount,
+      href: "/admin/orders?filter=archived",
+      icon: "📦",
+    },
+    {
+      id: "all",
+      label: "Всі замовлення",
+      count: allCount,
+      href: "/admin/orders?filter=all",
+      icon: "📋",
+    },
+  ];
 
   // Fetch menu details for all orders
   const ordersWithMenuDetails = await Promise.all(
@@ -324,22 +397,66 @@ export default async function AdminOrdersPage({
           ]}
           tips={[
             "Якщо біля замовлення світиться жовте попередження про таблицю — перевірте вкладку 'Таблиці' та активуйте конфігурацію на відповідний місяць.",
-            "Для перегляду раціонів конкретно на сьогодні скористайтеся вкладкою '📅 Доставки сьогодні'.",
+            "Для зручної фільтрації перемикайтеся між вкладками: '⚡ Активні', '📅 Доставки сьогодні', '📦 Архів' та '📋 Всі замовлення'.",
           ]}
         />
 
         <KitchenExport />
 
-        <div className="mb-6">
+        {/* Navigation Tabs and Archive Action */}
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <div className="inline-flex flex-wrap rounded-2xl bg-slate-200/80 dark:bg-slate-800/80 p-1.5 shadow-inner gap-1.5">
+            {tabs.map((tab) => {
+              const isActive = currentFilter === tab.id;
+              return (
+                <Link
+                  key={tab.id}
+                  href={tab.href}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                    isActive
+                      ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-800/50"
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span>{tab.label}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                      isActive
+                        ? "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300"
+                        : "bg-slate-300/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+
           <ArchiveOrdersButton />
         </div>
 
         <div className="overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-sm">
           {ordersWithMenuDetails.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="text-6xl mb-4">📦</div>
-              <p className="text-lg font-semibold text-gray-700 dark:text-slate-300">Замовлень поки немає</p>
-              <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">Нові замовлення з&apos;являться тут</p>
+              <div className="text-6xl mb-4">
+                {currentFilter === "archived" ? "📦" : currentFilter === "today" ? "📅" : "✨"}
+              </div>
+              <p className="text-lg font-semibold text-gray-700 dark:text-slate-300">
+                {currentFilter === "active"
+                  ? "Активних замовлень немає"
+                  : currentFilter === "today"
+                    ? "На сьогодні доставок немає"
+                    : currentFilter === "archived"
+                      ? "Архів порожній"
+                      : "Замовлень поки немає"}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-slate-400 mt-2">
+                {currentFilter === "active"
+                  ? "Всі замовлення виконані або перенесені в архів"
+                  : "Нові замовлення з'являться тут"}
+              </p>
             </div>
           ) : (
             <SyncedHorizontalScroll>
