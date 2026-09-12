@@ -48,9 +48,14 @@ export async function POST(request: Request) {
 
     // Rate limit OTP verification attempts
     const { otpGuessLimiter } = await import("@/lib/rate-limit");
-    if (!otpGuessLimiter.check(currentUserId)) {
+    if (!otpGuessLimiter.check(currentUserId) || !otpGuessLimiter.check(normalizedPhone)) {
+      const remaining = Math.max(
+        otpGuessLimiter.getRemainingCooldownSeconds(currentUserId),
+        otpGuessLimiter.getRemainingCooldownSeconds(normalizedPhone)
+      );
+      const mins = Math.max(1, Math.ceil(remaining / 60));
       return NextResponse.json(
-        { message: "Забагато спроб введення. Зачекайте 5 хвилин.", ok: false },
+        { message: `Забагато спроб введення. Зачекайте ${mins} хв перед наступною спробою.`, ok: false },
         { status: 429 }
       );
     }
@@ -128,6 +133,10 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Reset rate limiter on correct code
+    otpGuessLimiter.reset(currentUserId);
+    otpGuessLimiter.reset(normalizedPhone);
 
     // Get current user (Google user with placeholder phone)
     const currentUser = await prisma.user.findUnique({

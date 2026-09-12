@@ -97,7 +97,23 @@ export async function POST(request: Request) {
     }
 
     // Rate limit OTP requests to prevent Telegram spam
-    const { otpRequestLimiter } = await import("@/lib/rate-limit");
+    const { otpRequestLimiter, otpGuessLimiter } = await import("@/lib/rate-limit");
+
+    if (otpGuessLimiter.isBlocked(currentUser.id) || otpGuessLimiter.isBlocked(normalizedPhone)) {
+      const remaining = Math.max(
+        otpGuessLimiter.getRemainingCooldownSeconds(currentUser.id),
+        otpGuessLimiter.getRemainingCooldownSeconds(normalizedPhone)
+      );
+      const mins = Math.max(1, Math.ceil(remaining / 60));
+      return NextResponse.json(
+        {
+          message: `Забагато невірних спроб введення коду. Зачекайте ${mins} хв перед новою спробою.`,
+          ok: false,
+        },
+        { status: 429 }
+      );
+    }
+
     if (!otpRequestLimiter.check(normalizedPhone) || !otpRequestLimiter.check(currentUser.id)) {
       return NextResponse.json(
         {

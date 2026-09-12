@@ -40,6 +40,29 @@ export class RateLimiter {
     return true;
   }
 
+  public isBlocked(identifier: string): boolean {
+    const now = Date.now();
+    const record = this.cache.get(identifier);
+    if (!record) return false;
+    if (now > record.expiresAt) return false;
+    return record.count >= this.maxRequests;
+  }
+
+  public getRemainingCooldownSeconds(identifier: string): number {
+    const now = Date.now();
+    const record = this.cache.get(identifier);
+    if (!record) return 0;
+    if (now > record.expiresAt) return 0;
+    if (record.count >= this.maxRequests) {
+      return Math.ceil((record.expiresAt - now) / 1000);
+    }
+    return 0;
+  }
+
+  public reset(identifier: string) {
+    this.cache.delete(identifier);
+  }
+
   // Optional: cleanup expired entries periodically if memory becomes an issue
   public cleanup() {
     const now = Date.now();
