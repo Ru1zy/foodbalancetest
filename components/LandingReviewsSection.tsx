@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Star, MessageCircle, X, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Star, X, ChevronRight, CheckCircle2 } from "lucide-react";
 import { getPublicReviewsAction } from "@/app/actions/feedback";
 import FractionalRatingStars from "@/components/FractionalRatingStars";
 
@@ -22,6 +22,7 @@ export default function LandingReviewsSection() {
   const [summary, setSummary] = useState({ totalCount: 0, avgRating: 5.0 });
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeReviewDetail, setActiveReviewDetail] = useState<PublicReview | null>(null);
   const [selectedStarFilter, setSelectedStarFilter] = useState<number | null>(null);
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
 
@@ -83,95 +84,110 @@ export default function LandingReviewsSection() {
       </div>
 
       {/* Grid of Reviews */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {displayedReviews.map((review) => (
-          <div
-            key={review.id}
-            className="flex flex-col justify-between rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm hover:shadow-md transition duration-200"
-          >
-            <div>
-              {/* Header: User & Rating */}
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-base shadow-xs">
-                    {review.userAvatar ? (
-                      <img
-                        src={review.userAvatar}
-                        alt={review.userName}
-                        className="h-full w-full object-cover rounded-2xl"
-                      />
-                    ) : (
-                      review.userName.charAt(0).toUpperCase()
-                    )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-stretch">
+        {displayedReviews.map((review) => {
+          const isLong = review.comment.length > 200;
+          return (
+            <div
+              key={review.id}
+              className="flex flex-col justify-between rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 shadow-sm hover:shadow-md transition duration-200"
+            >
+              <div>
+                {/* Header: User & Rating */}
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-base shadow-xs">
+                      {review.userAvatar ? (
+                        <img
+                          src={review.userAvatar}
+                          alt={review.userName}
+                          className="h-full w-full object-cover rounded-2xl"
+                        />
+                      ) : (
+                        review.userName.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-slate-900 dark:text-white text-sm leading-snug">
+                        {review.userName}
+                      </h4>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                        {new Date(review.createdAt).toLocaleDateString("uk-UA", {
+                          day: "numeric",
+                          month: "long",
+                        })}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm leading-snug">
-                      {review.userName}
-                    </h4>
-                    <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                      {new Date(review.createdAt).toLocaleDateString("uk-UA", {
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </span>
+
+                  <div className="flex text-amber-400">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={`h-4 w-4 ${
+                          s <= review.rating
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-slate-300 dark:text-slate-700"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
 
-                <div className="flex text-amber-400">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      className={`h-4 w-4 ${
-                        s <= review.rating
-                          ? "fill-amber-400 text-amber-400"
-                          : "text-slate-300 dark:text-slate-700"
-                      }`}
-                    />
-                  ))}
+                {/* Review Text with clamping to prevent towering cards */}
+                <div className="relative">
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-4">
+                    {review.comment}
+                  </p>
+                  {isLong && (
+                    <button
+                      type="button"
+                      onClick={() => setActiveReviewDetail(review)}
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition cursor-pointer"
+                    >
+                      <span>Читати далі</span>
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
+
+                {/* Attached Photo Thumbnail */}
+                {review.photoUrl && (
+                  <div className="mt-3.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveReviewDetail(review)}
+                      className="relative group block overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 focus:outline-hidden cursor-pointer w-full text-left"
+                    >
+                      <img
+                        src={review.photoUrl}
+                        alt="Фото до відгуку"
+                        className="h-32 w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
+                        🔍 Відкрити відгук з фото
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Review Text */}
-              <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                {review.comment}
-              </p>
-
-              {/* Attached Photo */}
-              {review.photoUrl && (
-                <div className="mt-3.5">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewPhotoUrl(review.photoUrl)}
-                    className="relative group block overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 focus:outline-hidden cursor-pointer"
-                  >
-                    <img
-                      src={review.photoUrl}
-                      alt="Фото до відгуку"
-                      className="h-36 w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
-                      🔍 Збільшити фото
+              {/* Admin Reply */}
+              {review.adminReply && (
+                <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3.5 space-y-1">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> Відповідь команди FoodBalance
                     </div>
-                  </button>
+                    <p className="text-xs text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed line-clamp-2">
+                      {review.adminReply}
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* Admin Reply */}
-            {review.adminReply && (
-              <div className="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80">
-                <div className="rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3.5 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Відповідь команди FoodBalance
-                  </div>
-                  <p className="text-xs text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed">
-                    {review.adminReply}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Button to view all reviews if more than 4 */}
@@ -188,7 +204,138 @@ export default function LandingReviewsSection() {
         </div>
       )}
 
-      {/* Full Reviews Modal */}
+      {/* Dedicated Review Detail Modal (Side-by-side Photo + Text with smooth scroll) */}
+      {activeReviewDetail && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setActiveReviewDetail(null)}
+        >
+          <div
+            className={`w-full ${activeReviewDetail.photoUrl ? "max-w-3xl" : "max-w-xl"} max-h-[88vh] flex flex-col rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-base shadow-xs">
+                  {activeReviewDetail.userAvatar ? (
+                    <img
+                      src={activeReviewDetail.userAvatar}
+                      alt={activeReviewDetail.userName}
+                      className="h-full w-full object-cover rounded-2xl"
+                    />
+                  ) : (
+                    activeReviewDetail.userName.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-base leading-snug">
+                    {activeReviewDetail.userName}
+                  </h4>
+                  <div className="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+                    <span>
+                      {new Date(activeReviewDetail.createdAt).toLocaleDateString("uk-UA", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </span>
+                    <span>•</span>
+                    <div className="flex text-amber-400">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          className={`h-3.5 w-3.5 ${
+                            s <= activeReviewDetail.rating
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-slate-300 dark:text-slate-700"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveReviewDetail(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content: 2 columns if photo exists, 1 column if no photo */}
+            <div className="p-5 sm:p-6 overflow-y-auto">
+              {activeReviewDetail.photoUrl ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                  {/* Left: Full photo */}
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950">
+                    <img
+                      src={activeReviewDetail.photoUrl}
+                      alt="Фото страви"
+                      className="w-full max-h-[50vh] md:max-h-[60vh] object-cover"
+                    />
+                  </div>
+
+                  {/* Right: Full text with vertical scroll */}
+                  <div className="flex flex-col max-h-[50vh] md:max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+                    <p className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                      {activeReviewDetail.comment}
+                    </p>
+
+                    {activeReviewDetail.adminReply && (
+                      <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <div className="rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 p-4 space-y-1.5">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                            <CheckCircle2 className="h-4 w-4" /> Відповідь команди FoodBalance
+                          </div>
+                          <p className="text-xs sm:text-sm text-emerald-950 dark:text-emerald-200 leading-relaxed">
+                            {activeReviewDetail.adminReply}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="max-h-[60vh] overflow-y-auto pr-2 space-y-4">
+                  <p className="text-sm sm:text-base text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                    {activeReviewDetail.comment}
+                  </p>
+
+                  {activeReviewDetail.adminReply && (
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <div className="rounded-2xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/40 p-4 space-y-1.5">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                          <CheckCircle2 className="h-4 w-4" /> Відповідь команди FoodBalance
+                        </div>
+                        <p className="text-xs sm:text-sm text-emerald-950 dark:text-emerald-200 leading-relaxed">
+                          {activeReviewDetail.adminReply}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 flex justify-end bg-slate-50/50 dark:bg-slate-900/50">
+              <button
+                type="button"
+                onClick={() => setActiveReviewDetail(null)}
+                className="px-5 py-2 rounded-xl bg-slate-200/80 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition cursor-pointer"
+              >
+                Закрити
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Reviews List Modal */}
       {isModalOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200"
@@ -264,81 +411,95 @@ export default function LandingReviewsSection() {
                   Немає відгуків з вибраною оцінкою.
                 </div>
               ) : (
-                filteredReviews.map((review) => (
-                  <div
-                    key={review.id}
-                    className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 space-y-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-bold text-sm">
-                          {review.userName.charAt(0).toUpperCase()}
+                filteredReviews.map((review) => {
+                  const isLong = review.comment.length > 200;
+                  return (
+                    <div
+                      key={review.id}
+                      className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 text-white font-bold text-sm">
+                            {review.userName.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 dark:text-white text-sm">
+                              {review.userName}
+                            </div>
+                            <div className="text-[11px] text-slate-400">
+                              {new Date(review.createdAt).toLocaleDateString("uk-UA", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                              })}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-bold text-slate-900 dark:text-white text-sm">
-                            {review.userName}
-                          </div>
-                          <div className="text-[11px] text-slate-400">
-                            {new Date(review.createdAt).toLocaleDateString("uk-UA", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </div>
+
+                        <div className="flex text-amber-400">
+                          {[1, 2, 3, 4, 5].map((s) => (
+                            <Star
+                              key={s}
+                              className={`h-4 w-4 ${
+                                s <= review.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-slate-300 dark:text-slate-600"
+                              }`}
+                            />
+                          ))}
                         </div>
                       </div>
 
-                      <div className="flex text-amber-400">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <Star
-                            key={s}
-                            className={`h-4 w-4 ${
-                              s <= review.rating
-                                ? "fill-amber-400 text-amber-400"
-                                : "text-slate-300 dark:text-slate-600"
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                      {review.comment}
-                    </p>
-
-                    {review.photoUrl && (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewPhotoUrl(review.photoUrl)}
-                        className="block rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer"
-                      >
-                        <img
-                          src={review.photoUrl}
-                          alt="Фото до відгуку"
-                          className="h-32 object-cover rounded-xl hover:scale-105 transition"
-                        />
-                      </button>
-                    )}
-
-                    {review.adminReply && (
-                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 p-3 space-y-1">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Відповідь команди FoodBalance
-                        </div>
-                        <p className="text-xs text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed">
-                          {review.adminReply}
+                      <div>
+                        <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed line-clamp-4">
+                          {review.comment}
                         </p>
+                        {isLong && (
+                          <button
+                            type="button"
+                            onClick={() => setActiveReviewDetail(review)}
+                            className="mt-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer"
+                          >
+                            Читати далі →
+                          </button>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))
+
+                      {review.photoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveReviewDetail(review)}
+                          className="block rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 cursor-pointer"
+                        >
+                          <img
+                            src={review.photoUrl}
+                            alt="Фото до відгуку"
+                            className="h-32 object-cover rounded-xl hover:scale-105 transition"
+                          />
+                        </button>
+                      )}
+
+                      {review.adminReply && (
+                        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 p-3 space-y-1">
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 dark:text-emerald-400">
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Відповідь команди FoodBalance
+                          </div>
+                          <p className="text-xs text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed line-clamp-2">
+                            {review.adminReply}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Photo Zoom Lightbox */}
+      {/* Photo Zoom Lightbox (standalone backup) */}
       {previewPhotoUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
