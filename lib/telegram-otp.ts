@@ -31,6 +31,9 @@ export async function sendTelegramOTP(chatId: string, code: string): Promise<boo
   }
 }
 
+import { randomInt } from "node:crypto";
+
 export function generateOTPCode(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return randomInt(100000, 1000000).toString();
 }
+

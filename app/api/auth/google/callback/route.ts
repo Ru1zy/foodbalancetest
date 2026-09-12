@@ -15,9 +15,18 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const code = searchParams.get("code");
   const error = searchParams.get("error");
+  const returnedState = searchParams.get("state");
 
   const redirectUri = getGoogleRedirectUri(request);
   const redirectTo = (path: string) => createPublicRedirectUrl(path, request);
+
+  const cookieStore = await cookies();
+  const savedState = cookieStore.get("google_oauth_state")?.value;
+  cookieStore.delete("google_oauth_state");
+
+  if (!returnedState || !savedState || returnedState !== savedState) {
+    return NextResponse.redirect(redirectTo("/?error=csrf_state_mismatch"));
+  }
 
   if (error) {
     const errorUrl = redirectTo("/");

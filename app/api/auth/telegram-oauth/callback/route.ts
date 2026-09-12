@@ -23,6 +23,13 @@ type TelegramOAuthData = {
 function verifyTelegramOAuth(data: TelegramOAuthData, botToken: string): boolean {
   const { hash, ...dataWithoutHash } = data;
 
+  // Prevent replay attacks: check auth_date is within 24 hours
+  const authTimestamp = parseInt(data.auth_date, 10);
+  const now = Math.floor(Date.now() / 1000);
+  if (isNaN(authTimestamp) || Math.abs(now - authTimestamp) > 86400) {
+    return false;
+  }
+
   const dataCheckString = Object.keys(dataWithoutHash)
     .sort()
     .map((key) => `${key}=${dataWithoutHash[key as keyof typeof dataWithoutHash]}`)

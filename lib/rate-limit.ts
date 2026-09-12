@@ -55,12 +55,31 @@ export class RateLimiter {
 // and across invocations in production (per isolated Node instance)
 const globalForRateLimiter = globalThis as unknown as {
   checkoutLimiter: RateLimiter | undefined;
+  otpRequestLimiter: RateLimiter | undefined;
+  otpGuessLimiter: RateLimiter | undefined;
+  receiptUploadLimiter: RateLimiter | undefined;
 };
 
 // Checkout: max 3 requests per 1 minute
 export const checkoutLimiter =
   globalForRateLimiter.checkoutLimiter ?? new RateLimiter(3, 60 * 1000);
 
+// OTP Request (onboarding): max 2 requests per 60 seconds per phone/IP
+export const otpRequestLimiter =
+  globalForRateLimiter.otpRequestLimiter ?? new RateLimiter(2, 60 * 1000);
+
+// OTP Verification (merge): max 5 attempts per 5 minutes
+export const otpGuessLimiter =
+  globalForRateLimiter.otpGuessLimiter ?? new RateLimiter(5, 5 * 60 * 1000);
+
+// Receipt upload: max 5 uploads per 10 minutes
+export const receiptUploadLimiter =
+  globalForRateLimiter.receiptUploadLimiter ?? new RateLimiter(5, 10 * 60 * 1000);
+
 if (process.env.NODE_ENV !== "production") {
   globalForRateLimiter.checkoutLimiter = checkoutLimiter;
+  globalForRateLimiter.otpRequestLimiter = otpRequestLimiter;
+  globalForRateLimiter.otpGuessLimiter = otpGuessLimiter;
+  globalForRateLimiter.receiptUploadLimiter = receiptUploadLimiter;
 }
+

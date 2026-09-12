@@ -195,11 +195,13 @@ model AuthToken {
 }
 
 model MergeToken {
-  id        String   @id @default(uuid())
-  phone     String   @unique
-  code      String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id           String   @id @default(uuid())
+  phone        String   @unique
+  code         String
+  targetUserId String?
+  attempts     Int      @default(0)
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
 
   @@index([phone])
   @@index([expiresAt])

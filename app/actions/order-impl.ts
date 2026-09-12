@@ -1109,8 +1109,17 @@ export async function submitOrders(
         where: { key: idempotencyKey },
       });
 
-      // First request already committed → replay its result as success.
+      // First request already committed → replay its result as success if user matches.
       if (existing && existing.orderIds.length > 0) {
+        if (existing.userId && userId && existing.userId !== userId) {
+          return {
+            ok: false,
+            message: "Недійсний ключ ідемпотентності.",
+            status: 403,
+            createdCount: 0,
+          };
+        }
+
         return {
           ok: true,
           orderIds: existing.orderIds,

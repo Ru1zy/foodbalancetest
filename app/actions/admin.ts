@@ -9,7 +9,11 @@ import {
 } from "@/lib/delivery-orders";
 import { isOrderStatus, type OrderStatus } from "@/lib/order-status";
 import { sendPaymentConfirmation } from "@/lib/telegram";
-import { normalizePhoneForLegacy } from "@/lib/googleSheets";
+import {
+  normalizePhoneForLegacy,
+  archiveOrdersInSheet,
+  syncOrderStatusInSheet,
+} from "@/lib/googleSheets";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 import { createGoogleSheetsClient } from "@/lib/google-sheets-auth";
 import { syncOrderToMonthlySheets } from "@/lib/monthlySheets";
@@ -106,6 +110,11 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
 
     revalidatePath("/admin/orders");
 
+    // Sync to Google Sheets CRM in background
+    syncOrderStatusInSheet(nextOrderId, nextStatus).catch((err) =>
+      console.error("syncOrderStatusInSheet failed in updateOrderStatus:", err)
+    );
+
     return {
       ok: true,
       status: nextStatus,
@@ -163,6 +172,11 @@ export async function confirmOrderPayment(orderId: string): Promise<ConfirmPayme
     }
 
     revalidatePath("/admin/orders");
+
+    // Sync to Google Sheets CRM in background
+    syncOrderStatusInSheet(nextOrderId, "Оплачено", true).catch((err) =>
+      console.error("syncOrderStatusInSheet failed in confirmOrderPayment:", err)
+    );
 
     return {
       ok: true,
@@ -461,6 +475,13 @@ export async function archiveOldOrders(): Promise<ArchiveOrdersResult> {
         },
       },
     });
+
+    // Also sync to Google Sheets "Archive" tab
+    try {
+      await archiveOrdersInSheet(ordersToArchive.map((o: { id: string }) => o.id));
+    } catch (sheetErr) {
+      console.error("archiveOrdersInSheet failed in archiveOldOrders:", sheetErr);
+    }
 
     revalidatePath("/admin/orders");
 

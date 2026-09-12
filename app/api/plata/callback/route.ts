@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { verifyMonobankWebhook } from "@/lib/monobank";
+import { verifyMonobankWebhook, calculateAmountWithFee } from "@/lib/monobank";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
+import { syncOrderStatusInSheet } from "@/lib/googleSheets";
 import { revalidatePath } from "next/cache";
 
 export async function POST(request: Request) {
@@ -24,9 +25,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    const { reference, status } = body;
+    const { reference, status, ccy, amount } = body;
     if (!reference || !status) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    }
+
+    // Verify currency is UAH (980)
+    if (ccy !== undefined && ccy !== 980) {
+      console.warn(`Monobank webhook invalid currency: ${ccy}`);
+      return NextResponse.json({ error: "Invalid currency" }, { status: 400 });
     }
 
     // Ignore non-final events but return 200 OK so Monobank doesn't retry
@@ -48,6 +55,14 @@ export async function POST(request: Request) {
         }
 
         if (status === "success") {
+          const expectedPennies = Math.round(calculateAmountWithFee(purchase.finalPrice) * 100);
+          if (typeof amount === "number" && amount < expectedPennies) {
+            console.error(
+              `Monobank webhook underpayment for purchase ${reference}: expected ${expectedPennies}, got ${amount}`
+            );
+            return;
+          }
+
           // Mark as PAID
           await tx.subscriptionPurchase.update({
             where: { id: reference },
@@ -96,10 +111,19 @@ export async function POST(request: Request) {
           // Check if orders are already paid
           const existingOrders = await tx.order.findMany({
             where: { id: { in: idempotency.orderIds } },
-            select: { isPaid: true }
+            select: { id: true, price: true, isPaid: true },
           });
-          
-          const allPaid = existingOrders.length > 0 && existingOrders.every(o => o.isPaid);
+
+          const totalUah = existingOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+          const expectedPennies = Math.round(calculateAmountWithFee(totalUah) * 100);
+          if (typeof amount === "number" && amount < expectedPennies) {
+            console.error(
+              `Monobank webhook underpayment for checkout ${reference}: expected ${expectedPennies}, got ${amount}`
+            );
+            return;
+          }
+
+          const allPaid = existingOrders.length > 0 && existingOrders.every((o) => o.isPaid);
           if (allPaid) {
             console.log(`Monobank webhook: Checkout ${reference} is already paid. Idempotent return.`);
             return;
@@ -109,6 +133,13 @@ export async function POST(request: Request) {
             where: { id: { in: idempotency.orderIds } },
             data: { isPaid: true },
           });
+
+          // Sync paid status to Google Sheets Orders tab
+          for (const o of existingOrders) {
+            syncOrderStatusInSheet(o.id, "Оплачено", true).catch((err) =>
+              console.error("syncOrderStatusInSheet failed in plata callback:", err)
+            );
+          }
 
           // Enqueue telegram notification for admin
           await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION", {

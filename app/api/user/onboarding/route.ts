@@ -96,20 +96,36 @@ export async function POST(request: Request) {
       );
     }
 
+    // Rate limit OTP requests to prevent Telegram spam
+    const { otpRequestLimiter } = await import("@/lib/rate-limit");
+    if (!otpRequestLimiter.check(normalizedPhone) || !otpRequestLimiter.check(currentUser.id)) {
+      return NextResponse.json(
+        {
+          message: "Занадто багато запитів коду. Будь ласка, зачекайте 1 хвилину.",
+          ok: false,
+        },
+        { status: 429 }
+      );
+    }
+
     // Generate OTP code
     const code = generateOTPCode();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    // Save OTP to database
+    // Save OTP to database bound to the requesting user
     await prisma.mergeToken.upsert({
       where: { phone: normalizedPhone },
       create: {
         phone: normalizedPhone,
         code,
+        targetUserId: currentUser.id,
+        attempts: 0,
         expiresAt,
       },
       update: {
         code,
+        targetUserId: currentUser.id,
+        attempts: 0,
         expiresAt,
       },
     });

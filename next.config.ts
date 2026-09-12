@@ -41,10 +41,40 @@ const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",
+      allowedOrigins: [
+        "foodbalancetest-production-5092.up.railway.app",
+        "foodbalance.zp.ua",
+        "localhost:3000",
+      ],
     },
   },
   images: {
     remotePatterns,
+  },
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+          {
+            key: "Strict-Transport-Security",
+            value: "max-age=31536000; includeSubDomains",
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://web.telegram.org https://*.telegram.org telegram:;",
+          },
+        ],
+      },
+    ];
   },
 };
 

@@ -27,7 +27,9 @@ export async function createAuthToken(userId: string) {
 }
 
 export async function verifyAuthToken(token: string) {
-  const { payload } = await jwtVerify(token, getJwtSecret());
+  const { payload } = await jwtVerify(token, getJwtSecret(), {
+    algorithms: ["HS256"],
+  });
 
   if (typeof payload.userId === "string" && payload.userId.length > 0) {
     return payload.userId;

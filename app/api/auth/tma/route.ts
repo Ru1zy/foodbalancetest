@@ -34,6 +34,17 @@ function isValidTelegramInitData(initData: string, botToken: string) {
     return false;
   }
 
+  // Prevent replay attacks: check auth_date is within 24 hours
+  const authDateStr = searchParams.get("auth_date");
+  if (!authDateStr) {
+    return false;
+  }
+  const authDate = parseInt(authDateStr, 10);
+  const now = Math.floor(Date.now() / 1000);
+  if (isNaN(authDate) || Math.abs(now - authDate) > 86400) {
+    return false;
+  }
+
   const secret = createHmac("sha256", "WebAppData").update(botToken).digest();
   const calculatedHash = createHmac("sha256", secret)
     .update(buildDataCheckString(searchParams))

@@ -46,6 +46,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Rate limit OTP verification attempts
+    const { otpGuessLimiter } = await import("@/lib/rate-limit");
+    if (!otpGuessLimiter.check(currentUserId)) {
+      return NextResponse.json(
+        { message: "Забагато спроб введення. Зачекайте 5 хвилин.", ok: false },
+        { status: 429 }
+      );
+    }
+
     // Validate OTP
     const mergeToken = await prisma.mergeToken.findUnique({
       where: { phone: normalizedPhone },
@@ -53,8 +62,16 @@ export async function POST(request: Request) {
 
     if (!mergeToken) {
       return NextResponse.json(
-        { message: "Код підтвердження не знайдено", ok: false },
+        { message: "Код підтвердження не знайдено або термін його дії закінчився", ok: false },
         { status: 400 }
+      );
+    }
+
+    // Verify token belongs to the requesting user session
+    if (mergeToken.targetUserId && mergeToken.targetUserId !== currentUserId) {
+      return NextResponse.json(
+        { message: "Недійсний запит об'єднання", ok: false },
+        { status: 403 }
       );
     }
 
@@ -62,7 +79,7 @@ export async function POST(request: Request) {
     if (mergeToken.expiresAt < new Date()) {
       await prisma.mergeToken.delete({
         where: { phone: normalizedPhone },
-      });
+      }).catch(() => {});
 
       return NextResponse.json(
         { message: "Термін дії коду вичерпано. Спробуйте ще раз.", ok: false },
@@ -70,10 +87,44 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if code matches
-    if (mergeToken.code !== code) {
+    // Check if max attempts exceeded
+    if (mergeToken.attempts >= 5) {
+      await prisma.mergeToken.delete({
+        where: { phone: normalizedPhone },
+      }).catch(() => {});
+
       return NextResponse.json(
-        { message: "Невірний код підтвердження", ok: false },
+        { message: "Вичерпано ліміт спроб. Запитайте новий код.", ok: false },
+        { status: 429 }
+      );
+    }
+
+    // Check if code matches (constant-time comparison)
+    const { timingSafeEqual } = await import("node:crypto");
+    const expBuf = Buffer.from(mergeToken.code);
+    const actBuf = Buffer.from(code);
+    const isMatch = expBuf.length === actBuf.length && timingSafeEqual(expBuf, actBuf);
+
+    if (!isMatch) {
+      const nextAttempts = mergeToken.attempts + 1;
+      if (nextAttempts >= 5) {
+        await prisma.mergeToken.delete({
+          where: { phone: normalizedPhone },
+        }).catch(() => {});
+
+        return NextResponse.json(
+          { message: "Невірний код. Ліміт спроб вичерпано, запитайте новий код.", ok: false },
+          { status: 429 }
+        );
+      }
+
+      await prisma.mergeToken.update({
+        where: { phone: normalizedPhone },
+        data: { attempts: nextAttempts },
+      });
+
+      return NextResponse.json(
+        { message: `Невірний код підтвердження. Залишилось спроб: ${5 - nextAttempts}`, ok: false },
         { status: 400 }
       );
     }

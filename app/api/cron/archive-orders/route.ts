@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import prisma from "@/lib/prisma";
 import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
+import { archiveOrdersInSheet } from "@/lib/googleSheets";
 
 /**
  * GitHub Actions cron endpoint for automatic order archiving.
@@ -22,11 +24,14 @@ export async function GET(request: Request) {
     );
   }
 
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json(
-      { error: "Unauthorized" },
-      { status: 401 }
-    );
+  const expectedToken = `Bearer ${cronSecret}`;
+  const authBuf = Buffer.from(authHeader || "");
+  const expBuf = Buffer.from(expectedToken);
+  const isValidAuth =
+    authBuf.length === expBuf.length && timingSafeEqual(authBuf, expBuf);
+
+  if (!isValidAuth) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
@@ -84,6 +89,13 @@ export async function GET(request: Request) {
       },
     });
 
+    // Also sync to Google Sheets "Archive" tab
+    try {
+      await archiveOrdersInSheet(ordersToArchive.map((o: { id: string }) => o.id));
+    } catch (sheetErr) {
+      console.error("archiveOrdersInSheet failed in cron archive-orders:", sheetErr);
+    }
+
     return NextResponse.json({
       success: true,
       archived: archivedResult.count,
@@ -96,7 +108,7 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: "Failed to archive orders",
       },
       { status: 500 }
     );

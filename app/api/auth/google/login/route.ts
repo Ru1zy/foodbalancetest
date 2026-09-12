@@ -14,6 +14,8 @@ export async function GET(request: Request) {
     );
   }
 
+  const state = crypto.randomUUID();
+
   const googleAuthUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
 
   googleAuthUrl.searchParams.set("client_id", clientId);
@@ -22,6 +24,16 @@ export async function GET(request: Request) {
   googleAuthUrl.searchParams.set("scope", "openid email profile");
   googleAuthUrl.searchParams.set("access_type", "online");
   googleAuthUrl.searchParams.set("prompt", "select_account");
+  googleAuthUrl.searchParams.set("state", state);
 
-  return NextResponse.redirect(googleAuthUrl.toString());
+  const response = NextResponse.redirect(googleAuthUrl.toString());
+  response.cookies.set("google_oauth_state", state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 10 * 60, // 10 minutes
+    path: "/",
+  });
+
+  return response;
 }

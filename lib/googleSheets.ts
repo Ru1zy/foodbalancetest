@@ -285,3 +285,177 @@ export async function appendOrderToSheet(order: Order, user: User): Promise<void
     console.error("appendOrderToSheet failed:", error);
   }
 }
+
+/**
+ * Moves rows corresponding to the given orderIds from the "Orders" tab to the "Archive" tab.
+ */
+export async function archiveOrdersInSheet(orderIds?: string[]): Promise<{ movedCount: number }> {
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+  const sheets = createGoogleSheetsClient();
+
+  if (!sheets || !spreadsheetId) {
+    console.error("archiveOrdersInSheet: Missing Google API environment variables.");
+    return { movedCount: 0 };
+  }
+
+  try {
+    const meta = await sheets.spreadsheets.get({ spreadsheetId });
+    const ordersSheet = meta.data.sheets?.find((s) => s.properties?.title === "Orders");
+    const ordersSheetId = ordersSheet?.properties?.sheetId;
+
+    if (ordersSheetId == null) {
+      console.warn("archiveOrdersInSheet: 'Orders' tab not found in spreadsheet.");
+      return { movedCount: 0 };
+    }
+
+    // Ensure "Archive" tab exists
+    const archiveSheet = meta.data.sheets?.find((s) => s.properties?.title === "Archive");
+    if (!archiveSheet) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              addSheet: {
+                properties: { title: "Archive" },
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    const resp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: "Orders!A:O",
+    });
+
+    const rows = resp.data.values || [];
+    if (rows.length <= 1) {
+      return { movedCount: 0 };
+    }
+
+    const targetIds = orderIds && orderIds.length > 0 ? new Set(orderIds) : null;
+    const rowsToArchive: string[][] = [];
+    const rowIndicesToDelete: number[] = [];
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const rowOrderId = String(row[14] || "").trim();
+
+      // If specific IDs provided, match them. If no IDs provided, match rows whose status is "archived" or delivery is past
+      let shouldArchive = false;
+      if (targetIds) {
+        if (targetIds.has(rowOrderId)) {
+          shouldArchive = true;
+        }
+      }
+
+      if (shouldArchive) {
+        const archivedRow = [...row];
+        if (archivedRow[9] === "Новий") {
+          archivedRow[9] = "Архів";
+        }
+        rowsToArchive.push(archivedRow);
+        rowIndicesToDelete.push(i);
+      }
+    }
+
+    if (rowsToArchive.length === 0) {
+      return { movedCount: 0 };
+    }
+
+    // Append to Archive
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "Archive!A:O",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: rowsToArchive,
+      },
+    });
+
+    // Delete from Orders tab in reverse order to preserve indices
+    rowIndicesToDelete.sort((a, b) => b - a);
+    const deleteRequests = rowIndicesToDelete.map((rowIndex) => ({
+      deleteDimension: {
+        range: {
+          sheetId: ordersSheetId,
+          dimension: "ROWS",
+          startIndex: rowIndex,
+          endIndex: rowIndex + 1,
+        },
+      },
+    }));
+
+    if (deleteRequests.length > 0) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: deleteRequests,
+        },
+      });
+    }
+
+    console.log(`archiveOrdersInSheet: Successfully moved ${rowsToArchive.length} rows to Archive tab.`);
+    return { movedCount: rowsToArchive.length };
+  } catch (error) {
+    console.error("archiveOrdersInSheet failed:", error);
+    return { movedCount: 0 };
+  }
+}
+
+/**
+ * Updates status and/or payment confirmation for an order row in the "Orders" tab.
+ */
+export async function syncOrderStatusInSheet(
+  orderId: string,
+  status: string,
+  isPaid?: boolean,
+): Promise<void> {
+  const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+  const sheets = createGoogleSheetsClient();
+
+  if (!sheets || !spreadsheetId) return;
+
+  try {
+    const resp = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: "Orders!O:O",
+    });
+
+    const values = resp.data.values || [];
+    let targetRowNumber = -1;
+    for (let i = 0; i < values.length; i++) {
+      if (values[i][0] === orderId) {
+        targetRowNumber = i + 1; // 1-indexed row number
+        break;
+      }
+    }
+
+    if (targetRowNumber === -1) return;
+
+    if (isPaid !== undefined) {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Orders!J${targetRowNumber}:K${targetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [[status, isPaid ? "TRUE" : "FALSE"]],
+        },
+      });
+    } else {
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Orders!J${targetRowNumber}`,
+        valueInputOption: "USER_ENTERED",
+        requestBody: {
+          values: [[status]],
+        },
+      });
+    }
+  } catch (error) {
+    console.error(`syncOrderStatusInSheet failed for ${orderId}:`, error);
+  }
+}
+
