@@ -187,23 +187,23 @@ export default function OnboardingPage() {
                 type="text"
                 id="otp"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                placeholder="1234"
-                maxLength={4}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="123456"
+                maxLength={6}
                 className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl text-center text-2xl font-bold tracking-widest text-gray-900 dark:text-slate-100 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:border-emerald-400 outline-none transition-all"
                 required
                 disabled={loading}
                 autoFocus
               />
               <p className="mt-2 text-xs text-gray-500 dark:text-slate-400 text-center">
-                Введіть 4-значний код з Telegram
+                Введіть 6-значний код з Telegram
               </p>
             </div>
 
             <div className="space-y-3">
               <button
                 type="submit"
-                disabled={loading || otp.length !== 4}
+                disabled={loading || otp.length !== 6}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-xl transition-all active:scale-95"
               >
                 {loading ? "Перевірка..." : "Підтвердити"}
