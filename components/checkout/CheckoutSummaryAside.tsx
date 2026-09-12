@@ -294,10 +294,8 @@ export function CheckoutSummaryAside({
               ) : (
                 <span className="text-sm sm:text-base font-bold text-blue-400">Уточнюється менеджером</span>
               )
-            ) : grandGrossTotal > 0 ? (
-              `${grandGrossTotal} ₴`
             ) : (
-              "—"
+              `${grandGrossTotal} ₴`
             )}
           </span>
         </div>

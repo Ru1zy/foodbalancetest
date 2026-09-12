@@ -77,11 +77,7 @@ export function CheckoutCustomerForm({
 
   const orderAmount =
     cartItems.length > 0
-      ? grandGrossTotal > 0
-        ? grandGrossTotal
-        : 0
-      : orderTotalUah > 0
-      ? orderTotalUah
+      ? Math.max(0, grandGrossTotal)
       : fiatPrice;
 
   return (
@@ -347,15 +343,11 @@ export function CheckoutCustomerForm({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                {cartItems.length > 0
+                {hasIndivInCart || isIndivCurrent
                   ? grandGrossTotal > 0
-                    ? `До підтвердження: ${grandGrossTotal} ₴`
-                    : "0 ₴"
-                  : orderTotalUah > 0
-                  ? `До підтвердження: ${orderTotalUah} ₴`
-                  : isIndivPackage(selectedPackageRaw ?? undefined)
-                  ? "Індивідуальний розрахунок"
-                  : `До підтвердження: 0 ₴`}
+                    ? `До підтвердження: ${grandGrossTotal} ₴ + Інд.`
+                    : "Індивідуальний розрахунок"
+                  : `До підтвердження: ${grandGrossTotal} ₴`}
               </p>
               <p className="mt-1 text-sm text-slate-500">
                 Натискаючи кнопку, ви передаєте замовлення менеджеру в обробку.

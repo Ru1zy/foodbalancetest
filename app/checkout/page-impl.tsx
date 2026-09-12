@@ -426,9 +426,9 @@ export default function CheckoutPageImpl({
     [cartItems],
   );
 
-  /** Gross total across the current draft + all added packages. */
+  /** Payable total across the current draft + all added packages, deducting subscription days. */
   const grandGrossTotal =
-    (currentDraftValid ? orderTotalUah : 0) + cartFiatTotal;
+    (currentDraftValid ? fiatPrice : 0) + cartFiatTotal;
 
   /** Snapshot the current wizard draft as a ready-to-submit cart item. */
   const buildDraftCartItem = (): CartItem | null => {

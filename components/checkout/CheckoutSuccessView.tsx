@@ -54,8 +54,10 @@ export function CheckoutSuccessView({ submitted }: Props) {
             <div className="mt-2 text-lg font-bold text-slate-900 dark:text-slate-100">
               {submitted.totalPrice > 0 ? (
                 `${submitted.totalPrice} ₴`
-              ) : (
+              ) : isIndivPackage(submitted.packageType) ? (
                 "—"
+              ) : (
+                "0 ₴"
               )}
             </div>
           </div>
