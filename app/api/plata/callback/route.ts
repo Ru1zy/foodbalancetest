@@ -114,13 +114,16 @@ export async function POST(request: Request) {
             select: { id: true, price: true, isPaid: true },
           });
 
-          const totalUah = existingOrders.reduce((sum, o) => sum + (o.price || 0), 0);
-          const expectedPennies = Math.round(calculateAmountWithFee(totalUah) * 100);
-          if (typeof amount === "number" && amount < expectedPennies) {
-            console.error(
-              `Monobank webhook underpayment for checkout ${reference}: expected ${expectedPennies}, got ${amount}`
-            );
-            return;
+          const isAdminInvoice = reference.startsWith("admin_inv_");
+          if (!isAdminInvoice) {
+            const totalUah = existingOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+            const expectedPennies = Math.round(calculateAmountWithFee(totalUah) * 100);
+            if (typeof amount === "number" && amount < expectedPennies) {
+              console.error(
+                `Monobank webhook underpayment for checkout ${reference}: expected ${expectedPennies}, got ${amount}`
+              );
+              return;
+            }
           }
 
           const allPaid = existingOrders.length > 0 && existingOrders.every((o) => o.isPaid);
@@ -131,7 +134,7 @@ export async function POST(request: Request) {
 
           await tx.order.updateMany({
             where: { id: { in: idempotency.orderIds } },
-            data: { isPaid: true },
+            data: { isPaid: true, paymentMethod: "plata" },
           });
 
           // Sync paid status to Google Sheets Orders tab
@@ -149,6 +152,37 @@ export async function POST(request: Request) {
           console.log(`Monobank webhook: Checkout ${reference} marked as paid.`);
         } else {
           console.log(`Monobank webhook: Checkout ${reference} payment ${status}.`);
+        }
+        return;
+      }
+
+      // Check if reference is directly an Order ID
+      const singleOrder = await tx.order.findUnique({
+        where: { id: reference },
+        select: { id: true, price: true, isPaid: true },
+      });
+
+      if (singleOrder) {
+        if (status === "success") {
+          if (singleOrder.isPaid) {
+            console.log(`Monobank webhook: Order ${reference} is already paid. Idempotent return.`);
+            return;
+          }
+
+          await tx.order.update({
+            where: { id: reference },
+            data: { isPaid: true, paymentMethod: "plata" },
+          });
+
+          syncOrderStatusInSheet(singleOrder.id, "Оплачено", true).catch((err) =>
+            console.error("syncOrderStatusInSheet failed in plata callback:", err)
+          );
+
+          await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION", {
+            orderIds: [singleOrder.id],
+          });
+
+          console.log(`Monobank webhook: Order ${reference} marked as paid.`);
         }
         return;
       }

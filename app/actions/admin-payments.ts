@@ -4,6 +4,7 @@ import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
+import { createMonobankInvoice, calculateAmountWithFee } from "@/lib/monobank";
 
 export async function confirmPaymentAction(purchaseId: string) {
   const admin = await getAuthenticatedAdminUser();
@@ -589,4 +590,169 @@ export async function resolveSubscriptionRefundNoPaymentAction(purchaseId: strin
     return { ok: false, error: "Помилка при збереженні статусу" };
   }
 }
+
+export type GeneratePaymentLinkResult =
+  | { ok: true; pageUrl: string; invoiceId: string; amountUah: number; orderIds: string[] }
+  | { ok: false; error: string };
+
+/**
+ * Generates an official Monobank payment link (Plata by mono) for an order or a set of related orders.
+ */
+export async function generateOrderPaymentLinkAction(params: {
+  orderId: string;
+  amountUah: number;
+  includeRelatedOrderIds?: string[];
+}): Promise<GeneratePaymentLinkResult> {
+  const admin = await getAuthenticatedAdminUser();
+  if (!admin) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  const { orderId, amountUah, includeRelatedOrderIds = [] } = params;
+
+  if (!amountUah || amountUah <= 0 || !Number.isFinite(amountUah)) {
+    return { ok: false, error: "Сума має бути більшою за 0 грн" };
+  }
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: true },
+    });
+
+    if (!order) {
+      return { ok: false, error: "Замовлення не знайдено" };
+    }
+
+    if (order.isPaid) {
+      return { ok: false, error: "Це замовлення вже оплачено" };
+    }
+
+    const allOrderIds = Array.from(new Set([orderId, ...includeRelatedOrderIds]));
+
+    const orders = await prisma.order.findMany({
+      where: { id: { in: allOrderIds } },
+      include: { user: true },
+    });
+
+    const unpaidOrders = orders.filter((o) => !o.isPaid);
+    if (unpaidOrders.length === 0) {
+      return { ok: false, error: "Всі обрані замовлення вже оплачено" };
+    }
+
+    const finalOrderIds = unpaidOrders.map((o) => o.id);
+
+    // If only one order and it was Indiv or price 0, update its price to the agreed amount
+    if (
+      finalOrderIds.length === 1 &&
+      (order.price === null || order.price === 0 || order.packageType.toLowerCase().includes("ind"))
+    ) {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { price: Math.round(amountUah) },
+      });
+    }
+
+    // Create a CheckoutIdempotency record to track all orders linked to this payment link
+    const invoiceKey = `admin_inv_${order.id.slice(0, 8)}_${Date.now()}`;
+    await prisma.checkoutIdempotency.create({
+      data: {
+        key: invoiceKey,
+        userId: order.userId,
+        orderIds: finalOrderIds,
+      },
+    });
+
+    const grossAmount = calculateAmountWithFee(amountUah);
+    const isTestMode = process.env.MONOBANK_TEST_MODE === "true";
+    const invoiceAmount = isTestMode ? 100 : Math.round(grossAmount * 100);
+
+    const destination =
+      finalOrderIds.length > 1
+        ? `Оплата замовлень (${finalOrderIds.length} шт.) для ${order.user.name}`
+        : `Оплата замовлення ${order.packageType} для ${order.user.name}`;
+
+    const invoice = await createMonobankInvoice({
+      amount: invoiceAmount,
+      reference: invoiceKey,
+      destination,
+      redirectPath: "/profile",
+    });
+
+    revalidatePath("/admin/orders");
+
+    return {
+      ok: true,
+      pageUrl: invoice.pageUrl,
+      invoiceId: invoice.invoiceId,
+      amountUah,
+      orderIds: finalOrderIds,
+    };
+  } catch (error: unknown) {
+    console.error("Failed to generate Monobank payment link:", error);
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Не вдалося створити посилання на оплату",
+    };
+  }
+}
+
+/**
+ * Fetches other unpaid orders for the same client created around the same time (e.g. from the same multi-item cart).
+ */
+export async function getRelatedUnpaidOrdersAction(orderId: string) {
+  const admin = await getAuthenticatedAdminUser();
+  if (!admin) {
+    return { ok: false, error: "Unauthorized" };
+  }
+
+  try {
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        userId: true,
+        createdAt: true,
+        packageType: true,
+        price: true,
+        user: { select: { name: true, phone: true } },
+      },
+    });
+
+    if (!order) return { ok: false, error: "Замовлення не знайдено" };
+
+    // Find other unpaid orders for the same user created within 1 hour
+    const windowStart = new Date(order.createdAt.getTime() - 60 * 60 * 1000);
+    const windowEnd = new Date(order.createdAt.getTime() + 60 * 60 * 1000);
+
+    const relatedOrders = await prisma.order.findMany({
+      where: {
+        userId: order.userId,
+        isPaid: false,
+        id: { not: order.id },
+        createdAt: {
+          gte: windowStart,
+          lte: windowEnd,
+        },
+      },
+      select: {
+        id: true,
+        packageType: true,
+        price: true,
+        deliveryDate: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      ok: true,
+      currentOrder: order,
+      relatedOrders,
+    };
+  } catch (err: unknown) {
+    console.error("Failed to fetch related unpaid orders:", err);
+    return { ok: false, error: "Не вдалося отримати пов'язані замовлення" };
+  }
+}
+
 

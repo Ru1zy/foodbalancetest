@@ -607,6 +607,10 @@ export default async function AdminOrdersPage(props: {
                             orderId={order.id}
                             isPaid={order.isPaid}
                             hasChatId={!!order.user.chatId}
+                            orderPrice={order.price}
+                            packageType={order.packageType}
+                            customerName={order.user.name}
+                            customerPhone={order.user.phone}
                           />
                         </td>
                       </tr>
