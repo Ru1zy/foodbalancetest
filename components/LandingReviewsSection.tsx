@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Star, X, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Star, X, ChevronRight, CheckCircle2, Maximize2 } from "lucide-react";
 import { getPublicReviewsAction } from "@/app/actions/feedback";
 import FractionalRatingStars from "@/components/FractionalRatingStars";
 
@@ -37,6 +37,22 @@ export default function LandingReviewsSection() {
     }
     loadReviews();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (previewPhotoUrl) {
+          setPreviewPhotoUrl(null);
+        } else if (activeReviewDetail) {
+          setActiveReviewDetail(null);
+        } else if (isModalOpen) {
+          setIsModalOpen(false);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewPhotoUrl, activeReviewDetail, isModalOpen]);
 
   if (isLoading || reviews.length === 0) {
     return null;
@@ -270,13 +286,33 @@ export default function LandingReviewsSection() {
             <div className="p-5 sm:p-6 overflow-y-auto">
               {activeReviewDetail.photoUrl ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-                  {/* Left: Full photo */}
-                  <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950">
-                    <img
-                      src={activeReviewDetail.photoUrl}
-                      alt="Фото страви"
-                      className="w-full max-h-[50vh] md:max-h-[60vh] object-cover"
-                    />
+                  {/* Left: Full photo with fullscreen zoom */}
+                  <div className="relative group rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPhotoUrl(activeReviewDetail.photoUrl)}
+                      className="w-full block text-left cursor-zoom-in relative overflow-hidden focus:outline-hidden"
+                      title="Натисніть, щоб відкрити фото на весь екран"
+                    >
+                      <img
+                        src={activeReviewDetail.photoUrl}
+                        alt="Фото до відгуку"
+                        className="w-full max-h-[50vh] md:max-h-[60vh] object-cover group-hover:scale-[1.02] transition duration-300"
+                      />
+
+                      {/* Center hover badge */}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-200 flex items-center justify-center pointer-events-none">
+                        <span className="opacity-0 group-hover:opacity-100 transition-all duration-200 scale-95 group-hover:scale-100 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-950/85 backdrop-blur-md text-white text-xs font-semibold shadow-xl border border-white/15">
+                          <Maximize2 className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>На весь екран</span>
+                        </span>
+                      </div>
+
+                      {/* Corner quick expand icon */}
+                      <div className="absolute bottom-3 right-3 p-2 rounded-xl bg-slate-950/65 backdrop-blur-xs text-white/90 border border-white/10 group-hover:bg-slate-950/90 transition shadow-sm pointer-events-none">
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      </div>
+                    </button>
                   </div>
 
                   {/* Right: Full text with vertical scroll */}
@@ -499,24 +535,26 @@ export default function LandingReviewsSection() {
         </div>
       )}
 
-      {/* Photo Zoom Lightbox (standalone backup) */}
+      {/* Photo Zoom Lightbox */}
       {previewPhotoUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6 bg-black/95 backdrop-blur-md animate-in fade-in duration-200"
           onClick={() => setPreviewPhotoUrl(null)}
         >
-          <div className="relative max-w-4xl max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+          <div className="relative max-w-5xl max-h-[92vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <button
               type="button"
               onClick={() => setPreviewPhotoUrl(null)}
-              className="absolute -top-12 right-0 p-2 text-white/80 hover:text-white transition cursor-pointer"
+              className="absolute -top-12 right-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-xs font-semibold backdrop-blur-md transition cursor-pointer border border-white/10"
+              title="Закрити (Esc)"
             >
-              <X className="h-7 w-7" />
+              <span>Закрити</span>
+              <X className="h-4 w-4" />
             </button>
             <img
               src={previewPhotoUrl}
               alt="Збільшене фото відгуку"
-              className="max-h-[85vh] w-auto object-contain rounded-2xl shadow-2xl"
+              className="max-h-[85vh] sm:max-h-[88vh] max-w-full w-auto object-contain rounded-2xl shadow-2xl"
             />
           </div>
         </div>
