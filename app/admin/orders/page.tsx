@@ -8,6 +8,7 @@ import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 import prisma from "@/lib/prisma";
 import { orderHasMissingSheetConfig } from "@/lib/monthlySheets";
 import type { Prisma } from "@prisma/client";
+import { kyivDayRangeUtc, kyivTodayParts } from "@/lib/order-logic";
 
 type AdminOrderWithUser = Prisma.OrderGetPayload<{
   include: { user: { select: { address: true; chatId: true; name: true; phone: true } } };
@@ -190,10 +191,8 @@ async function parseOrderMenuDetails(items: unknown, orderId: string, deliveryDa
   return details || null;
 }
 
-export default async function AdminOrdersPage({
-  searchParams,
-}: {
-  searchParams: { filter?: string };
+export default async function AdminOrdersPage(props: {
+  searchParams?: Promise<{ filter?: string }> | { filter?: string };
 }) {
   const adminUser = await getAuthenticatedAdminUser();
 
@@ -214,14 +213,12 @@ export default async function AdminOrdersPage({
     );
   }
 
-  // Get today's date in Kyiv timezone (YYYY-MM-DD format)
-  const todayString = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Kiev' });
+  // Get today's date in Kyiv timezone
+  const { year, month, day } = kyivTodayParts();
+  const { start: todayStart, end: todayEnd } = kyivDayRangeUtc(year, month, day);
 
-  // Create Date objects for start and end of today in Kyiv timezone
-  const todayStart = new Date(`${todayString}T00:00:00.000+03:00`);
-  const todayEnd = new Date(`${todayString}T23:59:59.999+03:00`);
-
-  const currentFilter = searchParams.filter || "active";
+  const searchParams = await props.searchParams;
+  const currentFilter = searchParams?.filter || "active";
 
   let whereClause: Prisma.OrderWhereInput = {};
   if (currentFilter === "active") {
@@ -412,16 +409,17 @@ export default async function AdminOrdersPage({
                 <Link
                   key={tab.id}
                   href={tab.href}
-                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                  scroll={false}
+                  className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all cursor-pointer select-none ${
                     isActive
                       ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-800/50"
                   }`}
                 >
-                  <span>{tab.icon}</span>
-                  <span>{tab.label}</span>
+                  <span className="pointer-events-none">{tab.icon}</span>
+                  <span className="pointer-events-none">{tab.label}</span>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                    className={`pointer-events-none rounded-full px-2 py-0.5 text-xs font-bold ${
                       isActive
                         ? "bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300"
                         : "bg-slate-300/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300"
