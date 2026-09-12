@@ -37,14 +37,16 @@ The platform works as a responsive web app and as a **Telegram Mini App (TMA)**,
 ### Key Features
 
 - 🧙 **Order Wizard** — multi-step guided experience: choose nutrition package → select delivery days → assemble meals per day with live validation and dish details.
-- 💳 **Monobank Acquiring (Plata)** — seamless online card checkout (Apple Pay / Google Pay / cards) with automatic payment status webhooks and cryptographic ECDSA/SHA-256 signature verification.
+- ⚡ **Sport Active+ Modular Add-ons** — interactive calorie booster up to 10 clicks (+1,000 kcal = 3,400 kcal total) at +35 ₴ per 100 kcal/day, fully integrated into volume discounts and kitchen workflows.
+- 💳 **Monobank Acquiring (Plata) & Admin Invoice Generator** — seamless online card checkout (Apple Pay / Google Pay / cards) with automatic payment status webhooks and cryptographic ECDSA verification, plus an admin modal for generating payment links with multi-order bundling.
 - 🎟️ **Prepaid Day-Balances & Subscriptions** — customers buy meal packages upfront at tiered discount rates (-5%, -10%, -15%); each order atomically deducts days from their active balance.
 - 🛒 **Multi-Package Cart** — add several packages and quantities in one transaction with safe rollback on payment cancellation.
-- 🔒 **Idempotent Checkout** — duplicate submission guards guarantee a double click never charges or creates duplicate orders.
+- 🔒 **Idempotent Checkout & Anti-Brute-Force Auth** — duplicate submission guards guarantee a double click never charges or creates duplicate orders; 6-digit Telegram OTP onboarding with strict rate limits and cross-account cooldowns.
 - 📲 **Telegram Mini App & Bot** — native TMA experience (`@twa-dev/sdk`), passwordless Telegram login, and instant order broadcast notifications to kitchen & manager chat groups.
 - 🔑 **Google Ecosystem Integration** — Google OAuth 2.0 customer sign-in, real-time Google Sheets two-way order sync, and automated monthly Google Drive spreadsheet generation with AES-256 encrypted refresh tokens.
 - 🍽️ **Kitchen & Courier Daily View** — dedicated admin dashboard and export endpoints synchronized with Europe/Kyiv timezone (DST-aware).
-- 🛠️ **Admin Management Suite** — comprehensive back office for tariffs, weekly menus, promo marketing materials/flyers, client balances, and mass broadcasts.
+- 🛠️ **Admin Management Suite** — comprehensive back office for tariffs, weekly menus, promo marketing materials/flyers, client balances, Monobank payment links, and mass broadcasts.
+- 🖼️ **Interactive Customer Reviews** — real client feedback with a full-screen zoomable photo lightbox modal.
 - ☁️ **Cloudflare R2 / S3 Storage** — high-performance S3-compatible cloud storage for meal photos and marketing flyers.
 - 🎨 **Modern Design & Dark Mode** — fluid responsive layout, glassmorphism, tailored typography, and a seamless light/dark theme switch.
 - 🧪 **Automated Testing** — test suite with Jest verifying checkout idempotency, balance deduction, and Monobank integration.
@@ -206,14 +208,16 @@ tests/            Automated Jest test suite
 ### Ключові можливості
 
 - 🧙 **Майстер замовлення** — покроковий процес: вибір пакета → вибір днів доставки → складання страв на кожен день з онлайн-перевіркою та підрахунком КБЖВ.
-- 💳 **Еквайринг Monobank (Plata)** — швидка онлайн-оплата картками, Apple Pay та Google Pay, автоматична обробка вебхуків та перевірка криптографічного цифрового підпису (ECDSA/SHA-256).
+- ⚡ **Модульні калорії Sport Active+** — лічильник збільшення калорійності до 10 кліків (+1000 ккал = до 3400 ккал) по +35 ₴ за 100 ккал/день з автоматичним урахуванням у системі знижок та вивантаженням на кухню.
+- 💳 **Еквайринг Monobank (Plata) та генератор рахунків для адміна** — швидка онлайн-оплата картками, Apple Pay та Google Pay з автоматичною обробкою вебхуків, а також генерація індивідуальних платіжних посилань прямо з панелі замовлень з об'єднанням кількох замовлень клієнта.
 - 🎟️ **Передплачені абонементи та баланс днів** — придбання пакетів днів зі знижками (-5%, -10%, -15%); кожне замовлення атомарно списує дні без ризику подвійного списання.
 - 🛒 **Кошик на кілька пакетів** — можливість додавати кілька різних раціонів в одне замовлення з безпечним поверненням у разі скасування.
-- 🔒 **Ідемпотентне оформлення** — надійний захист від дублювання: навіть багаторазовий клік ніколи не створить повторне списання коштів чи дублікат замовлення.
+- 🔒 **Ідемпотентне оформлення та захист авторизації** — надійний захист від дублювання та списань, 6-значний OTP-код через Telegram із лімітами запитів і блокуванням перебору за номером телефону.
 - 📲 **Telegram Mini App та бот** — безшовна робота всередині Telegram через `@twa-dev/sdk`, вхід без паролів та миттєві сповіщення кухні/адміністратора про нові замовлення.
 - 🔑 **Інтеграція з Google** — авторизація через Google OAuth 2.0, двостороння синхронізація з Google Таблицями та автоматичне створення щомісячних книг на Google Диску із захищеним шифруванням токенів (AES-256).
 - 🍽️ **Щоденний експорт для кухні та кур'єрів** — окремий адмін-модуль «сьогодні» та ендпоінти вивантаження з точним урахуванням київського часу (Europe/Kyiv) та переходу на літній/зимовий час.
-- 🛠️ **Адмін-панель** — повне керування меню, тарифами, промо-матеріалами та флаєрами, балансами користувачів та розсилками («Мегафон»).
+- 🛠️ **Адмін-панель** — повне керування меню, тарифами, промо-матеріалами та флаєрами, балансами користувачів, генерацією посилань Mono та розсилками («Мегафон»).
+- 🖼️ **Галерея відгуків із зумом** — інтерактивні відгуки клієнтів із повноекранним переглядом фотографій у модальному вікні.
 - ☁️ **Хмарне сховище Cloudflare R2 / S3** — швидке завантаження та роздача фотографій страв і рекламних матеріалів.
 - 🎨 **Сучасний дизайн та темна тема** — плавна адаптивна верстка, гласморфізм, продумана типографіка та перемикання світлої/темної теми.
 - 🧪 **Автоматизовані тести** — набір тестів на базі Jest для перевірки логіки оплат, списання балансів та ідемпотентності.

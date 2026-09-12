@@ -42,7 +42,7 @@ Do not replace aliases with private email addresses in this public repository.
 | Telegram business bot | Existing live business workflow | Business owner | Do not move or rotate until Railway is green and the cutover window begins | `FoodBalance / Telegram production bot` |
 | GitHub Actions automation | Archive jobs, monthly workbook provisioning, encrypted database backups | Repository collaborators | Runtime values are stored only in repository Actions secrets | `FoodBalance / GitHub Actions` |
 | DNS / production domain | Final public routing | Domain account owner | Registrar, DNS zone and TTL must be recorded in the vault before cutover | `FoodBalance / Domain and DNS` |
-| Payment provider | Future card acquiring | Business owner | Not selected; production keys must belong to the business merchant | `FoodBalance / Payments` |
+| Payment provider | Card acquiring & Apple/Google Pay | Business owner / Monobank merchant | Monobank Plata API (`MONOBANK_API_TOKEN`, `PLATA_FEE_PERCENT`); ECDSA webhook signature verification | `FoodBalance / Monobank Plata` |
 
 ## Secret-vault checklist
 
