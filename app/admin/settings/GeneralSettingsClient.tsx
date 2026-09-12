@@ -6,6 +6,11 @@ import {
   updateAdminSettingsAction, 
   type AdminSettingsFormData,
 } from "@/app/actions/settings";
+import {
+  importClientsFromSheet,
+  importOrdersFromSheet,
+  type ImportResult,
+} from "@/app/actions/legacy-import";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { 
@@ -18,6 +23,10 @@ import {
   Unlock, 
   AlertOctagon, 
   Sparkles,
+  Users,
+  ShoppingCart,
+  Download,
+  Loader2,
 } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
 import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
@@ -31,6 +40,10 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
   const [formData, setFormData] = useState<AdminSettingsFormData>(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [importingClients, setImportingClients] = useState(false);
+  const [importingOrders, setImportingOrders] = useState(false);
+  const [clientsResult, setClientsResult] = useState<ImportResult | null>(null);
+  const [ordersResult, setOrdersResult] = useState<ImportResult | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -376,6 +389,140 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
           </button>
         </div>
       </form>
+
+      {/* Legacy Data Sync Section */}
+      <div className="mt-8 rounded-2xl border border-amber-200 dark:border-amber-900/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 p-6 shadow-sm">
+        <div className="mb-5">
+          <h2 className="text-xl font-black text-amber-900 dark:text-amber-200 flex items-center gap-2">
+            <Download className="w-5 h-5" />
+            Синхронізація з Google Таблицею
+          </h2>
+          <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
+            Імпортує клієнтів (вкладка <code className="font-mono bg-amber-200/50 dark:bg-amber-800/40 px-1 rounded">Info</code>) та замовлення (вкладка <code className="font-mono bg-amber-200/50 dark:bg-amber-800/40 px-1 rounded">Orders</code>) із CRM таблиці в базу даних. Вже існуючі записи пропускаються.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Import Clients */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-amber-100 dark:border-slate-800">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Імпорт клієнтів</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Вкладка Info → таблиця User</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={importingClients}
+              onClick={async () => {
+                setImportingClients(true);
+                setClientsResult(null);
+                try {
+                  const res = await importClientsFromSheet();
+                  setClientsResult(res);
+                  if (res.ok) {
+                    toast.success(`Клієнти: +${res.created} нових, ${res.updated} оновлено, ${res.skipped} пропущено`);
+                  } else {
+                    toast.error(res.errors[0] || "Помилка імпорту");
+                  }
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Помилка");
+                } finally {
+                  setImportingClients(false);
+                }
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition active:scale-95 disabled:opacity-50"
+            >
+              {importingClients ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {importingClients ? "Імпортуємо..." : "Імпортувати клієнтів"}
+            </button>
+            {clientsResult && (
+              <div className={`mt-3 rounded-lg p-3 text-xs font-medium ${
+                clientsResult.ok
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+                  : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
+              }`}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span>✅ Створено: <b>{clientsResult.created}</b></span>
+                  <span>🔄 Оновлено: <b>{clientsResult.updated}</b></span>
+                  <span>⏭️ Пропущено: <b>{clientsResult.skipped}</b></span>
+                </div>
+                {clientsResult.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-amber-700 dark:text-amber-400">⚠️ {clientsResult.errors.length} попередж.</summary>
+                    <ul className="mt-1 space-y-0.5 text-[11px]">
+                      {clientsResult.errors.slice(0, 20).map((e, idx) => <li key={idx}>{e}</li>)}
+                      {clientsResult.errors.length > 20 && <li>…та ще {clientsResult.errors.length - 20}</li>}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Import Orders */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-amber-100 dark:border-slate-800">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950">
+                <ShoppingCart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Імпорт замовлень</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Вкладка Orders → таблиця Order</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              disabled={importingOrders}
+              onClick={async () => {
+                setImportingOrders(true);
+                setOrdersResult(null);
+                try {
+                  const res = await importOrdersFromSheet();
+                  setOrdersResult(res);
+                  if (res.ok) {
+                    toast.success(`Замовлення: +${res.created} нових, ${res.skipped} пропущено`);
+                  } else {
+                    toast.error(res.errors[0] || "Помилка імпорту");
+                  }
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Помилка");
+                } finally {
+                  setImportingOrders(false);
+                }
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-purple-700 transition active:scale-95 disabled:opacity-50"
+            >
+              {importingOrders ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+              {importingOrders ? "Імпортуємо..." : "Імпортувати замовлення"}
+            </button>
+            {ordersResult && (
+              <div className={`mt-3 rounded-lg p-3 text-xs font-medium ${
+                ordersResult.ok
+                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+                  : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
+              }`}>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span>✅ Створено: <b>{ordersResult.created}</b></span>
+                  <span>⏭️ Пропущено: <b>{ordersResult.skipped}</b></span>
+                </div>
+                {ordersResult.errors.length > 0 && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-amber-700 dark:text-amber-400">⚠️ {ordersResult.errors.length} попередж.</summary>
+                    <ul className="mt-1 space-y-0.5 text-[11px]">
+                      {ordersResult.errors.slice(0, 20).map((e, idx) => <li key={idx}>{e}</li>)}
+                      {ordersResult.errors.length > 20 && <li>…та ще {ordersResult.errors.length - 20}</li>}
+                    </ul>
+                  </details>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
