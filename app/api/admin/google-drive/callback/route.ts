@@ -8,12 +8,18 @@ export const runtime = "nodejs";
 
 const STATE_COOKIE = "foodbalance_drive_oauth_state";
 
+import { getPublicAppUrl } from "@/lib/site-config";
+
 function settingsUrl(params: Record<string, string>): URL {
-  const redirectUri = process.env.GOOGLE_DRIVE_REDIRECT_URI;
-  if (!redirectUri) {
-    throw new Error("GOOGLE_DRIVE_REDIRECT_URI is not configured.");
+  let origin: string;
+  try {
+    origin = process.env.GOOGLE_DRIVE_REDIRECT_URI
+      ? new URL(process.env.GOOGLE_DRIVE_REDIRECT_URI).origin
+      : getPublicAppUrl();
+  } catch {
+    origin = getPublicAppUrl();
   }
-  const url = new URL("/admin/settings/sheets", new URL(redirectUri).origin);
+  const url = new URL("/admin/settings/sheets", origin);
   for (const [key, value] of Object.entries(params)) {
     url.searchParams.set(key, value);
   }

@@ -9,6 +9,7 @@ import {
   isGoogleDriveEncryptionConfigured,
 } from "@/lib/google-drive-crypto";
 import { isValidMonthKey } from "@/lib/sheet-config-validation";
+import { getPublicAppUrl } from "@/lib/site-config";
 
 const CONNECTION_ID = "primary";
 const ROOT_FOLDER_NAME = "FoodBalance";
@@ -61,7 +62,9 @@ export type MonthlySheetProvisionResult =
 function getDriveOAuthConfig(): DriveOAuthConfig {
   const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID?.trim();
   const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET?.trim();
-  const redirectUri = process.env.GOOGLE_DRIVE_REDIRECT_URI?.trim();
+  const redirectUri =
+    process.env.GOOGLE_DRIVE_REDIRECT_URI?.trim() ||
+    `${getPublicAppUrl()}/api/admin/google-drive/callback`;
 
   if (!clientId || !clientSecret || !redirectUri) {
     throw new Error("Google Drive OAuth environment variables are not configured.");
@@ -88,7 +91,9 @@ function getMissingEnvironmentVariables(): string[] {
   const missing: string[] = [];
   if (!process.env.GOOGLE_DRIVE_CLIENT_ID?.trim()) missing.push("GOOGLE_DRIVE_CLIENT_ID");
   if (!process.env.GOOGLE_DRIVE_CLIENT_SECRET?.trim()) missing.push("GOOGLE_DRIVE_CLIENT_SECRET");
-  if (!process.env.GOOGLE_DRIVE_REDIRECT_URI?.trim()) missing.push("GOOGLE_DRIVE_REDIRECT_URI");
+  if (!process.env.GOOGLE_DRIVE_REDIRECT_URI?.trim() && !process.env.APP_BASE_URL?.trim()) {
+    missing.push("GOOGLE_DRIVE_REDIRECT_URI");
+  }
   if (!process.env.GOOGLE_CLIENT_EMAIL?.trim()) missing.push("GOOGLE_CLIENT_EMAIL");
   if (!isGoogleDriveEncryptionConfigured()) {
     missing.push("GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY");

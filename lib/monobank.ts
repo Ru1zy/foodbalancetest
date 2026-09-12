@@ -1,7 +1,6 @@
 import crypto from "crypto";
 import { getPublicAppUrl } from "./site-config.ts";
 const MONOBANK_API_TOKEN = process.env.MONOBANK_API_TOKEN || "";
-const APP_BASE_URL = getPublicAppUrl();
 
 // The percentage the payment gateway takes (e.g. 1.3% = 0.013).
 // We pass this fee to the customer so the merchant receives the exact net amount.
@@ -37,6 +36,7 @@ export async function createMonobankInvoice(
     throw new Error("MONOBANK_API_TOKEN is not configured.");
   }
 
+  const baseUrl = getPublicAppUrl();
   const payload = {
     amount: options.amount,
     ccy: 980, // UAH
@@ -44,8 +44,8 @@ export async function createMonobankInvoice(
       reference: options.reference,
       destination: options.destination,
     },
-    redirectUrl: `${APP_BASE_URL}${options.redirectPath || "/profile"}`,
-    webHookUrl: `${APP_BASE_URL}/api/plata/callback`,
+    redirectUrl: `${baseUrl}${options.redirectPath || "/profile"}`,
+    webHookUrl: `${baseUrl}/api/plata/callback`,
     validity: 3600 * 24, // 24 hours
   };
 
