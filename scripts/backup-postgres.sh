@@ -51,6 +51,7 @@ trap cleanup EXIT
 echo "Creating PostgreSQL 18 custom-format dump..."
 docker run --rm \
   --env DATABASE_PUBLIC_URL \
+  --env PGSSLMODE="${PGSSLMODE:-require}" \
   --volume "${work_dir}:/backup" \
   "$BACKUP_POSTGRES_IMAGE" \
   sh -ceu 'pg_dump --dbname="$DATABASE_PUBLIC_URL" --format=custom --compress=9 --no-owner --no-acl --file="/backup/'"${base_name}"'.dump"'

@@ -33,6 +33,7 @@ jobs:
       VERIFY_RESTORE: ${{ github.event_name == 'workflow_dispatch' && inputs.verify_restore || false }}
       BACKUP_RECIPIENT_FILE: .github/backup-recipient.pub
       BACKUP_POSTGRES_IMAGE: postgres:18-bookworm
+      PGSSLMODE: require
       AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION }}

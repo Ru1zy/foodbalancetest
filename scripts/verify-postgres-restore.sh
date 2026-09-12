@@ -44,18 +44,23 @@ if [[ -z "$admin_database_url" || -z "$restore_database_url" ]]; then
 fi
 
 cleanup_restore_database() {
-  docker run --rm "$BACKUP_POSTGRES_IMAGE" \
+  docker run --rm \
+    --env PGSSLMODE="${PGSSLMODE:-require}" \
+    "$BACKUP_POSTGRES_IMAGE" \
     psql "$admin_database_url" --set=ON_ERROR_STOP=1 \
     --command="DROP DATABASE IF EXISTS \"${restore_database}\" WITH (FORCE)" >/dev/null
 }
 trap cleanup_restore_database EXIT
 
 cleanup_restore_database
-docker run --rm "$BACKUP_POSTGRES_IMAGE" \
+docker run --rm \
+  --env PGSSLMODE="${PGSSLMODE:-require}" \
+  "$BACKUP_POSTGRES_IMAGE" \
   psql "$admin_database_url" --set=ON_ERROR_STOP=1 \
   --command="CREATE DATABASE \"${restore_database}\"" >/dev/null
 
 docker run --rm \
+  --env PGSSLMODE="${PGSSLMODE:-require}" \
   --volume "$(dirname "$dump_file"):/backup:ro" \
   "$BACKUP_POSTGRES_IMAGE" \
   pg_restore --exit-on-error --no-owner --no-acl \
@@ -63,8 +68,8 @@ docker run --rm \
 
 tables=(User Order UserBalance Menu Tariff SheetConfig GoogleDriveConnection)
 for table in "${tables[@]}"; do
-  source_count="$(docker run --rm "$BACKUP_POSTGRES_IMAGE" psql "$DATABASE_PUBLIC_URL" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
-  restored_count="$(docker run --rm "$BACKUP_POSTGRES_IMAGE" psql "$restore_database_url" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
+  source_count="$(docker run --rm --env PGSSLMODE="${PGSSLMODE:-require}" "$BACKUP_POSTGRES_IMAGE" psql "$DATABASE_PUBLIC_URL" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
+  restored_count="$(docker run --rm --env PGSSLMODE="${PGSSLMODE:-require}" "$BACKUP_POSTGRES_IMAGE" psql "$restore_database_url" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
   if [[ "$source_count" != "$restored_count" ]]; then
     echo "Restore verification count mismatch for a core table." >&2
     exit 1
