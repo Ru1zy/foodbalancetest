@@ -1,12 +1,14 @@
-import { getAllTariffs, getPromoMaterialsAction } from "@/app/actions/tariff-impl";
+import { getAllTariffs, getPromoMaterialsAction, getTariffAddonsAction } from "@/app/actions/tariff-impl";
 import TariffRow from "./TariffRow";
+import TariffAddonsManager from "./TariffAddonsManager";
 import PromoMaterialsManager from "./PromoMaterialsManager";
 import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
 
 export default async function TariffsPage() {
-  const [tariffs, promoMaterials] = await Promise.all([
+  const [tariffs, promoMaterials, addons] = await Promise.all([
     getAllTariffs(),
     getPromoMaterialsAction(),
+    getTariffAddonsAction(),
   ]);
 
   return (
@@ -54,9 +56,15 @@ export default async function TariffsPage() {
               title: "Швидке редагування",
               text: "Кнопка 'Редагувати' дозволяє оперативно змінювати параметри тарифу без потреби перезапуску сервера.",
             },
+            {
+              icon: "⚡",
+              title: "Модульні допи",
+              text: "Налаштовуйте додаткові опції (додаткові калорії, добавки, порції): загальні для всіх раціонів або окремі для конкретного пакета.",
+            },
           ]}
           tips={[
             "Якщо змінюється базова ціна за день, перевірте також налаштування вартості абонементів у системі розрахунку.",
+            "Для Sport Active+ діє модульний доп збільшення калорійності (+35 ₴/100 ккал/день), який можна налаштовувати у секції допів.",
           ]}
         />
 
@@ -96,6 +104,8 @@ export default async function TariffsPage() {
             </table>
           </div>
         </div>
+
+        <TariffAddonsManager initialAddons={addons} />
 
         <PromoMaterialsManager initialItems={promoMaterials} />
 
