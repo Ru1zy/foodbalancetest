@@ -7,7 +7,9 @@ test("getDiscountForPackage returns correct percentages for standard packages", 
   assert.equal(getDiscountForPackage(pkg, 1), 0);
   assert.equal(getDiscountForPackage(pkg, 2), 0.15); // Trial
   assert.equal(getDiscountForPackage(pkg, 3), 0);
-  assert.equal(getDiscountForPackage(pkg, 6), 0);
+  assert.equal(getDiscountForPackage(pkg, 4), 0);
+  assert.equal(getDiscountForPackage(pkg, 5), 0.03); // 3% for 5 days
+  assert.equal(getDiscountForPackage(pkg, 6), 0.03); // 3% for 6 days
   assert.equal(getDiscountForPackage(pkg, 7), 0.05);
   assert.equal(getDiscountForPackage(pkg, 13), 0.05);
   assert.equal(getDiscountForPackage(pkg, 14), 0.10);
@@ -21,7 +23,9 @@ test("getDiscountForPackage returns correct percentages for Sushka packages", ()
   assert.equal(getDiscountForPackage(pkg, 1), 0);
   assert.equal(getDiscountForPackage(pkg, 2), 0.10); // Trial for Sushka (10%, not 15%)
   assert.equal(getDiscountForPackage(pkg, 3), 0);
-  assert.equal(getDiscountForPackage(pkg, 6), 0);
+  assert.equal(getDiscountForPackage(pkg, 4), 0);
+  assert.equal(getDiscountForPackage(pkg, 5), 0.03); // 3% for 5 days
+  assert.equal(getDiscountForPackage(pkg, 6), 0.03); // 3% for 6 days
   assert.equal(getDiscountForPackage(pkg, 7), 0.05);
   assert.equal(getDiscountForPackage(pkg, 13), 0.05);
   assert.equal(getDiscountForPackage(pkg, 14), 0.10);

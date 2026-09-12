@@ -132,3 +132,56 @@ export async function deleteSheetConfig(
     return { ok: false, error: "Не вдалося видалити конфігурацію." };
   }
 }
+
+/** Sorts tabs in a monthly spreadsheet in chronological order (01.MM ... 31.MM, _Template). */
+export async function sortSheetTabsAction(
+  spreadsheetId: string
+): Promise<{ ok: boolean; message: string }> {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Доступ заборонено: потрібні права адміністратора." };
+  }
+
+  try {
+    const { sortMonthlySheetTabs } = await import("@/lib/monthlySheets");
+    const success = await sortMonthlySheetTabs(spreadsheetId);
+    if (!success) {
+      return { ok: false, message: "Не вдалося відсортувати вкладки. Перевірте доступ сервісного акаунта." };
+    }
+    revalidatePath(SETTINGS_PATH);
+    return { ok: true, message: "Вкладки успішно відсортовано за датою (01.MM ... 31.MM)!" };
+  } catch (error) {
+    console.error("Failed to sort sheet tabs:", error);
+    return { ok: false, message: "Помилка при сортуванні вкладок." };
+  }
+}
+
+/** Sorts tabs across all configured monthly spreadsheets. */
+export async function sortAllSheetsTabsAction(): Promise<{ ok: boolean; message: string }> {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Доступ заборонено: потрібні права адміністратора." };
+  }
+
+  try {
+    const configs = await prisma.sheetConfig.findMany();
+    if (configs.length === 0) {
+      return { ok: false, message: "Не знайдено жодної таблиці для сортування." };
+    }
+
+    const { sortMonthlySheetTabs } = await import("@/lib/monthlySheets");
+    let sortedCount = 0;
+    for (const cfg of configs) {
+      if (cfg.spreadsheetId) {
+        const ok = await sortMonthlySheetTabs(cfg.spreadsheetId);
+        if (ok) sortedCount++;
+      }
+    }
+
+    revalidatePath(SETTINGS_PATH);
+    return { ok: true, message: `Успішно відсортовано вкладки у ${sortedCount} з ${configs.length} таблиць!` };
+  } catch (error) {
+    console.error("Failed to sort all sheets tabs:", error);
+    return { ok: false, message: "Помилка при сортуванні таблиць." };
+  }
+}

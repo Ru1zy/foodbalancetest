@@ -26,6 +26,7 @@ export type TelegramOrder = {
   receiptUrl?: string | null;
   sendEmailReceipt?: boolean;
   receiptEmail?: string | null;
+  deliveryDate?: Date | string | null;
 };
 
 export type TelegramUser = {
@@ -215,26 +216,49 @@ function extractCartDays(items: unknown): CartDay[] {
     }));
 }
 
-async function formatDays(items: unknown, packageType: PackageType) {
+function formatDayDateKyiv(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Kyiv",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date).split("-");
+  return `${parts[2]}.${parts[1]}`;
+}
+
+async function formatDays(
+  items: unknown,
+  packageType: PackageType,
+  orderId?: string,
+  deliveryDate?: Date | string | null,
+) {
   const cartDays = extractCartDays(items);
 
   if (cartDays.length === 0) {
     return "• Немає даних про дні";
   }
 
-  const menuItems = await prisma.menu.findMany({
-    where: {
-      id: {
-        in: cartDays.map((day) => day.dayId),
+  const [menuItems, orderDays] = await Promise.all([
+    prisma.menu.findMany({
+      where: {
+        id: {
+          in: cartDays.map((day) => day.dayId),
+        },
       },
-    },
-    select: {
-      dayOfWeek: true,
-      dishes: true,
-      id: true,
-      packageType: true,
-    },
-  });
+      select: {
+        dayOfWeek: true,
+        dishes: true,
+        id: true,
+        packageType: true,
+      },
+    }),
+    orderId
+      ? prisma.orderDay.findMany({
+          where: { orderId },
+          select: { menuId: true, deliveryDate: true, weekday: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const menuById = new Map(
     menuItems.map((item: Pick<Menu, "id" | "dayOfWeek" | "dishes" | "packageType">) => [
@@ -251,15 +275,51 @@ async function formatDays(items: unknown, packageType: PackageType) {
     ]),
   );
 
-  return cartDays
+  const baseDate = deliveryDate ? new Date(deliveryDate) : null;
+  const selectedWeekdays = cartDays
+    .map((day) => menuById.get(day.dayId)?.dayOfWeek)
+    .filter((dow): dow is number => typeof dow === "number");
+  const minWeekday = selectedWeekdays.length > 0 ? Math.min(...selectedWeekdays) : null;
+
+  const cartDaysWithDates = cartDays.map((day) => {
+    const menu = menuById.get(day.dayId);
+    let dayDate: Date | null = null;
+
+    if (orderDays.length > 0) {
+      const matched =
+        orderDays.find((od) => od.menuId === day.dayId) ||
+        orderDays.find((od) => od.weekday === menu?.dayOfWeek);
+      if (matched) dayDate = new Date(matched.deliveryDate);
+    }
+
+    if (!dayDate && baseDate && menu && minWeekday !== null) {
+      const offset = menu.dayOfWeek - minWeekday;
+      const dt = new Date(baseDate);
+      dt.setDate(dt.getDate() + offset);
+      dayDate = dt;
+    }
+
+    return {
+      day,
+      menu,
+      dayDate,
+    };
+  });
+
+  return cartDaysWithDates
     .sort((left, right) => {
-      const leftDay = menuById.get(left.dayId)?.dayOfWeek ?? 99;
-      const rightDay = menuById.get(right.dayId)?.dayOfWeek ?? 99;
+      const leftTime = left.dayDate ? left.dayDate.getTime() : 0;
+      const rightTime = right.dayDate ? right.dayDate.getTime() : 0;
+      if (leftTime && rightTime && leftTime !== rightTime) {
+        return leftTime - rightTime;
+      }
+      const leftDay = left.menu?.dayOfWeek ?? 99;
+      const rightDay = right.menu?.dayOfWeek ?? 99;
       return leftDay - rightDay;
     })
-    .map((day, index) => {
-      const menu = menuById.get(day.dayId);
+    .map(({ day, menu, dayDate }, index) => {
       const dayName = DAY_NAMES[menu?.dayOfWeek ?? 0] || `День ${index + 1}`;
+      const dateLabel = dayDate ? ` (${formatDayDateKyiv(dayDate)})` : "";
       
       const isCustomOrIndiv = isIndivPackage(packageType) || (day.items && day.items.length > 0);
 
@@ -305,7 +365,7 @@ async function formatDays(items: unknown, packageType: PackageType) {
           });
 
       return [
-        `• <b>${escapeHtml(dayName)}</b> — ${day.selectedCount} ${formatDishWord(day.selectedCount)}`,
+        `• <b>${escapeHtml(dayName)}${dateLabel}</b> — ${day.selectedCount} ${formatDishWord(day.selectedCount)}`,
         ...dishes,
       ].join("\n");
     })
@@ -335,7 +395,12 @@ export async function sendOrderNotification(
   }
 
   const adminIds = adminChatId.split(",").map((id) => id.trim());
-  const daysText = await formatDays(order.items, order.packageType as PackageType);
+  const daysText = await formatDays(
+    order.items,
+    order.packageType as PackageType,
+    order.id,
+    order.deliveryDate,
+  );
   const warningBanner = options.warningPrefix
     ? `<b>${escapeHtml(options.warningPrefix)}</b>\n\n`
     : "";

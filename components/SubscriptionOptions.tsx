@@ -146,12 +146,14 @@ export default function SubscriptionOptions({ pkg, isNewClient: _isNewClient = t
           {isSushka ? (
             <>
               <li><strong>2 дні:</strong> знижка 10% (пробний тест-драйв)</li>
+              <li><strong>5-6 днів:</strong> знижка 3%</li>
               <li><strong>7-13 днів:</strong> знижка 5%</li>
               <li><strong>14 днів:</strong> знижка 10% (максимальний рекомендований курс)</li>
             </>
           ) : (
             <>
               <li><strong>2 дні:</strong> знижка 15% (пробний тариф)</li>
+              <li><strong>5-6 днів:</strong> знижка 3%</li>
               <li><strong>7-13 днів:</strong> знижка 5%</li>
               <li><strong>14-29 днів:</strong> знижка 10%</li>
               <li><strong>30+ днів:</strong> знижка 15%</li>

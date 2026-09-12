@@ -2,10 +2,13 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 import {
   createSheetConfig,
   updateSheetConfig,
   deleteSheetConfig,
+  sortSheetTabsAction,
+  sortAllSheetsTabsAction,
 } from "@/app/actions/sheet-config-impl";
 import { isValidMonthKey } from "@/lib/sheet-config-validation";
 
@@ -24,11 +27,43 @@ const inputClass =
   "w-full rounded border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500";
 
 export default function SheetConfigManager({ configs }: Props) {
+  const router = useRouter();
+  const [isSortingAll, startSortAll] = useTransition();
+
+  const handleSortAll = () => {
+    startSortAll(async () => {
+      const res = await sortAllSheetsTabsAction();
+      if (res.ok) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+      router.refresh();
+    });
+  };
+
   return (
     <div className="space-y-6">
       <CreateForm />
 
-      <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200">
+      <div className="rounded-2xl bg-white dark:bg-slate-900 shadow-sm ring-1 ring-gray-200 dark:ring-slate-700">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-950/50">
+          <span className="text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-slate-400">
+            Налаштовані таблиці ({configs.length})
+          </span>
+          {configs.length > 0 && (
+            <button
+              onClick={handleSortAll}
+              disabled={isSortingAll}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-300 dark:ring-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition active:scale-95 disabled:opacity-50"
+              title="Відсортувати всі вкладки в усіх місячних таблицях за зростанням дати (01.MM ... 31.MM)"
+            >
+              <span>↕️</span>
+              {isSortingAll ? "Сортуємо..." : "Сортувати всі вкладки за датою"}
+            </button>
+          )}
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-950">
@@ -170,6 +205,7 @@ function CreateForm() {
 function ConfigRow({ config }: { config: SheetConfig }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isSorting, startSort] = useTransition();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -179,6 +215,18 @@ function ConfigRow({ config }: { config: SheetConfig }) {
   const [label, setLabel] = useState(config.label ?? "");
 
   const monthKeyValid = isValidMonthKey(monthKey);
+
+  const handleSort = () => {
+    startSort(async () => {
+      const res = await sortSheetTabsAction(config.spreadsheetId);
+      if (res.ok) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
+      router.refresh();
+    });
+  };
 
   const resetForm = () => {
     setMonthKey(config.monthKey);
@@ -312,6 +360,14 @@ function ConfigRow({ config }: { config: SheetConfig }) {
             </div>
           ) : (
             <div className="flex gap-2">
+              <button
+                onClick={handleSort}
+                disabled={isSorting || isPending}
+                className="rounded bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-300 dark:ring-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900 transition disabled:opacity-50"
+                title="Відсортувати вкладки цієї таблиці за датою (01.MM ... 31.MM)"
+              >
+                {isSorting ? "…" : "Сортувати"}
+              </button>
               <button
                 onClick={() => setEditing(true)}
                 className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"

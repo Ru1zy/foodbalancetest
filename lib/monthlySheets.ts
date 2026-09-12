@@ -374,6 +374,13 @@ async function ensureDayTab(
     requestBody: { values: [[localizedDate]] },
   });
 
+  // Automatically keep all tabs sorted chronologically by date (01.MM ... 31.MM, _Template)
+  try {
+    await sortMonthlySheetTabs(spreadsheetId);
+  } catch (sortErr) {
+    console.warn("ensureDayTab: background sort failed", sortErr);
+  }
+
   return newSheetId;
 }
 
@@ -574,5 +581,96 @@ export async function markOrderCancelledInSheet(
     console.log(`markOrderCancelledInSheet: marked order ${orderId} in ${tabName} row ${rowIndex + 1}.`);
   } catch (error) {
     console.error("markOrderCancelledInSheet failed:", error);
+  }
+}
+
+/**
+ * Sorts all tabs in a monthly spreadsheet:
+ * 1. Date tabs matching `DD.MM` sorted ascending chronologically (e.g. 01.09, 02.09, ... 30.09).
+ * 2. Non-date tabs (like `_Template`) placed at the end.
+ */
+export async function sortMonthlySheetTabs(spreadsheetId: string): Promise<boolean> {
+  try {
+    const sheets = getSheetsClient();
+    if (!sheets) {
+      console.warn("sortMonthlySheetTabs: Google Sheets client not available.");
+      return false;
+    }
+
+    const meta = await sheets.spreadsheets.get({
+      spreadsheetId,
+      fields: "sheets.properties(sheetId,title,index)",
+    });
+
+    const allSheets = meta.data.sheets || [];
+    if (allSheets.length <= 1) return true;
+
+    const parseDayMonth = (title: string): { day: number; month: number } | null => {
+      const match = title.trim().match(/^(\d{1,2})\.(\d{1,2})$/);
+      if (!match) return null;
+      return {
+        day: parseInt(match[1], 10),
+        month: parseInt(match[2], 10),
+      };
+    };
+
+    const dateSheets: { sheet: sheets_v4.Schema$Sheet; day: number; month: number }[] = [];
+    const otherSheets: sheets_v4.Schema$Sheet[] = [];
+
+    for (const sheet of allSheets) {
+      const title = sheet.properties?.title || "";
+      const parsed = parseDayMonth(title);
+      if (parsed) {
+        dateSheets.push({ sheet, day: parsed.day, month: parsed.month });
+      } else {
+        otherSheets.push(sheet);
+      }
+    }
+
+    // Sort date sheets ascending chronologically (month, then day)
+    dateSheets.sort((a, b) => {
+      if (a.month !== b.month) return a.month - b.month;
+      return a.day - b.day;
+    });
+
+    // Desired order: sorted date sheets first, then other sheets (e.g. _Template)
+    const sortedSheets = [...dateSheets.map((d) => d.sheet), ...otherSheets];
+
+    // Check if reordering is needed
+    let needsReorder = false;
+    for (let i = 0; i < sortedSheets.length; i++) {
+      if (allSheets[i]?.properties?.sheetId !== sortedSheets[i]?.properties?.sheetId) {
+        needsReorder = true;
+        break;
+      }
+    }
+
+    if (!needsReorder) {
+      return true;
+    }
+
+    // Generate updateSheetProperties requests setting index sequentially
+    const requests: sheets_v4.Schema$Request[] = sortedSheets.map((sheet, targetIndex) => ({
+      updateSheetProperties: {
+        properties: {
+          sheetId: sheet.properties?.sheetId,
+          index: targetIndex,
+        },
+        fields: "index",
+      },
+    }));
+
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: { requests },
+    });
+
+    console.log(
+      `sortMonthlySheetTabs: Successfully sorted ${sortedSheets.length} tabs in ${spreadsheetId}`,
+    );
+    return true;
+  } catch (error) {
+    console.error(`sortMonthlySheetTabs failed for ${spreadsheetId}:`, error);
+    return false;
   }
 }

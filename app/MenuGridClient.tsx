@@ -810,9 +810,16 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
       {!zoomedImage && (!wizardFilterActive || isLastDay) && (
         <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
           <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-slate-900/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 dark:border-slate-700 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
-            <span className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base whitespace-nowrap">
-              Обрано днів: {completedDaysCount}
-            </span>
+            <div className="flex items-center gap-2 whitespace-nowrap">
+              <span className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base">
+                Обрано днів: {completedDaysCount}
+              </span>
+              {completedDaysCount >= 5 && (
+                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                  -{completedDaysCount >= 30 ? "15%" : completedDaysCount >= 14 ? "10%" : completedDaysCount >= 7 ? "5%" : "3%"}
+                </span>
+              )}
+            </div>
             <Link
               href={canProceedToCheckout ? "/checkout" : "#"}
               onClick={(e) => !canProceedToCheckout && e.preventDefault()}

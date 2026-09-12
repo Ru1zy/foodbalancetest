@@ -8,12 +8,14 @@ export function getDiscountForPackage(packageId: string, days: number): number {
     if (days === 2) return 0.10; // 10% for Sushka 2-day trial
     if (days >= 14) return 0.10; // 10%
     if (days >= 7) return 0.05; // 5%
+    if (days >= 5) return 0.03; // 3% for 5-6 days
     return 0; 
   } else {
     if (days === 2) return 0.15; // 15% for standard 2-day trial
     if (days >= 30) return 0.15; // 15%
     if (days >= 14) return 0.10; // 10%
     if (days >= 7) return 0.05; // 5%
+    if (days >= 5) return 0.03; // 3% for 5-6 days
     return 0;
   }
 }

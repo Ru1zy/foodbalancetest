@@ -1,6 +1,7 @@
 import { OrderCartData } from "@/app/actions/order-impl";
 import { formatDisplayDate } from "@/lib/checkout";
 import { isIndivPackage } from "@/lib/order-selection";
+import { getOrderDiscount } from "@/lib/order-logic";
 import { CartItem } from "@/lib/orderStore";
 import { SummaryDay } from "./types";
 import { PlusCircle, Trash2, ChevronDown, ChevronUp } from "lucide-react";
@@ -186,19 +187,42 @@ export function CheckoutSummaryAside({
             <div className="bg-white dark:bg-slate-900 px-5 py-5 pt-7">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{selectedPackageRaw ?? "Оберіть раціон"}</span>
-                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-                  {isIndivCurrent ? (
-                    <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
-                      Розрахунок менеджером
-                    </span>
-                  ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
-                    "0 ₴"
-                  ) : fiatPrice > 0 ? (
-                    `${fiatPrice} ₴`
-                  ) : (
-                    "—"
-                  )}
-                </span>
+                {(() => {
+                  const draftDays = currentDraftValid ? summaryDays.length : 0;
+                  const discountRate = selectedPackageRaw ? getOrderDiscount(selectedPackageRaw, draftDays) : 0;
+                  const discountPercent = Math.round(discountRate * 100);
+                  const originalPrice = discountRate > 0 && fiatPrice > 0 ? Math.round(fiatPrice / (1 - discountRate)) : 0;
+
+                  return (
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-2">
+                        {discountPercent > 0 && balanceDaysToUse === 0 && fiatPrice > 0 && (
+                          <span className="text-sm font-medium text-slate-400 dark:text-slate-500 line-through">
+                            {originalPrice} ₴
+                          </span>
+                        )}
+                        <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
+                          {isIndivCurrent ? (
+                            <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
+                              Розрахунок менеджером
+                            </span>
+                          ) : fiatPrice === 0 && balanceDaysToUse > 0 ? (
+                            "0 ₴"
+                          ) : fiatPrice > 0 ? (
+                            `${fiatPrice} ₴`
+                          ) : (
+                            "—"
+                          )}
+                        </span>
+                      </div>
+                      {discountPercent > 0 && balanceDaysToUse === 0 && fiatPrice > 0 && (
+                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                          Знижка -{discountPercent}% ({draftDays} дн.)
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
               
               {availableDays > 0 && balanceDaysToUse > 0 && (

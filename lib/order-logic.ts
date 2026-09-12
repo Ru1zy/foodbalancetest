@@ -32,6 +32,32 @@ export const PACKAGE_PRICES: Record<PackageType, number> = {
   Template: 0,
 };
 
+/**
+ * Знижка за кількість обраних днів у звичайному замовленні (поза абонементом):
+ * - 5-6 днів: 3%
+ * - 7-13 днів: 5%
+ * - 14-29 днів: 10% (для Сушки: максимум 10% від 14 днів)
+ * - 30+ днів: 15%
+ */
+export function getOrderDiscount(packageType: string, totalDays: number): number {
+  if (totalDays < 5) return 0;
+  const lower = packageType.toLowerCase();
+  const isSushka = lower.includes("sushka") || lower.includes("сушка");
+
+  if (isSushka) {
+    if (totalDays >= 14) return 0.10;
+    if (totalDays >= 7) return 0.05;
+    if (totalDays >= 5) return 0.03;
+    return 0;
+  } else {
+    if (totalDays >= 30) return 0.15;
+    if (totalDays >= 14) return 0.10;
+    if (totalDays >= 7) return 0.05;
+    if (totalDays >= 5) return 0.03;
+    return 0;
+  }
+}
+
 export function getOrderTotalUah(
   packageType: PackageType,
   totalDays: number,
@@ -56,7 +82,45 @@ export function getOrderTotalUah(
     return 0;
   }
   
-  return totalDays * unit;
+  const original = totalDays * unit;
+  const discountRate = getOrderDiscount(packageType, totalDays);
+  return Math.round(original * (1 - discountRate));
+}
+
+export function getOrderPriceBreakdown(
+  packageType: PackageType,
+  totalDays: number,
+  tariffs?: { name: string; basePrice: number }[],
+): {
+  unitPrice: number;
+  originalTotal: number;
+  discountPercent: number;
+  discountAmount: number;
+  finalTotal: number;
+} {
+  if (packageType === "Indiv") {
+    return { unitPrice: 0, originalTotal: 0, discountPercent: 0, discountAmount: 0, finalTotal: 0 };
+  }
+
+  let unit = PACKAGE_PRICES[packageType] ?? 0;
+  if (tariffs && tariffs.length > 0) {
+    const tariff = tariffs.find(t => t.name === packageType);
+    if (tariff) {
+      unit = tariff.basePrice;
+    }
+  }
+
+  if (totalDays < 1) {
+    return { unitPrice: unit, originalTotal: 0, discountPercent: 0, discountAmount: 0, finalTotal: 0 };
+  }
+
+  const originalTotal = totalDays * unit;
+  const discountRate = getOrderDiscount(packageType, totalDays);
+  const finalTotal = Math.round(originalTotal * (1 - discountRate));
+  const discountPercent = Math.round(discountRate * 100);
+  const discountAmount = originalTotal - finalTotal;
+
+  return { unitPrice: unit, originalTotal, discountPercent, discountAmount, finalTotal };
 }
 
 export type PackageLimitInfo = {
