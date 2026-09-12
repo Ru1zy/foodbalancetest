@@ -30,8 +30,7 @@
 
 ### Обов'язкові змінні:
 - `DATABASE_URL` — рядок підключення до PostgreSQL (формат: `postgresql://postgres:...@.../railway`).
-- `APP_BASE_URL` — базовий публічний URL сайту: **`https://foodbalance.com.ua`**.
-- `NEXT_PUBLIC_APP_URL` — дублює `APP_BASE_URL` для клієнтської частини: **`https://foodbalance.com.ua`**.
+- `APP_BASE_URL` — головний публічний URL сайту: **`https://foodbalance.com.ua`**. (Використовується всюди для формування посилань, вебхуків та редиректів. Додаткову змінну `NEXT_PUBLIC_APP_URL` створювати не обов'язково — код автоматично бере `APP_BASE_URL`).
 - `TELEGRAM_BOT_TOKEN` — токен бота від @BotFather.
 - `TELEGRAM_ADMIN_CHAT_ID` — Chat ID адміністраторів через кому (наприклад: `300333050,366707827,729923101`). **Захищає адмінів від видалення та дає доступ до `/admin`**.
 - `TELEGRAM_WEBHOOK_SECRET` — секретний токен для захисту вебхука Telegram від підробки запитів.
@@ -46,9 +45,9 @@
 
 ### Крок 1. Оновити змінні в Railway
 У [Railway Dashboard](https://railway.app/) → сервіс додатку → **Variables**:
-1. `APP_BASE_URL` = `https://foodbalance.com.ua`
-2. `NEXT_PUBLIC_APP_URL` = `https://foodbalance.com.ua`
-3. Якщо налаштовано Google Drive: `GOOGLE_DRIVE_REDIRECT_URI` = `https://foodbalance.com.ua/api/admin/google-drive/callback`
+1. `APP_BASE_URL` = `https://foodbalance.com.ua` (вона у вас вже є у списку!).
+2. Якщо налаштовано Google Drive: `GOOGLE_DRIVE_REDIRECT_URI` = `https://foodbalance.com.ua/api/admin/google-drive/callback`
+3. Натиснути кнопку **«Deploy / Apply change»**.
 
 *(Після збереження Railway сам автоматично перезапустить контейнер за 1–2 хвилини).*
 
