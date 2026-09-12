@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Star, MessageCircle, X, ChevronRight, CheckCircle2 } from "lucide-react";
 import { getPublicReviewsAction } from "@/app/actions/feedback";
+import FractionalRatingStars from "@/components/FractionalRatingStars";
 
 type PublicReview = {
   id: string;
@@ -69,18 +70,11 @@ export default function LandingReviewsSection() {
             {summary.avgRating.toFixed(1)}
           </div>
           <div>
-            <div className="flex items-center text-amber-400 text-sm">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <Star
-                  key={s}
-                  className={`h-4 w-4 ${
-                    s <= Math.round(summary.avgRating)
-                      ? "fill-amber-400 text-amber-400"
-                      : "text-slate-300 dark:text-slate-600"
-                  }`}
-                />
-              ))}
-            </div>
+            <FractionalRatingStars
+              rating={summary.avgRating}
+              sizeClass="h-4 w-4"
+              starSizePx={16}
+            />
             <div className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
               {summary.totalCount} {summary.totalCount === 1 ? "відгук" : summary.totalCount < 5 ? "відгуки" : "відгуків"}
             </div>
@@ -210,9 +204,16 @@ export default function LandingReviewsSection() {
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                   Усі відгуки клієнтів ({reviews.length})
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Середня оцінка {summary.avgRating.toFixed(1)} з 5.0
-                </p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Середня оцінка {summary.avgRating.toFixed(1)} з 5.0
+                  </p>
+                  <FractionalRatingStars
+                    rating={summary.avgRating}
+                    sizeClass="h-3.5 w-3.5"
+                    starSizePx={14}
+                  />
+                </div>
               </div>
               <button
                 type="button"

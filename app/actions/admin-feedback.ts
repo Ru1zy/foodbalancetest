@@ -56,14 +56,27 @@ export async function deleteTicketAction(ticketId: string) {
 
 export async function moderateReviewAction(
   reviewId: string,
-  status: "APPROVED" | "REJECTED" | "PENDING"
+  status: "APPROVED" | "REJECTED" | "PENDING",
+  adminReply?: string
 ) {
   try {
     await ensureAdmin();
 
+    const data: {
+      status: string;
+      adminReply?: string | null;
+      adminReplyAt?: Date | null;
+    } = { status };
+
+    if (adminReply !== undefined) {
+      const trimmed = adminReply.trim();
+      data.adminReply = trimmed.length > 0 ? trimmed : null;
+      data.adminReplyAt = trimmed.length > 0 ? new Date() : null;
+    }
+
     await prisma.review.update({
       where: { id: reviewId },
-      data: { status },
+      data,
     });
 
     revalidatePath("/admin/feedback");

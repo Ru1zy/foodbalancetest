@@ -143,7 +143,8 @@ export default function FeedbackClient({
     status: "APPROVED" | "REJECTED" | "PENDING"
   ) => {
     setActionProcessingId(reviewId);
-    const res = await moderateReviewAction(reviewId, status);
+    const draftText = replyDrafts[reviewId];
+    const res = await moderateReviewAction(reviewId, status, draftText);
     if (!res.ok) {
       alert(res.error || "Помилка модерації відгуку");
     }
