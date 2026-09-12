@@ -665,7 +665,12 @@ export async function notifyTodayOrders(dateStr: string) {
   }
 }
 
-export async function notifySingleTodayOrder(orderId: string): Promise<{ ok: boolean; message: string }> {
+export async function notifySingleTodayOrder(
+  orderId: string,
+  orderDayId?: string | null,
+  deliveryTimeOverride?: string | null,
+  deliveryNoteOverride?: string | null
+): Promise<{ ok: boolean; message: string }> {
   const adminUser = await getAuthenticatedAdminUser();
   if (!adminUser) {
     return { ok: false, message: "Недостатньо прав для відправки сповіщень" };
@@ -677,6 +682,28 @@ export async function notifySingleTodayOrder(orderId: string): Promise<{ ok: boo
   }
 
   try {
+    // If overrides are provided (e.g. from the client's current input), persist them to DB
+    if (deliveryTimeOverride !== undefined || deliveryNoteOverride !== undefined) {
+      const dataToUpdate = {
+        ...(deliveryTimeOverride !== undefined ? { deliveryTime: deliveryTimeOverride || null } : {}),
+        ...(deliveryNoteOverride !== undefined ? { deliveryNote: deliveryNoteOverride || null } : {}),
+      };
+
+      if (orderDayId) {
+        await prisma.orderDay.updateMany({
+          where: { id: orderDayId, orderId },
+          data: dataToUpdate,
+        });
+      } else {
+        await prisma.order.update({
+          where: { id: orderId },
+          data: dataToUpdate,
+        });
+      }
+
+      revalidatePath("/admin/today");
+    }
+
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -686,6 +713,7 @@ export async function notifySingleTodayOrder(orderId: string): Promise<{ ok: boo
             chatId: true,
           },
         },
+        days: orderDayId ? { where: { id: orderDayId } } : { orderBy: { deliveryDate: "asc" } },
       },
     });
 
@@ -697,18 +725,28 @@ export async function notifySingleTodayOrder(orderId: string): Promise<{ ok: boo
       return { ok: false, message: `У клієнта ${order.user.name} немає Telegram ChatID` };
     }
 
-    if (!order.deliveryTime && !order.deliveryNote) {
+    const targetDay = orderDayId ? order.days.find((d) => d.id === orderDayId) : order.days[0];
+    const effectiveDeliveryTime =
+      deliveryTimeOverride !== undefined
+        ? (deliveryTimeOverride || null)
+        : (targetDay?.deliveryTime ?? order.deliveryTime ?? null);
+    const effectiveDeliveryNote =
+      deliveryNoteOverride !== undefined
+        ? (deliveryNoteOverride || null)
+        : (targetDay?.deliveryNote ?? order.deliveryNote ?? null);
+
+    if (!effectiveDeliveryTime && !effectiveDeliveryNote) {
       return { ok: false, message: "Вкажіть час доставки або напишіть нотатку перед відправкою" };
     }
 
     let message = `🚚 <b>Доставка FoodBalance</b>\nКлієнт: <b>${escapeTelegramHtml(order.user.name)}</b>`;
 
-    if (order.deliveryTime) {
-      message += `\nЧас доставки: <b>${escapeTelegramHtml(order.deliveryTime)}</b> ⏰`;
+    if (effectiveDeliveryTime) {
+      message += `\nЧас доставки: <b>${escapeTelegramHtml(effectiveDeliveryTime)}</b> ⏰`;
     }
 
-    if (order.deliveryNote) {
-      message += `\n\n💬 <b>Нотатка від адміністратора:</b>\n${escapeTelegramHtml(order.deliveryNote)}`;
+    if (effectiveDeliveryNote) {
+      message += `\n\n💬 <b>Нотатка від адміністратора:</b>\n${escapeTelegramHtml(effectiveDeliveryNote)}`;
     }
 
     const response = await fetch(

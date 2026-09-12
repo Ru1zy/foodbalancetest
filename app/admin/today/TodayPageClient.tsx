@@ -67,7 +67,9 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
     // Optimistic update
     setOrders((prev) =>
       prev.map((order) =>
-        order.id === orderId ? { ...order, [field]: value } : order
+        (orderDayId ? order.orderDayId === orderDayId : order.id === orderId)
+          ? { ...order, [field]: value }
+          : order
       )
     );
 
@@ -80,7 +82,9 @@ export default function TodayPageClient({ initialOrders, initialDate }: Props) {
     // Set new debounced save
     debounceTimers.current[timerKey] = setTimeout(() => {
       startTransition(async () => {
-        const order = orders.find((o) => o.id === orderId);
+        const order = orders.find((o) =>
+          orderDayId ? o.orderDayId === orderDayId : o.id === orderId
+        );
         if (!order) return;
 
         await updateOrderDeliveryInfo(
@@ -133,20 +137,36 @@ const handleExportToKitchen = () => {
     });
   };
 
-  const handleNotifySingle = async (orderId: string, clientName: string) => {
-    const order = orders.find(o => o.id === orderId);
-    if (!order) return;
-
+  const handleNotifySingle = async (order: Order) => {
     if (!order.deliveryTime && !order.deliveryNote) {
-      alert(`Вкажіть час доставки або напишіть нотатку для клієнта ${clientName} перед відправкою.`);
+      alert(`Вкажіть час доставки або напишіть нотатку для клієнта ${order.user.name} перед відправкою.`);
       return;
     }
 
-    setIsSendingId(orderId);
+    const rowId = order.orderDayId ?? order.id;
+
+    // Clear pending debounce timers for this row so delayed callbacks don't race
+    const timeKey = `${rowId}-deliveryTime`;
+    const noteKey = `${rowId}-deliveryNote`;
+    if (debounceTimers.current[timeKey]) {
+      clearTimeout(debounceTimers.current[timeKey]);
+      delete debounceTimers.current[timeKey];
+    }
+    if (debounceTimers.current[noteKey]) {
+      clearTimeout(debounceTimers.current[noteKey]);
+      delete debounceTimers.current[noteKey];
+    }
+
+    setIsSendingId(rowId);
     setNotifyMessage(null);
 
     try {
-      const res = await notifySingleTodayOrder(orderId);
+      const res = await notifySingleTodayOrder(
+        order.id,
+        order.orderDayId,
+        order.deliveryTime,
+        order.deliveryNote
+      );
       setNotifyMessage({
         type: res.ok ? "success" : "error",
         text: res.message,
@@ -408,12 +428,12 @@ const handleExportToKitchen = () => {
                             <span className="text-green-600 font-bold text-base leading-none" title="Telegram підключено">✓</span>
                             <button
                               type="button"
-                              onClick={() => handleNotifySingle(order.id, order.user.name)}
-                              disabled={isSendingId === order.id}
+                              onClick={() => handleNotifySingle(order)}
+                              disabled={isSendingId === (order.orderDayId ?? order.id)}
                               className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition active:scale-95 disabled:opacity-50"
                               title="Надіслати сповіщення (час та/або нотатку) тільки цьому клієнту"
                             >
-                              <span>{isSendingId === order.id ? "⏳" : "📢"}</span>
+                              <span>{isSendingId === (order.orderDayId ?? order.id) ? "⏳" : "📢"}</span>
                               <span>Надіслати</span>
                             </button>
                           </div>
