@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://foodbalancetest-production.up.railway.app";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://foodbalance.com.ua";
 
   return [
     {

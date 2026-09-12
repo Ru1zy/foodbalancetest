@@ -8,9 +8,15 @@ import {
 } from "@/app/actions/settings";
 import {
   importClientsFromSheet,
-  importOrdersFromSheet,
   type ImportResult,
 } from "@/app/actions/legacy-import";
+import {
+  clearOrdersAction,
+  clearNonAdminClientsAction,
+  clearAllTestDataAction,
+  updateTelegramWebhookAction,
+  type CleanupResult,
+} from "@/app/actions/admin-cleanup";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { 
@@ -24,9 +30,12 @@ import {
   AlertOctagon, 
   Sparkles,
   Users,
-  ShoppingCart,
   Download,
   Loader2,
+  Trash2,
+  AlertTriangle,
+  Radio,
+  Check,
 } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
 import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
@@ -41,9 +50,13 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [importingClients, setImportingClients] = useState(false);
-  const [importingOrders, setImportingOrders] = useState(false);
   const [clientsResult, setClientsResult] = useState<ImportResult | null>(null);
-  const [ordersResult, setOrdersResult] = useState<ImportResult | null>(null);
+  const [cleaningOrders, setCleaningOrders] = useState(false);
+  const [cleaningClients, setCleaningClients] = useState(false);
+  const [cleaningAll, setCleaningAll] = useState(false);
+  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null);
+  const [updatingWebhook, setUpdatingWebhook] = useState(false);
+  const [webhookResult, setWebhookResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -395,133 +408,288 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
         <div className="mb-5">
           <h2 className="text-xl font-black text-amber-900 dark:text-amber-200 flex items-center gap-2">
             <Download className="w-5 h-5" />
-            Синхронізація з Google Таблицею
+            Синхронізація та інтеграції
           </h2>
           <p className="mt-1 text-sm text-amber-700 dark:text-amber-400">
-            Імпортує клієнтів (вкладка <code className="font-mono bg-amber-200/50 dark:bg-amber-800/40 px-1 rounded">Info</code>) та замовлення (вкладка <code className="font-mono bg-amber-200/50 dark:bg-amber-800/40 px-1 rounded">Orders</code>) із CRM таблиці в базу даних. Вже існуючі записи пропускаються.
+            Імпорт бази клієнтів із CRM таблиці (лише ті, що мають Chat ID) та налаштування вебхука бота.
           </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           {/* Import Clients */}
-          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-amber-100 dark:border-slate-800">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950">
-                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Імпорт клієнтів</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Вкладка Info → таблиця User</p>
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={importingClients}
-              onClick={async () => {
-                setImportingClients(true);
-                setClientsResult(null);
-                try {
-                  const res = await importClientsFromSheet();
-                  setClientsResult(res);
-                  if (res.ok) {
-                    toast.success(`Клієнти: +${res.created} нових, ${res.updated} оновлено, ${res.skipped} пропущено`);
-                  } else {
-                    toast.error(res.errors[0] || "Помилка імпорту");
-                  }
-                } catch (err) {
-                  toast.error(err instanceof Error ? err.message : "Помилка");
-                } finally {
-                  setImportingClients(false);
-                }
-              }}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition active:scale-95 disabled:opacity-50"
-            >
-              {importingClients ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              {importingClients ? "Імпортуємо..." : "Імпортувати клієнтів"}
-            </button>
-            {clientsResult && (
-              <div className={`mt-3 rounded-lg p-3 text-xs font-medium ${
-                clientsResult.ok
-                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
-                  : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
-              }`}>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span>✅ Створено: <b>{clientsResult.created}</b></span>
-                  <span>🔄 Оновлено: <b>{clientsResult.updated}</b></span>
-                  <span>⏭️ Пропущено: <b>{clientsResult.skipped}</b></span>
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-amber-100 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950">
+                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                {clientsResult.errors.length > 0 && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-amber-700 dark:text-amber-400">⚠️ {clientsResult.errors.length} попередж.</summary>
-                    <ul className="mt-1 space-y-0.5 text-[11px]">
-                      {clientsResult.errors.slice(0, 20).map((e, idx) => <li key={idx}>{e}</li>)}
-                      {clientsResult.errors.length > 20 && <li>…та ще {clientsResult.errors.length - 20}</li>}
-                    </ul>
-                  </details>
-                )}
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Імпорт клієнтів</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Вкладка Info → таблиця User (з Chat ID)</p>
+                </div>
               </div>
-            )}
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
+                Підтягує ПІБ, телефон, адресу та чат ID. Рядки без чат ID пропускаються, щоб не конфліктувати з майбутньою реєстрацією.
+              </p>
+            </div>
+            <div>
+              <button
+                type="button"
+                disabled={importingClients}
+                onClick={async () => {
+                  setImportingClients(true);
+                  setClientsResult(null);
+                  try {
+                    const res = await importClientsFromSheet();
+                    setClientsResult(res);
+                    if (res.ok) {
+                      toast.success(`Клієнти: +${res.created} нових, ${res.updated} оновлено, ${res.skipped} пропущено`);
+                    } else {
+                      toast.error(res.errors[0] || "Помилка імпорту");
+                    }
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Помилка");
+                  } finally {
+                    setImportingClients(false);
+                  }
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-700 transition active:scale-95 disabled:opacity-50"
+              >
+                {importingClients ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                {importingClients ? "Імпортуємо..." : "Імпортувати клієнтів"}
+              </button>
+              {clientsResult && (
+                <div className={`mt-3 rounded-lg p-3 text-xs font-medium ${
+                  clientsResult.ok
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+                    : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
+                }`}>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span>✅ Створено: <b>{clientsResult.created}</b></span>
+                    <span>🔄 Оновлено: <b>{clientsResult.updated}</b></span>
+                    <span>⏭️ Пропущено: <b>{clientsResult.skipped}</b></span>
+                  </div>
+                  {clientsResult.errors.length > 0 && (
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-amber-700 dark:text-amber-400">⚠️ {clientsResult.errors.length} попередж.</summary>
+                      <ul className="mt-1 space-y-0.5 text-[11px]">
+                        {clientsResult.errors.slice(0, 20).map((e, idx) => <li key={idx}>{e}</li>)}
+                        {clientsResult.errors.length > 20 && <li>…та ще {clientsResult.errors.length - 20}</li>}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Import Orders */}
-          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-amber-100 dark:border-slate-800">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950">
-                <ShoppingCart className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+          {/* Telegram Webhook */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-sky-100 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 dark:bg-sky-950">
+                  <Radio className="w-5 h-5 text-sky-600 dark:text-sky-400" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Telegram Webhook</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Оновлення адреси вебхука для бота</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Імпорт замовлень</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Вкладка Orders → таблиця Order</p>
-              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-4">
+                Реєструє адресу бота в Telegram на поточний домен (<code className="font-mono bg-sky-50 dark:bg-sky-950/50 px-1 py-0.5 rounded text-sky-700 dark:text-sky-300">/api/telegram-webhook</code>).
+              </p>
+            </div>
+            <div>
+              <button
+                type="button"
+                disabled={updatingWebhook}
+                onClick={async () => {
+                  setUpdatingWebhook(true);
+                  setWebhookResult(null);
+                  try {
+                    const res = await updateTelegramWebhookAction();
+                    setWebhookResult(res);
+                    if (res.ok) {
+                      toast.success(res.message);
+                    } else {
+                      toast.error(res.message);
+                    }
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Помилка");
+                  } finally {
+                    setUpdatingWebhook(false);
+                  }
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-sky-700 transition active:scale-95 disabled:opacity-50"
+              >
+                {updatingWebhook ? <Loader2 className="w-4 h-4 animate-spin" /> : <Radio className="w-4 h-4" />}
+                {updatingWebhook ? "Оновлюємо..." : "Оновити Webhook Telegram"}
+              </button>
+              {webhookResult && (
+                <div className={`mt-3 rounded-lg p-3 text-xs font-medium ${
+                  webhookResult.ok
+                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+                    : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
+                }`}>
+                  {webhookResult.message}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Danger Zone: Database Cleanup */}
+      <div className="mt-8 rounded-2xl border border-red-200 dark:border-red-900/50 bg-gradient-to-br from-red-50/60 to-rose-50/40 dark:from-red-950/30 dark:to-rose-950/20 p-6 shadow-sm">
+        <div className="mb-5">
+          <h2 className="text-xl font-black text-red-900 dark:text-red-200 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            Очищення тестових даних (Danger Zone)
+          </h2>
+          <p className="mt-1 text-sm text-red-700 dark:text-red-400">
+            Очищення бази від спамних замовлень та тестових користувачів перед релізом. Адміністратори із <code className="font-mono bg-red-200/50 dark:bg-red-900/40 px-1 rounded">TELEGRAM_ADMIN_CHAT_ID</code> надійно захищені від видалення.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {/* Clear Orders */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-red-100 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">Тільки замовлення</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Видаляє всі замовлення, дні доставки, покупки підписок та скидає лічильники днів. Клієнти залишаються в базі.
+              </p>
             </div>
             <button
               type="button"
-              disabled={importingOrders}
+              disabled={cleaningOrders || cleaningAll}
               onClick={async () => {
-                setImportingOrders(true);
-                setOrdersResult(null);
+                if (!window.confirm("Ви впевнені, що хочете видалити ВСІ замовлення та підписки з бази даних? Цю дію неможливо скасувати.")) {
+                  return;
+                }
+                setCleaningOrders(true);
+                setCleanupResult(null);
                 try {
-                  const res = await importOrdersFromSheet();
-                  setOrdersResult(res);
+                  const res = await clearOrdersAction();
+                  setCleanupResult(res);
                   if (res.ok) {
-                    toast.success(`Замовлення: +${res.created} нових, ${res.skipped} пропущено`);
+                    toast.success(res.message || "Замовлення видалено!");
+                    router.refresh();
                   } else {
-                    toast.error(res.errors[0] || "Помилка імпорту");
+                    toast.error(res.error || "Помилка");
                   }
                 } catch (err) {
                   toast.error(err instanceof Error ? err.message : "Помилка");
                 } finally {
-                  setImportingOrders(false);
+                  setCleaningOrders(false);
                 }
               }}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-purple-700 transition active:scale-95 disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition active:scale-95 disabled:opacity-50"
             >
-              {importingOrders ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              {importingOrders ? "Імпортуємо..." : "Імпортувати замовлення"}
+              {cleaningOrders ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {cleaningOrders ? "Очищення..." : "Очистити замовлення"}
             </button>
-            {ordersResult && (
-              <div className={`mt-3 rounded-lg p-3 text-xs font-medium ${
-                ordersResult.ok
-                  ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
-                  : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300"
-              }`}>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span>✅ Створено: <b>{ordersResult.created}</b></span>
-                  <span>⏭️ Пропущено: <b>{ordersResult.skipped}</b></span>
-                </div>
-                {ordersResult.errors.length > 0 && (
-                  <details className="mt-2">
-                    <summary className="cursor-pointer text-amber-700 dark:text-amber-400">⚠️ {ordersResult.errors.length} попередж.</summary>
-                    <ul className="mt-1 space-y-0.5 text-[11px]">
-                      {ordersResult.errors.slice(0, 20).map((e, idx) => <li key={idx}>{e}</li>)}
-                      {ordersResult.errors.length > 20 && <li>…та ще {ordersResult.errors.length - 20}</li>}
-                    </ul>
-                  </details>
-                )}
+          </div>
+
+          {/* Clear Clients (except admins) */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border border-red-100 dark:border-slate-800 flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 mb-1">Клієнти (крім адмінів)</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Видаляє всіх користувачів, крім адмінів з Chat ID. Баланси та пов&apos;язані дані цих користувачів також видаляються.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={cleaningClients || cleaningAll}
+              onClick={async () => {
+                if (!window.confirm("УВАГА! Видалити ВСІХ клієнтів (крім адмінів із TELEGRAM_ADMIN_CHAT_ID)? Продовжити?")) {
+                  return;
+                }
+                setCleaningClients(true);
+                setCleanupResult(null);
+                try {
+                  const res = await clearNonAdminClientsAction();
+                  setCleanupResult(res);
+                  if (res.ok) {
+                    toast.success(res.message || "Клієнтів очищено!");
+                    router.refresh();
+                  } else {
+                    toast.error(res.error || "Помилка");
+                  }
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Помилка");
+                } finally {
+                  setCleaningClients(false);
+                }
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700 transition active:scale-95 disabled:opacity-50"
+            >
+              {cleaningClients ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              {cleaningClients ? "Очищення..." : "Очистити клієнтів"}
+            </button>
+          </div>
+
+          {/* Full Wipe */}
+          <div className="rounded-xl bg-white dark:bg-slate-900 p-5 shadow-sm border-2 border-red-300 dark:border-red-800 flex flex-col justify-between">
+            <div>
+              <h3 className="text-sm font-bold text-red-700 dark:text-red-400 mb-1">Повне очищення</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Повний скид: видаляє всі замовлення та всіх користувачів (крім адмінів). Ідеально для старту з чистого аркуша.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={cleaningAll || cleaningOrders || cleaningClients}
+              onClick={async () => {
+                if (!window.confirm("⚠️ КРИТИЧНА ДІЯ: Буде виконано ПОВНЕ очищення бази даних (всі замовлення та всі не-адміни). Підтверджуєте?")) {
+                  return;
+                }
+                setCleaningAll(true);
+                setCleanupResult(null);
+                try {
+                  const res = await clearAllTestDataAction();
+                  setCleanupResult(res);
+                  if (res.ok) {
+                    toast.success(res.message || "Базу повністю очищено!");
+                    router.refresh();
+                  } else {
+                    toast.error(res.error || "Помилка");
+                  }
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Помилка");
+                } finally {
+                  setCleaningAll(false);
+                }
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-red-700 px-4 py-2 text-xs font-black text-white hover:bg-red-800 transition active:scale-95 disabled:opacity-50 shadow-sm"
+            >
+              {cleaningAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <AlertTriangle className="w-4 h-4" />}
+              {cleaningAll ? "Очищення всієї БД..." : "Повне очищення БД"}
+            </button>
+          </div>
+        </div>
+
+        {cleanupResult && (
+          <div className={`mt-4 rounded-xl p-4 text-xs font-medium ${
+            cleanupResult.ok
+              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
+              : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-800"
+          }`}>
+            <p className="font-bold text-sm mb-1">{cleanupResult.ok ? "✅ Успішно виконано" : "❌ Помилка"}</p>
+            <p>{cleanupResult.message || cleanupResult.error}</p>
+            {cleanupResult.preservedAdmins && cleanupResult.preservedAdmins.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60">
+                <p className="font-semibold text-emerald-900 dark:text-emerald-200">Збережені акаунти адміністраторів:</p>
+                <ul className="list-disc list-inside mt-1 space-y-0.5">
+                  {cleanupResult.preservedAdmins.map((adm, i) => (
+                    <li key={i}>{adm}</li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

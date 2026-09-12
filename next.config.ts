@@ -42,6 +42,8 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
       allowedOrigins: [
+        "foodbalance.com.ua",
+        "www.foodbalance.com.ua",
         "foodbalancetest-production-5092.up.railway.app",
         "foodbalance.zp.ua",
         "localhost:3000",

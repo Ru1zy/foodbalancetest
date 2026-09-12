@@ -17,7 +17,7 @@ const comfortaa = Comfortaa({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://foodbalancetest-production.up.railway.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://foodbalance.com.ua"),
   title: "Food Balance - Здорове харчування з доставкою",
   description: "Замовте здорове харчування з доставкою додому",
   icons: {

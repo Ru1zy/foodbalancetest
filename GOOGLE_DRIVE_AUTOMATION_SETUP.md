@@ -41,7 +41,7 @@ credential vault. Do not add private account addresses to the repository.
 4. Add the exact Railway staging redirect URI:
 
    ```text
-   https://foodbalancetest-production.up.railway.app/api/admin/google-drive/callback
+   https://foodbalance.com.ua/api/admin/google-drive/callback
    ```
 
 Do not add this callback to the customer-login OAuth client.
@@ -77,8 +77,8 @@ The Drive owner automatically shares the managed folder with this address.
 For staging:
 
 ```text
-GOOGLE_DRIVE_REDIRECT_URI=https://foodbalancetest-production.up.railway.app/api/admin/google-drive/callback
-APP_BASE_URL=https://foodbalancetest-production.up.railway.app
+GOOGLE_DRIVE_REDIRECT_URI=https://foodbalance.com.ua/api/admin/google-drive/callback
+APP_BASE_URL=https://foodbalance.com.ua
 ```
 
 ## 5. Apply the PostgreSQL schema

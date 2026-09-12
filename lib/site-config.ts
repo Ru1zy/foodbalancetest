@@ -47,7 +47,7 @@ export function getPublicAppUrl(request?: Request): string {
   }
 
   // 5. Default production domain fallback
-  return "https://foodbalancetest-production-5092.up.railway.app";
+  return "https://foodbalance.com.ua";
 }
 
 export function createPublicRedirectUrl(path: string, request?: Request): URL {
