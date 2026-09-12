@@ -67,6 +67,15 @@ export async function importClientsFromSheet(): Promise<ImportResult> {
       const row = rows[i];
       const rawPhone = String(row[2] || "").trim();
       const name = String(row[1] || "").trim();
+      const chatId = String(row[4] || "").trim() || null;
+
+      // Skip rows without chatId — importing phone-only records creates
+      // orphan accounts that block real Telegram registrations (phone
+      // unique constraint). Let them register fresh on the site instead.
+      if (!chatId) {
+        skipped++;
+        continue;
+      }
 
       if (!rawPhone || !name) {
         skipped++;
@@ -83,7 +92,6 @@ export async function importClientsFromSheet(): Promise<ImportResult> {
       }
 
       const address = String(row[3] || "").trim() || null;
-      const chatId = String(row[4] || "").trim() || null;
       const defaultPackage = String(row[5] || "").trim() || null;
       const defaultCutlery = String(row[6] || "").trim() || null;
       const notes = String(row[7] || "").trim() || null;
@@ -109,12 +117,10 @@ export async function importClientsFromSheet(): Promise<ImportResult> {
           }
         } else {
           // Check if chatId is already taken by another user
-          let safeChatId = chatId;
-          if (chatId) {
-            const chatIdOwner = await prisma.user.findUnique({ where: { chatId } });
-            if (chatIdOwner) {
-              safeChatId = null; // Don't set chatId if it's already in use
-            }
+          const chatIdOwner = await prisma.user.findUnique({ where: { chatId } });
+          if (chatIdOwner) {
+            skipped++;
+            continue;
           }
 
           await prisma.user.create({
@@ -122,7 +128,7 @@ export async function importClientsFromSheet(): Promise<ImportResult> {
               phone,
               name,
               address,
-              chatId: safeChatId,
+              chatId,
               defaultPackage,
               defaultCutlery,
               notes,
