@@ -1,189 +1,145 @@
-# 🛠️ Шпаргалка адміністратора FoodBalance (Ops & Troubleshooting Guide)
+# 🛠️ Шпаргалка адміністратора FoodBalance (Ops, Variables & Troubleshooting Guide)
 
-> **Домен:** `foodbalance.com.ua`  
+> **Головний домен:** `https://foodbalance.com.ua`  
 > **Резервний домен Railway:** `foodbalancetest-production-5092.up.railway.app`  
-> **Оновлено:** Вересень 2026  
-
-Цей документ — повна практична шпаргалка: де що зберігається, як влаштовані сервіси, що оновити після покупки нового домену та куди дивитися в разі збоїв.
+> **Версія системи:** 2.2.1 (Вересень 2026)  
+> **Призначення:** Довідник для швидкої навігації: де що зберігається, повний реєстр усіх змінних оточення (Railway та GitHub Secrets), що відкривати при збоях та як миттєво відновити роботу сервісів.
 
 ---
 
-## 🗺️ 1. Де що зберігається (Архітектура та компоненти)
+## 🗺️ 1. Карта сервісів та компонентів
 
-| Компонент | Де розміщено | Для чого використовується | Де керувати / дивитися |
+| Компонент | Де розміщено | Для чого використовується | Що відкривати для перевірки / логів |
 |---|---|---|---|
-| **Хостинг додатку (Web App)** | **Railway** (сервіс `foodbalance`) | Next.js 16 (App Router), SSR, Server Actions, API routes. Порт `8080`. | [railway.app](https://railway.app/) → Project → Service → **Deployments / Logs** |
-| **База даних** | **PostgreSQL на Railway** | Зберігає користувачів (`User`), замовлення (`Order`, `OrderDay`), баланси, тарифи, налаштування. | Railway → PostgreSQL service → **Data** (або підключення через DBeaver / Prisma Studio) |
-| **Домен і DNS** | **Реєстратор домену / Cloudflare** | DNS-записи (`A`, `CNAME`, `ALIAS`). Направляє трафік на Railway. | Панель реєстратора або [dash.cloudflare.com](https://dash.cloudflare.com) |
-| **SSL-сертифікат** | **Railway (Let's Encrypt) / Cloudflare** | HTTPS шифрування. | Railway Networking або Cloudflare SSL/TLS |
-| **Telegram-бот** | **Telegram Bot API** (`@fooddevtestbot` / робочий бот) | Авторизація без пароля через Deep-link (`/start <token>`), адмінські сповіщення про замовлення. | [@BotFather](https://t.me/BotFather) та `/api/telegram-webhook` на сайті |
-| **Google Авторизація** | **Google Cloud Console** | Вхід клієнтів в 1 клік через Google акаунт. | [console.cloud.google.com](https://console.cloud.google.com/) → APIs & Services → Credentials |
-| **Google Таблиці (CRM)** | **Google Drive & Sheets** | Експорт замовлень у щомісячні таблиці доставок та імпорт старих клієнтів. | Сервісний акаунт `foodbalance@foodbalance-506313.iam.gserviceaccount.com` |
-| **Оплата (Еквайринг)** | **Monobank (Plata by Mono)** | Прийом карткових оплат (Apple Pay, Google Pay, картки). | [web.monobank.ua](https://web.monobank.ua/) (Кабінет мерчанта) |
-| **Сховище медіа (S3/R2)** | **Cloudflare R2** | Фотографії страв меню, аватарки та чеки оплат. | [dash.cloudflare.com](https://dash.cloudflare.com) → R2 Object Storage |
+| **Веб-додаток (Next.js 16)** | **Railway** (сервіс `foodbalance`) | Next.js 16 App Router, SSR, Server Actions, API ендпоінти. Порт `8080`. | [railway.app](https://railway.app/) → Project → Service → **Deployments / View Logs** |
+| **База даних (PostgreSQL 18)** | **Railway** (сервіс `PostgreSQL`) | Клієнти (`User`), замовлення (`Order`, `OrderDay`), баланси, тарифи, допи, системні налаштування. | Railway → Service PostgreSQL → вкладка **Data** або через Prisma Studio / DBeaver |
+| **Домен і DNS** | **Cloudflare / Реєстратор** | DNS-записи (`A`, `CNAME`, `ALIAS`), SSL/TLS, захист від DDoS. | [dash.cloudflare.com](https://dash.cloudflare.com) → `foodbalance.com.ua` → **DNS** та **SSL/TLS** |
+| **Telegram-бот** | **Telegram Bot API** | Авторизація без пароля через Deep-link (`/start <token>`), 6-значний OTP, адмін-сповіщення, Webhook. | [@BotFather](https://t.me/BotFather) та перевірка в браузері: `https://api.telegram.org/bot<TOKEN>/getWebhookInfo` |
+| **Google Авторизація** | **Google Cloud Console** | Вхід клієнтів в 1 клік через Google акаунт (OAuth 2.0). | [console.cloud.google.com](https://console.cloud.google.com/) → **APIs & Services** → **Credentials** |
+| **Google Таблиці (CRM)** | **Google Sheets API** | Щоденний експорт замовлень для кухні та кур'єрів, архів, імпорт клієнтів. | Сервісний акаунт `foodbalance@foodbalance-506313.iam.gserviceaccount.com` |
+| **Google Drive Автоматика** | **Google Drive OAuth 2.0** | Щомісячне створення нової таблиці на 20-те число місяця за шаблоном. | Адмінка сайту → `/admin/settings/sheets` |
+| **Оплата (Еквайринг)** | **Monobank (Plata by Mono)** | Прийом карткових оплат (Apple Pay, Google Pay, картки), генерація адмін-посилань. | [web.monobank.ua](https://web.monobank.ua/) (Кабінет мерчанта) |
+| **Медіа-сховище (S3/R2)** | **Cloudflare R2** | Фотографії страв меню, аватарки та чеки оплат. | [dash.cloudflare.com](https://dash.cloudflare.com) → **R2 Object Storage** |
+| **Фонові задачі (Крони)** | **GitHub Actions** | Резервне копіювання БД, архівування замовлень, створення таблиць, черга Outbox. | GitHub репозиторій → вкладка [Actions](https://github.com/Ru1zy/foodbalancetest/actions) |
 
 ---
 
-## 🔑 2. Змінні оточення (Railway Variables Reference)
+## 🔑 2. Повний реєстр змінних оточення (Variables Reference)
 
-Усі секрети зберігаються в **Railway → Сервіс бекенду → Variables**.
+У проекті використовуються два місця зберігання секретів:
+1. **Railway Variables** — змінні, необхідні для роботи веб-сайту та бекенду.
+2. **GitHub Repository Secrets** — змінні, необхідні для роботи автоматичних кронів та щоденного бекапу бази даних.
 
-### Обов'язкові змінні:
-- `DATABASE_URL` — рядок підключення до PostgreSQL (формат: `postgresql://postgres:...@.../railway`).
-- `APP_BASE_URL` — головний публічний URL сайту: **`https://foodbalance.com.ua`**. (Використовується всюди для формування посилань, вебхуків та редиректів. Додаткову змінну `NEXT_PUBLIC_APP_URL` створювати не обов'язково — код автоматично бере `APP_BASE_URL`).
-- `TELEGRAM_BOT_TOKEN` — токен бота від @BotFather.
-- `TELEGRAM_ADMIN_CHAT_ID` — Chat ID адміністраторів через кому (наприклад: `300333050,366707827,729923101`). **Захищає адмінів від видалення та дає доступ до `/admin`**.
-- `TELEGRAM_WEBHOOK_SECRET` — секретний токен для захисту вебхука Telegram від підробки запитів.
-- `MONOBANK_API_TOKEN` — токен мерчанта Monobank.
-- `GOOGLE_CLIENT_ID` та `GOOGLE_CLIENT_SECRET` — облікові дані для Google Auth.
-- `GOOGLE_CLIENT_EMAIL` та `GOOGLE_PRIVATE_KEY` — ключ сервісного акаунту для читання/запису Google Таблиць.
-- `GOOGLE_SHEET_ID` — ID таблиці CRM для імпорту клієнтів.
+### А. Змінні у Railway (Railway → Service `foodbalance` → Variables)
 
----
-
-## 🚀 3. Що зробити після покупки нового домену `foodbalance.com.ua`
-
-### Крок 1. Оновити змінні в Railway
-У [Railway Dashboard](https://railway.app/) → сервіс додатку → **Variables**:
-1. `APP_BASE_URL` = `https://foodbalance.com.ua` (вона у вас вже є у списку!).
-2. Якщо налаштовано Google Drive: `GOOGLE_DRIVE_REDIRECT_URI` = `https://foodbalance.com.ua/api/admin/google-drive/callback`
-3. Натиснути кнопку **«Deploy / Apply change»**.
-
-*(Після збереження Railway сам автоматично перезапустить контейнер за 1–2 хвилини).*
-
-### Крок 2. Оновити Webhook для Telegram-бота
-Telegram надсилає оновлення лише на зареєстровану адресу.
-- **Спосіб А (найпростіший):** Зайти на сайті в `/admin/settings` у блок **«Синхронізація та інтеграції»** і натиснути кнопку **«Оновити Webhook Telegram»**.
-- **Спосіб Б (вручну в браузері):**
-  Відкрити посилання (підставивши свій токен і секрет):
-  ```text
-  https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=https://foodbalance.com.ua/api/telegram-webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>
-  ```
-  *Відповідь має бути:* `{"ok":true,"result":true,"description":"Webhook was set"}`.
-
-### Крок 3. Додати домен в Google Cloud Console (для входу через Google)
-Без цього при натисканні «Увійти через Google» буде помилка `redirect_uri_mismatch`:
-1. Відкрийте [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services** → **Credentials**.
-2. Відкрийте ваш **OAuth 2.0 Client ID** (Web application).
-3. У полі **Authorized JavaScript origins** додайте:
-   - `https://foodbalance.com.ua`
-   - `https://www.foodbalance.com.ua`
-4. У полі **Authorized redirect URIs** додайте:
-   - `https://foodbalance.com.ua/api/auth/google/callback`
-   - `https://www.foodbalance.com.ua/api/auth/google/callback`
-5. Натисніть **Save** (зберігається 2–5 хвилин).
-
-### Крок 4. Monobank (Plata by Mono)
-- **Нічого вручну налаштовувати не потрібно!**
-- Наш бекенд при кожному створенні рахунку автоматично передає актуальний `webHookUrl: https://foodbalance.com.ua/api/plata/callback` та `redirectUrl: https://foodbalance.com.ua/profile`. Щойно оновлено `APP_BASE_URL`, нові оплати одразу підуть через новий домен.
+| Назва змінної | Призначення | Приклад значення | Що станеться, якщо відсутня або пошкоджена |
+|---|---|---|---|
+| `DATABASE_URL` | Підключення до PostgreSQL | `postgresql://postgres:pass@altaria.proxy.rlwy.net:44358/railway` | Додаток впаде з помилкою `502 Bad Gateway` (`Can't reach database`). |
+| `APP_BASE_URL` | Головний публічний URL сайту **(БЕЗ слеша в кінці!)** | `https://foodbalance.com.ua` | Зламаються посилання на оплату Monobank, редиректи Google Auth та вебхуки. |
+| `TELEGRAM_BOT_TOKEN` | Токен бота від @BotFather | `7712345678:AAH...` | Бот перестане відповідати, клієнти не зможуть увійти, адміни не отримають сповіщень. |
+| `TELEGRAM_ADMIN_CHAT_ID` | Chat ID адміністраторів (через кому!) | `300333050,366707827,729923101` | Адміни втратять доступ до `/admin`, а їхні акаунти випадково можна видалити в Danger Zone. |
+| `TELEGRAM_WEBHOOK_SECRET` | Захист вебхука Telegram від підробки | Випадковий безпечний рядок | Бот буде відхиляти запити з помилкою 401 (`wrong secret token`). |
+| `MONOBANK_API_TOKEN` | Токен мерчанта Monobank Plata | Токен з кабінету [web.monobank.ua](https://web.monobank.ua/) | Клієнти не зможуть оплатити замовлення карткою, генератор посилань в адмінці видасть помилку. |
+| `MONOBANK_TEST_MODE` | Тестовий режим оплат (`true` або `false`) | `false` | Якщо `true`, будуть створюватися несправжні тестові інвойси. |
+| `PLATA_FEE_PERCENT` | Комісія еквайрингу Plata у відсотках | `1.3` | Використовується для коректного обліку сум. |
+| `CRON_SECRET` | Токен авторизації кронів | Секретний рядок (ідентичний до GitHub Secrets) | Крони GitHub Actions отримають помилку `401 Unauthorized`. |
+| `GOOGLE_CLIENT_ID` | Клієнтський ID для входу через Google | `...apps.googleusercontent.com` | Кнопка «Увійти через Google» видаватиме помилку. |
+| `GOOGLE_CLIENT_SECRET` | Секретний ключ для Google Auth | Текстовий секрет з Google Cloud | Вхід через Google завершиться збоєм авторизації. |
+| `GOOGLE_CLIENT_EMAIL` | Email сервісного акаунту для Google Sheets | `foodbalance@foodbalance-506313.iam.gserviceaccount.com` | Замовлення не синхронізуються з робочими таблицями кухні. |
+| `GOOGLE_PRIVATE_KEY` | Приватний ключ сервісного акаунту | `-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n` | Синхронізація Google Sheets видасть `Invalid RSA Key / 403`. |
+| `GOOGLE_SHEET_ID` | ID основної таблиці CRM для імпорту клієнтів | `1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms` | Не працюватиме імпорт клієнтів зі старої бази. |
+| `GOOGLE_DRIVE_CLIENT_ID` | OAuth Client ID для створення щомісячних таблиць | `...apps.googleusercontent.com` | Автоматичне створення таблиць на новий місяць не працюватиме. |
+| `GOOGLE_DRIVE_CLIENT_SECRET` | OAuth Client Secret для Google Drive | Текстовий секрет | Помилка створення таблиць Google Drive. |
+| `GOOGLE_DRIVE_REDIRECT_URI` | URL колбеку авторизації Drive | `https://foodbalance.com.ua/api/admin/google-drive/callback` | Помилка `redirect_uri_mismatch` при підключенні Google Drive. |
+| `GOOGLE_DRIVE_TOKEN_ENCRYPTION_KEY` | 32-байтний Base64 ключ шифрування токенів | Згенерований Base64 рядок (AES-256) | Неможливо розшифрувати токен доступу до Drive. |
+| `S3_ENDPOINT` | URL кінцевої точки Cloudflare R2 | `https://<account_id>.r2.cloudflarestorage.com` | Завантаження фотографій страв та чеків впаде. |
+| `S3_BUCKET` | Ім'я бакета Cloudflare R2 для медіа | `foodbalance-media` | Помилка завантаження медіафайлів (`NoSuchBucket`). |
+| `S3_ACCESS_KEY_ID` | Access Key ID для Cloudflare R2 | Ключ R2 API Token | Помилка 403 при завантаженні картинок. |
+| `S3_SECRET_ACCESS_KEY` | Secret Access Key для Cloudflare R2 | Секрет R2 API Token | Помилка 403 при завантаженні картинок. |
+| `S3_PUBLIC_BASE_URL` | Публічний домен для роздачі картинок | `https://media.foodbalance.com.ua` | Фотографії страв не відображатимуться у клієнтів. |
 
 ---
 
-## 🧹 4. Що робити з базою перед офіційним стартом?
+### Б. Секрети у GitHub Actions (GitHub → Settings → Secrets and variables → Actions)
 
-Якщо під час тестів було створено фейкові замовлення або тестових користувачів:
+| Назва секрету | Призначення | Важливі вимоги | Що станеться при помилці |
+|---|---|---|---|
+| `DATABASE_PUBLIC_URL` | Публічний URL PostgreSQL від Railway для бекапу | Формат: `postgresql://postgres:pass@altaria.proxy.rlwy.net:44358/railway` **(БЕЗ пробілів і \n у кінці!)** | Щоденний бекап впаде: `FATAL: database "railway\n" does not exist`. |
+| `CRON_SECRET` | Спільний токен для виклику кронів | **Повинен точно збігатися** зі значенням `CRON_SECRET` у Railway. | Крони завершаться з кодом `401 Unauthorized`. |
+| `APP_BASE_URL` | Публічна адреса сайту для виклику кронів | `https://foodbalance.com.ua` **(БЕЗ слеша в кінці!)** | Запити підуть за неправильною адресою (`404 Not Found`). |
+| `BACKUP_S3_ENDPOINT` | Endpoint S3-сховища для бекапів | Наприклад: `https://<account_id>.r2.cloudflarestorage.com` | Бекап не зможе завантажити зашифрований файл дампа. |
+| `BACKUP_S3_BUCKET` | Ім'я S3 бакета для бекапів | Наприклад: `foodbalance-backups` | Помилка S3 `NoSuchBucket`. |
+| `BACKUP_S3_REGION` | Регіон S3 сховища | Зазвичай `auto` (для R2) або `eu-central-1` | Помилка валідації регіону S3. |
+| `BACKUP_S3_ACCESS_KEY_ID` | Ключ доступу S3 для бекапів | Рядок API ключа | Помилка 403 Access Denied при завантаженні бекапу. |
+| `BACKUP_S3_SECRET_ACCESS_KEY` | Секретний ключ S3 для бекапів | Рядок API секрету | Помилка 403 Signature Mismatch при завантаженні бекапу. |
 
-1. **Не запускайте сайт зі спамом у БД:** Старі тестові замовлення будуть плутати кур'єрів у щоденних звітах (`/admin/today`) та вивантажуватися в CRM таблицю.
-2. **Як очистити:**
-   - Відкрийте панель управління: **`/admin/settings`**.
-   - Прокрутіть донизу до блоку **«Очищення тестових даних (Danger Zone)»**.
-   - Доступно три кнопки:
-     - 🟡 **«Очистити замовлення»** — видаляє всі замовлення, дні доставок, історію покупок підписок та скидає баланси. Акаунти користувачів не чіпає.
-     - 🔴 **«Очистити клієнтів (крім адмінів)»** — видаляє всіх зареєстрованих клієнтів, **але захищає всіх адмінів**, чий `chatId` прописаний у `TELEGRAM_ADMIN_CHAT_ID`.
-     - 💥 **«Повне очищення БД»** — стирає всі тестові замовлення та всіх користувачів, окрім адміністраторів. База стає кришталево чистою для старту.
-3. **Імпорт клієнтів зі старої CRM:**
-   - Після очищення натисніть **«Імпортувати клієнтів»** у блоці вище.
-   - Система перенесе клієнтів, які мають Chat ID (ПІБ, телефон, адресу, пакет).
-   - Коли такий клієнт зайде на сайт через Telegram — він одразу впізнається системою без конфліктів.
-
----
-
-## 🚑 5. Що робити при збоях (Troubleshooting Runbook)
-
-### Сценарій А: Сайт видає «ERR_TOO_MANY_REDIRECTS» (Циклічний редирект)
-- **Де проблема:** Налаштування Cloudflare SSL/TLS.
-- **Причина:** Cloudflare звертається до Railway по HTTP (порт 80), а Railway перенаправляє на HTTPS.
-- **Як полагодити:**
-  1. Зайдіть у [Cloudflare](https://dash.cloudflare.com/) → виберіть `foodbalance.com.ua`.
-  2. Перейдіть у меню **SSL/TLS** → **Overview**.
-  3. Змініть режим шифрування з **Flexible** на **Full** або **Full (Strict)**.
-  4. Зачекайте 1 хвилину — редиректи зникнуть.
-
-### Сценарій Б: Сайт видає «502 Bad Gateway» або «Application Error»
-- **Де проблема:** Процес Next.js на Railway впав або не може запуститися.
-- **Куди дивитися:**
-  1. Відкрийте [Railway Dashboard](https://railway.app/).
-  2. Натисніть на сервіс додатку → вкладка **Deployments** → виберіть поточний активний деплой → натисніть **View Logs**.
-  3. Шукайте червоні помилки в логах.
-- **Типові причини:**
-  - `PrismaClientInitializationError: Can't reach database server`: впала база PostgreSQL на Railway або неправильний `DATABASE_URL`.
-  - Змінна середовища містить синтаксичну помилку (наприклад, незакриті лапки в приватному ключі).
-
-### Сценарій В: Бот не відповідає на кнопку «Увійти через Telegram» (мовчить після переходу)
-- **Куди дивитися:**
-  1. Перевірте статус вебхука: відкрийте в браузері:
-     ```text
-     https://api.telegram.org/bot<ВАШ_ТОКЕН>/getWebhookInfo
-     ```
-  2. Подивіться поле `url` (має бути `https://foodbalance.com.ua/api/telegram-webhook`) та `last_error_message`.
-  3. Якщо `url` веде на старий домен або пустий — оновіть вебхук у `/admin/settings`.
-  4. Якщо помилка `wrong secret token` — перевірте, чи збігається `TELEGRAM_WEBHOOK_SECRET` у Railway з тим, що передавався в `setWebhook`.
-
-### Сценарій Г: Помилка «redirect_uri_mismatch» при вході через Google
-- **Причина:** Новий домен не внесено до білого списку в Google Cloud Console.
-- **Як полагодити:**
-  1. Відкрийте [Google Cloud Console](https://console.cloud.google.com/) → Credentials → ваш OAuth Client.
-  2. Додайте в **Authorized redirect URIs**: `https://foodbalance.com.ua/api/auth/google/callback`.
-  3. Додайте в **Authorized JavaScript origins**: `https://foodbalance.com.ua`.
-  4. Збережіть та зачекайте 3 хвилини.
-
-### Сценарій Д: Оплата в Monobank пройшла успішно, але баланс не нарахувався
-- **Куди дивитися:**
-  1. Відкрийте логи Railway та знайдіть запити на `/api/plata/callback`.
-  2. У базі даних перевірте таблицю `SubscriptionPurchase` (чи статус змінився з `PENDING` на `PAID`).
-  3. Перевірте, чи не заблокований вхід на сайт Cloudflare WAF (іноді Cloudflare блокує IP-адреси вебхуків Monobank, якщо увімкнено режим Under Attack).
-- **Як терміново допомогти клієнту:**
-  - Зайдіть в `/admin` → вкладка клієнтів або замовлень → відкрийте клієнта і вручну додайте дні підписки через інтерфейс адміністратора.
-
-### Сценарій Е: Замовлення не потрапляють у Google Таблицю
-- **Куди дивитися:**
-  1. Відкрийте `/admin/settings` або `/admin/settings/sheets`.
-  2. Перевірте, чи є рядок для поточного місяця (наприклад, `09.2026`). Якщо місяць змінився, а адміністратор не додав нову таблицю — додаток тимчасово не може експортувати туди замовлення.
-  3. Перевірте, чи надано доступ **Редактора** на цю Google Таблицю сервісному акаунту `foodbalance@foodbalance-506313.iam.gserviceaccount.com`.
+> [!CAUTION]
+> **Золоте правило копіювання секретів:**  
+> При вставці секретів у поля GitHub або Railway стежте, щоб наприкінці не було випадкових пробілів або переводу рядка (`Enter`). Наші скрипти санітизують змінні, але чистий ввід гарантує 100% надійність.
 
 ---
 
-## 🔒 6. Резервні копії (Backups)
+## 🎯 3. Матриця діагностики: яку проблему де шукати і що відкривати
 
-- **PostgreSQL на Railway:** Railway автоматично створює щоденні бекапи бази (вкладка **Backups** у сервісі PostgreSQL).
-- **Ручний дамп перед важливими оновленнями:**
-  Можна зняти повний дамп через команду `pg_dump`:
-  ```bash
-  pg_dump "<DATABASE_URL>" > backup_$(date +%Y%m%d).sql
-  ```
-  Детальний регламент резервного копіювання описано у файлі `DATABASE_BACKUP_RUNBOOK.md`.
+| Симптом / Проблема | Куди дивитися першочергово | Що відкривати | Як полагодити за 2 хвилини |
+|---|---|---|---|
+| **Сайт взагалі не відкривається («502 Bad Gateway» / «Application Error»)** | Логи контейнера Next.js у Railway | [railway.app](https://railway.app/) → сервіс `foodbalance` → **Deployments** → **View Logs** | Подивіться останній рядок логу. Якщо `Can't reach database` — перезапустіть сервіс PostgreSQL у Railway. Якщо помилка синтаксису змінної — перевірте останні зміни у Variables. |
+| **Циклічний редирект («ERR_TOO_MANY_REDIRECTS»)** | Налаштування шифрування Cloudflare | [dash.cloudflare.com](https://dash.cloudflare.com) → `foodbalance.com.ua` → **SSL/TLS** | Перемкніть режим шифрування з **Flexible** на **Full (Strict)**. Зачекайте 1 хвилину. |
+| **Крон у GitHub Actions впав («Process completed with exit code 1»)** | Логи конкретної джоби у вкладці Actions | GitHub → [Actions](https://github.com/Ru1zy/foodbalancetest/actions) → обрати останній червоний запуск | Якщо `database "railway\n" does not exist` — перевірте, чи запущено останній коміт з гілки `main`, а не старий перезапуск через «Re-run». Якщо 401 — синхронізуйте `CRON_SECRET` у GitHub та Railway. |
+| **Посилання в Telegram відправляється без превью (без логотипу та опису)** | Кэш датацентрів Telegram та локальний кеш Desktop | 1. Бот [@WebpageBot](https://t.me/WebpageBot)<br>2. Чат Saved Messages | 1. Надішліть чисте посилання боту `@WebpageBot`, щоб очистити глобальний кеш.<br>2. Для негайної перевірки вставте в чат `https://foodbalance.com.ua/?1` (хвостик `?1` обходить локальний кеш клієнта). |
+| **Клієнт оплатив через Monobank, але статус замовлення не став «Оплачено»** | 1. Логи запитів у Railway по ендпоінту `/api/plata/callback`<br>2. Кабінет Monobank | 1. [web.monobank.ua](https://web.monobank.ua/) → Платежі<br>2. Адмінка сайту → `/admin/orders` | 1. Перевірте в Monobank статус транзакції (успішна чи відхилена банком).<br>2. Якщо оплата пройшла, зайдіть в `/admin/orders` і натисніть кнопку **`✓ Підтвердити`** на замовленні клієнта — статус оновиться миттєво. |
+| **Замовлення не потрапляють у щомісячну Google Таблицю кухні** | 1. Таблиця `OutboxJob` у базі даних<br>2. Налаштування таблиць в адмінці | Адмінка сайту → `/admin/settings/sheets` | 1. Перевірте, чи підключена таблиця для поточного місяця (наприклад, `09.2026`). Якщо ні — додайте її ID вручну або натисніть «Створити таблицю».<br>2. Перевірте, чи має сервісний акаунт `foodbalance@foodbalance-506313.iam.gserviceaccount.com` права **Редактора** на цю таблицю. |
+| **Клієнт пише: «Не можу увійти, пише "Забагато спроб" або заблоковано»** | Лімітер безпеки OTP у `lib/rate-limit.ts` | База даних → таблиця `VerificationCode` | Система блокує введення коду на 15 хвилин після 5 невірних спроб (захист від підбору). Попросіть клієнта зачекати 15 хвилин або скористатися входом в 1 клік через Google / Telegram Deep-link. |
+| **Помилка «redirect_uri_mismatch» при вході через Google** | Білий список адрес у Google Cloud | [console.cloud.google.com](https://console.cloud.google.com/) → APIs & Services → Credentials → OAuth Client | Додайте в **Authorized redirect URIs**: `https://foodbalance.com.ua/api/auth/google/callback`. Збережіть і зачекайте 3 хвилини. |
+| **Бот у Telegram мовчить при переході за посиланням авторизації** | Статус вебхука у Telegram | Браузер: `https://api.telegram.org/bot<TOKEN>/getWebhookInfo` | Якщо в полі `last_error_message` є помилка або URL старий — зайдіть у `/admin/settings` і натисніть кнопку **«Оновити Webhook Telegram»**. |
 
 ---
 
-## ⚡ 7. Специфічні механізми платформи (Швидка довідка)
+## ⏰ 4. Розклад та робота автоматичних кронів
 
-### А. Генератор платіжних посилань Monobank в адмінці (`/admin/orders`)
-- **Як влаштовано:** Адміністратор натискає кнопку «💳 Посилання Mono», система генерує ключ виду `admin_inv_${orderId}_${timestamp}`, зв'язує його в таблиці `CheckoutIdempotency` з усіма вибраними замовленнями і викликає `createMonobankInvoice`.
-- **Автоматичний вебхук:** При оплаті Monobank надсилає `POST /api/plata/callback`. Код визначає префікс `admin_inv_`, пропускає формульні перевірки недоплати (оскільки суму вручну встановив адмін), масово проставляє `isPaid: true` та `paymentMethod: "plata"` для всіх замовлень у чеку, оновлює статус у Google Sheets та надсилає клієнту сповіщення в Telegram.
+Усі крони налаштовані у файлах `.github/workflows/cron.yml` та `.github/workflows/database-backup.yml`. Вони запускаються за розкладом або вручну:
 
-### Б. Захист від спаму та перебору кодів (OTP Rate Limiting)
-- **Обмеження запитів:** `otpRequestLimiter` дозволяє 1 відправку коду на 60 секунд (перевіряється окремо за `userId` та за нормалізованим номером телефону).
-- **Захист від підбору (Brute-force):** `otpGuessLimiter` дає максимум 5 спроб введення 6-значного коду. При вичерпанні блокує введення та повторний запит на **15 хвилин**.
-- **Захист при зміні номера:** Блокування за номером телефону (`normalizedPhone`) фіксується окремо від акаунта. Якщо шахрай намагається перебирати коди для чужого номера з різних акаунтів або перемикає свій номер — система миттєво блокує запити саме на цей цільовий номер.
+1. **`database-backup` (Щодня о 06:20 за Києвом / 03:20 UTC)**:
+   - Створює повний бінарний дамп PostgreSQL 18 через `pg_dump`.
+   - Розгортає тимчасову базу `foodbalance_restore_...`, відновлює туди дамп і звіряє кількість рядків у всіх 7 ключових таблицях (`User`, `Order`, `Menu`, `Tariff` тощо).
+   - Шифрує дамп стійким ключем `age` (публічний ключ у `.github/backup-recipient.pub`).
+   - Завантажує в Cloudflare R2 / S3 сховище з маніфестом цілісності (sha256).
 
-### В. Модульний лічильник калоражу Sport Active+ (до 3400 ккал)
-- **Логіка:** Для раціону Sport Active+ доступний модульний лічильник калоражу в кошику: від 2400 ккал (базовий) до 3400 ккал (+1000 ккал, ліміт 10 кліків).
-- **Ціна:** Кожні +100 ккал додають **+35 ₴ на кожен день** раціону. Наприклад, для 2700 ккал: `850 + 105 = 955 ₴/день`.
-- **Синхронізація:** У базі `Order.items` зберігається `extraKcal`, у коментар замовлення автоматично дописується `[Калораж: 2700 ккал (+300 ккал/день)]`, у Google Sheets (колонка G) виводиться `Sport (2700 ккал)`, а Telegram надсилає кухарям та адмінам повне розшифрування калоражу.
+2. **`archive-orders` (Щодня о 05:00 за Києвом / 02:00 UTC)**:
+   - Знаходить усі замовлення, дата доставки яких минула і які оплачені/доставлені, та переводить їх у статус `archived`.
+   - Переносить замовлення у вкладку «Архів» робочої Google-таблиці.
+   - Видаляє кинуті неоплачені кошики клієнтів, старші за 7 днів.
 
-### Г. Керування додатковими опціями та допами (`/admin/tariffs`)
-- **Розташування:** Під таблицею тарифів є модуль «⚡ Модульні допи та модифікатори».
-- **Додавання:** Кнопка `+ Додати доп` розгортає форму додавання: назва, прив'язка (*Загальний для всіх* або *Окремий для раціону*), ціна в ₴, періодичність (*за день*, *за 100 ккал*, *за порцію*, *фіксована*), макс. ліміт кроків та опис.
-- **Збереження:** Конфігурація зберігається в базі даних (`package_addons_config`), дозволяє миттєво вмикати/вимикати опції перемикачем, редагувати ✏️ та видаляти 🗑️ без перезапуску сервера.
+3. **`check-next-month-sheet` (Щомісяця 20-го числа о 12:00 за Києвом / 09:00 UTC)**:
+   - За 10–11 днів до початку наступного місяця автоматично створює нову робочу Google-таблицю доставок за шаблоном.
+   - Якщо виник збій прав доступу Google Drive — негайно надсилає сповіщення з тривогою адміністраторам у Telegram.
 
+4. **`process-outbox` (Кожні 5 хвилин)**:
+   - Підхоплює всі відкладені або тимчасово збійні задачі синхронізації з Google Sheets і Telegram.
+   - Якщо Google API відповів таймаутом під час замовлення на сайті, цей крон гарантовано доставить рядок у таблицю кухні.
 
+### Як запустити будь-який крон вручну:
+1. Перейдіть у репозиторій на GitHub → вкладка **Actions**.
+2. У списку зліва виберіть потрібний воркфлоу (наприклад, **«Encrypted PostgreSQL backup»** або **«Scheduled cron jobs»**).
+3. Праворуч натисніть кнопку **«Run workflow»**.
+4. Оберіть **Branch: main** (і джобу, якщо потрібно), після чого натисніть зелену кнопку **«Run workflow»**.
+
+---
+
+## ⚡ 5. Шпаргалка за ключовими адмінськими функціями
+
+### Генератор посилань на оплату Monobank (`/admin/orders`):
+- Натисніть **`💳 Посилання Mono`** на будь-якому замовленні.
+- Якщо у клієнта є кілька неоплачених замовлень — система автоматично запропонує **об'єднати їх в один рахунок** (bundling), покаже деталізацію та сформує єдине посилання.
+- Після оплати вебхук `admin_inv_` автоматично помітить усі включені замовлення як оплачені, відправить сповіщення клієнту та оновить статус у Google Sheets.
+
+### Модульні допи раціонів (`/admin/tariffs`):
+- Модуль **«Додаткові опції раціонів (допи)»** розташований внизу сторінки тарифів.
+- Дозволяє створювати загальні (для всіх раціонів) або індивідуальні допи (наприклад, Sport Active +100 ккал за 35 ₴/день).
+- Можна в один клік увімкнути/вимкнути опцію 🏷️, змінити ціну ✏️ або видалити 🗑️ без перезавантаження серверів.
+
+### Очищення тестових даних перед офіційним стартом (`/admin/settings`):
+- Блок **«Danger Zone»** у самому низу налаштувань.
+- **«Очистити замовлення»** — видаляє всі тестові замовлення, не чіпаючи користувачів.
+- **«Очистити клієнтів (крім адмінів)»** — видаляє тестові акаунти, але **надійно захищає всіх адміністраторів**, чий Chat ID є в `TELEGRAM_ADMIN_CHAT_ID`.
+- **«Імпортувати клієнтів»** — переносить клієнтську базу зі старої таблиці CRM в один клік.

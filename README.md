@@ -46,6 +46,9 @@ The platform works as a responsive web app and as a **Telegram Mini App (TMA)**,
 - 🔑 **Google Ecosystem Integration** — Google OAuth 2.0 customer sign-in, real-time Google Sheets two-way order sync, and automated monthly Google Drive spreadsheet generation with AES-256 encrypted refresh tokens.
 - 🍽️ **Kitchen & Courier Daily View** — dedicated admin dashboard and export endpoints synchronized with Europe/Kyiv timezone (DST-aware).
 - 🛠️ **Admin Management Suite** — comprehensive back office for tariffs, weekly menus, promo marketing materials/flyers, client balances, Monobank payment links, and mass broadcasts.
+- ➕ **Dynamic Tariff Addons Manager** (`/admin/tariffs`) — visual administration of general and ration-specific meal add-ons and calorie increments saved dynamically in PostgreSQL.
+- 🛡️ **Encrypted Backups & Maintenance Crons** — daily off-site encrypted PostgreSQL 18 backups with `age` encryption, automated temporary restore verification, daily order archiving, 20th-of-month Google Sheets generation, and resilient 5-min Outbox queue retries.
+- 🔍 **SEO & Structured Data** — rich OpenGraph and Twitter cards, canonical links, and Schema.org JSON-LD `FoodEstablishment` markup for search engine discovery.
 - 🖼️ **Interactive Customer Reviews** — real client feedback with a full-screen zoomable photo lightbox modal.
 - ☁️ **Cloudflare R2 / S3 Storage** — high-performance S3-compatible cloud storage for meal photos and marketing flyers.
 - 🎨 **Modern Design & Dark Mode** — fluid responsive layout, glassmorphism, tailored typography, and a seamless light/dark theme switch.
@@ -217,6 +220,9 @@ tests/            Automated Jest test suite
 - 🔑 **Інтеграція з Google** — авторизація через Google OAuth 2.0, двостороння синхронізація з Google Таблицями та автоматичне створення щомісячних книг на Google Диску із захищеним шифруванням токенів (AES-256).
 - 🍽️ **Щоденний експорт для кухні та кур'єрів** — окремий адмін-модуль «сьогодні» та ендпоінти вивантаження з точним урахуванням київського часу (Europe/Kyiv) та переходу на літній/зимовий час.
 - 🛠️ **Адмін-панель** — повне керування меню, тарифами, промо-матеріалами та флаєрами, балансами користувачів, генерацією посилань Mono та розсилками («Мегафон»).
+- ➕ **Керування модульними допами** (`/admin/tariffs`) — зручний візуальний конструктор модифікаторів калоражу та допів з динамічним збереженням у PostgreSQL.
+- 🛡️ **Зашифровані бекапи та автоматичні крони** — щоденний бекап PostgreSQL 18 з перевіркою відновлення та шифруванням `age`, нічне архівування замовлень, створення Google Таблиць (20-го числа) та черга Outbox кожні 5 хв.
+- 🔍 **Повна SEO-оптимізація та Schema.org** — картки OpenGraph/Twitter, канонічні URL та мікророзмітка `FoodEstablishment` (JSON-LD) для найвищого ранжування в Google.
 - 🖼️ **Галерея відгуків із зумом** — інтерактивні відгуки клієнтів із повноекранним переглядом фотографій у модальному вікні.
 - ☁️ **Хмарне сховище Cloudflare R2 / S3** — швидке завантаження та роздача фотографій страв і рекламних матеріалів.
 - 🎨 **Сучасний дизайн та темна тема** — плавна адаптивна верстка, гласморфізм, продумана типографіка та перемикання світлої/темної теми.
