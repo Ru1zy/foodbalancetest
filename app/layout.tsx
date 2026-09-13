@@ -25,6 +25,24 @@ export const metadata: Metadata = {
     apple: "/icon.png",
   },
   openGraph: {
+    type: "website",
+    locale: "uk_UA",
+    url: "https://foodbalance.com.ua",
+    siteName: "Food Balance",
+    title: "Food Balance - Здорове харчування з доставкою",
+    description: "Замовте здорове харчування з доставкою додому",
+    images: [
+      {
+        url: "/icon.png",
+        width: 500,
+        height: 500,
+        alt: "Food Balance - Здорове харчування з доставкою",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
     title: "Food Balance - Здорове харчування з доставкою",
     description: "Замовте здорове харчування з доставкою додому",
     images: ["/icon.png"],
