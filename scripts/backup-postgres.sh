@@ -34,16 +34,39 @@ for name in "${required[@]}"; do
   export "$name"="$clean_val"
 done
 
-# Deeply sanitize PostgreSQL URL (strip any trailing slashes, newlines, query fragments on dbname)
-DATABASE_PUBLIC_URL="$(python3 -c "
-import os, re
-from urllib.parse import urlsplit, urlunsplit
+# Deeply sanitize PostgreSQL URL and extract connection components
+eval "$(python3 - <<'PY' 2>/dev/null || true
+import os, re, shlex
+from urllib.parse import urlsplit, unquote
+
 raw = re.sub(r'[\r\n]', '', os.environ.get('DATABASE_PUBLIC_URL', '')).strip().strip('\"\'').strip()
 s = urlsplit(raw)
-clean_path = '/' + s.path.strip('/') if s.path else '/railway'
-print(urlunsplit((s.scheme, s.netloc, clean_path, s.query, s.fragment)))
-" 2>/dev/null || sanitize_string "$DATABASE_PUBLIC_URL")"
-export DATABASE_PUBLIC_URL
+host = s.hostname or ''
+port = str(s.port or 5432)
+user = unquote(s.username or '')
+password = unquote(s.password or '')
+db = s.path.strip('/') or 'railway'
+
+clean_url = f"{s.scheme}://{s.netloc}/{db}"
+if s.query:
+    clean_url += f"?{s.query}"
+
+print(f"export PGHOST={shlex.quote(host)}")
+print(f"export PGPORT={shlex.quote(port)}")
+print(f"export PGUSER={shlex.quote(user)}")
+print(f"export PGPASSWORD={shlex.quote(password)}")
+print(f"export PGDATABASE={shlex.quote(db)}")
+print(f"export DATABASE_PUBLIC_URL={shlex.quote(clean_url)}")
+PY
+)"
+
+export PGHOST="${PGHOST:-}"
+export PGPORT="${PGPORT:-5432}"
+export PGUSER="${PGUSER:-}"
+export PGPASSWORD="${PGPASSWORD:-}"
+export PGDATABASE="${PGDATABASE:-railway}"
+export PGSSLMODE="${PGSSLMODE:-require}"
+export DATABASE_PUBLIC_URL="${DATABASE_PUBLIC_URL:-}"
 
 export AWS_ACCESS_KEY_ID="$BACKUP_S3_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$BACKUP_S3_SECRET_ACCESS_KEY"
@@ -78,15 +101,23 @@ cleanup() {
 }
 trap cleanup EXIT
 
+echo "[FoodBalance Backup v2.2.1] Connecting to host=${PGHOST}, port=${PGPORT}, user=${PGUSER}, db=${PGDATABASE}..."
 echo "Creating PostgreSQL 18 custom-format dump..."
 docker run --rm \
-  --env DATABASE_PUBLIC_URL="$DATABASE_PUBLIC_URL" \
-  --env PGSSLMODE="${PGSSLMODE:-require}" \
+  --env PGHOST="$PGHOST" \
+  --env PGPORT="$PGPORT" \
+  --env PGUSER="$PGUSER" \
+  --env PGPASSWORD="$PGPASSWORD" \
+  --env PGDATABASE="$PGDATABASE" \
+  --env PGSSLMODE="$PGSSLMODE" \
   --volume "${work_dir}:/backup" \
   "$BACKUP_POSTGRES_IMAGE" \
   sh -ceu '
-    CLEAN_URL="$(printf "%s" "$DATABASE_PUBLIC_URL" | tr -d "\r\n" | sed -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//" -e "s/^[\"'\'']//" -e "s/[\"'\'']$//" -e "s/^[[:space:]]*//" -e "s/[[:space:]]*$//")"
-    pg_dump --dbname="$CLEAN_URL" --format=custom --compress=9 --no-owner --no-acl --file="/backup/'"${base_name}"'.dump"
+    if [ -n "$PGHOST" ]; then
+      pg_dump -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" --format=custom --compress=9 --no-owner --no-acl --file="/backup/'"${base_name}"'.dump"
+    else
+      pg_dump --dbname="$DATABASE_PUBLIC_URL" --format=custom --compress=9 --no-owner --no-acl --file="/backup/'"${base_name}"'.dump"
+    fi
   '
 
 docker run --rm \

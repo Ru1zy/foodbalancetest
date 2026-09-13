@@ -35,14 +35,18 @@ if source.scheme not in {"postgres", "postgresql"} or not source.hostname:
 restore_name = os.environ["RESTORE_DATABASE"].strip()
 admin = source._replace(path="/postgres", query="", fragment="")
 restore = source._replace(path=f"/{restore_name}", query="", fragment="")
+source_path = '/' + (source.path.strip('/') or 'railway')
+clean_source = source._replace(path=source_path, query="", fragment="")
 print(urlunsplit(admin).strip())
 print(urlunsplit(restore).strip())
+print(urlunsplit(clean_source).strip())
 PY
 )
 
 admin_database_url="${database_urls[0]:-}"
 restore_database_url="${database_urls[1]:-}"
-if [[ -z "$admin_database_url" || -z "$restore_database_url" ]]; then
+clean_source_database_url="${database_urls[2]:-}"
+if [[ -z "$admin_database_url" || -z "$restore_database_url" || -z "$clean_source_database_url" ]]; then
   echo "Could not derive temporary restore URLs." >&2
   exit 1
 fi
@@ -72,7 +76,7 @@ docker run --rm \
 
 tables=(User Order UserBalance Menu Tariff SheetConfig GoogleDriveConnection)
 for table in "${tables[@]}"; do
-  source_count="$(docker run --rm --env PGSSLMODE="${PGSSLMODE:-require}" "$BACKUP_POSTGRES_IMAGE" psql "$DATABASE_PUBLIC_URL" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
+  source_count="$(docker run --rm --env PGSSLMODE="${PGSSLMODE:-require}" "$BACKUP_POSTGRES_IMAGE" psql "$clean_source_database_url" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
   restored_count="$(docker run --rm --env PGSSLMODE="${PGSSLMODE:-require}" "$BACKUP_POSTGRES_IMAGE" psql "$restore_database_url" --tuples-only --no-align --command="SELECT count(*) FROM \"${table}\"")"
   if [[ "$source_count" != "$restored_count" ]]; then
     echo "Restore verification count mismatch for a core table." >&2

@@ -39,7 +39,7 @@ jobs:
       AWS_DEFAULT_REGION: ${{ secrets.BACKUP_S3_REGION }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Install encryption client
         run: |
@@ -52,6 +52,7 @@ jobs:
       - name: Dump, optionally verify, encrypt, and upload
         run: |
           set -euo pipefail
+          echo "=== Running backup workflow on commit ${{ github.sha }} (ref: ${{ github.ref }}) ==="
           export DATABASE_PUBLIC_URL="$(printf '%s' "${DATABASE_PUBLIC_URL:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
           export BACKUP_S3_ENDPOINT="$(printf '%s' "${BACKUP_S3_ENDPOINT:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
           export BACKUP_S3_REGION="$(printf '%s' "${BACKUP_S3_REGION:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
