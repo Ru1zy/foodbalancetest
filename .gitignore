@@ -81,22 +81,14 @@ Thumbs.db
 *.sublime-*
 /.fleet/
 
-# Local agent/session material. These files can contain machine-specific or
-# conversation-specific context and should not be published.
+# Local agent/session material.
 /.claude/
 /AGENTS.md
-/AI_CONTEXT.md
-/CLAUDE.md
-/CLAUDE_SETUP.md
-/SESSION_HISTORY.md
-/TELEGRAM_AUTH_HISTORY.md
-/TEST_INSTRUCTIONS.md
-/DOMAIN_MIGRATION_GUIDE.md
+/OPS_CHEATSHEET.html
+/OPS_CHEATSHEET.pdf
 
-# Local/legacy reference material pending a separate content review.
+# Local/legacy reference material
 /docs/
-/viktor_media/
-/legacy_bot_logic.js
 
 # One-off smoke-test artifacts created during migration verification.
 /scripts/remote-smoke.mjs
