@@ -50,4 +50,12 @@ jobs:
           aws --version
 
       - name: Dump, optionally verify, encrypt, and upload
-        run: bash scripts/backup-postgres.sh
+        run: |
+          set -euo pipefail
+          export DATABASE_PUBLIC_URL="$(printf '%s' "${DATABASE_PUBLIC_URL:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          export BACKUP_S3_ENDPOINT="$(printf '%s' "${BACKUP_S3_ENDPOINT:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          export BACKUP_S3_REGION="$(printf '%s' "${BACKUP_S3_REGION:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          export BACKUP_S3_ACCESS_KEY_ID="$(printf '%s' "${BACKUP_S3_ACCESS_KEY_ID:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          export BACKUP_S3_SECRET_ACCESS_KEY="$(printf '%s' "${BACKUP_S3_SECRET_ACCESS_KEY:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          export BACKUP_S3_BUCKET="$(printf '%s' "${BACKUP_S3_BUCKET:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          bash scripts/backup-postgres.sh

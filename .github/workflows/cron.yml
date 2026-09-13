@@ -43,8 +43,11 @@ jobs:
           set -euo pipefail
           : "${APP_BASE_URL:?Repository secret APP_BASE_URL is not configured}"
           : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
+          APP_BASE_URL="$(printf '%s' "$APP_BASE_URL" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          APP_BASE_URL="${APP_BASE_URL%/}"
+          CRON_SECRET="$(printf '%s' "$CRON_SECRET" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
           curl -fsS --retry 3 --retry-delay 10 -X GET \
-            "${APP_BASE_URL%/}/api/cron/archive-orders" \
+            "${APP_BASE_URL}/api/cron/archive-orders" \
             -H "Authorization: Bearer ${CRON_SECRET}"
         env:
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
@@ -62,8 +65,11 @@ jobs:
           set -euo pipefail
           : "${APP_BASE_URL:?Repository secret APP_BASE_URL is not configured}"
           : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
+          APP_BASE_URL="$(printf '%s' "$APP_BASE_URL" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          APP_BASE_URL="${APP_BASE_URL%/}"
+          CRON_SECRET="$(printf '%s' "$CRON_SECRET" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
           curl -fsS --retry 3 --retry-delay 10 -X GET \
-            "${APP_BASE_URL%/}/api/cron/check-next-month-sheet" \
+            "${APP_BASE_URL}/api/cron/check-next-month-sheet" \
             -H "Authorization: Bearer ${CRON_SECRET}"
         env:
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}
@@ -81,8 +87,11 @@ jobs:
           set -euo pipefail
           : "${APP_BASE_URL:?Repository secret APP_BASE_URL is not configured}"
           : "${CRON_SECRET:?Repository secret CRON_SECRET is not configured}"
+          APP_BASE_URL="$(printf '%s' "$APP_BASE_URL" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
+          APP_BASE_URL="${APP_BASE_URL%/}"
+          CRON_SECRET="$(printf '%s' "$CRON_SECRET" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/")"
           curl -fsS --retry 3 --retry-delay 10 -X GET \
-            "${APP_BASE_URL%/}/api/cron/process-outbox" \
+            "${APP_BASE_URL}/api/cron/process-outbox" \
             -H "Authorization: Bearer ${CRON_SECRET}"
         env:
           APP_BASE_URL: ${{ secrets.APP_BASE_URL }}

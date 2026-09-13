@@ -13,8 +13,8 @@ export const runtime = "nodejs";
  * operational if this fails; the admin receives a manual-recovery alert.
  */
 export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization")?.trim();
+  const cronSecret = process.env.CRON_SECRET?.trim();
 
   if (!cronSecret) {
     console.error("CRON_SECRET is not configured");
@@ -24,7 +24,8 @@ export async function GET(request: Request) {
     );
   }
 
-  if (authHeader !== `Bearer ${cronSecret}`) {
+  const expectedToken = `Bearer ${cronSecret}`;
+  if (authHeader !== expectedToken) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

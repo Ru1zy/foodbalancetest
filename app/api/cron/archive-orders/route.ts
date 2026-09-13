@@ -13,8 +13,8 @@ import { archiveOrdersInSheet } from "@/lib/googleSheets";
  */
 export async function GET(request: Request) {
   // Fail closed: a missing deployment secret must never make this endpoint public.
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization")?.trim();
+  const cronSecret = process.env.CRON_SECRET?.trim();
 
   if (!cronSecret) {
     console.error("CRON_SECRET is not configured");

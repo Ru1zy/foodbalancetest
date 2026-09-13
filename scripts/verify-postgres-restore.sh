@@ -7,6 +7,9 @@ if [[ -z "$dump_file" || ! -f "$dump_file" ]]; then
   exit 1
 fi
 
+DATABASE_PUBLIC_URL="$(printf '%s' "${DATABASE_PUBLIC_URL:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/^"\(.*\)"$/\1/' -e "s/^'\\(.*\\)'$/\\1/" -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+export DATABASE_PUBLIC_URL
+
 if [[ -z "${DATABASE_PUBLIC_URL:-}" || -z "${BACKUP_POSTGRES_IMAGE:-}" ]]; then
   echo "Restore verification environment is incomplete." >&2
   exit 1
@@ -21,18 +24,19 @@ fi
 
 mapfile -t database_urls < <(
   SOURCE_DATABASE_URL="$DATABASE_PUBLIC_URL" RESTORE_DATABASE="$restore_database" python3 - <<'PY'
-import os
+import os, re
 from urllib.parse import urlsplit, urlunsplit
 
-source = urlsplit(os.environ["SOURCE_DATABASE_URL"])
+source_raw = re.sub(r'[\r\n]', '', os.environ["SOURCE_DATABASE_URL"]).strip().strip('\"\'').strip()
+source = urlsplit(source_raw)
 if source.scheme not in {"postgres", "postgresql"} or not source.hostname:
     raise SystemExit("Invalid PostgreSQL source URL")
 
-restore_name = os.environ["RESTORE_DATABASE"]
-admin = source._replace(path="/postgres")
-restore = source._replace(path=f"/{restore_name}")
-print(urlunsplit(admin))
-print(urlunsplit(restore))
+restore_name = os.environ["RESTORE_DATABASE"].strip()
+admin = source._replace(path="/postgres", query="", fragment="")
+restore = source._replace(path=f"/{restore_name}", query="", fragment="")
+print(urlunsplit(admin).strip())
+print(urlunsplit(restore).strip())
 PY
 )
 
