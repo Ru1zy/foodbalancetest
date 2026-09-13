@@ -99,13 +99,14 @@ export default function OrderWizard({
                   <div className="mb-4 flex justify-center">
                     <img
                       src="/foodbalancelogo.png"
-                      alt="Food Balance"
+                      alt="Food Balance — Доставка здорового харчування та раціонів"
                       className="h-32 w-32 object-contain drop-shadow-md transition-transform duration-300 hover:scale-105"
                     />
                   </div>
 
                 <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
                   <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span> <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
+                  <span className="sr-only"> — Доставка здорового харчування та готових раціонів</span>
                 </h1>
 
                 <p className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-600 dark:text-slate-400 mb-4">
