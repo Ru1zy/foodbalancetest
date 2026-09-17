@@ -1,20 +1,17 @@
 "use client";
 
-import { useOrderStore } from "@/lib/orderStore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Logo() {
-  const hardReset = useOrderStore((state) => state.hardReset);
   const router = useRouter();
 
   const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    hardReset();
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     if (window.location.pathname !== "/") {
+      e.preventDefault();
       router.push("/");
     }
   };

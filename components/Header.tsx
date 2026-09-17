@@ -6,6 +6,7 @@ import Logo from "./Logo";
 import prisma from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth-token";
 import { ThemeToggle } from "./ThemeToggle";
+import HeaderCartButton from "./HeaderCartButton";
 
 export default async function Header() {
   const cookieStore = await cookies();
@@ -43,6 +44,7 @@ export default async function Header() {
           <Logo />
 
           <nav className="flex items-center gap-2 sm:gap-4">
+            <HeaderCartButton />
             <ThemeToggle />
             {isAuthenticated ? (
               <>

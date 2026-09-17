@@ -461,12 +461,35 @@ export default function CheckoutPageImpl({
   const currentDraftValid = Boolean(pkg) && cartData.totalDays > 0;
   const hasOrderItems = currentDraftValid || cartItems.length > 0;
 
-  // If cart is empty after store hydration and order is not submitted, redirect to home
+  // If cart is genuinely empty after store hydration and order is not submitted, redirect to home
   useEffect(() => {
-    if (hasHydrated && !hasOrderItems && !submitted) {
-      router.replace("/");
+    if (!hasHydrated || hasOrderItems || submitted) {
+      return;
     }
+    const timer = setTimeout(() => {
+      const state = useOrderStore.getState();
+      const currentPkg = parsePackageType(state.selectedPackage);
+      const hasAnyDraftDays = Object.keys(state.selections).length > 0 || state.selectedDates.length > 0;
+      const hasAnyCart = state.cartItems.length > 0;
+      if (!currentPkg && !hasAnyDraftDays && !hasAnyCart) {
+        router.replace("/");
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
   }, [hasHydrated, hasOrderItems, submitted, router]);
+
+  // Protect against accidental tab closure while in checkout
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasOrderItems && !submitted) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasOrderItems, submitted]);
 
   /** Sum of fiat subtotals for added cart packages. */
   const cartFiatTotal = useMemo(

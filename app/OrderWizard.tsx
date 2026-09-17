@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 
 import type { MenuItem } from "@/lib/menu-types";
 import { getSelectableMenuDayNumbers } from "@/lib/order-logic";
 import { useOrderStore } from "@/lib/orderStore";
+import { parsePackageType } from "@/lib/package-coerce";
+import { getDaySelectedCount, isDaySelectionComplete, isIndivPackage } from "@/lib/order-selection";
 import DateSelector from "./DateSelector";
 import MenuGridClient from "./MenuGridClient";
 import PackageSelector from "./PackageSelector";
@@ -43,7 +45,54 @@ export default function OrderWizard({
 }: Props) {
   const step = useOrderStore((s) => s.step);
   const cartItems = useOrderStore((s) => s.cartItems);
+  const selectedPackageRaw = useOrderStore((s) => s.selectedPackage);
+  const selectedDates = useOrderStore((s) => s.selectedDates);
+  const selections = useOrderStore((s) => s.selections);
+  const resetWizard = useOrderStore((s) => s.resetWizard);
+  const setStep = useOrderStore((s) => s.setStep);
   const [isSushkaView, setIsSushkaView] = useState(false);
+
+  const { draftDays, totalDaysCount, totalPackagesCount, hasCartContent, cartLabel } = useMemo(() => {
+    const pkg = parsePackageType(selectedPackageRaw);
+    let draft = 0;
+
+    if (pkg) {
+      if (pkg.includes("Sushka")) {
+        draft = selectedDates.length;
+      } else {
+        const isIndiv = isIndivPackage(selectedPackageRaw ?? undefined);
+        for (const daySelections of Object.values(selections)) {
+          const count = getDaySelectedCount(daySelections, pkg);
+          if (isIndiv ? count >= 1 : isDaySelectionComplete(count, pkg)) {
+            draft += 1;
+          }
+        }
+      }
+    }
+
+    const addedCartDays = cartItems.reduce((sum, item) => sum + item.dayCount * item.quantity, 0);
+    const addedCartPackages = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+    const totalDays = addedCartDays + draft;
+    const totalPackages = addedCartPackages + (draft > 0 ? 1 : 0);
+
+    let label = "";
+    if (addedCartPackages > 0 && draft > 0) {
+      label = `У кошику: ${totalPackages} рац. (${totalDays} дн.)`;
+    } else if (draft > 0 && selectedPackageRaw) {
+      label = `У кошику: ${selectedPackageRaw} (${draft} ${draft === 1 ? "день" : draft >= 5 ? "днів" : "дні"})`;
+    } else if (addedCartPackages > 0) {
+      label = `У кошику ${addedCartPackages} ${addedCartPackages === 1 ? "раціон" : addedCartPackages >= 5 ? "раціонів" : "раціони"}`;
+    }
+
+    return {
+      draftDays: draft,
+      totalDaysCount: totalDays,
+      totalPackagesCount: totalPackages,
+      hasCartContent: totalDays > 0 || totalPackages > 0,
+      cartLabel: label,
+    };
+  }, [cartItems, selectedPackageRaw, selectedDates, selections]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -153,23 +202,74 @@ export default function OrderWizard({
               </div>
             </>
           )}
+          {hasCartContent && (
+            <div className="w-full rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/70 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
+              <div className="flex items-center gap-3.5">
+                <span className="text-3xl sm:text-4xl select-none">🛒</span>
+                <div>
+                  <div className="font-bold text-emerald-950 dark:text-emerald-100 text-base sm:text-lg">
+                    {draftDays > 0 && selectedPackageRaw ? (
+                      <>
+                        У вас є збережене замовлення: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{selectedPackageRaw}</span> ({draftDays} {draftDays === 1 ? "день" : draftDays >= 5 ? "днів" : "дні"})
+                      </>
+                    ) : (
+                      <>
+                        У вашому кошику є збережені раціони ({totalPackagesCount})
+                      </>
+                    )}
+                  </div>
+                  <div className="text-xs sm:text-sm text-emerald-700 dark:text-emerald-300">
+                    Усі вибрані дні та страви збережено у вашому браузері
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => resetWizard()}
+                  className="flex-1 sm:flex-none text-xs text-slate-500 hover:text-red-500 underline px-2 py-1 transition-colors"
+                >
+                  Очистити
+                </button>
+                {draftDays > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="flex-1 sm:flex-none rounded-xl border border-emerald-600 dark:border-emerald-500 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/60 transition shadow-sm text-center"
+                  >
+                    Змінити страви
+                  </button>
+                )}
+                <Link
+                  href="/checkout"
+                  className="flex-1 sm:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm text-center active:scale-95 whitespace-nowrap"
+                >
+                  Оформити &rarr;
+                </Link>
+              </div>
+            </div>
+          )}
+
           <PackageSelector
             tariffs={tariffs}
             promoMaterials={promoMaterials}
             onSushkaViewChange={setIsSushkaView}
           />
 
-          {cartItems.length > 0 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm">
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-lg flex items-center justify-between dark:bg-emerald-900/90 dark:border-emerald-700">
-                <div className="text-emerald-800 dark:text-emerald-100 text-sm font-semibold">
-                  У кошику {cartItems.length} {cartItems.length === 1 ? "раціон" : cartItems.length >= 5 ? "раціонів" : "раціони"}
+          {hasCartContent && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
+              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xl flex-shrink-0">🛒</span>
+                  <div className="text-slate-800 dark:text-slate-100 text-sm font-semibold truncate">
+                    {cartLabel}
+                  </div>
                 </div>
                 <Link
                   href="/checkout"
-                  className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm"
+                  className="flex-shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm whitespace-nowrap active:scale-95"
                 >
-                  Оформити
+                  Оформити &rarr;
                 </Link>
               </div>
             </div>
@@ -191,6 +291,25 @@ export default function OrderWizard({
             ))}
           </div>
           <DateSelector menuItems={menuItems} orderingMode={orderingMode} tariffs={tariffs} />
+
+          {hasCartContent && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
+              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-xl flex-shrink-0">🛒</span>
+                  <div className="text-slate-800 dark:text-slate-100 text-sm font-semibold truncate">
+                    {cartLabel}
+                  </div>
+                </div>
+                <Link
+                  href="/checkout"
+                  className="flex-shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm whitespace-nowrap active:scale-95"
+                >
+                  Оформити &rarr;
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       );
     case 3:
