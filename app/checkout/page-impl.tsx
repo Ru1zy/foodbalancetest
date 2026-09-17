@@ -86,6 +86,7 @@ export default function CheckoutPageImpl({
   const clearSelections = useOrderStore((state) => state.clearSelections);
   const clearDaySelections = useOrderStore((state) => state.clearDaySelections);
   const resetWizard = useOrderStore((state) => state.resetWizard);
+  const setStep = useOrderStore((state) => state.setStep);
   const setCustomerProfile = useOrderStore((state) => state.setCustomerProfile);
   const setSelectedDates = useOrderStore((state) => state.setSelectedDates);
   const cartItems = useOrderStore((state) => state.cartItems);
@@ -782,13 +783,26 @@ export default function CheckoutPageImpl({
     <FormProvider {...methods}>
       <main className="flex-1 flex flex-col min-h-[100dvh] bg-transparent dark:bg-slate-950/50 px-4 py-10 text-slate-900 dark:text-slate-100 md:px-8">
         <section className="flex-grow mx-auto w-full max-w-6xl pb-20">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700 active:scale-95"
-          >
-            <span>←</span>
-            <span>Повернутися до меню</span>
-          </Link>
+          <div className="flex flex-wrap items-center gap-4">
+            {currentDraftValid && (
+              <Link
+                href="/"
+                onClick={() => setStep(3)}
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 transition hover:text-emerald-700 active:scale-95"
+              >
+                <span>←</span>
+                <span>До вибору страв</span>
+              </Link>
+            )}
+            <Link
+              href="/"
+              onClick={() => setStep(1)}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-500 dark:text-slate-400 transition hover:text-slate-700 dark:hover:text-slate-200 active:scale-95"
+            >
+              <span>🏠</span>
+              <span>На головну</span>
+            </Link>
+          </div>
 
           <div className="mt-5 max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Checkout</p>

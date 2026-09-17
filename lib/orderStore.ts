@@ -391,6 +391,16 @@ export const useOrderStore = create<OrderStore>()(
 }),
     {
       name: "food-balance-storage",
+      partialize: (state) => ({
+        customerProfile: state.customerProfile,
+        customModeDays: state.customModeDays,
+        selectedPackage: state.selectedPackage,
+        selectedDates: state.selectedDates,
+        showSushkaOptions: state.showSushkaOptions,
+        selections: state.selections,
+        cartItems: state.cartItems,
+        draftExtraKcal: state.draftExtraKcal,
+      }),
     }
   )
 );

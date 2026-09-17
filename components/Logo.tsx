@@ -2,11 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useOrderStore } from "@/lib/orderStore";
 
 export default function Logo() {
   const router = useRouter();
+  const setStep = useOrderStore((state) => state.setStep);
 
   const handleLogoClick = (e: React.MouseEvent) => {
+    setStep(1);
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
