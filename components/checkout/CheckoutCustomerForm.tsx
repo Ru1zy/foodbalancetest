@@ -25,6 +25,8 @@ type Props = {
   cartTotalDays: number;
   onValidSubmit: (data: CheckoutSchema) => void;
   feedback: { message: string; tone: "error" | "success" } | null;
+  balanceBreakdownList?: { label: string; days: number }[];
+  totalBalanceDaysUsedAcrossCart?: number;
 };
 
 const CUTLERY_OPTIONS = [0, 1, 2, 3, 4] as const;
@@ -48,19 +50,28 @@ export function CheckoutCustomerForm({
   cartTotalDays,
   onValidSubmit,
   feedback,
+  balanceBreakdownList = [],
+  totalBalanceDaysUsedAcrossCart = 0,
 }: Props) {
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useFormContext<CheckoutSchema>();
+
+  const sendEmailReceipt = watch("sendEmailReceipt");
+  const cutlery = watch("cutlery");
+  const receiptEmail = watch("receiptEmail");
+
+  const prevCutleryRef = useRef<number | null>(null);
 
   const feedbackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (feedback) {
-      feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (feedback && typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [feedback]);
 
@@ -75,10 +86,7 @@ export function CheckoutCustomerForm({
     }
   };
 
-  const orderAmount =
-    cartItems.length > 0
-      ? Math.max(0, grandGrossTotal)
-      : fiatPrice;
+  const orderAmount = Math.max(0, grandGrossTotal);
 
   return (
     <section className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm sm:p-8">
@@ -116,88 +124,114 @@ export function CheckoutCustomerForm({
               </div>
             </div>
           </div>
-        ) : fiatPrice === 0 ? (
+        ) : orderAmount === 0 ? (
           <div className="mt-4 flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/40 px-5 py-4">
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                 <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
-            <div className="font-bold text-emerald-900">Повністю оплачено з абонемента</div>
-          </div>
-        ) : (
-          <div className="mt-4 flex flex-col gap-3">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="radio" 
-                name="paymentMethod" 
-                value="plata"
-                checked={paymentMethod === "plata"}
-                onChange={() => setPaymentMethod("plata")}
-                className="w-4 h-4 text-emerald-600"
-              />
-              <div className="flex items-center text-gray-900 dark:text-slate-100 font-medium">
-                <img src="/images/mono/plata_light_bg.svg" alt="Plata by mono" className="h-5 object-contain block dark:hidden mr-2" />
-                <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-5 object-contain hidden dark:block mr-2" />
+            <div>
+              <div className="font-bold text-emerald-900 dark:text-emerald-100">Повністю оплачено з абонемента</div>
+              <div className="text-xs text-emerald-700 dark:text-emerald-300 mt-0.5">
+                Усі обрані дні замовлення покриваються вашим абонементом (0 ₴)
               </div>
-            </label>
-            {paymentMethod === "plata" && fiatPrice > 0 && (
-              <p className="ml-6 text-sm text-orange-600 dark:text-orange-500 italic">
-                * Платіжні системи можуть стягувати додаткову комісію (1.3%).
-              </p>
-            )}
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="radio" 
-                name="paymentMethod" 
-                value="cash"
-                checked={paymentMethod === "cash"}
-                onChange={() => setPaymentMethod("cash")}
-                className="w-4 h-4 text-emerald-600"
-              />
-              <span className="text-gray-900 dark:text-slate-100 font-medium">Готівкою при отриманні кур&apos;єру</span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="radio" 
-                name="paymentMethod" 
-                value="bank_transfer"
-                checked={paymentMethod === "bank_transfer"}
-                onChange={() => setPaymentMethod("bank_transfer")}
-                className="w-4 h-4 text-emerald-600"
-              />
-              <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на розрахунковий рахунок (IBAN)</span>
-            </label>
-          </div>
-        )}
-
-        {paymentMethod === "bank_transfer" && fiatPrice > 0 && (
-          <div className="mt-4 space-y-3">
-            <IbanPaymentDetails ibanDetails={ibanDetails} amount={orderAmount} />
-            
-            <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-              <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">
-                Завантажте квитанцію про оплату
-              </label>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
-                Прикріпіть файл або скріншот (PNG, JPG або PDF-квитанція з банку)
-              </p>
-              <input 
-                type="file" 
-                accept="image/*,application/pdf,.pdf"
-                onChange={(e) => setFile?.(e.target.files?.[0] || null)}
-                className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-950/60 dark:file:text-emerald-400 cursor-pointer"
-              />
             </div>
           </div>
-        )}
+        ) : (
+          <div className="mt-4 flex flex-col gap-4">
+            {totalBalanceDaysUsedAcrossCart > 0 && (
+              <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 p-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">
+                  <span>🎟️</span>
+                  <span>Покриття абонементом:</span>
+                </div>
+                <ul className="mt-2 space-y-1 text-xs text-emerald-900 dark:text-emerald-200">
+                  {balanceBreakdownList.map((entry, idx) => (
+                    <li key={idx} className="flex justify-between">
+                      <span>• {entry.label}:</span>
+                      <span className="font-semibold text-emerald-700 dark:text-emerald-300">-{entry.days} дн. з абонементу</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-2.5 pt-2 border-t border-emerald-200/60 dark:border-emerald-800/40 flex justify-between text-xs font-bold text-emerald-950 dark:text-emerald-100">
+                  <span>До сплати за решту замовлення:</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 text-sm font-black">{orderAmount} ₴</span>
+                </div>
+              </div>
+            )}
 
-        {balanceDaysToUse > 0 && fiatPrice > 0 && (
-          <p className="mt-3 px-1 text-xs text-slate-500">
-            * Частина замовлення ({balanceDaysToUse} дн.) буде списана з вашого абонемента автоматично.
-          </p>
+            <div className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              Спосіб оплати доплати ({orderAmount} ₴):
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  value="plata"
+                  checked={paymentMethod === "plata"}
+                  onChange={() => setPaymentMethod("plata")}
+                  className="w-4 h-4 text-emerald-600"
+                />
+                <div className="flex items-center text-gray-900 dark:text-slate-100 font-medium">
+                  <img src="/images/mono/plata_light_bg.svg" alt="Plata by mono" className="h-5 object-contain block dark:hidden mr-2" />
+                  <img src="/images/mono/plata_dark_bg.svg" alt="Plata by mono" className="h-5 object-contain hidden dark:block mr-2" />
+                </div>
+              </label>
+              {paymentMethod === "plata" && orderAmount > 0 && (
+                <p className="ml-6 text-sm text-orange-600 dark:text-orange-500 italic">
+                  * Платіжні системи можуть стягувати додаткову комісію (1.3%).
+                </p>
+              )}
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  value="cash"
+                  checked={paymentMethod === "cash"}
+                  onChange={() => setPaymentMethod("cash")}
+                  className="w-4 h-4 text-emerald-600"
+                />
+                <span className="text-gray-900 dark:text-slate-100 font-medium">Готівкою при отриманні кур&apos;єру</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="paymentMethod" 
+                  value="bank_transfer"
+                  checked={paymentMethod === "bank_transfer"}
+                  onChange={() => setPaymentMethod("bank_transfer")}
+                  className="w-4 h-4 text-emerald-600"
+                />
+                <span className="text-gray-900 dark:text-slate-100 font-medium">Переказ на розрахунковий рахунок (IBAN)</span>
+              </label>
+            </div>
+
+            {paymentMethod === "bank_transfer" && orderAmount > 0 && (
+              <div className="mt-2 space-y-3">
+                <IbanPaymentDetails ibanDetails={ibanDetails} amount={orderAmount} />
+                
+                <div className="p-4 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-1">
+                    Завантажте квитанцію про оплату
+                  </label>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+                    Прикріпіть файл або скріншот (PNG, JPG або PDF-квитанція з банку)
+                  </p>
+                  <input 
+                    type="file" 
+                    accept="image/*,application/pdf,.pdf"
+                    onChange={(e) => setFile?.(e.target.files?.[0] || null)}
+                    className="block w-full text-sm text-gray-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 dark:file:bg-emerald-950/60 dark:file:text-emerald-400 cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -347,6 +381,8 @@ export function CheckoutCustomerForm({
                   ? grandGrossTotal > 0
                     ? `До підтвердження: ${grandGrossTotal} ₴ + Інд.`
                     : "Індивідуальний розрахунок"
+                  : grandGrossTotal === 0
+                  ? "До підтвердження: 0 ₴ (оплата з абонемента)"
                   : `До підтвердження: ${grandGrossTotal} ₴`}
               </p>
               <p className="mt-1 text-sm text-slate-500">
@@ -355,24 +391,22 @@ export function CheckoutCustomerForm({
             </div>
             <button
               type="submit"
-              disabled={isPending || (cartTotalDays === 0 && cartItems.length === 0) || (paymentMethod === "bank_transfer" && !file)}
+              disabled={isPending || (cartTotalDays === 0 && cartItems.length === 0) || (paymentMethod === "bank_transfer" && !file && grandGrossTotal > 0)}
               className={`inline-flex w-full items-center justify-center rounded-2xl px-6 py-4 text-base font-bold transition-all duration-200 ease-out active:scale-95 sm:w-full ${
-                isPending || (cartTotalDays === 0 && cartItems.length === 0) || (paymentMethod === "bank_transfer" && !file)
+                isPending || (cartTotalDays === 0 && cartItems.length === 0) || (paymentMethod === "bank_transfer" && !file && grandGrossTotal > 0)
                   ? "cursor-not-allowed bg-slate-200 text-slate-400"
                   : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg"
               }`}
             >
               {isPending
                 ? "Надсилаємо..."
-                : cartItems.length > 0
-                ? "Підтвердити замовлення"
-                : balanceDaysToUse > 0
-                ? fiatPrice > 0
-                  ? `Оформити (${balanceDaysToUse} дні з балансу + ${fiatPrice} ₴)`
-                  : `Оформити (списати ${balanceDaysToUse} дні з балансу)`
+                : grandGrossTotal === 0
+                ? "Оформити з абонемента (0 ₴)"
+                : totalBalanceDaysUsedAcrossCart > 0
+                ? `Підтвердити замовлення (${grandGrossTotal} ₴)`
                 : isIndivPackage(selectedPackageRaw ?? undefined) && orderTotalUah === 0
                 ? "Надіслати заявку"
-                : "Підтвердити замовлення"}
+                : `Підтвердити замовлення (${grandGrossTotal} ₴)`}
             </button>
           </div>
         </div>

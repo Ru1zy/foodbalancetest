@@ -19,28 +19,63 @@ export function BaseEmailLayout({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${subject}</title>
+  <style type="text/css">
+    @media only screen and (max-width: 600px) {
+      .email-wrapper {
+        padding: 10px 0 !important;
+      }
+      .email-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 8px !important;
+      }
+      .email-header {
+        padding: 24px 16px !important;
+      }
+      .email-content {
+        padding: 20px 16px !important;
+      }
+      .email-footer {
+        padding: 20px 16px !important;
+      }
+      .stack-column {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+        padding-bottom: 12px !important;
+      }
+      .stack-column:last-child {
+        padding-bottom: 0 !important;
+      }
+      .mobile-text-left {
+        text-align: left !important;
+      }
+    }
+  </style>
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6;">
-  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f3f4f6; padding: 20px 0;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" class="email-wrapper" style="background-color: #f3f4f6; padding: 20px 0;">
     <tr>
-      <td align="center">
-        <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); margin: 0 auto; max-width: 600px;">
+      <td align="center" style="padding: 0 10px;">
+        <table width="600" border="0" cellspacing="0" cellpadding="0" class="email-card" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); margin: 0 auto; max-width: 600px; width: 100%;">
           <!-- Header -->
           <tr>
-            <td align="center" style="background-color: ${headerColor}; padding: 30px 20px;">
+            <td align="center" class="email-header" style="background-color: ${headerColor}; padding: 30px 20px;">
               <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">${title}</h1>
               <p style="color: ${subtitleColor}; margin: 10px 0 0 0; font-size: 16px;">${subtitle}</p>
             </td>
           </tr>
           <!-- Content -->
           <tr>
-            <td style="padding: 30px 40px;">
+            <td class="email-content" style="padding: 30px 40px;">
               ${content}
             </td>
           </tr>
           <!-- Footer -->
           <tr>
-            <td align="center" style="background-color: #f9fafb; padding: 25px 20px; border-top: 1px solid #e5e7eb;">
+            <td align="center" class="email-footer" style="background-color: #f9fafb; padding: 25px 20px; border-top: 1px solid #e5e7eb;">
               <p style="margin: 0; color: #6b7280; font-size: 14px;">Виникли питання? Напишіть нам!</p>
               <p style="margin: 10px 0 0 0; font-size: 14px;">
                 <a href="https://instagram.com/food.balance.zp" style="color: #047857; text-decoration: none; font-weight: 600; margin-right: 15px;">Instagram</a>
@@ -114,12 +149,12 @@ export function generateOrderReceiptHtml({
     <!-- Order Info -->
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 25px;">
       <tr>
-        <td style="padding-bottom: 15px;">
+        <td class="stack-column" style="padding-bottom: 15px; vertical-align: top;">
           <p style="margin: 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Деталі клієнта</p>
           <p style="margin: 5px 0 0 0; color: #111827; font-size: 16px; font-weight: 500;">${name} (${phone})</p>
           ${address ? `<p style="margin: 5px 0 0 0; color: #374151; font-size: 15px;">📍 ${address}</p>` : ''}
         </td>
-        <td align="right" style="padding-bottom: 15px;">
+        <td class="stack-column mobile-text-left" align="right" style="padding-bottom: 15px; vertical-align: top;">
           ${orderId ? `<p style="margin: 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Замовлення #</p><p style="margin: 5px 0 0 0; color: #111827; font-size: 16px; font-weight: 500;">${orderId.slice(0, 8)}</p>` : ''}
         </td>
       </tr>
@@ -129,13 +164,13 @@ export function generateOrderReceiptHtml({
     <!-- Package & Price -->
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 25px; background-color: #f9fafb; border-radius: 8px; padding: 20px;">
       <tr>
-        <td>
+        <td class="stack-column" style="vertical-align: middle;">
           <p style="margin: 0; color: #6b7280; font-size: 14px;">Раціон</p>
           <p style="margin: 5px 0 0 0; color: #111827; font-size: 18px; font-weight: 600;">${packageType}</p>
         </td>
-        <td align="right">
+        <td class="stack-column mobile-text-left" align="right" style="vertical-align: middle;">
           <p style="margin: 0; color: #6b7280; font-size: 14px;">Сума до сплати</p>
-          <p style="margin: 5px 0 0 0; color: #047857; font-size: 22px; font-weight: 700;">${price !== undefined && price !== null ? `${price} ₴` : 'За балансом'}</p>
+          <p style="margin: 5px 0 0 0; color: #047857; font-size: 22px; font-weight: 700;">${price !== undefined && price !== null && price > 0 ? `${price} ₴` : 'З абонементу'}</p>
         </td>
       </tr>
     </table>
@@ -195,11 +230,11 @@ export function generateSubscriptionReceiptHtml({
     <!-- Order Info -->
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 25px;">
       <tr>
-        <td style="padding-bottom: 15px;">
+        <td class="stack-column" style="padding-bottom: 15px; vertical-align: top;">
           <p style="margin: 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Деталі клієнта</p>
           <p style="margin: 5px 0 0 0; color: #111827; font-size: 16px; font-weight: 500;">${name} (${phone})</p>
         </td>
-        <td align="right" style="padding-bottom: 15px;">
+        <td class="stack-column mobile-text-left" align="right" style="padding-bottom: 15px; vertical-align: top;">
           ${purchaseId ? `<p style="margin: 0; color: #6b7280; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Оплата #</p><p style="margin: 5px 0 0 0; color: #111827; font-size: 16px; font-weight: 500;">${purchaseId.slice(0, 8)}</p>` : ''}
         </td>
       </tr>
@@ -209,11 +244,11 @@ export function generateSubscriptionReceiptHtml({
     <!-- Package & Price -->
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-bottom: 25px; background-color: #f9fafb; border-radius: 8px; padding: 20px;">
       <tr>
-        <td>
+        <td class="stack-column" style="vertical-align: middle;">
           <p style="margin: 0; color: #6b7280; font-size: 14px;">Тариф</p>
           <p style="margin: 5px 0 0 0; color: #111827; font-size: 18px; font-weight: 600;">${packageId} (${days} днів)</p>
         </td>
-        <td align="right">
+        <td class="stack-column mobile-text-left" align="right" style="vertical-align: middle;">
           <p style="margin: 0; color: #6b7280; font-size: 14px;">Сума до сплати</p>
           <p style="margin: 5px 0 0 0; color: #047857; font-size: 22px; font-weight: 700;">${finalPrice} ₴</p>
         </td>

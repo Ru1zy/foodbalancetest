@@ -25,6 +25,9 @@ export async function GET(request: Request) {
   const session = searchParams.get("session");
   const token = searchParams.get("token");
 
+  const redirectParam = searchParams.get("redirect") || "/";
+  const safeRedirect = redirectParam.startsWith("/") && !redirectParam.startsWith("//") ? redirectParam : "/";
+
   // 1. Direct signed session JWT passed from bot
   if (session) {
     try {
@@ -38,7 +41,7 @@ export async function GET(request: Request) {
           sameSite: "lax",
           secure: process.env.NODE_ENV === "production",
         });
-        return NextResponse.redirect(createPublicRedirectUrl("/profile", request));
+        return NextResponse.redirect(createPublicRedirectUrl(safeRedirect, request));
       }
     } catch (error) {
       console.error("GET session verify error:", error);
@@ -70,14 +73,14 @@ export async function GET(request: Request) {
           secure: process.env.NODE_ENV === "production",
         });
         await prisma.authToken.deleteMany({ where: { token: cleanToken } });
-        return NextResponse.redirect(createPublicRedirectUrl("/profile", request));
+        return NextResponse.redirect(createPublicRedirectUrl(safeRedirect, request));
       }
     } catch (error) {
       console.error("GET token verify error:", error);
     }
   }
 
-  return NextResponse.redirect(createPublicRedirectUrl("/", request));
+  return NextResponse.redirect(createPublicRedirectUrl(safeRedirect, request));
 }
 
 export async function POST(request: Request) {

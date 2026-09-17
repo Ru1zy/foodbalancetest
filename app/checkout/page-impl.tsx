@@ -98,6 +98,8 @@ export default function CheckoutPageImpl({
   const [feedback, setFeedback] = useState<FeedbackState | null>(null);
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
+  const [allBalances, setAllBalances] = useState<Record<string, number>>({});
+  const [draftQuantity, setDraftQuantity] = useState<number>(1);
   const [paymentMethod, setPaymentMethod] = useState<"plata" | "cash" | "bank_transfer">("plata");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -166,17 +168,18 @@ export default function CheckoutPageImpl({
   }, [customerProfile, authenticatedUser, normalizedPhone, methods]);
 
   useEffect(() => {
-    if (!pkg) return;
-    
-    fetch(`/api/balance?packageId=${pkg}`)
-      .then(res => res.json())
-      .then(data => {
-        if (typeof data.availableDays === 'number') {
+    fetch("/api/balance")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.balances && typeof data.balances === "object") {
+          setAllBalances(data.balances);
+        }
+        if (typeof data.availableDays === "number" && pkg) {
           setAvailableDays(data.availableDays);
         }
       })
-      .catch(err => console.error("Balance fetch error:", err));
-  }, [pkg]);
+      .catch((err) => console.error("Balance fetch error:", err));
+  }, [customerProfile.isAuthenticated, authenticatedUser, pkg]);
 
   useEffect(() => {
     if (authenticatedUser && !customerProfile.isAuthenticated) {
@@ -315,21 +318,86 @@ export default function CheckoutPageImpl({
     return getOrderTotalUah(pkg, cartData.totalDays, tariffs, totalDishesCount, draftExtraKcal);
   }, [cartData.totalDays, pkg, tariffs, totalDishesCount, draftExtraKcal]);
 
-  const { balanceDaysToUse, fiatPrice } = useMemo(() => {
-    if (!pkg || availableDays === 0) {
-      return { balanceDaysToUse: 0, fiatPrice: orderTotalUah };
+  // Allocate balances across cartItems, then to the draft
+  const {
+    allocatedCartItems,
+    draftAllocation,
+    balanceBreakdownList,
+    totalBalanceDaysUsedAcrossCart,
+  } = useMemo(() => {
+    const remainingBalances: Record<string, number> = { ...allBalances };
+    const breakdownMap: Record<string, number> = {};
+
+    const allocatedItems = cartItems.map((item) => {
+      const pkgType = item.packageType;
+      const totalDaysNeeded = item.dayCount * item.quantity;
+      const available = remainingBalances[pkgType] ?? 0;
+      const balanceDaysUsed = Math.min(available, totalDaysNeeded);
+      remainingBalances[pkgType] = Math.max(0, available - balanceDaysUsed);
+
+      if (balanceDaysUsed > 0) {
+        breakdownMap[pkgType] = (breakdownMap[pkgType] || 0) + balanceDaysUsed;
+      }
+
+      const fiatDays = totalDaysNeeded - balanceDaysUsed;
+      let fiatPrice = 0;
+      if (fiatDays > 0) {
+        // Discount is computed ONLY on fiatDays, preventing subscription days from triggering volume discount!
+        fiatPrice = getOrderTotalUah(pkgType, fiatDays, tariffs, undefined, item.extraKcal);
+      }
+
+      const originalPrice = getOrderTotalUah(pkgType, totalDaysNeeded, tariffs, undefined, item.extraKcal);
+
+      return {
+        ...item,
+        balanceDaysUsed,
+        fiatDays,
+        fiatPrice,
+        originalPrice,
+      };
+    });
+
+    let draftBalanceDaysUsed = 0;
+    let draftFiatDays = 0;
+    let draftFiatPrice = 0;
+
+    if (pkg && cartData.totalDays > 0) {
+      const totalDaysNeeded = cartData.totalDays * draftQuantity;
+      const available = remainingBalances[pkg] ?? 0;
+      draftBalanceDaysUsed = Math.min(available, totalDaysNeeded);
+      remainingBalances[pkg] = Math.max(0, available - draftBalanceDaysUsed);
+
+      if (draftBalanceDaysUsed > 0) {
+        breakdownMap[pkg] = (breakdownMap[pkg] || 0) + draftBalanceDaysUsed;
+      }
+
+      draftFiatDays = totalDaysNeeded - draftBalanceDaysUsed;
+      if (draftFiatDays > 0) {
+        draftFiatPrice = getOrderTotalUah(pkg, draftFiatDays, tariffs, totalDishesCount, draftExtraKcal);
+      }
     }
-    
-    const toUse = Math.min(availableDays, cartData.totalDays);
-    const fiatDays = cartData.totalDays - toUse;
-    
-    let fPrice = 0;
-    if (fiatDays > 0) {
-      fPrice = getOrderTotalUah(pkg, fiatDays, tariffs, totalDishesCount, draftExtraKcal);
-    }
-    
-    return { balanceDaysToUse: toUse, fiatPrice: fPrice };
-  }, [availableDays, cartData.totalDays, orderTotalUah, pkg, tariffs, totalDishesCount, draftExtraKcal]);
+
+    const balanceBreakdownList = Object.entries(breakdownMap).map(([packageId, days]) => ({
+      label: packageId,
+      days,
+    }));
+
+    const totalBalanceDaysUsedAcrossCart = Object.values(breakdownMap).reduce((sum, d) => sum + d, 0);
+
+    return {
+      allocatedCartItems: allocatedItems,
+      draftAllocation: {
+        balanceDaysUsed: draftBalanceDaysUsed,
+        fiatDays: draftFiatDays,
+        fiatPrice: draftFiatPrice,
+      },
+      balanceBreakdownList,
+      totalBalanceDaysUsedAcrossCart,
+    };
+  }, [allBalances, cartItems, pkg, cartData.totalDays, draftQuantity, tariffs, totalDishesCount, draftExtraKcal]);
+
+  const balanceDaysToUse = draftAllocation.balanceDaysUsed;
+  const fiatPrice = draftAllocation.fiatPrice;
 
   const deliveryDate = useMemo(
     () =>
@@ -403,11 +471,11 @@ export default function CheckoutPageImpl({
   /** Sum of fiat subtotals for added cart packages. */
   const cartFiatTotal = useMemo(
     () =>
-      cartItems.reduce(
-        (sum, item) => sum + item.unitPrice * item.quantity,
+      allocatedCartItems.reduce(
+        (sum, item) => sum + item.fiatPrice,
         0,
       ),
-    [cartItems],
+    [allocatedCartItems],
   );
 
   const hasIndivInCart = useMemo(
@@ -453,7 +521,7 @@ export default function CheckoutPageImpl({
       unitPrice: orderTotalUah,
       dayCount: cartData.totalDays,
       dayLabels: summaryDays.map((day) => `${day.dayName} (${day.scheduleLabel})`),
-      quantity: 1,
+      quantity: draftQuantity,
       extraKcal: pkg === "Sport" && draftExtraKcal > 0 ? draftExtraKcal : undefined,
     };
   };
@@ -468,6 +536,7 @@ export default function CheckoutPageImpl({
     if (draft) {
       addCartItem(draft);
     }
+    setDraftQuantity(1);
     clearSelections();
     resetWizard();
     toast.success("Раціон додано до кошика. Оберіть наступний!", {
@@ -567,9 +636,8 @@ export default function CheckoutPageImpl({
       Object.entries(data).forEach(([key, value]) => {
         formData.append(key, String(value));
       });
-      // The server applies balance per individual order, so always pass the
-      // user's chosen fiat method; balance-covered orders resolve to 0 ₴ there.
-      formData.set("paymentMethod", paymentMethod);
+      const effectivePaymentMethod = grandGrossTotal === 0 ? "balance" : paymentMethod;
+      formData.set("paymentMethod", effectivePaymentMethod);
       if (finalReceiptUrl) {
         formData.set("receiptUrl", finalReceiptUrl);
       }
@@ -598,7 +666,7 @@ export default function CheckoutPageImpl({
           },
           deliveryDate: deliveryDate.toISOString(),
           unitPrice: orderTotalUah,
-          quantity: 1,
+          quantity: draftQuantity,
         });
       }
 
@@ -715,10 +783,14 @@ export default function CheckoutPageImpl({
               isAuthenticated={customerProfile.isAuthenticated}
               cartData={cartData}
               selectedPackageRaw={selectedPackageRaw}
-              fiatPrice={fiatPrice}
-              balanceDaysToUse={balanceDaysToUse}
+              fiatPrice={draftAllocation.fiatPrice}
+              balanceDaysToUse={draftAllocation.balanceDaysUsed}
+              draftFiatDays={draftAllocation.fiatDays}
+              draftQuantity={draftQuantity}
+              incrementDraftQuantity={() => setDraftQuantity((q) => Math.min(50, q + 1))}
+              decrementDraftQuantity={() => setDraftQuantity((q) => Math.max(1, q - 1))}
               deliveryDate={deliveryDate}
-              cartItems={cartItems}
+              cartItems={allocatedCartItems}
               cartCopiesCount={cartCopiesCount}
               grandGrossTotal={grandGrossTotal}
               hasIndivInCart={hasIndivInCart}
@@ -726,7 +798,7 @@ export default function CheckoutPageImpl({
               summaryDays={summaryDays}
               incompleteDaysCount={incompleteDaysCount}
               currentDraftValid={currentDraftValid}
-              availableDays={availableDays}
+              availableDays={allBalances[pkg ?? ""] ?? 0}
               paymentMethod={paymentMethod}
               handleAddAnotherPackage={handleAddAnotherPackage}
               handleRemoveDay={handleRemoveDay}
@@ -740,13 +812,13 @@ export default function CheckoutPageImpl({
 
             <CheckoutCustomerForm
               isAuthenticated={customerProfile.isAuthenticated}
-              fiatPrice={fiatPrice}
-              balanceDaysToUse={balanceDaysToUse}
+              fiatPrice={draftAllocation.fiatPrice}
+              balanceDaysToUse={draftAllocation.balanceDaysUsed}
               paymentMethod={paymentMethod}
               setPaymentMethod={setPaymentMethod}
               file={file}
               setFile={setFile}
-              cartItems={cartItems}
+              cartItems={allocatedCartItems}
               grandGrossTotal={grandGrossTotal}
               hasIndivInCart={hasIndivInCart}
               isIndivCurrent={isIndivCurrent}
@@ -757,6 +829,8 @@ export default function CheckoutPageImpl({
               onValidSubmit={onValidSubmit}
               feedback={feedback}
               ibanDetails={ibanDetails}
+              balanceBreakdownList={balanceBreakdownList}
+              totalBalanceDaysUsedAcrossCart={totalBalanceDaysUsedAcrossCart}
             />
           </div>
         </section>

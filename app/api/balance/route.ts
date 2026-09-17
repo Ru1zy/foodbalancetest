@@ -26,26 +26,21 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const packageId = searchParams.get("packageId");
 
-    if (!packageId) {
-      return NextResponse.json({ error: "PackageId is required" }, { status: 400 });
-    }
-
-    const balance = await prisma.userBalance.findUnique({
-      where: {
-        userId_packageId: {
-          userId,
-          packageId,
-        },
-      },
+    const allBalances = await prisma.userBalance.findMany({
+      where: { userId },
     });
 
-    if (!balance) {
-      return NextResponse.json({ availableDays: 0 });
+    const balances: Record<string, number> = {};
+    for (const b of allBalances) {
+      balances[b.packageId] = Math.max(0, b.totalDays - b.usedDays);
     }
 
-    const availableDays = Math.max(0, balance.totalDays - balance.usedDays);
+    const availableDays = packageId ? (balances[packageId] ?? 0) : 0;
 
-    return NextResponse.json({ availableDays });
+    return NextResponse.json({
+      balances,
+      availableDays,
+    });
   } catch (error) {
     console.error("Fetch balance error:", error);
     return NextResponse.json({ error: "Failed to fetch balance" }, { status: 500 });

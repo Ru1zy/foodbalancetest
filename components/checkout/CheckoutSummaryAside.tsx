@@ -10,14 +10,25 @@ import CartItemAddons from "./CartItemAddons";
 
 import TelegramDeepLinkAuth from "@/components/TelegramDeepLinkAuth";
 
+export type AllocatedCartItem = CartItem & {
+  balanceDaysUsed?: number;
+  fiatDays?: number;
+  fiatPrice?: number;
+  originalPrice?: number;
+};
+
 type Props = {
   isAuthenticated?: boolean;
   cartData: OrderCartData;
   selectedPackageRaw: string | null;
   fiatPrice: number;
   balanceDaysToUse: number;
+  draftFiatDays?: number;
+  draftQuantity?: number;
+  incrementDraftQuantity?: () => void;
+  decrementDraftQuantity?: () => void;
   deliveryDate: Date | null;
-  cartItems: CartItem[];
+  cartItems: AllocatedCartItem[];
   cartCopiesCount: number;
   grandGrossTotal: number;
   hasIndivInCart: boolean;
@@ -43,6 +54,10 @@ export function CheckoutSummaryAside({
   selectedPackageRaw,
   fiatPrice,
   balanceDaysToUse,
+  draftFiatDays = 0,
+  draftQuantity = 1,
+  incrementDraftQuantity,
+  decrementDraftQuantity,
   deliveryDate,
   cartItems,
   cartCopiesCount,
@@ -64,7 +79,7 @@ export function CheckoutSummaryAside({
   incrementQuantity,
 }: Props) {
   const totalDaysInCart = cartItems.reduce((acc, item) => acc + (item.dayCount * item.quantity), 0);
-  const grandTotalDays = (currentDraftValid ? summaryDays.length : 0) + totalDaysInCart;
+  const grandTotalDays = (currentDraftValid ? summaryDays.length * draftQuantity : 0) + totalDaysInCart;
 
   // We can track expanded states for each item. 
   // Let's use a simple Set for expanded IDs.
@@ -121,10 +136,17 @@ export function CheckoutSummaryAside({
                         <span className="text-xs sm:text-sm font-bold text-blue-600 dark:text-blue-400">
                           Розрахунок менеджером
                         </span>
+                      ) : (item.fiatPrice === 0 && (item.balanceDaysUsed ?? 0) > 0) ? (
+                        <span className="text-emerald-600 dark:text-emerald-400">0 ₴</span>
                       ) : (
-                        `${item.unitPrice * item.quantity} ₴`
+                        `${item.fiatPrice !== undefined ? item.fiatPrice : item.unitPrice * item.quantity} ₴`
                       )}
                     </div>
+                    {(item.fiatDays ?? 0) >= 5 && (item.fiatPrice ?? 0) > 0 && (
+                      <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                        Знижка -{Math.round(getOrderDiscount(item.packageType, item.fiatDays!) * 100)}% ({item.fiatDays} дн.)
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -134,6 +156,17 @@ export function CheckoutSummaryAside({
                   onChangeExtraKcal={(newKcal) => setCartItemExtraKcal?.(item.id, newKcal)}
                   dayCount={item.dayCount}
                 />
+
+                {(item.balanceDaysUsed ?? 0) > 0 && (
+                  <div className="mt-3 rounded-xl bg-emerald-500/10 p-2.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
+                    З абонементу: -{item.balanceDaysUsed} дн.
+                    {(item.fiatDays ?? 0) > 0 && (
+                      <span className="ml-1 text-slate-600 dark:text-slate-400">
+                        • Доплата за {item.fiatDays} дн.: {item.fiatPrice} ₴
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800 pt-4">
                   <div className="flex items-center gap-3">
@@ -202,15 +235,15 @@ export function CheckoutSummaryAside({
               <div className="flex items-center justify-between gap-3">
                 <span className="text-base font-bold text-slate-900 dark:text-slate-100">{selectedPackageRaw ?? "Оберіть раціон"}</span>
                 {(() => {
-                  const draftDays = currentDraftValid ? summaryDays.length : 0;
-                  const discountRate = selectedPackageRaw ? getOrderDiscount(selectedPackageRaw, draftDays) : 0;
+                  const effectiveFiatDays = currentDraftValid ? draftFiatDays : 0;
+                  const discountRate = selectedPackageRaw && effectiveFiatDays >= 5 ? getOrderDiscount(selectedPackageRaw, effectiveFiatDays) : 0;
                   const discountPercent = Math.round(discountRate * 100);
                   const originalPrice = discountRate > 0 && fiatPrice > 0 ? Math.round(fiatPrice / (1 - discountRate)) : 0;
 
                   return (
                     <div className="flex flex-col items-end">
                       <div className="flex items-center gap-2">
-                        {discountPercent > 0 && balanceDaysToUse === 0 && fiatPrice > 0 && (
+                        {discountPercent > 0 && fiatPrice > 0 && (
                           <span className="text-sm font-medium text-slate-400 dark:text-slate-500 line-through">
                             {originalPrice} ₴
                           </span>
@@ -229,9 +262,9 @@ export function CheckoutSummaryAside({
                           )}
                         </span>
                       </div>
-                      {discountPercent > 0 && balanceDaysToUse === 0 && fiatPrice > 0 && (
+                      {discountPercent > 0 && fiatPrice > 0 && (
                         <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                          Знижка -{discountPercent}% ({draftDays} дн.)
+                          Знижка -{discountPercent}% ({effectiveFiatDays} дн.)
                         </span>
                       )}
                     </div>
@@ -248,9 +281,42 @@ export function CheckoutSummaryAside({
                 />
               )}
               
-              {availableDays > 0 && balanceDaysToUse > 0 && (
+              {balanceDaysToUse > 0 && (
                 <div className="mt-3 rounded-xl bg-emerald-500/10 p-2.5 text-xs font-medium text-emerald-700 dark:text-emerald-300">
                   З абонементу: -{balanceDaysToUse} дн.
+                  {draftFiatDays > 0 && (
+                    <span className="ml-1 text-slate-600 dark:text-slate-400">
+                      • Доплата за {draftFiatDays} дн.: {fiatPrice} ₴
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {incrementDraftQuantity && decrementDraftQuantity && (
+                <div className="mt-4 flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full p-1 border border-slate-200 dark:border-slate-700">
+                      <button
+                        type="button"
+                        onClick={decrementDraftQuantity}
+                        disabled={draftQuantity <= 1}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:text-emerald-600 disabled:opacity-40"
+                      >
+                        −
+                      </button>
+                      <span className="min-w-6 text-center text-sm font-bold text-slate-900 dark:text-slate-100">
+                        {draftQuantity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={incrementDraftQuantity}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white dark:bg-slate-900 text-lg font-bold text-slate-700 dark:text-slate-300 shadow-sm transition hover:text-emerald-600"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <span className="text-xs text-slate-500 font-medium">Кількість порцій</span>
+                  </div>
                 </div>
               )}
               

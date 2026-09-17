@@ -112,7 +112,7 @@ export async function GET(request: Request) {
     });
 
     // Use full URL redirect to ensure cookies are set properly after OAuth
-    return NextResponse.redirect(createPublicRedirectUrl("/profile", request));
+    return NextResponse.redirect(createPublicRedirectUrl("/", request));
   } catch (error) {
     console.error("Telegram OAuth auth failed", error);
     return NextResponse.redirect(createPublicRedirectUrl("/?error=auth_failed", request));

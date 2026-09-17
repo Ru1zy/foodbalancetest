@@ -417,18 +417,24 @@ export async function sendOrderNotification(
     `💵 <b>Сума:</b> ${
       isIndivPackage(order.packageType)
         ? "Індивідуальний розрахунок (уточнюється менеджером за калоражем)"
-        : order.price != null && order.price > 0
-          ? `${order.price} ₴`
-          : order.balanceDaysUsed && order.balanceDaysUsed > 0
-            ? `${order.balanceDaysUsed} дн. з абонементу`
-            : "Індивідуально"
+        : order.balanceDaysUsed && order.balanceDaysUsed > 0 && order.price != null && order.price > 0
+          ? `${order.price} ₴ (з абонементу: -${order.balanceDaysUsed} дн. + доплата: ${order.price} ₴)`
+          : order.price != null && order.price > 0
+            ? `${order.price} ₴`
+            : order.balanceDaysUsed && order.balanceDaysUsed > 0
+              ? `0 ₴ (-${order.balanceDaysUsed} дн. з абонементу)`
+              : "0 ₴"
     }`,
     `💰 <b>Спосіб оплати:</b> ${
       isIndivPackage(order.packageType)
         ? "Після зв'язку з менеджером"
-        : order.paymentMethod === 'bank_transfer'
-          ? 'Переказ (IBAN)'
-          : (order.paymentMethod === 'plata' ? 'Plata' : (order.paymentMethod === 'cash' ? 'Готівкою' : order.paymentMethod))
+        : (order.price == null || order.price === 0) && order.balanceDaysUsed && order.balanceDaysUsed > 0
+          ? "З абонементу"
+          : order.balanceDaysUsed && order.balanceDaysUsed > 0
+            ? `Абонемент + ${order.paymentMethod === 'bank_transfer' ? 'Переказ (IBAN)' : (order.paymentMethod === 'plata' ? 'Plata' : (order.paymentMethod === 'cash' ? 'Готівкою' : order.paymentMethod))}`
+            : order.paymentMethod === 'bank_transfer'
+              ? 'Переказ (IBAN)'
+              : (order.paymentMethod === 'plata' ? 'Plata' : (order.paymentMethod === 'cash' ? 'Готівкою' : order.paymentMethod))
     }`,
     order.receiptUrl ? `🧾 <b>Квитанція:</b> <a href="${order.receiptUrl}">Переглянути</a>` : null,
     `📍 <b>Адреса:</b> ${escapeHtml(user.address || "Не вказано")}`,

@@ -111,3 +111,26 @@ test("manual ordering modes behave correctly", () => {
   assert.equal(isDaySelectable(7, "FORCE_CLOSED"), false);
   assert.deepEqual(getSelectableMenuDayNumbers("FORCE_CLOSED"), []);
 });
+
+test("subscription overage: discount must only evaluate paid days, not subscription days", () => {
+  // Scenario: customer selects 7 days of Slim, but has 5 days in subscription.
+  // 5 days covered by subscription -> 0 UAH
+  // 2 remaining days to pay: 2 * 610 = 1220 UAH.
+  // Discount for 2 fiat days must be 0% (NOT 5% for 7 days, NOT 3% for 5 days).
+  const fiatDays = 2;
+  const fiatPrice = getOrderTotalUah("Slim", fiatDays);
+  assert.equal(fiatPrice, 2 * 610); // 1220 UAH, 0% discount
+  assert.equal(getOrderDiscount("Slim", fiatDays), 0);
+
+  // Scenario: 5 subscription days + 1 extra paid day
+  const singleFiatPrice = getOrderTotalUah("Slim", 1);
+  assert.equal(singleFiatPrice, 610);
+  assert.equal(getOrderDiscount("Slim", 1), 0);
+
+  // Scenario: 5 subscription days + 5 extra paid days (5 paid days qualifies for 3% discount)
+  const fiveFiatPrice = getOrderTotalUah("Slim", 5);
+  // 5 * 610 = 3050 -> 3% discount = 2958.5 -> 2959
+  assert.equal(fiveFiatPrice, 2959);
+  assert.equal(getOrderDiscount("Slim", 5), 0.03);
+});
+

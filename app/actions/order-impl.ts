@@ -535,7 +535,7 @@ async function persistOrderInTransaction(
   let balanceTotalDays = 0;
   let fiatPrice = totalPrice;
 
-  if (userId && paymentMethod !== "cash") {
+  if (userId) {
     const userBalance = await tx.userBalance.findUnique({
       where: {
         userId_packageId: {
@@ -583,7 +583,7 @@ async function persistOrderInTransaction(
   // --- End: Split Payment Calculation ---
 
   // 1. Deduct balance if used — atomic and race-safe.
-  if (balanceDaysToUse > 0 && userId && paymentMethod !== "cash") {
+  if (balanceDaysToUse > 0 && userId) {
     // Conditional update: succeeds only while there are still enough unused days
     // at the moment of the write (usedDays + balanceDaysToUse <= totalDays). The
     // row-level lock serialises concurrent submits, so two tabs / a double click
@@ -662,8 +662,8 @@ async function persistOrderInTransaction(
           packageType: sanitizedCartData.packageType,
           price: fiatPrice,
           balanceDaysUsed: balanceDaysToUse,
-          isPaid: paymentMethod === "cash" ? false : fiatPrice === 0,
-          paymentMethod: paymentMethod || "balance",
+          isPaid: fiatPrice === 0 ? true : paymentMethod === "cash" ? false : false,
+          paymentMethod: fiatPrice === 0 ? "balance" : (paymentMethod || "balance"),
           status: "new",
           userId,
           days: {
@@ -1083,12 +1083,19 @@ export async function submitOrders(
     revalidatePath("/");
     revalidatePath("/admin/orders");
 
-    const firstPrepared = prepared[0];
-    const isPlata = firstPrepared && firstPrepared.paymentMethod === "plata";
+    const totalAmount = results.reduce((sum: number, r: { order: Order }) => sum + (r.order.price ?? 0), 0);
+    const hasPlata = results.some((r: { order: Order }) => r.order.paymentMethod === "plata" && (r.order.price ?? 0) > 0);
 
-    if (!isPlata) {
+    // Any order that is already paid (price === 0 or isPaid: true) or non-plata (cash/bank_transfer)
+    // should immediately dispatch its side effects (Telegram admin alert, email receipt).
+    // Plata orders with price > 0 will have their notifications dispatched upon Monobank webhook callback.
+    const ordersToDispatchNow = results.filter(
+      (r: { order: Order }) => !hasPlata || r.order.paymentMethod !== "plata" || (r.order.price ?? 0) === 0 || r.order.isPaid
+    );
+
+    if (ordersToDispatchNow.length > 0) {
       await Promise.allSettled(
-        results.map((r: { order: Order; user: User; prepared: PreparedOrder }) =>
+        ordersToDispatchNow.map((r: { order: Order; user: User; prepared: PreparedOrder }) =>
           dispatchOrderSideEffects(r.order, r.user, r.prepared.validatedData, r.prepared.sanitizedCartData),
         ),
       );
@@ -1099,27 +1106,23 @@ export async function submitOrders(
       console.error("processAllOutboxJobs error:", err);
     });
 
-
     let pageUrl: string | undefined;
 
-    if (isPlata && idempotencyKey) {
-      const totalAmount = results.reduce((sum: number, r: { order: Order }) => sum + (r.order.price ?? 0), 0);
-      if (totalAmount > 0) {
-        const grossAmount = calculateAmountWithFee(totalAmount);
-        const isTestMode = process.env.MONOBANK_TEST_MODE === "true";
-        const invoiceAmount = isTestMode ? 100 : Math.round(grossAmount * 100);
-        const destination = isTestMode
-          ? `Оплата замовлень (${results.length} шт.) [TEST]`
-          : `Оплата замовлень (${results.length} шт.)`;
+    if (hasPlata && idempotencyKey && totalAmount > 0) {
+      const grossAmount = calculateAmountWithFee(totalAmount);
+      const isTestMode = process.env.MONOBANK_TEST_MODE === "true";
+      const invoiceAmount = isTestMode ? 100 : Math.round(grossAmount * 100);
+      const destination = isTestMode
+        ? `Оплата замовлень (${results.length} шт.) [TEST]`
+        : `Оплата замовлень (${results.length} шт.)`;
 
-        const invoice = await createMonobankInvoice({
-          amount: invoiceAmount,
-          reference: idempotencyKey, // Using the checkout key to identify the batch
-          destination,
-          redirectPath: "/profile",
-        });
-        pageUrl = invoice.pageUrl;
-      }
+      const invoice = await createMonobankInvoice({
+        amount: invoiceAmount,
+        reference: idempotencyKey, // Using the checkout key to identify the batch
+        destination,
+        redirectPath: "/profile",
+      });
+      pageUrl = invoice.pageUrl;
     }
 
     return {
