@@ -52,7 +52,7 @@ export default function OrderWizard({
   const setStep = useOrderStore((s) => s.setStep);
   const [isSushkaView, setIsSushkaView] = useState(false);
 
-  const { draftDays, totalDaysCount, totalPackagesCount, hasCartContent, cartLabel } = useMemo(() => {
+  const { draftDays, draftComplete, canCheckout, totalDaysCount, totalPackagesCount, hasCartContent, cartLabel } = useMemo(() => {
     const pkg = parsePackageType(selectedPackageRaw);
     let draft = 0;
 
@@ -76,6 +76,11 @@ export default function OrderWizard({
     const totalDays = addedCartDays + draft;
     const totalPackages = addedCartPackages + (draft > 0 ? 1 : 0);
 
+    // Draft is complete only when ALL selected days have been fully assembled
+    const isDraftComplete = selectedDates.length > 0 && draft === selectedDates.length;
+    // Can checkout: either the draft is complete, or there are only previously-added cart items (no active draft)
+    const canProceed = (draft > 0 ? isDraftComplete : true) && (totalDays > 0 || totalPackages > 0);
+
     let label = "";
     if (addedCartPackages > 0 && draft > 0) {
       label = `У кошику: ${totalPackages} рац. (${totalDays} дн.)`;
@@ -87,6 +92,8 @@ export default function OrderWizard({
 
     return {
       draftDays: draft,
+      draftComplete: isDraftComplete,
+      canCheckout: canProceed,
       totalDaysCount: totalDays,
       totalPackagesCount: totalPackages,
       hasCartContent: totalDays > 0 || totalPackages > 0,
@@ -182,6 +189,7 @@ export default function OrderWizard({
 
   const renderFloatingCart = () => {
     if (!hasCartContent) return null;
+    const remaining = selectedDates.length - draftDays;
     return (
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
         <div className="rounded-2xl border border-emerald-400/40 dark:border-emerald-500/30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-3 sm:p-4 shadow-2xl shadow-emerald-950/20 flex items-center justify-between gap-3">
@@ -193,18 +201,28 @@ export default function OrderWizard({
               <div className="text-slate-900 dark:text-slate-100 text-xs sm:text-sm font-bold truncate">
                 {cartLabel}
               </div>
-              <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                Збережено у вашому кошику
+              <div className={`text-[10px] font-semibold ${canCheckout ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                {canCheckout
+                  ? "Збережено у вашому кошику"
+                  : `Залишилось зібрати: ${remaining} ${remaining === 1 ? "день" : remaining >= 5 ? "днів" : "дні"}`
+                }
               </div>
             </div>
           </div>
-          <Link
-            href="/checkout"
-            className="flex-shrink-0 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-white transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/40 whitespace-nowrap active:scale-95 flex items-center gap-1.5"
-          >
-            <span>Оформити</span>
-            <span className="text-base leading-none">→</span>
-          </Link>
+          {canCheckout ? (
+            <Link
+              href="/checkout"
+              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-white transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/40 whitespace-nowrap active:scale-95 flex items-center gap-1.5"
+            >
+              <span>Оформити</span>
+              <span className="text-base leading-none">→</span>
+            </Link>
+          ) : (
+            <span className="flex-shrink-0 rounded-xl bg-slate-200 dark:bg-slate-800 px-4 py-2.5 text-xs sm:text-sm font-black text-slate-400 dark:text-slate-600 whitespace-nowrap cursor-not-allowed flex items-center gap-1.5">
+              <span>Оформити</span>
+              <span className="text-base leading-none">→</span>
+            </span>
+          )}
         </div>
       </div>
     );
@@ -310,12 +328,18 @@ export default function OrderWizard({
                     Змінити страви
                   </button>
                 )}
-                <Link
-                  href="/checkout"
-                  className="flex-1 sm:flex-none rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition shadow-sm text-center active:scale-95 whitespace-nowrap"
-                >
-                  Оформити &rarr;
-                </Link>
+                {canCheckout ? (
+                  <Link
+                    href="/checkout"
+                    className="flex-1 sm:flex-none rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition shadow-sm text-center active:scale-95 whitespace-nowrap"
+                  >
+                    Оформити &rarr;
+                  </Link>
+                ) : (
+                  <span className="flex-1 sm:flex-none rounded-xl bg-slate-300 dark:bg-slate-800 px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-600 text-center cursor-not-allowed whitespace-nowrap">
+                    Оформити &rarr;
+                  </span>
+                )}
               </div>
             </div>
           )}
