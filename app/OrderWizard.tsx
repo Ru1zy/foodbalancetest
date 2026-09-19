@@ -366,7 +366,6 @@ export default function OrderWizard({
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center text-center gap-6 px-4 sm:px-6 md:px-8">
           {renderStepper()}
           <MenuGridClient menuItems={menuItems} orderingMode={orderingMode} />
-          {renderFloatingCart()}
         </div>
       );
     default:
