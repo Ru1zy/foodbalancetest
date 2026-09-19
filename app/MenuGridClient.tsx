@@ -74,24 +74,33 @@ function MealSection({
   if (!options || options.length === 0) return null;
   if (!pkg) return null;
 
+  const getCategoryIcon = (cat: string) => {
+    switch (cat) {
+      case "breakfast": return "🌅";
+      case "lunch": return "🍲";
+      case "dinner": return "🌙";
+      case "snack": return "🥪";
+      case "extra": return "⚡";
+      default: return "🍽️";
+    }
+  };
+
   const visibleOptions = isSushka ? options.slice(0, 1) : options;
 
   if (isSushka) {
     return (
-      <div className="mb-4 last:mb-0">
-        <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-emerald-600 md:text-xl">
-          {title}
+      <div className="mb-5 last:mb-0">
+        <div className="mt-5 mb-3 flex items-center gap-2 text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
+          <span>{getCategoryIcon(category)}</span>
+          <span>{title}</span>
         </div>
-        <ul className="space-y-1">
+        <ul className="space-y-1.5">
           {visibleOptions.map((opt, idx) => (
             <li
               key={buildDishOptionKey(itemId, category, opt, idx)}
-              className="break-words text-sm text-gray-700 dark:text-slate-300"
+              className="break-words text-sm text-slate-700 dark:text-slate-300 font-medium pl-2 border-l-2 border-emerald-500/40"
             >
               {opt.full}
-              {opt.short && opt.short !== opt.full && (
-                <span className="text-xs text-gray-500 dark:text-slate-400"> ({opt.short})</span>
-              )}
             </li>
           ))}
         </ul>
@@ -103,11 +112,12 @@ function MealSection({
   const daySelectedCount = progressByDay[itemId]?.selectedCount ?? 0;
 
   return (
-    <div className="mb-4 last:mb-0">
-      <div className="mt-6 mb-3 text-lg font-extrabold uppercase tracking-wider text-emerald-600 md:text-xl">
-        {title}
+    <div className="mb-6 last:mb-0">
+      <div className="mt-6 mb-3 flex items-center gap-2 text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-slate-100">
+        <span>{getCategoryIcon(category)}</span>
+        <span>{title}</span>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         {visibleOptions.map((opt, idx) => {
           if (indivSelected) {
             const dishId = buildIndivDishId(category, idx);
@@ -117,20 +127,23 @@ function MealSection({
             return (
               <div
                 key={dishId}
-                className={`rounded-lg border p-3 text-left text-sm transition ${
-                  quantity > 0 ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/30" : "border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                className={`rounded-2xl border p-4 text-left text-sm transition-all duration-200 ${
+                  quantity > 0
+                    ? "border-emerald-500/80 dark:border-emerald-400/80 bg-emerald-50/70 dark:bg-emerald-950/40 shadow-xs"
+                    : "border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs"
                 } ${disabled ? "opacity-50" : ""}`}
               >
-                <div className="break-words font-medium text-gray-800 dark:text-slate-200">{opt.full}</div>
-                {opt.short && opt.short !== opt.full && (
-                  <div className="break-words text-xs text-gray-500 dark:text-slate-400">{opt.short}</div>
-                )}
+                <div className="break-words font-bold text-slate-900 dark:text-slate-100 leading-snug">
+                  {opt.full}
+                </div>
                 {options.length > 1 && (
-                  <div className="mt-1 text-[9px] text-emerald-500 dark:text-emerald-400">ВАРІАНТ {idx + 1}</div>
+                  <div className="mt-1.5 inline-block text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-100/60 dark:bg-emerald-950/60 px-2 py-0.5 rounded">
+                    Варіант {idx + 1}
+                  </div>
                 )}
-                <div className="mt-3 flex items-center justify-between gap-3">
-                  <div className="text-xs font-semibold text-gray-500 dark:text-slate-400">
-                    Обрано: {quantity}
+                <div className="mt-3 flex items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                    Обрано: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{quantity}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -142,11 +155,13 @@ function MealSection({
                         if (disabled || quantity === 0) return;
                         decrementDish(itemId, dishId);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-base font-bold text-gray-700 dark:text-slate-300 transition hover:border-blue-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-base font-bold text-slate-700 dark:text-slate-200 transition hover:border-emerald-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 shadow-xs"
                     >
                       -
                     </button>
-                    <div className="min-w-8 text-center text-sm font-bold text-gray-900 dark:text-slate-100">{quantity}</div>
+                    <div className="min-w-6 text-center text-sm font-black text-slate-900 dark:text-slate-100">
+                      {quantity}
+                    </div>
                     <button
                       type="button"
                       disabled={disabled || isAtLimit}
@@ -156,7 +171,7 @@ function MealSection({
                         if (disabled || isAtLimit) return;
                         incrementDish(itemId, dishId);
                       }}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-base font-bold text-emerald-600 transition hover:border-emerald-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-600 hover:bg-emerald-500 text-base font-bold text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 shadow-xs"
                     >
                       +
                     </button>
@@ -171,7 +186,6 @@ function MealSection({
             <DishCard
               key={buildDishOptionKey(itemId, category, opt, idx)}
               dishName={opt.full}
-              dishShort={opt.short !== opt.full ? opt.short : undefined}
               variantNumber={options.length > 1 ? idx + 1 : undefined}
               isSelected={isSelected}
               disabled={disabled}
@@ -400,24 +414,45 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
     <>
       <div className="w-full max-w-5xl mx-auto flex flex-col gap-6 pb-32 md:pb-40">
         {step === 3 && (
-          <div className="mb-4 flex flex-col items-center gap-4">
+          <div className="mb-2 flex flex-col items-center gap-3.5 w-full max-w-2xl mx-auto">
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="text-sm font-semibold text-emerald-600 transition hover:text-emerald-800"
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 transition"
             >
-              ← Назад до вибору днів
+              ← Повернутися до вибору днів
             </button>
+
             {sorted.length > 1 && (
-              <div className="flex items-center gap-2">
-                {sorted.map((_, idx) => (
-                  <div
-                    key={idx}
-                    className={`h-2 w-2 rounded-full transition-all ${
-                      idx === activeDayIndex ? "w-6 bg-emerald-500" : "bg-gray-200 dark:bg-slate-700"
-                    }`}
-                  />
-                ))}
+              <div className="flex flex-wrap items-center justify-center gap-1.5 p-1.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-xs backdrop-blur-md">
+                {sorted.map((item, idx) => {
+                  const isDayDone = progressByDay[item.id]?.isComplete;
+                  const isCur = idx === activeDayIndex;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveDayIndex(idx);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                        isCur
+                          ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-sm shadow-emerald-600/20"
+                          : isDayDone
+                          ? "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100"
+                          : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      <span>{dayNames[item.dayOfWeek] || `День ${item.dayOfWeek}`}</span>
+                      {isDayDone && (
+                        <span className={`text-[10px] font-black ${isCur ? "text-white" : "text-emerald-600"}`}>
+                          ✓
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -512,22 +547,34 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                   </div>
                 )}
                 <div className="p-6 sm:p-8">
-                  <div className="mb-6 flex flex-wrap items-center justify-between gap-2 border-b border-gray-50 pb-4">
-                    <h3 className="break-words text-2xl font-black text-gray-900 dark:text-slate-100 sm:text-3xl">
-                      {dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`}
-                    </h3>
-                    <span className="rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700">
-                      {selectedPackageRaw ?? "—"}
-                    </span>
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div>
+                      <h3 className="break-words text-2xl font-black text-slate-900 dark:text-slate-100 sm:text-3xl">
+                        {dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`}
+                      </h3>
+                      <div className="text-xs text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
+                        День {activeDayIndex + 1} з {sorted.length} обраних
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-emerald-100/80 dark:bg-emerald-950/80 px-3.5 py-1 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                        {selectedPackageRaw ?? "—"}
+                      </span>
+                      {currentDayComplete && (
+                        <span className="rounded-full bg-emerald-500 text-white px-2.5 py-1 text-xs font-bold shadow-xs">
+                          ✓ Зібрано
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {!isIndiv && !isSushka && (
                     <button
                       type="button"
                       onClick={() => toggleCustomMode(currentDayItem.id, !currentDayCustom)}
-                      className="mb-6 w-full rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/20 shadow-sm dark:border-emerald-800 py-3 text-base font-bold text-emerald-600 transition-colors hover:bg-emerald-50 active:scale-95"
+                      className="mb-6 w-full rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 shadow-xs py-3 px-4 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 transition-colors hover:bg-emerald-100/70 active:scale-[0.99] flex items-center justify-center gap-2"
                     >
-                      {currentDayCustom ? "Повернутися до стандарту" : "Індивідуальна збірка"}
+                      <span>{currentDayCustom ? "🔄 Повернутися до стандарту" : "✨ Зібрати страви індивідуально"}</span>
                     </button>
                   )}
 
@@ -648,9 +695,9 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                           setActiveDayIndex(prev => prev - 1);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className="flex-1 rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-4 text-sm font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950 disabled:opacity-30 active:scale-95"
+                        className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-3.5 text-sm font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 active:scale-95 shadow-xs"
                       >
-                        ← Назад
+                        ← Попередній день
                       </button>
                       {!isLastDay ? (
                         <button
@@ -661,16 +708,27 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                             setActiveDayIndex(prev => prev + 1);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className={`flex-1 rounded-2xl py-4 text-sm font-bold text-white transition active:scale-95 ${
+                          className={`flex-1 rounded-2xl py-3.5 text-sm font-black text-white transition active:scale-95 shadow-md flex items-center justify-center gap-1.5 ${
                             currentDayComplete
-                              ? "bg-emerald-600 hover:bg-emerald-700"
-                              : "cursor-not-allowed bg-slate-300 text-slate-500"
+                              ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/20"
+                              : "cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500"
                           }`}
                         >
-                          Наступний день →
+                          <span>Наступний день</span>
+                          <span>→</span>
                         </button>
                       ) : (
-                        <div className="flex-1" />
+                        <Link
+                          href="/checkout"
+                          className={`flex-1 rounded-2xl py-3.5 text-sm font-black text-white transition active:scale-95 shadow-md flex items-center justify-center gap-1.5 ${
+                            canProceedToCheckout
+                              ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/20"
+                              : "cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500 pointer-events-none"
+                          }`}
+                        >
+                          <span>До оформлення замовлення</span>
+                          <span>→</span>
+                        </Link>
                       )}
                     </div>
                   </div>

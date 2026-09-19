@@ -837,7 +837,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
             return (
               <div
                 key="sushka-folder"
-                className="w-full flex flex-col rounded-3xl border border-emerald-200/80 dark:border-emerald-900/40 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300"
+                className="w-full flex flex-col rounded-3xl border border-emerald-200/80 dark:border-emerald-900/60 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-2xl hover:border-emerald-500/60 transition-all duration-300 hover:-translate-y-1.5"
               >
                 {/* Top visual banner */}
                 <div
@@ -863,10 +863,11 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
-                    🔥 Експрес-програма
+                  <div className="absolute top-3 left-3 z-20 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-xs font-black text-amber-300 shadow-sm flex items-center gap-1.5">
+                    <span>🔥</span>
+                    <span>Експрес-програма</span>
                   </div>
-                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                  <div className="absolute top-3 right-3 z-20 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                     <span className="text-xs font-black text-white">
                       {sushkaPriceRange ? `від ${sushkaPriceRange.split("–")[0]}` : "від 710 ₴"}
                     </span>{" "}
@@ -874,11 +875,11 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   </div>
 
                   <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
-                    <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-white/90 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                    <div className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-white/90 flex items-center gap-1.5 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
                       <span>🥗</span>
                       <span>3–4 прийоми</span>
                     </div>
-                    <div className="px-2.5 py-1 rounded-lg bg-emerald-950/85 backdrop-blur-md border border-emerald-500/30 text-[10px] sm:text-[11px] font-semibold text-emerald-200 opacity-95 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
+                    <div className="px-2.5 py-1 rounded-lg bg-emerald-950/90 backdrop-blur-md border border-emerald-500/30 text-[11px] font-bold text-emerald-200 opacity-95 group-hover:opacity-100 transition-opacity flex items-center gap-1 shadow-sm">
                       <span>Деталі та тарифи</span>
                       <span>→</span>
                     </div>
@@ -886,7 +887,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                 </div>
 
                 {/* Card Body */}
-                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
+                <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                   <div>
                     <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
                       Сушка «Light»
@@ -896,12 +897,12 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-emerald-900 dark:text-emerald-200">
-                    <span className="flex items-center gap-1.5 font-semibold text-[11px] sm:text-xs">
+                  <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-emerald-900 dark:text-emerald-200">
+                    <span className="flex items-center gap-1.5 font-semibold text-xs">
                       <span>🎟️</span>
                       <span>В абонементі:</span>
                     </span>
-                    <span className="font-bold text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400">
+                    <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400">
                       від 639 ₴/день (-10%)
                     </span>
                   </div>
@@ -909,7 +910,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   <button
                     type="button"
                     onClick={openSushka}
-                    className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all text-center flex items-center justify-center gap-1.5 mt-auto"
+                    className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-[0.98] py-3.5 text-sm font-black text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all text-center flex items-center justify-center gap-2 mt-auto"
                   >
                     <span>Деталі та тарифи Сушки</span>
                     <span>→</span>
@@ -924,12 +925,28 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
           const flyerUrl = pkg.imageUrl || rationMeta?.flyer;
           const previewUrl = pkg.previewImageUrl || DEFAULT_PREVIEWS[pkg.name] || flyerUrl;
 
+          // Program badge based on package name
+          const getProgramBadge = (name: string) => {
+            switch (name) {
+              case "Slim":
+                return { text: "🌱 Зниження ваги", color: "text-emerald-300 border-emerald-400/20" };
+              case "Balance":
+                return { text: "⚖️ Хіт балансу", color: "text-teal-300 border-teal-400/20" };
+              case "Active":
+                return { text: "⚡ Більше енергії", color: "text-orange-300 border-orange-400/20" };
+              case "Sport":
+                return { text: "💪 Спортивний", color: "text-amber-300 border-amber-400/20" };
+              default:
+                return { text: "✨ Готовий раціон", color: "text-emerald-300 border-white/10" };
+            }
+          };
+
           if (pkg.name.toLowerCase().includes("indiv")) {
             const indivPreview = pkg.previewImageUrl || DEFAULT_PREVIEWS["Indiv"] || "/images/meals/individual-meals.jpg";
             return (
               <div
                 key={pkg.id}
-                className="w-full flex flex-col rounded-3xl border border-purple-200/80 dark:border-purple-900/40 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-purple-400/50 dark:hover:border-purple-500/40 transition-all duration-300"
+                className="w-full flex flex-col rounded-3xl border border-purple-200/80 dark:border-purple-900/50 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-2xl hover:border-purple-500/60 transition-all duration-300 hover:-translate-y-1.5"
               >
                 {/* Top visual banner */}
                 <div
@@ -955,15 +972,16 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-purple-300 shadow-sm">
-                    🌟 Персональний
+                  <div className="absolute top-3 left-3 z-20 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-purple-400/20 text-xs font-black text-purple-300 shadow-sm flex items-center gap-1.5">
+                    <span>✨</span>
+                    <span>Конструктор</span>
                   </div>
-                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                  <div className="absolute top-3 right-3 z-20 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                     <span className="text-xs font-black text-white">За меню</span>
                   </div>
 
                   <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
-                    <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-purple-200 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                    <div className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-purple-200 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
                       <span>🔍</span>
                       <span>Фото страв</span>
                     </div>
@@ -973,7 +991,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                         e.stopPropagation();
                         openLightbox(overviewFlyer, "Огляд програм Balance Food та калоражу");
                       }}
-                      className="pointer-events-auto px-2 py-1 rounded-lg bg-purple-900/80 hover:bg-purple-700 backdrop-blur-md border border-purple-300/30 text-[10px] sm:text-[11px] font-semibold text-purple-100 transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                      className="pointer-events-auto px-2.5 py-1 rounded-lg bg-purple-900/80 hover:bg-purple-700 backdrop-blur-md border border-purple-300/30 text-[11px] font-semibold text-purple-100 transition-all flex items-center gap-1 shadow-sm active:scale-95"
                     >
                       <span>📋</span>
                       <span>Калораж</span>
@@ -982,7 +1000,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                 </div>
 
                 {/* Card Body */}
-                <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
+                <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                   <div>
                     <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
                       {pkg.title}
@@ -992,12 +1010,12 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 text-xs text-purple-900 dark:text-purple-200">
-                    <span className="flex items-center gap-1.5 font-semibold text-[11px] sm:text-xs">
+                  <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 text-xs text-purple-900 dark:text-purple-200">
+                    <span className="flex items-center gap-1.5 font-semibold text-xs">
                       <span>🥗</span>
                       <span>Конструктор меню:</span>
                     </span>
-                    <span className="font-bold text-[11px] sm:text-xs text-purple-600 dark:text-purple-400">
+                    <span className="font-bold text-xs text-purple-600 dark:text-purple-400">
                       1–10 страв на день
                     </span>
                   </div>
@@ -1005,7 +1023,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   <button
                     type="button"
                     onClick={() => handleSelectPackage(pkg)}
-                    className="w-full rounded-2xl bg-purple-600 hover:bg-purple-500 active:scale-[0.98] py-3 text-sm font-bold text-white shadow-md shadow-purple-600/20 hover:shadow-purple-600/30 transition-all text-center flex items-center justify-center gap-1.5 mt-auto"
+                    className="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:scale-[0.98] py-3.5 text-sm font-black text-white shadow-md shadow-purple-600/20 hover:shadow-purple-600/30 transition-all text-center flex items-center justify-center gap-2 mt-auto"
                   >
                     <span>Зібрати свій раціон</span>
                     <span>→</span>
@@ -1015,10 +1033,12 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
             );
           }
 
+          const badgeInfo = getProgramBadge(pkg.name);
+
           return (
             <div
               key={pkg.id}
-              className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-400/50 dark:hover:border-emerald-500/40 transition-all duration-300"
+              className="w-full flex flex-col rounded-3xl border border-gray-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-2xl hover:border-emerald-500/60 transition-all duration-300 hover:-translate-y-1.5"
             >
               {/* Top visual banner */}
               {previewUrl && (
@@ -1045,16 +1065,16 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[11px] font-bold text-emerald-300 shadow-sm">
-                    {rationMeta?.mealsBadge || "4 прийоми їжі"}
+                  <div className={`absolute top-3 left-3 z-20 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border ${badgeInfo.color} text-xs font-bold shadow-sm`}>
+                    {badgeInfo.text}
                   </div>
-                  <div className="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
+                  <div className="absolute top-3 right-3 z-20 px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm">
                     <span className="text-xs font-black text-white">{pkg.price}</span>{" "}
                     <span className="text-[10px] text-gray-400 font-medium">/ день</span>
                   </div>
 
                   <div className="absolute bottom-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
-                    <div className="px-2 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[10px] sm:text-[11px] font-medium text-white/90 flex items-center gap-1 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                    <div className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/15 text-[11px] font-medium text-white/90 flex items-center gap-1.5 shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
                       <span>🔍</span>
                       <span>Фото страв</span>
                     </div>
@@ -1065,7 +1085,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                           e.stopPropagation();
                           openLightbox(flyerUrl, `Ціни та знижки: ${pkg.title}`);
                         }}
-                        className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[10px] sm:text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
+                        className="pointer-events-auto px-2.5 py-1 rounded-lg bg-black/70 hover:bg-emerald-600 backdrop-blur-md border border-white/20 text-[11px] font-semibold text-white transition-all flex items-center gap-1 shadow-sm active:scale-95"
                       >
                         <span>📋</span>
                         <span>Таблиця цін</span>
@@ -1076,12 +1096,17 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
               )}
 
               {/* Card Body */}
-              <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between gap-3">
+              <div className="p-5 flex-1 flex flex-col justify-between gap-4">
                 <div>
-                  <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
-                    {pkg.title}
-                  </h3>
-                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white leading-tight">
+                      {pkg.title}
+                    </h3>
+                    <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">
+                      {rationMeta?.mealsBadge || "4 прийоми"}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
                     {pkg.kcal} {rationMeta?.details ? `• ${rationMeta.details}` : ""}
                   </p>
                   {pkg.name.toLowerCase().includes("sport") && (
@@ -1095,13 +1120,13 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                 <div className="flex flex-col gap-2">
                   <Link
                     href={`/profile?tab=subscription&pkg=${encodeURIComponent(pkg.name)}#purchase-subscription`}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-emerald-900 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition group"
+                    className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-xs text-emerald-900 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition group"
                   >
-                    <span className="flex items-center gap-1.5 font-semibold text-[11px] sm:text-xs">
+                    <span className="flex items-center gap-1.5 font-semibold text-xs">
                       <span>🎟️</span>
                       <span>В абонементі:</span>
                     </span>
-                    <span className="font-bold text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                    <span className="font-bold text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                       {rationMeta?.minPriceDay ? `${rationMeta.minPriceDay} (-15%)` : "знижки до -15%"}
                       <span className="group-hover:translate-x-0.5 transition-transform text-emerald-500">→</span>
                     </span>
@@ -1112,7 +1137,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     <button
                       type="button"
                       onClick={() => openLightbox(extraCaloriesFlyer, "Раціони понад 2500 ккал (+35 грн/100 ккал)")}
-                      className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 text-[11px] text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition"
+                      className="flex items-center justify-between px-3.5 py-1.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 text-[11px] text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition"
                     >
                       <span className="flex items-center gap-1 font-semibold">
                         <span>⚡</span>
@@ -1126,7 +1151,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                 <button
                   type="button"
                   onClick={() => handleSelectPackage(pkg)}
-                  className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] py-3 text-sm font-bold text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all text-center flex items-center justify-center gap-1.5 mt-auto"
+                  className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 active:scale-[0.98] py-3.5 text-sm font-black text-white shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/30 transition-all text-center flex items-center justify-center gap-2 mt-auto"
                 >
                   <span>Обрати {pkg.title}</span>
                   <span>→</span>

@@ -2,7 +2,11 @@
 
 :root {
   --background: #f8fafc;
-  --foreground: #171717;
+  --foreground: #0f172a;
+  --brand-emerald: #059669;
+  --brand-emerald-light: #10b981;
+  --brand-orange: #ea580c;
+  --brand-amber: #f59e0b;
 }
 
 @theme inline {
@@ -16,20 +20,71 @@
 @layer base {
   :root {
     --background: #f8fafc;
-    --foreground: #171717;
+    --foreground: #0f172a;
   }
   .dark {
-    --background: #020617; /* slate-950 */
+    --background: #020617; /* deep slate-950 */
     --foreground: #f8fafc; /* slate-50 */
   }
 }
-
-
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-comfortaa), Arial, Helvetica, sans-serif;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glassmorphism & Bento Design Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}
+
+.bento-card {
+  position: relative;
+  border-radius: 1.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease;
+}
+
+.dark .bento-card {
+  background: #0f172a;
+  border: 1px solid rgba(30, 41, 59, 0.9);
+  box-shadow: 0 4px 25px -4px rgba(0, 0, 0, 0.35);
+}
+
+.bento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px -8px rgba(5, 150, 105, 0.15);
+}
+
+.dark .bento-card:hover {
+  box-shadow: 0 16px 36px -8px rgba(5, 150, 105, 0.25);
+}
+
+/* Vibrant FoodTech Glow Utilities */
+.glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.25);
+}
+
+.glow-orange {
+  box-shadow: 0 0 35px -5px rgba(234, 88, 12, 0.25);
 }
 
 /* Animations */
@@ -60,6 +115,21 @@ body {
   animation-delay: 4s;
 }
 
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -85,5 +155,14 @@ body {
 
 .animate-checkmark {
   animation: checkmark 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

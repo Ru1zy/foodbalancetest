@@ -137,6 +137,79 @@ export default function OrderWizard({
     );
   }
 
+  const renderStepper = () => {
+    const stepsList = [
+      { num: 1, label: "Тарифи", icon: "🥗" },
+      { num: 2, label: "Дні доставки", icon: "📅" },
+      { num: 3, label: "Меню та страви", icon: "🍽️" },
+    ];
+
+    return (
+      <nav aria-label="Кроки замовлення" className="w-full max-w-xl mx-auto my-2">
+        <div className="flex items-center justify-between p-1.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md">
+          {stepsList.map((s) => {
+            const isActive = step === s.num;
+            const isCompleted = step > s.num;
+            const canNavigate = s.num === 1 || (s.num === 2 && Boolean(selectedPackageRaw)) || (s.num === 3 && selectedDates.length > 0);
+
+            return (
+              <button
+                key={s.num}
+                type="button"
+                disabled={!canNavigate}
+                onClick={() => {
+                  if (canNavigate) {
+                    setStep(s.num as 1 | 2 | 3);
+                  }
+                }}
+                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
+                  isActive
+                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/20"
+                    : isCompleted
+                    ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer"
+                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60"
+                }`}
+              >
+                <span className="text-sm sm:text-base">{isCompleted ? "✓" : s.icon}</span>
+                <span className="truncate">{s.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
+    );
+  };
+
+  const renderFloatingCart = () => {
+    if (!hasCartContent) return null;
+    return (
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="rounded-2xl border border-emerald-400/40 dark:border-emerald-500/30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-3 sm:p-4 shadow-2xl shadow-emerald-950/20 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center text-lg flex-shrink-0">
+              🛒
+            </div>
+            <div className="min-w-0">
+              <div className="text-slate-900 dark:text-slate-100 text-xs sm:text-sm font-bold truncate">
+                {cartLabel}
+              </div>
+              <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                Збережено у вашому кошику
+              </div>
+            </div>
+          </div>
+          <Link
+            href="/checkout"
+            className="flex-shrink-0 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-white transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/40 whitespace-nowrap active:scale-95 flex items-center gap-1.5"
+          >
+            <span>Оформити</span>
+            <span className="text-base leading-none">→</span>
+          </Link>
+        </div>
+      </div>
+    );
+  };
+
   switch (step) {
     case 1:
       return (
@@ -144,66 +217,63 @@ export default function OrderWizard({
           {/* Hero Section - Visible only on Step 1 when NOT in Sushka Light program presentation */}
           {!isSushkaView && (
             <>
-              <div className="mb-8 text-center relative w-full">
-                  <div className="mb-4 flex justify-center">
-                    <img
-                      src="/foodbalancelogo.png"
-                      alt="Food Balance — Доставка здорового харчування та раціонів"
-                      className="h-32 w-32 object-contain drop-shadow-md transition-transform duration-300 hover:scale-105"
-                    />
-                  </div>
+              <div className="mb-4 text-center relative w-full flex flex-col items-center">
+                {/* Brand Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-400/10 border border-emerald-500/20 dark:border-emerald-400/20 text-emerald-700 dark:text-emerald-300 text-xs sm:text-sm font-bold mb-4 backdrop-blur-sm shadow-xs">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                  <span>Свіже ресторанне харчування щоранку</span>
+                </div>
 
-                <h1 className="mb-6 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
+                <div className="mb-3 flex justify-center">
+                  <img
+                    src="/foodbalancelogo.png"
+                    alt="Food Balance — Доставка здорового харчування та раціонів"
+                    className="h-28 w-28 sm:h-32 sm:w-32 object-contain drop-shadow-md transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+
+                <h1 className="mb-4 text-4xl sm:text-5xl md:text-6xl font-black leading-tight tracking-tighter drop-shadow-md">
                   <span className="bg-gradient-to-b from-emerald-400 to-emerald-600 bg-clip-text text-transparent">Food</span> <span className="bg-gradient-to-b from-orange-400 to-orange-600 bg-clip-text text-transparent">Balance</span>
                   <span className="sr-only"> — Доставка здорового харчування та готових раціонів</span>
                 </h1>
 
-                <p className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-600 dark:text-slate-400 mb-4">
-                  Здорове харчування з доставкою
+                <p className="text-lg sm:text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  Здорове харчування з доставкою до дверей
                 </p>
 
-                <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-8">
-                  Оберіть свій ідеальний раціон харчування та отримайте свіжі страви прямо до дверей
+                <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-8">
+                  Оберіть готовий раціон під власну ціль або складіть індивідуальне меню зі щоденним підрахунком КБЖВ
                 </p>
 
-                {/* Stats */}
-                <div className="mb-12 flex flex-wrap items-center justify-center gap-4">
-                  <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
+                {/* Bento Stats */}
+                <div className="mb-8 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-2xl mx-auto w-full">
+                  <div className="rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-emerald-400/40 transition-all duration-300">
+                    <div className="text-2xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400">
                       1 000+
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Задоволених клієнтів</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Клієнтів на місяць</div>
                   </div>
-                  <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
+                  <div className="rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-orange-400/40 transition-all duration-300">
+                    <div className="text-2xl sm:text-4xl font-black text-orange-600 dark:text-orange-400">
                       75 000+
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Доставлених страв</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Доставлених страв</div>
                   </div>
-                  <div className="rounded-2xl px-8 py-4 border border-slate-100 bg-white dark:bg-slate-900 shadow-md hover:border-gray-300 dark:border-slate-600">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-green-400 bg-clip-text text-transparent">
+                  <div className="rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-emerald-400/40 transition-all duration-300">
+                    <div className="text-2xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400">
                       100%
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-slate-400 font-medium">Свіжі продукти</div>
+                    <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Свіжі продукти</div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-center gap-2">
-                {([1, 2, 3] as const).map((n) => (
-                  <div
-                    key={n}
-                    className={`h-2 w-8 rounded-full transition-colors ${
-                      n === 1 ? "bg-emerald-500" : "bg-emerald-100"
-                    }`}
-                    aria-hidden
-                  />
-                ))}
-              </div>
+              {renderStepper()}
             </>
           )}
+
           {hasCartContent && (
-            <div className="w-full rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/70 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
+            <div className="w-full rounded-2xl border border-emerald-300 dark:border-emerald-700/80 bg-emerald-50/90 dark:bg-emerald-950/70 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300 backdrop-blur-sm">
               <div className="flex items-center gap-3.5">
                 <span className="text-3xl sm:text-4xl select-none">🛒</span>
                 <div>
@@ -242,7 +312,7 @@ export default function OrderWizard({
                 )}
                 <Link
                   href="/checkout"
-                  className="flex-1 sm:flex-none rounded-xl bg-emerald-600 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm text-center active:scale-95 whitespace-nowrap"
+                  className="flex-1 sm:flex-none rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition shadow-sm text-center active:scale-95 whitespace-nowrap"
                 >
                   Оформити &rarr;
                 </Link>
@@ -256,77 +326,23 @@ export default function OrderWizard({
             onSushkaViewChange={setIsSushkaView}
           />
 
-          {hasCartContent && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
-              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xl flex-shrink-0">🛒</span>
-                  <div className="text-slate-800 dark:text-slate-100 text-sm font-semibold truncate">
-                    {cartLabel}
-                  </div>
-                </div>
-                <Link
-                  href="/checkout"
-                  className="flex-shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm whitespace-nowrap active:scale-95"
-                >
-                  Оформити &rarr;
-                </Link>
-              </div>
-            </div>
-          )}
+          {renderFloatingCart()}
         </div>
       );
     case 2:
       return (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center gap-6 px-4 sm:px-6 md:px-8">
-          <div className="flex items-center justify-center gap-2">
-            {([1, 2, 3] as const).map((n) => (
-              <div
-                key={n}
-                className={`h-2 w-8 rounded-full transition-colors ${
-                  n === 2 ? "bg-emerald-500" : "bg-emerald-100"
-                }`}
-                aria-hidden
-              />
-            ))}
-          </div>
+          {renderStepper()}
           <DateSelector menuItems={menuItems} orderingMode={orderingMode} tariffs={tariffs} />
-
-          {hasCartContent && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md">
-              <div className="rounded-2xl border border-emerald-300 dark:border-emerald-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3.5 sm:p-4 shadow-xl flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-xl flex-shrink-0">🛒</span>
-                  <div className="text-slate-800 dark:text-slate-100 text-sm font-semibold truncate">
-                    {cartLabel}
-                  </div>
-                </div>
-                <Link
-                  href="/checkout"
-                  className="flex-shrink-0 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-emerald-700 shadow-sm whitespace-nowrap active:scale-95"
-                >
-                  Оформити &rarr;
-                </Link>
-              </div>
-            </div>
-          )}
+          {renderFloatingCart()}
         </div>
       );
     case 3:
       return (
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center text-center gap-6 px-4 sm:px-6 md:px-8">
-          <div className="flex items-center justify-center gap-2">
-            {([1, 2, 3] as const).map((n) => (
-              <div
-                key={n}
-                className={`h-2 w-8 rounded-full transition-colors ${
-                  n === 3 ? "bg-emerald-500" : "bg-emerald-100"
-                }`}
-                aria-hidden
-              />
-            ))}
-          </div>
+          {renderStepper()}
           <MenuGridClient menuItems={menuItems} orderingMode={orderingMode} />
+          {renderFloatingCart()}
         </div>
       );
     default:

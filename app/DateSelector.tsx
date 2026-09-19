@@ -130,7 +130,7 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
     <>
       {/* Selected package pill & flyer zoom button */}
       <div className="mb-6 flex flex-wrap items-center justify-center gap-2.5">
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 px-4 py-2 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/80 dark:bg-emerald-950/40 px-4 py-2 text-xs sm:text-sm font-bold text-emerald-800 dark:text-emerald-300 shadow-sm backdrop-blur-sm">
           <span>🥗</span>
           <span>Раціон: <strong>{currentTariff?.title || selectedPackage}</strong></span>
           {currentTariff?.kcal && (
@@ -145,7 +145,7 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
               setZoomScale(1);
               setShowFlyerModal(true);
             }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-xs sm:text-sm font-bold text-gray-700 dark:text-slate-300 shadow-sm hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition active:scale-95"
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm px-4 py-2 text-xs sm:text-sm font-bold text-gray-700 dark:text-slate-300 shadow-sm hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition active:scale-95"
           >
             <span>🔍</span>
             <span>Таблиця цін та знижок</span>
@@ -153,13 +153,38 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
         )}
       </div>
 
-      <p className="mb-8 text-center text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">
-        Доступні лише дні поточного тижня меню, для яких ще не минув дедлайн (
-        <span className="font-semibold text-gray-900 dark:text-slate-100">{menuWeekMondayLabel}</span>
-        {isNextOpen ? ", замовлення на наступний тиждень" : ""}).
+      {/* Discount threshold callout */}
+      <div className="mb-6 max-w-xl mx-auto text-center">
+        {selectedDates.length >= 14 ? (
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200">
+            <span>🎉</span>
+            <span>Чудово! Застосовано знижку 10% (від 14 днів)</span>
+          </div>
+        ) : selectedDates.length >= 7 ? (
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200">
+            <span>🎉</span>
+            <span>Застосовано знижку 5%! Ще {14 - selectedDates.length} дн. до максимальної знижки 10%</span>
+          </div>
+        ) : selectedDates.length >= 5 ? (
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200">
+            <span>🎉</span>
+            <span>Застосовано знижку 3%! Ще {7 - selectedDates.length} дн. до знижки 5%</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <span>💡</span>
+            <span>Оберіть від 5 днів, щоб отримати знижку від 3% до 15%</span>
+          </div>
+        )}
+      </div>
+
+      <p className="mb-8 text-center text-sm sm:text-base text-gray-600 dark:text-slate-400 max-w-2xl mx-auto">
+        Оберіть зручні дні доставки (меню на тиждень:{" "}
+        <span className="font-bold text-gray-900 dark:text-slate-100">{menuWeekMondayLabel}</span>
+        {isNextOpen ? ", доступне попереднє замовлення на наступний тиждень" : ""}):
       </p>
 
-      <div className="flex flex-wrap justify-center gap-3 md:gap-4 max-w-4xl mx-auto w-full">
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-4 max-w-4xl mx-auto w-full">
         {selectableDays.map((dow) => {
           const key = String(dow);
           const on = selectedDates.includes(key);
@@ -168,13 +193,31 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
               key={dow}
               type="button"
               onClick={() => toggleDay(dow)}
-              className={`w-full sm:w-[calc(50%-0.75rem)] md:w-[calc(33.333%-1rem)] rounded-2xl border-2 px-6 py-5 text-base font-bold transition-all duration-200 ease-out hover:-translate-y-1 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] active:scale-95 ${
+              className={`w-full sm:w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.75rem)] group relative rounded-2xl border-2 p-5 text-left transition-all duration-300 ease-out hover:-translate-y-1 active:scale-[0.98] ${
                 on
-                  ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-900 dark:text-emerald-400"
-                  : "border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:border-gray-200 dark:border-slate-700"
+                  ? "border-emerald-500 dark:border-emerald-400 bg-emerald-50/90 dark:bg-emerald-950/50 shadow-md shadow-emerald-600/10"
+                  : "border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 hover:border-emerald-400/50 dark:hover:border-emerald-500/40 shadow-xs"
               }`}
             >
-              {dayNames[dow] ?? `День ${dow}`}
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                    День {dow}
+                  </div>
+                  <div className={`text-lg font-black mt-0.5 ${on ? "text-emerald-950 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200"}`}>
+                    {dayNames[dow] ?? `День ${dow}`}
+                  </div>
+                </div>
+                <div
+                  className={`h-8 w-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    on
+                      ? "bg-emerald-500 text-white shadow-sm scale-105"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:text-emerald-500"
+                  }`}
+                >
+                  {on ? "✓" : "+"}
+                </div>
+              </div>
             </button>
           );
         })}
@@ -184,21 +227,27 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="w-full sm:w-auto min-w-[140px] rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 py-4 text-lg font-bold text-gray-700 dark:text-slate-300 transition hover:bg-gray-50 dark:bg-slate-950 active:scale-95"
+          className="w-full sm:w-auto min-w-[140px] rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 py-3.5 text-base font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 shadow-sm"
         >
-          Назад
+          ← Змінити тариф
         </button>
         <button
           type="button"
           disabled={selectedDates.length === 0}
           onClick={() => setStep(3)}
-          className={`w-full sm:w-auto min-w-[200px] rounded-xl px-8 py-4 text-lg font-bold transition-all duration-200 ease-out active:scale-95 ${
+          className={`w-full sm:w-auto min-w-[220px] rounded-2xl px-8 py-3.5 text-base font-black transition-all duration-200 ease-out active:scale-95 flex items-center justify-center gap-2 shadow-md ${
             selectedDates.length > 0
-              ? "bg-gray-900 dark:bg-slate-800 text-white hover:bg-emerald-600 hover:shadow-lg"
-              : "cursor-not-allowed bg-gray-200 dark:bg-slate-700 text-gray-400"
+              ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-emerald-600/20 hover:shadow-emerald-600/40"
+              : "cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400"
           }`}
         >
-          Далі
+          <span>Далі до меню</span>
+          {selectedDates.length > 0 && (
+            <span className="text-xs font-extrabold bg-white/20 px-2 py-0.5 rounded-full">
+              {selectedDates.length} {selectedDates.length === 1 ? "день" : selectedDates.length >= 5 ? "днів" : "дні"}
+            </span>
+          )}
+          <span>→</span>
         </button>
       </div>
 

@@ -70,20 +70,22 @@ export default function HeaderCartButton() {
   return (
     <Link
       href="/checkout"
-      className={`group relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3.5 py-2 text-xs sm:text-sm font-bold transition-all duration-200 active:scale-95 shadow-sm ${
+      className={`group relative flex items-center gap-1.5 sm:gap-2.5 rounded-2xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold transition-all duration-300 active:scale-95 shadow-sm ${
         isCheckoutPage
-          ? "bg-emerald-600 text-white shadow-emerald-500/20"
-          : "bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/80 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 hover:border-emerald-400"
+          ? "bg-emerald-600 text-white shadow-emerald-500/25"
+          : "bg-emerald-500/10 dark:bg-emerald-400/10 border border-emerald-500/30 dark:border-emerald-400/30 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-500/20 hover:border-emerald-500/50 backdrop-blur-md"
       }`}
       title="Перейти до кошика та оплати"
     >
-      <span className="text-base sm:text-lg leading-none transition-transform group-hover:scale-110">🛒</span>
-      <span className="hidden xs:inline">Кошик</span>
+      <span className="text-base sm:text-lg leading-none transition-transform duration-300 group-hover:scale-115">
+        🛒
+      </span>
+      <span className="hidden xs:inline font-black">Кошик</span>
       <span
-        className={`rounded-full px-2 py-0.5 text-[11px] font-extrabold ${
+        className={`rounded-full px-2 py-0.5 text-[11px] font-black tracking-tight ${
           isCheckoutPage
             ? "bg-emerald-700 text-white"
-            : "bg-emerald-600 text-white"
+            : "bg-emerald-600 text-white shadow-xs"
         }`}
       >
         {totalDays > 0 ? `${totalDays} дн.` : `${totalPackages} рац.`}
