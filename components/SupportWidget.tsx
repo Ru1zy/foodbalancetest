@@ -57,17 +57,17 @@ export default function SupportWidget() {
   return (
     <>
       {/* Floating Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-40">
+      <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40">
         <button
           onClick={() => setIsOpen((prev) => !prev)}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-hidden focus:ring-4 focus:ring-emerald-500/30 cursor-pointer"
+          className="group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-hidden focus:ring-4 focus:ring-emerald-500/30 cursor-pointer"
           aria-label="Підтримка та зворотний зв'язок"
         >
           {isOpen ? (
-            <X className="h-6 w-6 transition-transform duration-200" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200" />
           ) : (
             <>
-              <MessageSquare className="h-6 w-6 transition-transform duration-200 group-hover:rotate-6" />
+              <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200 group-hover:rotate-6" />
               {/* Subtle pulsing indicator */}
               <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

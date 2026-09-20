@@ -154,26 +154,28 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
       </div>
 
       {/* Discount threshold callout */}
-      <div className="mb-6 max-w-xl mx-auto text-center">
+      <div className="mb-6 max-w-xl mx-auto text-center px-2">
         {selectedDates.length >= 14 ? (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200 text-center">
             <span>🎉</span>
-            <span>Чудово! Застосовано знижку 10% (від 14 днів)</span>
+            <span>Застосовано знижку 10% (від 14 днів)</span>
           </div>
         ) : selectedDates.length >= 7 ? (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200 text-center">
             <span>🎉</span>
-            <span>Застосовано знижку 5%! Ще {14 - selectedDates.length} дн. до максимальної знижки 10%</span>
+            <span className="sm:hidden">Знижка 5%! Ще {14 - selectedDates.length} дн. до 10%</span>
+            <span className="hidden sm:inline">Застосовано знижку 5%! Ще {14 - selectedDates.length} дн. до знижки 10%</span>
           </div>
         ) : selectedDates.length >= 5 ? (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-300 text-xs sm:text-sm font-black shadow-xs animate-in fade-in duration-200 text-center">
             <span>🎉</span>
-            <span>Застосовано знижку 3%! Ще {7 - selectedDates.length} дн. до знижки 5%</span>
+            <span className="sm:hidden">Знижка 3%! Ще {7 - selectedDates.length} дн. до 5%</span>
+            <span className="hidden sm:inline">Застосовано знижку 3%! Ще {7 - selectedDates.length} дн. до знижки 5%</span>
           </div>
         ) : (
-          <div className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <div className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium text-center">
             <span>💡</span>
-            <span>Оберіть від 5 днів, щоб отримати знижку від 3% до 15%</span>
+            <span>Оберіть від 5 днів для знижки від 3% до 15%</span>
           </div>
         )}
       </div>
@@ -223,11 +225,11 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
         })}
       </div>
 
-      <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <div className="mt-8 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full px-2">
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="w-full sm:w-auto min-w-[140px] rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-8 py-3.5 text-base font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 shadow-sm"
+          className="w-full sm:w-auto min-w-[140px] rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-3 sm:px-8 sm:py-3.5 text-sm sm:text-base font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 shadow-sm text-center"
         >
           ← Змінити тариф
         </button>
@@ -235,7 +237,7 @@ export default function DateSelector({ menuItems, orderingMode = "AUTO", tariffs
           type="button"
           disabled={selectedDates.length === 0}
           onClick={() => setStep(3)}
-          className={`w-full sm:w-auto min-w-[220px] rounded-2xl px-8 py-3.5 text-base font-black transition-all duration-200 ease-out active:scale-95 flex items-center justify-center gap-2 shadow-md ${
+          className={`w-full sm:w-auto min-w-[200px] rounded-2xl px-5 py-3 sm:px-8 sm:py-3.5 text-sm sm:text-base font-black transition-all duration-200 ease-out active:scale-95 flex items-center justify-center gap-2 shadow-md ${
             selectedDates.length > 0
               ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white shadow-emerald-600/20 hover:shadow-emerald-600/40"
               : "cursor-not-allowed bg-slate-200 dark:bg-slate-800 text-slate-400"

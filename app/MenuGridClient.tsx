@@ -866,14 +866,14 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
 
       {/* Floating Bubble Button */}
       {!zoomedImage && (!wizardFilterActive || isLastDay) && (
-        <div className="fixed bottom-6 left-0 right-0 z-[999999] pointer-events-none px-4 flex justify-center transform-gpu translate-z-0">
-          <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-slate-900/95 backdrop-blur-md shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 dark:border-slate-700 rounded-full py-3 px-6 md:px-8 flex items-center justify-between gap-4 transition-all">
-            <div className="flex items-center gap-2 whitespace-nowrap">
-              <span className="text-slate-800 dark:text-slate-200 font-bold text-sm md:text-base">
-                Обрано днів: {completedDaysCount}
+        <div className="fixed bottom-4 sm:bottom-6 left-0 right-0 z-30 pointer-events-none px-3 sm:px-4 flex justify-center transform-gpu translate-z-0">
+          <div className="pointer-events-auto w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-2xl border border-slate-200/80 dark:border-slate-700/80 rounded-2xl sm:rounded-full py-2.5 px-4 sm:py-3 sm:px-6 flex items-center justify-between gap-2.5 sm:gap-4 transition-all">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+              <span className="text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm md:text-base truncate">
+                Обрано: {completedDaysCount} {completedDaysCount === 1 ? "день" : completedDaysCount >= 5 ? "днів" : "дні"}
               </span>
               {completedDaysCount >= 5 && (
-                <span className="rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                <span className="shrink-0 rounded-full bg-emerald-100 dark:bg-emerald-950/80 px-2 py-0.5 text-[10px] sm:text-xs font-black text-emerald-700 dark:text-emerald-300">
                   -{completedDaysCount >= 30 ? "15%" : completedDaysCount >= 14 ? "10%" : completedDaysCount >= 7 ? "5%" : "3%"}
                 </span>
               )}
@@ -881,8 +881,10 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
             <Link
               href={canProceedToCheckout ? "/checkout" : "#"}
               onClick={(e) => !canProceedToCheckout && e.preventDefault()}
-              className={`w-full sm:w-auto text-center bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-6 rounded-full transition-colors shadow-md hover:shadow-lg ${
-                !canProceedToCheckout ? "bg-slate-300 shadow-none hover:shadow-none hover:bg-slate-300 text-slate-500 cursor-not-allowed" : ""
+              className={`flex-shrink-0 text-center font-black py-2 px-4 sm:py-2.5 sm:px-6 rounded-xl sm:rounded-full transition-all shadow-md text-xs sm:text-sm whitespace-nowrap active:scale-95 ${
+                !canProceedToCheckout
+                  ? "bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none"
+                  : "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/25 hover:shadow-emerald-600/40"
               }`}
             >
               Оформити &rarr;

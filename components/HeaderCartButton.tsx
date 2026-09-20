@@ -80,7 +80,7 @@ export default function HeaderCartButton() {
       <span className="text-base sm:text-lg leading-none transition-transform duration-300 group-hover:scale-115">
         🛒
       </span>
-      <span className="hidden xs:inline font-black">Кошик</span>
+      <span className="hidden sm:inline font-black">Кошик</span>
       <span
         className={`rounded-full px-2 py-0.5 text-[11px] font-black tracking-tight ${
           isCheckoutPage

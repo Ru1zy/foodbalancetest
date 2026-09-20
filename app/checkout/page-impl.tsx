@@ -462,20 +462,25 @@ export default function CheckoutPageImpl({
   const currentDraftValid = Boolean(pkg) && cartData.totalDays > 0;
   const hasOrderItems = currentDraftValid || cartItems.length > 0;
 
-  // If cart is genuinely empty after store hydration and order is not submitted, redirect to home
+  // If cart is empty after store hydration and order is not submitted, redirect to home
   useEffect(() => {
     if (!hasHydrated || hasOrderItems || submitted) {
       return;
     }
     const timer = setTimeout(() => {
-      const state = useOrderStore.getState();
-      const currentPkg = parsePackageType(state.selectedPackage);
-      const hasAnyDraftDays = Object.keys(state.selections).length > 0 || state.selectedDates.length > 0;
-      const hasAnyCart = state.cartItems.length > 0;
-      if (!currentPkg && !hasAnyDraftDays && !hasAnyCart) {
+      try {
         router.replace("/");
+      } catch {
+        window.location.href = "/";
       }
-    }, 400);
+      // Backup hard redirect if Next.js router is unresponsive on mobile
+      const backupTimer = setTimeout(() => {
+        if (typeof window !== "undefined" && window.location.pathname.includes("/checkout")) {
+          window.location.href = "/";
+        }
+      }, 1000);
+      return () => clearTimeout(backupTimer);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, [hasHydrated, hasOrderItems, submitted, router]);
@@ -768,12 +773,27 @@ export default function CheckoutPageImpl({
 
   if (hasHydrated && !hasOrderItems) {
     return (
-      <main className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Кошик порожній. Перенаправлення на головну...
-          </p>
+      <main className="flex-1 flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
+        <div className="flex flex-col items-center gap-4 max-w-sm mx-auto p-6 rounded-3xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md animate-in fade-in duration-300">
+          <div className="h-14 w-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/80 flex items-center justify-center text-2xl shadow-xs">
+            🛒
+          </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-100">
+              Ваш кошик порожній
+            </h2>
+            <p className="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">
+              Перенаправляємо на головну для вибору раціону...
+            </p>
+          </div>
+          <div className="h-6 w-6 animate-spin rounded-full border-3 border-emerald-500 border-t-transparent my-1" />
+          <Link
+            href="/"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold px-5 py-3 text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition-all"
+          >
+            <span>←</span>
+            <span>Повернутися до меню</span>
+          </Link>
         </div>
       </main>
     );

@@ -146,14 +146,14 @@ export default function OrderWizard({
 
   const renderStepper = () => {
     const stepsList = [
-      { num: 1, label: "Тарифи", icon: "🥗" },
-      { num: 2, label: "Дні доставки", icon: "📅" },
-      { num: 3, label: "Меню та страви", icon: "🍽️" },
+      { num: 1, label: "Тарифи", shortLabel: "Тарифи", icon: "🥗" },
+      { num: 2, label: "Дні доставки", shortLabel: "Дні", icon: "📅" },
+      { num: 3, label: "Меню та страви", shortLabel: "Меню", icon: "🍽️" },
     ];
 
     return (
-      <nav aria-label="Кроки замовлення" className="w-full max-w-xl mx-auto my-2">
-        <div className="flex items-center justify-between p-1.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md">
+      <nav aria-label="Кроки замовлення" className="w-full max-w-xl mx-auto my-2 px-1 sm:px-0">
+        <div className="flex items-center justify-between p-1 sm:p-1.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md gap-1 sm:gap-1.5">
           {stepsList.map((s) => {
             const isActive = step === s.num;
             const isCompleted = step > s.num;
@@ -169,7 +169,7 @@ export default function OrderWizard({
                     setStep(s.num as 1 | 2 | 3);
                   }
                 }}
-                className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
+                className={`min-w-0 flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-1.5 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
                   isActive
                     ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/20"
                     : isCompleted
@@ -177,8 +177,9 @@ export default function OrderWizard({
                     : "text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60"
                 }`}
               >
-                <span className="text-sm sm:text-base">{isCompleted ? "✓" : s.icon}</span>
-                <span className="truncate">{s.label}</span>
+                <span className="text-xs sm:text-base flex-shrink-0">{isCompleted ? "✓" : s.icon}</span>
+                <span className="sm:hidden text-xs font-bold truncate">{s.shortLabel}</span>
+                <span className="hidden sm:inline truncate">{s.label}</span>
               </button>
             );
           })}
@@ -191,17 +192,17 @@ export default function OrderWizard({
     if (!hasCartContent) return null;
     const remaining = selectedDates.length - draftDays;
     return (
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
-        <div className="rounded-2xl border border-emerald-400/40 dark:border-emerald-500/30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-3 sm:p-4 shadow-2xl shadow-emerald-950/20 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center text-lg flex-shrink-0">
+      <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="rounded-2xl border border-emerald-400/40 dark:border-emerald-500/30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-2.5 sm:p-4 shadow-2xl shadow-emerald-950/20 flex items-center justify-between gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center text-base sm:text-lg flex-shrink-0">
               🛒
             </div>
             <div className="min-w-0">
               <div className="text-slate-900 dark:text-slate-100 text-xs sm:text-sm font-bold truncate">
                 {cartLabel}
               </div>
-              <div className={`text-[10px] font-semibold ${canCheckout ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+              <div className={`text-[10px] font-semibold truncate ${canCheckout ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
                 {canCheckout
                   ? "Збережено у вашому кошику"
                   : `Залишилось зібрати: ${remaining} ${remaining === 1 ? "день" : remaining >= 5 ? "днів" : "дні"}`
@@ -212,15 +213,15 @@ export default function OrderWizard({
           {canCheckout ? (
             <Link
               href="/checkout"
-              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 px-4 py-2.5 text-xs sm:text-sm font-black text-white transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/40 whitespace-nowrap active:scale-95 flex items-center gap-1.5"
+              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-black text-white transition-all shadow-md shadow-emerald-600/20 hover:shadow-emerald-600/40 whitespace-nowrap active:scale-95 flex items-center gap-1"
             >
               <span>Оформити</span>
-              <span className="text-base leading-none">→</span>
+              <span className="text-sm sm:text-base leading-none">→</span>
             </Link>
           ) : (
-            <span className="flex-shrink-0 rounded-xl bg-slate-200 dark:bg-slate-800 px-4 py-2.5 text-xs sm:text-sm font-black text-slate-400 dark:text-slate-600 whitespace-nowrap cursor-not-allowed flex items-center gap-1.5">
+            <span className="flex-shrink-0 rounded-xl bg-slate-200 dark:bg-slate-800 px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-black text-slate-400 dark:text-slate-600 whitespace-nowrap cursor-not-allowed flex items-center gap-1">
               <span>Оформити</span>
-              <span className="text-base leading-none">→</span>
+              <span className="text-sm sm:text-base leading-none">→</span>
             </span>
           )}
         </div>
@@ -311,11 +312,11 @@ export default function OrderWizard({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => resetWizard()}
-                  className="flex-1 sm:flex-none text-xs text-slate-500 hover:text-red-500 underline px-2 py-1 transition-colors"
+                  className="text-xs text-slate-500 hover:text-red-500 underline px-2 py-1 transition-colors mr-auto sm:mr-0"
                 >
                   Очистити
                 </button>
@@ -323,7 +324,7 @@ export default function OrderWizard({
                   <button
                     type="button"
                     onClick={() => setStep(3)}
-                    className="flex-1 sm:flex-none rounded-xl border border-emerald-600 dark:border-emerald-500 px-3.5 py-2 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/60 transition shadow-sm text-center"
+                    className="flex-1 sm:flex-none rounded-xl border border-emerald-600 dark:border-emerald-500 px-3 py-2 text-xs sm:text-sm font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/60 transition shadow-sm text-center whitespace-nowrap"
                   >
                     Змінити страви
                   </button>
@@ -331,12 +332,12 @@ export default function OrderWizard({
                 {canCheckout ? (
                   <Link
                     href="/checkout"
-                    className="flex-1 sm:flex-none rounded-xl bg-emerald-600 hover:bg-emerald-700 px-5 py-2.5 text-xs sm:text-sm font-bold text-white transition shadow-sm text-center active:scale-95 whitespace-nowrap"
+                    className="flex-1 sm:flex-none rounded-xl bg-emerald-600 hover:bg-emerald-700 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold text-white transition shadow-sm text-center active:scale-95 whitespace-nowrap"
                   >
                     Оформити &rarr;
                   </Link>
                 ) : (
-                  <span className="flex-1 sm:flex-none rounded-xl bg-slate-300 dark:bg-slate-800 px-5 py-2.5 text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-600 text-center cursor-not-allowed whitespace-nowrap">
+                  <span className="flex-1 sm:flex-none rounded-xl bg-slate-300 dark:bg-slate-800 px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-bold text-slate-400 dark:text-slate-600 text-center cursor-not-allowed whitespace-nowrap">
                     Оформити &rarr;
                   </span>
                 )}
