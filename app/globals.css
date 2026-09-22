@@ -166,3 +166,57 @@ body {
   }
 }
 
+/* Telegram HTML Preview Styles */
+.telegram-html-preview b, .telegram-html-preview strong {
+  font-weight: 700;
+}
+.telegram-html-preview i, .telegram-html-preview em {
+  font-style: italic;
+}
+.telegram-html-preview u {
+  text-decoration: underline;
+}
+.telegram-html-preview s, .telegram-html-preview del, .telegram-html-preview strike {
+  text-decoration: line-through;
+}
+.telegram-html-preview code {
+  background: rgba(0, 0, 0, 0.07);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+}
+.dark .telegram-html-preview code {
+  background: rgba(255, 255, 255, 0.12);
+}
+.telegram-html-preview blockquote {
+  border-left: 3px solid #3b82f6;
+  padding-left: 8px;
+  margin: 6px 0;
+  font-style: italic;
+  opacity: 0.92;
+}
+.telegram-html-preview a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.dark .telegram-html-preview a {
+  color: #60a5fa;
+}
+.telegram-html-preview .telegram-spoiler {
+  background-color: #64748b;
+  color: transparent;
+  border-radius: 4px;
+  padding: 1px 5px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+.telegram-html-preview .telegram-spoiler:hover,
+.telegram-html-preview .telegram-spoiler.revealed {
+  background-color: rgba(100, 116, 139, 0.2);
+  color: inherit;
+}
+
+
