@@ -83,6 +83,7 @@ Thumbs.db
 
 # Local agent/session material.
 /.claude/
+/.agents/
 /AGENTS.md
 /OPS_CHEATSHEET.html
 /OPS_CHEATSHEET.pdf

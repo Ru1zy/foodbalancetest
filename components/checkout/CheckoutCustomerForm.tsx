@@ -5,6 +5,7 @@ import { CartItem } from "@/lib/orderStore";
 import { CheckoutSchema } from "@/lib/validations";
 import { SITE_CONFIG } from "@/lib/site-config";
 import IbanPaymentDetails from "@/components/payment/IbanPaymentDetails";
+import DeliveryAddressPicker from "./DeliveryAddressPicker";
 
 type Props = {
   isAuthenticated?: boolean;
@@ -68,6 +69,10 @@ export function CheckoutCustomerForm({
   const prevCutleryRef = useRef<number | null>(null);
 
   const feedbackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    register("address");
+  }, [register]);
 
   useEffect(() => {
     if (feedback && typeof window !== "undefined") {
@@ -290,24 +295,15 @@ export function CheckoutCustomerForm({
           </label>
         </div>
 
-        <label className="block">
-          <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Адреса доставки</span>
-          <textarea
-            {...register("address")}
-            aria-invalid={errors.address ? "true" : "false"}
-            autoComplete="street-address"
-            className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 scroll-mt-32 ${
-              errors.address
-                ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
-            }`}
-            placeholder="Вулиця, будинок, квартира, під’їзд, орієнтир"
-            rows={3}
+        <div>
+          <DeliveryAddressPicker
+            value={watch("address") || ""}
+            onChange={(concatenated) => {
+              setValue("address", concatenated, { shouldValidate: true, shouldDirty: true });
+            }}
+            error={errors.address?.message}
           />
-          {errors.address && (
-            <span className="mt-2 block text-sm text-red-600">{errors.address.message}</span>
-          )}
-        </label>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2 md:gap-5">
           <label className="block">
