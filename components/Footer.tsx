@@ -33,8 +33,13 @@ export default async function Footer() {
           <h3 className="text-lg font-bold text-white mb-4">Контакти</h3>
           <div className="flex flex-col space-y-3 text-sm text-slate-300 dark:text-slate-400">
             {settings.contactPhone && (
-              <a href={`tel:${settings.contactPhone}`} className="flex items-center gap-2 hover:text-emerald-400 transition-colors">
-                <Phone className="w-4 h-4" /> {settings.contactPhone}
+              <a 
+                href={`tel:${settings.contactPhone.replace(/[^\d+]/g, "")}`} 
+                className="flex items-center gap-2 hover:text-emerald-400 transition-colors group"
+                title="Зателефонувати нам"
+              >
+                <Phone className="w-4 h-4 text-emerald-500 shrink-0 group-hover:scale-110 transition-transform" />
+                <span>{settings.contactPhone}</span>
               </a>
             )}
             <a 

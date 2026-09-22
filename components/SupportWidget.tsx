@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { MessageSquare, X, Send, Phone, CheckCircle2 } from "lucide-react";
 import { FaTelegram } from "react-icons/fa";
 import { createSupportTicketAction } from "@/app/actions/feedback";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 export default function SupportWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -114,7 +115,7 @@ export default function SupportWidget() {
                 </p>
                 <div className="grid grid-cols-2 gap-2.5">
                   <a
-                    href="https://t.me/foodbalancezp"
+                    href={SITE_CONFIG.telegram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-sky-50 dark:bg-sky-950/50 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-300 text-xs font-bold transition cursor-pointer"
@@ -122,10 +123,20 @@ export default function SupportWidget() {
                     <FaTelegram className="h-4 w-4" /> Telegram
                   </a>
                   <a
-                    href="tel:+380990000000"
+                    href={`tel:${SITE_CONFIG.phone.replace(/[^\d+]/g, "")}`}
                     className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold transition cursor-pointer"
+                    title={`Зателефонувати: ${SITE_CONFIG.phoneDisplay}`}
                   >
                     <Phone className="h-4 w-4" /> Зателефонувати
+                  </a>
+                </div>
+                <div className="mt-2 text-center">
+                  <a
+                    href={`tel:${SITE_CONFIG.phone.replace(/[^\d+]/g, "")}`}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 hover:underline transition-colors"
+                  >
+                    <Phone className="h-3 w-3" />
+                    <span>{SITE_CONFIG.phoneDisplay}</span>
                   </a>
                 </div>
               </div>

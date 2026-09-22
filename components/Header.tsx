@@ -7,6 +7,8 @@ import prisma from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth-token";
 import { ThemeToggle } from "./ThemeToggle";
 import HeaderCartButton from "./HeaderCartButton";
+import { Phone } from "lucide-react";
+import { SITE_CONFIG } from "@/lib/site-config";
 
 export default async function Header() {
   const cookieStore = await cookies();
@@ -43,7 +45,16 @@ export default async function Header() {
         <div className="flex h-20 items-center justify-between">
           <Logo />
 
-          <nav className="flex items-center gap-2 sm:gap-4">
+          <nav className="flex items-center gap-2 sm:gap-3">
+            {/* Corporate phone quick call button */}
+            <a
+              href={`tel:${(SITE_CONFIG.phone || "+380930150507").replace(/[^\d+]/g, "")}`}
+              className="hidden md:inline-flex items-center gap-2 px-3.5 py-2 rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/50 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200 text-xs xl:text-sm font-bold shadow-2xs group cursor-pointer"
+              title="Зателефонувати до Food Balance"
+            >
+              <Phone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+              <span>{SITE_CONFIG.phoneDisplay || "+380 93 015 05 07"}</span>
+            </a>
             <HeaderCartButton />
             <ThemeToggle />
             {isAuthenticated ? (

@@ -333,7 +333,7 @@ export default function GeneralSettingsClient({ initialSettings }: Props) {
               type="text"
               value={formData.contactPhone}
               onChange={(e) => setFormData({ ...formData, contactPhone: e.target.value })}
-              placeholder="+38 (067) 123-45-67"
+              placeholder="+380 93 015 05 07"
               className="w-full max-w-md rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 p-3.5 text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
             <p className="mt-2 text-xs text-slate-400">
