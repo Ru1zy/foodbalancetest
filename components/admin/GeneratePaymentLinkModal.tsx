@@ -113,6 +113,22 @@ export default function GeneratePaymentLinkModal({
     }
   };
 
+  const isAllRelatedSelected =
+    relatedOrders.length > 0 && selectedRelatedIds.length === relatedOrders.length;
+
+  const toggleSelectAllRelated = () => {
+    const updated = isAllRelatedSelected ? [] : relatedOrders.map((o) => o.id);
+    setSelectedRelatedIds(updated);
+
+    // Recalculate suggested sum
+    const basePrice = initialAmountUah && initialAmountUah > 0 ? initialAmountUah : 0;
+    const selectedOrders = relatedOrders.filter((o) => updated.includes(o.id));
+    const newSum = basePrice + selectedOrders.reduce((sum, o) => sum + (o.price || 0), 0);
+    if (newSum > 0) {
+      setAmount(String(newSum));
+    }
+  };
+
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -233,11 +249,16 @@ export default function GeneratePaymentLinkModal({
                 <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Супутні раціони цього замовника ({relatedOrders.length})
+                      Супутні раціони цього замовника ({selectedRelatedIds.length}/{relatedOrders.length})
                     </label>
-                    <span className="text-[11px] text-emerald-600 font-medium">
-                      Об&apos;єднання в один чек
-                    </span>
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllRelated}
+                      className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition hover:underline cursor-pointer flex items-center gap-1 active:scale-95"
+                      title={isAllRelatedSelected ? "Зняти всі позначки" : "Вибрати всі для оплати одним чеком"}
+                    >
+                      {isAllRelatedSelected ? "Зняти всі" : "Об'єднати всі в один чек"}
+                    </button>
                   </div>
 
                   <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
