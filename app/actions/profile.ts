@@ -4,7 +4,8 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { verifyAuthToken } from "@/lib/auth-token";
 import prisma from "@/lib/prisma";
-import { normalizePhone } from "@/lib/phone-utils";
+import { normalizePhone, isValidUkrainianPhone } from "@/lib/phone-utils";
+import { isValidFullName } from "@/lib/validations";
 
 export type UpdateUserProfileResult =
   | { ok: true }
@@ -43,14 +44,17 @@ export async function updateUserProfile(
   const cleanName = (name || "").trim();
   const normalizedPhone = phone ? normalizePhone(phone) : "";
 
-  if (!cleanName) {
-    return { ok: false, message: "Вкажіть ім'я." };
-  }
-
-  if (normalizedPhone && !/^0\d{9}$/.test(normalizedPhone)) {
+  if (!cleanName || !isValidFullName(cleanName)) {
     return {
       ok: false,
-      message: "Вкажіть український номер у форматі +380XXXXXXXXX або 0XXXXXXXXX.",
+      message: "Вкажіть справжнє ім'я та прізвище (тільки літери, без цифр та нікнеймів).",
+    };
+  }
+
+  if (normalizedPhone && !isValidUkrainianPhone(normalizedPhone)) {
+    return {
+      ok: false,
+      message: "Вкажіть дійсний український номер з коректним кодом оператора (наприклад: 050, 066, 067, 068, 073, 075, 077, 093, 095-099 тощо).",
     };
   }
 

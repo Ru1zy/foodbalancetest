@@ -266,7 +266,7 @@ export function CheckoutCustomerForm({
                   ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                   : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
               }`}
-              placeholder="Як до вас звертатися"
+              placeholder="Ім'я та прізвище"
               type="text"
             />
             {errors.name && (
@@ -286,7 +286,7 @@ export function CheckoutCustomerForm({
                   : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
               }`}
               inputMode="tel"
-              placeholder="0501234567"
+              placeholder="050 123 45 67"
               type="tel"
             />
             {errors.phone && (
