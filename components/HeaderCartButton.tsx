@@ -25,6 +25,7 @@ export default function HeaderCartButton() {
   const selectedPackageRaw = useOrderStore((s) => s.selectedPackage);
   const selectedDates = useOrderStore((s) => s.selectedDates);
   const selections = useOrderStore((s) => s.selections);
+  const draftQuantity = useOrderStore((s) => s.draftQuantity ?? 1);
 
   const { totalPackages, totalDays, hasCartContent } = useMemo(() => {
     if (!hasHydrated) {
@@ -51,15 +52,15 @@ export default function HeaderCartButton() {
     const addedCartDays = cartItems.reduce((sum, item) => sum + item.dayCount * item.quantity, 0);
     const addedCartPackages = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-    const totalDaysCount = addedCartDays + draftDays;
-    const totalPackagesCount = addedCartPackages + (draftDays > 0 ? 1 : 0);
+    const totalDaysCount = addedCartDays + draftDays * draftQuantity;
+    const totalPackagesCount = addedCartPackages + (draftDays > 0 ? draftQuantity : 0);
 
     return {
       totalPackages: totalPackagesCount,
       totalDays: totalDaysCount,
       hasCartContent: totalDaysCount > 0 || totalPackagesCount > 0,
     };
-  }, [hasHydrated, cartItems, selectedPackageRaw, selectedDates, selections]);
+  }, [hasHydrated, cartItems, selectedPackageRaw, selectedDates, selections, draftQuantity]);
 
   if (!hasHydrated || !hasCartContent) {
     return null;

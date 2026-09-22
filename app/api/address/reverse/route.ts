@@ -9,6 +9,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing coordinates" }, { status: 400 });
   }
 
+  const numLat = parseFloat(lat);
+  const numLon = parseFloat(lon);
+
+  // Restrict to Zaporizhzhia metropolitan & immediate delivery area
+  if (
+    isNaN(numLat) ||
+    isNaN(numLon) ||
+    numLat < 47.65 ||
+    numLat > 48.05 ||
+    numLon < 34.85 ||
+    numLon > 35.45
+  ) {
+    return NextResponse.json({
+      outOfZone: true,
+      error: "OUT_OF_DELIVERY_ZONE",
+      message: "Доставка здійснюється тільки по м. Запоріжжя",
+    });
+  }
+
   try {
     const osmUrl = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=uk`;
 

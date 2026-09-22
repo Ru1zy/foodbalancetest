@@ -12,12 +12,26 @@ type Props = {
 // Zaporizhzhia default center
 const ZAPORIZHZHIA_COORDS: [number, number] = [47.8388, 35.1396];
 
+// Strict delivery bounds for Zaporizhzhia metropolitan & suburban coverage
+const ZAPORIZHZHIA_BOUNDS_SW: [number, number] = [47.70, 34.95];
+const ZAPORIZHZHIA_BOUNDS_NE: [number, number] = [47.96, 35.36];
+
+function isWithinZaporizhzhia(lat: number, lng: number): boolean {
+  return (
+    lat >= ZAPORIZHZHIA_BOUNDS_SW[0] &&
+    lat <= ZAPORIZHZHIA_BOUNDS_NE[0] &&
+    lng >= ZAPORIZHZHIA_BOUNDS_SW[1] &&
+    lng <= ZAPORIZHZHIA_BOUNDS_NE[1]
+  );
+}
+
 export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: Props) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
 
   const [loading, setLoading] = useState(false);
+  const [isOutOfZone, setIsOutOfZone] = useState(false);
   const [addressData, setAddressData] = useState<{
     road: string;
     houseNumber: string;
@@ -45,11 +59,14 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
       if (!mapContainerRef.current || !isMounted) return;
 
       if (!mapInstanceRef.current) {
+        const bounds = L.latLngBounds(ZAPORIZHZHIA_BOUNDS_SW, ZAPORIZHZHIA_BOUNDS_NE);
         const map = L.map(mapContainerRef.current, {
           center: ZAPORIZHZHIA_COORDS,
           zoom: 14,
-          minZoom: 11,
+          minZoom: 12,
           maxZoom: 19,
+          maxBounds: bounds,
+          maxBoundsViscosity: 1.0,
         });
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -62,11 +79,22 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
 
         // Fetch address for coordinates
         const updateAddressForCoords = async (lat: number, lon: number) => {
+          if (!isWithinZaporizhzhia(lat, lon)) {
+            setIsOutOfZone(true);
+            setAddressData(null);
+            return;
+          }
+          setIsOutOfZone(false);
           setLoading(true);
           try {
             const res = await fetch(`/api/address/reverse?lat=${lat}&lon=${lon}`);
             if (res.ok) {
               const data = await res.json();
+              if (data.outOfZone) {
+                setIsOutOfZone(true);
+                setAddressData(null);
+                return;
+              }
               if (isMounted) {
                 setAddressData({
                   road: data.road || "",
@@ -126,13 +154,24 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
+        if (!isWithinZaporizhzhia(latitude, longitude)) {
+          setIsOutOfZone(true);
+          setAddressData(null);
+          return;
+        }
         mapInstanceRef.current.setView([latitude, longitude], 16);
         markerRef.current.setLatLng([latitude, longitude]);
+        setIsOutOfZone(false);
         // Trigger reverse geocoding
         setLoading(true);
         fetch(`/api/address/reverse?lat=${latitude}&lon=${longitude}`)
           .then((r) => r.json())
           .then((data) => {
+            if (data.outOfZone) {
+              setIsOutOfZone(true);
+              setAddressData(null);
+              return;
+            }
             setAddressData({
               road: data.road || "",
               houseNumber: data.houseNumber || "",
@@ -216,15 +255,25 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
                   <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
                   Визначаємо адресу...
                 </span>
+              ) : isOutOfZone ? (
+                <span className="inline-flex items-center gap-1.5 text-red-600 dark:text-red-400 font-bold">
+                  <span>⚠️</span>
+                  <span>Поза зоною доставки (тільки м. Запоріжжя)</span>
+                </span>
               ) : addressData?.fullStreet ? (
                 addressData.fullStreet
               ) : (
                 "Виберіть точку на карті"
               )}
             </div>
-            {addressData?.quarter && (
+            {!isOutOfZone && addressData?.quarter && (
               <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
                 {addressData.quarter}, Запоріжжя
+              </div>
+            )}
+            {isOutOfZone && (
+              <div className="text-xs text-red-500 dark:text-red-400">
+                Перетягніть маркер ближче до міста Запоріжжя
               </div>
             )}
           </div>
@@ -233,15 +282,15 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
             >
               Скасувати
             </button>
             <button
               type="button"
-              disabled={loading || !addressData?.fullStreet}
+              disabled={loading || isOutOfZone || !addressData?.fullStreet}
               onClick={handleConfirm}
-              className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
             >
               Підтвердити адресу
             </button>

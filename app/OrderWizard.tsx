@@ -312,21 +312,21 @@ export default function OrderWizard({
                 </p>
 
                 {/* Bento Stats */}
-                <div className="mb-8 grid grid-cols-3 gap-2.5 sm:gap-4 max-w-2xl mx-auto w-full">
-                  <div className="rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-emerald-400/40 transition-all duration-300">
-                    <div className="text-2xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400">
+                <div className="mb-8 grid grid-cols-3 gap-2 sm:gap-4 max-w-2xl mx-auto w-full">
+                  <div className="rounded-2xl p-2.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-emerald-400/40 transition-all duration-300">
+                    <div className="text-xl sm:text-3xl md:text-4xl font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap tracking-tight">
                       1 000+
                     </div>
                     <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Клієнтів на місяць</div>
                   </div>
-                  <div className="rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-orange-400/40 transition-all duration-300">
-                    <div className="text-2xl sm:text-4xl font-black text-orange-600 dark:text-orange-400">
+                  <div className="rounded-2xl p-2.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-orange-400/40 transition-all duration-300">
+                    <div className="text-xl sm:text-3xl md:text-4xl font-black text-orange-600 dark:text-orange-400 whitespace-nowrap tracking-tight">
                       75 000+
                     </div>
                     <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Доставлених страв</div>
                   </div>
-                  <div className="rounded-2xl p-3.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-emerald-400/40 transition-all duration-300">
-                    <div className="text-2xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400">
+                  <div className="rounded-2xl p-2.5 sm:p-5 border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md text-center shadow-sm hover:border-emerald-400/40 transition-all duration-300">
+                    <div className="text-xl sm:text-3xl md:text-4xl font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap tracking-tight">
                       100%
                     </div>
                     <div className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Свіжі продукти</div>

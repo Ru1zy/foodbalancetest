@@ -695,9 +695,11 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                           setActiveDayIndex(prev => prev - 1);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
-                        className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-3.5 text-sm font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 active:scale-95 shadow-xs"
+                        className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 py-3.5 px-2.5 sm:px-4 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300 transition hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-30 active:scale-95 shadow-xs flex items-center justify-center gap-1.5 whitespace-nowrap"
                       >
-                        ← Попередній день
+                        <span className="text-sm leading-none shrink-0">←</span>
+                        <span className="sm:hidden">Попередній</span>
+                        <span className="hidden sm:inline">Попередній день</span>
                       </button>
                       {!isLastDay ? (
                         <button
@@ -708,26 +710,28 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
                             setActiveDayIndex(prev => prev + 1);
                             window.scrollTo({ top: 0, behavior: "smooth" });
                           }}
-                          className={`flex-1 rounded-2xl py-3.5 text-sm font-black text-white transition active:scale-95 shadow-md flex items-center justify-center gap-1.5 ${
+                          className={`flex-1 rounded-2xl py-3.5 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-white transition active:scale-95 shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap ${
                             currentDayComplete
                               ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/20"
                               : "cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500"
                           }`}
                         >
-                          <span>Наступний день</span>
-                          <span>→</span>
+                          <span className="sm:hidden">Наступний</span>
+                          <span className="hidden sm:inline">Наступний день</span>
+                          <span className="text-sm leading-none shrink-0">→</span>
                         </button>
                       ) : (
                         <Link
                           href="/checkout"
-                          className={`flex-1 rounded-2xl py-3.5 text-sm font-black text-white transition active:scale-95 shadow-md flex items-center justify-center gap-1.5 ${
+                          className={`flex-1 rounded-2xl py-3.5 px-2.5 sm:px-4 text-xs sm:text-sm font-black text-white transition active:scale-95 shadow-md flex items-center justify-center gap-1.5 whitespace-nowrap ${
                             canProceedToCheckout
                               ? "bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 shadow-emerald-600/20"
                               : "cursor-not-allowed bg-slate-300 dark:bg-slate-800 text-slate-500 pointer-events-none"
                           }`}
                         >
-                          <span>До оформлення замовлення</span>
-                          <span>→</span>
+                          <span className="sm:hidden">Оформити</span>
+                          <span className="hidden sm:inline">До оформлення</span>
+                          <span className="text-sm leading-none shrink-0">→</span>
                         </Link>
                       )}
                     </div>

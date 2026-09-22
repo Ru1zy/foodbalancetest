@@ -100,7 +100,8 @@ export default function CheckoutPageImpl({
   const [submitted, setSubmitted] = useState<SubmittedState | null>(null);
   const [availableDays, setAvailableDays] = useState<number>(0);
   const [allBalances, setAllBalances] = useState<Record<string, number>>({});
-  const [draftQuantity, setDraftQuantity] = useState<number>(1);
+  const draftQuantity = useOrderStore((state) => state.draftQuantity ?? 1);
+  const setDraftQuantity = useOrderStore((state) => state.setDraftQuantity);
   const [paymentMethod, setPaymentMethod] = useState<"plata" | "cash" | "bank_transfer">("plata");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -725,7 +726,7 @@ export default function CheckoutPageImpl({
 
       const totalDays =
         cartItems.reduce((sum, item) => sum + item.dayCount * item.quantity, 0) +
-        (hasDraft ? cartData.totalDays : 0);
+        (hasDraft ? cartData.totalDays * draftQuantity : 0);
 
       const firstDeliveryLabel = deliveryDate
         ? formatDisplayDate(deliveryDate)

@@ -72,6 +72,9 @@ export interface OrderStore {
   /** Extra calories for the current draft package in wizard (Sport Active+ only). */
   draftExtraKcal: number;
   setDraftExtraKcal: (extraKcal: number) => void;
+  /** Number of portions/copies for the current draft package in checkout (default 1). */
+  draftQuantity: number;
+  setDraftQuantity: (updater: number | ((prev: number) => number)) => void;
   setCartItemExtraKcal: (cartItemId: string, extraKcal: number) => void;
   incrementDish: (dayId: string, dishId: string) => void;
   decrementDish: (dayId: string, dishId: string) => void;
@@ -129,6 +132,13 @@ export const useOrderStore = create<OrderStore>()(
       cartItems: [],
       draftExtraKcal: 0,
       setDraftExtraKcal: (draftExtraKcal) => set({ draftExtraKcal: Math.min(Math.max(0, draftExtraKcal), 1000) }),
+      draftQuantity: 1,
+      setDraftQuantity: (updater) =>
+        set((state) => {
+          const nextVal = typeof updater === "function" ? updater(state.draftQuantity) : updater;
+          const clamped = Math.min(Math.max(1, Number(nextVal) || 1), MAX_CART_ITEM_QUANTITY);
+          return { draftQuantity: clamped };
+        }),
       setCartItemExtraKcal: (cartItemId, extraKcal) =>
         set((state) => ({
           cartItems: state.cartItems.map((item) => {
@@ -188,6 +198,7 @@ export const useOrderStore = create<OrderStore>()(
         selectedDates: pkgChanged ? [] : state.selectedDates,
         customModeDays: pkgChanged ? {} : state.customModeDays,
         draftExtraKcal: pkgChanged ? 0 : state.draftExtraKcal,
+        draftQuantity: pkgChanged ? 1 : state.draftQuantity,
         step: 2,
       };
     }),
@@ -221,6 +232,7 @@ export const useOrderStore = create<OrderStore>()(
       customModeDays: {},
       showSushkaOptions: false,
       draftExtraKcal: 0,
+      draftQuantity: 1,
     }),
 
   hardReset: () =>
@@ -233,6 +245,7 @@ export const useOrderStore = create<OrderStore>()(
       cartItems: [],
       showSushkaOptions: false,
       draftExtraKcal: 0,
+      draftQuantity: 1,
     }),
 
   setSelection: (dayId, category, dishIndex) =>
@@ -400,6 +413,7 @@ export const useOrderStore = create<OrderStore>()(
         selections: state.selections,
         cartItems: state.cartItems,
         draftExtraKcal: state.draftExtraKcal,
+        draftQuantity: state.draftQuantity,
       }),
     }
   )

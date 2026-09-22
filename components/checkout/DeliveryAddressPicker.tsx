@@ -292,17 +292,18 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
     <div ref={containerRef} className="space-y-4">
       {/* Header with Map Button and Manual Switch */}
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-          <span>Адреса доставки</span>
-          <span className="text-emerald-600 font-bold">*</span>
-        </span>
+        <div className="flex items-center whitespace-nowrap shrink-0">
+          <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            Адреса доставки<span className="text-emerald-500 font-bold ml-1">*</span>
+          </span>
+        </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           {!isManualMode && (
             <button
               type="button"
               onClick={() => setIsMapOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-bold text-xs transition active:scale-95 shadow-xs"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-bold text-xs transition active:scale-95 shadow-2xs whitespace-nowrap cursor-pointer"
             >
               <span>📍</span>
               <span>На карті</span>
@@ -322,7 +323,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                 triggerChange({ isManualMode: nextManual });
               }
             }}
-            className="text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition underline underline-offset-2"
+            className="text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition underline underline-offset-2 whitespace-nowrap cursor-pointer"
           >
             {isManualMode ? "Структурована адреса" : "Ввести вручну"}
           </button>
