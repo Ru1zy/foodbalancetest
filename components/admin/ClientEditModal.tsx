@@ -158,7 +158,7 @@ export default function ClientEditModal({ client, onClose }: Props) {
           <div className="rounded-lg bg-slate-50 dark:bg-slate-950 p-4">
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-slate-500">Ім&apos;я:</span>
+                <span className="text-slate-500">ПІБ / Клієнт:</span>
                 <div className="font-semibold text-slate-900 dark:text-slate-100">{client.name}</div>
               </div>
               <div>

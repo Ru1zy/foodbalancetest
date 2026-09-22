@@ -601,7 +601,7 @@ export default function ProfilePageClient({
               {isEditing ? (
                 <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div className="sm:col-span-1">
-                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Ім&apos;я</label>
+                    <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">ПІБ</label>
                     <div className="relative">
                       <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
@@ -676,7 +676,7 @@ export default function ProfilePageClient({
               ) : (
                 <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">
-                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Ім&apos;я</dt>
+                    <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">ПІБ</dt>
                     <dd className="text-base font-bold text-slate-900 dark:text-slate-100">{user.name}</dd>
                   </div>
                   <div className="rounded-2xl bg-slate-50 dark:bg-slate-950 p-5 border border-slate-100 dark:border-slate-800">

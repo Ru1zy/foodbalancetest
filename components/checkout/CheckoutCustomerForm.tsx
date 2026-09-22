@@ -256,7 +256,7 @@ export function CheckoutCustomerForm({
       <form className="space-y-6" onSubmit={handleSubmit(onValidSubmit, onInvalid)}>
         <div className="grid gap-4 md:grid-cols-2 md:gap-5">
           <label className="block">
-            <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">Ім&apos;я</span>
+            <span className="mb-2 block text-sm font-semibold text-slate-900 dark:text-slate-100">ПІБ</span>
             <input
               {...register("name")}
               aria-invalid={errors.name ? "true" : "false"}
@@ -266,7 +266,7 @@ export function CheckoutCustomerForm({
                   ? "border-red-300 focus:border-red-500 focus:ring-red-100"
                   : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
               }`}
-              placeholder="Ім'я та прізвище"
+              placeholder="Прізвище, ім'я або повне ПІБ"
               type="text"
             />
             {errors.name && (

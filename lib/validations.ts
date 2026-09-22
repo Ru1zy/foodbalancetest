@@ -52,9 +52,9 @@ export function isValidFullName(name: string): boolean {
 export const checkoutSchema = z.object({
   name: z
     .string()
-    .min(2, "Введіть коректне ім'я (мінімум 2 символи)")
+    .min(2, "Введіть коректне ПІБ або ім'я (мінімум 2 символи)")
     .refine(isValidFullName, {
-      message: "Вкажіть справжнє ім'я та прізвище (тільки літери, без цифр та нікнеймів)",
+      message: "Вкажіть справжнє ПІБ або ім'я та прізвище (тільки літери, без цифр та нікнеймів)",
     }),
   phone: z
     .string()
