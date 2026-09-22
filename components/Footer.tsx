@@ -1,9 +1,11 @@
-import { Phone } from "lucide-react";
+import { Phone, Code2 } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
 import { getPublicSettings } from "@/app/actions/settings";
 
 export default async function Footer() {
   const settings = await getPublicSettings();
+  const currentYear = new Date().getFullYear();
+  const yearText = currentYear > 2025 ? `2025–${currentYear}` : "2025";
 
   return (
     <footer className="bg-slate-900 dark:bg-slate-950 border-t border-slate-800">
@@ -73,15 +75,23 @@ export default async function Footer() {
       {/* Bottom Bar */}
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         <div className="border-t border-slate-800 py-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-          <p>© 2026 Food Balance. Всі права захищені.</p>
+          <p>© {yearText} Food Balance. Всі права захищені.</p>
           <a
             href="https://ru1zy.github.io/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors group"
+            className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/60 hover:bg-slate-800/90 border border-slate-700/70 hover:border-emerald-500/50 transition-all duration-300 shadow-2xs hover:shadow-emerald-500/10 active:scale-95 cursor-pointer"
+            title="Портфоліо розробника"
           >
-            <span>Designed &amp; Developed by</span>
-            <span className="font-semibold text-slate-400 group-hover:text-emerald-400">2ez4ru1z</span>
+            <span className="text-slate-400 transition-colors group-hover:text-slate-200">
+              Created by
+            </span>
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-all duration-500 group-hover:rotate-[360deg] group-hover:scale-110 shadow-xs">
+              <Code2 className="w-3 h-3" />
+            </span>
+            <span className="font-bold tracking-wide bg-gradient-to-r from-slate-200 via-emerald-300 to-emerald-400 bg-clip-text text-transparent group-hover:from-emerald-300 group-hover:to-teal-200 transition-all">
+              2ez4ru1z
+            </span>
           </a>
         </div>
       </div>
