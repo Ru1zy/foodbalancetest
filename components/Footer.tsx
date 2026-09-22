@@ -90,7 +90,7 @@ export default async function Footer() {
               <Code2 className="w-3 h-3" />
             </span>
             <span className="font-bold tracking-wide bg-gradient-to-r from-slate-200 via-emerald-300 to-emerald-400 bg-clip-text text-transparent group-hover:from-emerald-300 group-hover:to-teal-200 transition-all">
-              2ez4ru1z
+              241
             </span>
           </a>
         </div>
