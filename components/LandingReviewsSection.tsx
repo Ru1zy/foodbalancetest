@@ -17,16 +17,27 @@ type PublicReview = {
   createdAt: Date;
 };
 
-export default function LandingReviewsSection() {
-  const [reviews, setReviews] = useState<PublicReview[]>([]);
-  const [summary, setSummary] = useState({ totalCount: 0, avgRating: 5.0 });
-  const [isLoading, setIsLoading] = useState(true);
+type Props = {
+  initialReviews?: PublicReview[];
+  initialSummary?: { totalCount: number; avgRating: number };
+};
+
+export default function LandingReviewsSection({
+  initialReviews = [],
+  initialSummary = { totalCount: 0, avgRating: 5.0 },
+}: Props) {
+  const [reviews, setReviews] = useState<PublicReview[]>(initialReviews);
+  const [summary, setSummary] = useState(initialSummary);
+  const [isLoading, setIsLoading] = useState(initialReviews.length === 0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeReviewDetail, setActiveReviewDetail] = useState<PublicReview | null>(null);
   const [selectedStarFilter, setSelectedStarFilter] = useState<number | null>(null);
   const [previewPhotoUrl, setPreviewPhotoUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialReviews.length > 0) {
+      return;
+    }
     async function loadReviews() {
       const res = await getPublicReviewsAction();
       if (res.ok && res.reviews) {
@@ -36,7 +47,7 @@ export default function LandingReviewsSection() {
       setIsLoading(false);
     }
     loadReviews();
-  }, []);
+  }, [initialReviews.length]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
