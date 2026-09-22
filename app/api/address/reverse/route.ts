@@ -12,19 +12,20 @@ export async function GET(request: NextRequest) {
   const numLat = parseFloat(lat);
   const numLon = parseFloat(lon);
 
-  // Restrict to Zaporizhzhia metropolitan & immediate delivery area
+  // Restrict strictly to Zaporizhzhia city delivery bounds (excluding Kushuhum, Balabyne, etc.)
+  // South of Komunarskyi (Pisky) ends around ~47.765
   if (
     isNaN(numLat) ||
     isNaN(numLon) ||
-    numLat < 47.65 ||
-    numLat > 48.05 ||
-    numLon < 34.85 ||
-    numLon > 35.45
+    numLat < 47.765 ||
+    numLat > 47.935 ||
+    numLon < 34.985 ||
+    numLon > 35.315
   ) {
     return NextResponse.json({
       outOfZone: true,
       error: "OUT_OF_DELIVERY_ZONE",
-      message: "Доставка здійснюється тільки по м. Запоріжжя",
+      message: "Доставка здійснюється тільки по м. Запоріжжя (Кушугум, Балабине та передмістя поза зоною)",
     });
   }
 
@@ -44,6 +45,50 @@ export async function GET(request: NextRequest) {
 
     const data = await res.json();
     const addr = data.address || {};
+
+    const settlementText = [
+      addr.village,
+      addr.town,
+      addr.hamlet,
+      addr.suburb,
+      addr.municipality,
+      data.display_name,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const isExcludedSuburbs = [
+      "кушугум",
+      "kushuhum",
+      "балабине",
+      "balabyne",
+      "малокатеринівка",
+      "malokaterynivka",
+      "вільнянськ",
+      "vilniansk",
+      "наталівка",
+      "natalivka",
+      "розумівка",
+      "rozumivka",
+      "михайлівка",
+      "степне",
+      "новоолександрівка",
+    ].some((name) => settlementText.includes(name));
+
+    const city = (addr.city || addr.town || addr.village || addr.municipality || "").toLowerCase();
+
+    if (
+      isExcludedSuburbs ||
+      (city && !city.includes("запоріжжя") && !city.includes("zaporizhzhia"))
+    ) {
+      return NextResponse.json({
+        outOfZone: true,
+        error: "OUT_OF_DELIVERY_ZONE",
+        message: "Доставка здійснюється тільки по м. Запоріжжя",
+      });
+    }
+
     const road = addr.road || addr.pedestrian || addr.street || "";
     const houseNumber = addr.house_number || "";
     const quarter = addr.quarter || addr.suburb || addr.city_district || "";

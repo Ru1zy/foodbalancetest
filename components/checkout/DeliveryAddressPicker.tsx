@@ -456,9 +456,10 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                   </span>
                   <input
                     type="text"
+                    maxLength={10}
                     value={apartment}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const val = e.target.value.replace(/[^0-9a-zA-Zа-яА-ЯіІїЇєЄґҐ/\\-]/g, "").slice(0, 10);
                       setApartment(val);
                       triggerChange({ apartment: val });
                     }}
@@ -476,9 +477,10 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                   </span>
                   <input
                     type="text"
+                    maxLength={8}
                     value={entrance}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const val = e.target.value.replace(/[^0-9a-zA-Zа-яА-ЯіІїЇєЄґҐ-]/g, "").slice(0, 8);
                       setEntrance(val);
                       triggerChange({ entrance: val });
                     }}
@@ -496,9 +498,10 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                   </span>
                   <input
                     type="text"
+                    maxLength={6}
                     value={floor}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const val = e.target.value.replace(/[^0-9-]/g, "").slice(0, 6);
                       setFloor(val);
                       triggerChange({ floor: val });
                     }}
@@ -516,9 +519,10 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                   </span>
                   <input
                     type="text"
+                    maxLength={25}
                     value={intercom}
                     onChange={(e) => {
-                      const val = e.target.value;
+                      const val = e.target.value.slice(0, 25);
                       setIntercom(val);
                       triggerChange({ intercom: val });
                     }}

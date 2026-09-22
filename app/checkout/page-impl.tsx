@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import { CheckoutSuccessView } from "@/components/checkout/CheckoutSuccessView";
@@ -487,8 +487,11 @@ export default function CheckoutPageImpl({
   }, [hasHydrated, hasOrderItems, submitted, router]);
 
   // Protect against accidental tab closure while in checkout
+  const isSubmittingOrRedirectingRef = useRef(false);
+
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSubmittingOrRedirectingRef.current) return;
       if (hasOrderItems && !submitted) {
         e.preventDefault();
         e.returnValue = "";
@@ -735,6 +738,7 @@ export default function CheckoutPageImpl({
         : null;
 
       if (result.pageUrl) {
+        isSubmittingOrRedirectingRef.current = true;
         setCustomerProfile({
           address: data.address,
           cutlery: data.cutlery,
@@ -750,6 +754,7 @@ export default function CheckoutPageImpl({
         return;
       }
 
+      isSubmittingOrRedirectingRef.current = true;
       if (typeof window !== "undefined") {
         window.scrollTo({ top: 0, behavior: "instant" });
       }

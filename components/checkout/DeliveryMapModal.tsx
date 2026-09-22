@@ -12,9 +12,27 @@ type Props = {
 // Zaporizhzhia default center
 const ZAPORIZHZHIA_COORDS: [number, number] = [47.8388, 35.1396];
 
-// Strict delivery bounds for Zaporizhzhia metropolitan & suburban coverage
-const ZAPORIZHZHIA_BOUNDS_SW: [number, number] = [47.70, 34.95];
-const ZAPORIZHZHIA_BOUNDS_NE: [number, number] = [47.96, 35.36];
+// Strict delivery bounds for Zaporizhzhia city limits (strictly excluding Kushuhum lat ~47.71 and Balabyne lat ~47.74)
+const ZAPORIZHZHIA_BOUNDS_SW: [number, number] = [47.765, 34.980];
+const ZAPORIZHZHIA_BOUNDS_NE: [number, number] = [47.935, 35.315];
+
+// Visual delivery zone polygon covering the 7 districts of Zaporizhzhia
+const ZAPORIZHZHIA_DELIVERY_POLYGON: [number, number][] = [
+  [47.932, 35.065], // Borodynskyi north
+  [47.936, 35.120], // Osypenkivskyi north
+  [47.915, 35.185], // Pavlo-Kichkas north
+  [47.885, 35.240], // Zavodskyi / Motor Sich
+  [47.845, 35.285], // Shevchenkivskyi east
+  [47.800, 35.265], // Kosmichnyi east
+  [47.768, 35.215], // Pivdennyi / Pisky south-east
+  [47.765, 35.175], // Pivdennyi south edge (strict boundary above Balabyne)
+  [47.768, 35.140], // Lower Khortytsia / river boundary
+  [47.785, 35.035], // Khortytskyi district south (Baburka)
+  [47.820, 35.005], // Khortytskyi district west
+  [47.865, 35.015], // Verkhnya Khortytsia west
+  [47.900, 35.035], // Dniprovskyi north-west
+  [47.932, 35.065], // Close loop
+];
 
 function isWithinZaporizhzhia(lat: number, lng: number): boolean {
   return (
@@ -71,6 +89,16 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+
+        // Visual delivery boundary frame
+        L.polygon(ZAPORIZHZHIA_DELIVERY_POLYGON, {
+          color: "#10b981",
+          weight: 2.5,
+          dashArray: "6, 6",
+          fillColor: "#10b981",
+          fillOpacity: 0.08,
+          interactive: false,
         }).addTo(map);
 
         const marker = L.marker(ZAPORIZHZHIA_COORDS, {
@@ -231,11 +259,17 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
         <div className="relative flex-1 w-full bg-slate-100 dark:bg-slate-950">
           <div ref={mapContainerRef} className="h-full w-full" />
 
+          {/* Delivery Zone Badge / Frame Indicator */}
+          <div className="absolute top-3 left-14 z-[400] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-xl shadow-lg border border-emerald-500/40 flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-100 pointer-events-none">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse ring-2 ring-emerald-500/20" />
+            <span>Зона доставки: м. Запоріжжя</span>
+          </div>
+
           {/* Quick Locate Me Button */}
           <button
             type="button"
             onClick={handleLocateMe}
-            className="absolute top-4 right-4 z-[400] bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 p-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 transition flex items-center gap-1.5 text-xs font-bold"
+            className="absolute top-3 right-3 z-[400] bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 p-2.5 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
             title="Знайти мене"
           >
             <span>🎯</span>
@@ -272,8 +306,8 @@ export default function DeliveryMapModal({ isOpen, onClose, onSelectAddress }: P
               </div>
             )}
             {isOutOfZone && (
-              <div className="text-xs text-red-500 dark:text-red-400">
-                Перетягніть маркер ближче до міста Запоріжжя
+              <div className="text-xs font-medium text-red-500 dark:text-red-400 mt-0.5">
+                Кушугум, Балабине та передмістя поза зоною доставки. Оберіть точку в межах зеленої рамки м. Запоріжжя.
               </div>
             )}
           </div>

@@ -63,11 +63,31 @@ export async function GET(request: NextRequest) {
       if (Array.isArray(items)) {
         for (const item of items) {
           const addr = item.address || {};
-          // Only accept results inside Zaporizhzhia or Zaporizhzhia district
+          const rawText = `${item.display_name || ""} ${addr.village || ""} ${addr.town || ""} ${addr.suburb || ""}`.toLowerCase();
+          const isExcluded = [
+            "кушугум",
+            "kushuhum",
+            "балабине",
+            "balabyne",
+            "малокатеринівка",
+            "вільнянськ",
+            "наталівка",
+            "розумівка",
+            "степне",
+            "новоолександрівка",
+          ].some((s) => rawText.includes(s));
+
+          if (isExcluded) continue;
+
+          // Exclude points outside strict lat/lon bounds
+          if (item.lat && (parseFloat(item.lat) < 47.765 || parseFloat(item.lat) > 47.935)) {
+            continue;
+          }
+
+          // Only accept results inside Zaporizhzhia city
           const isZp =
             addr.city === "Запоріжжя" ||
             addr.town === "Запоріжжя" ||
-            addr.state === "Запорізька область" ||
             item.display_name?.includes("Запоріжжя");
 
           if (!isZp) continue;
