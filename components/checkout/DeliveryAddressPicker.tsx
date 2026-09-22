@@ -10,12 +10,25 @@ type Props = {
   error?: string;
 };
 
+type ParsedAddress = {
+  street: string;
+  house: string;
+  apartment: string;
+  entrance: string;
+  floor: string;
+  intercom: string;
+  isPrivateHouse: boolean;
+  isManualMode: boolean;
+  manualAddress: string;
+};
+
 export default function DeliveryAddressPicker({ value, onChange, error }: Props) {
   // Parse initial value if present
-  const parseInitialValue = (addrStr: string) => {
+  const parseInitialValue = (addrStr: string): ParsedAddress => {
     if (!addrStr || !addrStr.trim()) {
       return {
         street: "",
+        house: "",
         apartment: "",
         entrance: "",
         floor: "",
@@ -33,15 +46,27 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
     const entMatch = cleanStr.match(/під(?:'|’)?їзд\s*([0-9a-zA-Zа-яА-ЯіїєґІЇЄҐ/-]+)/i);
     const floorMatch = cleanStr.match(/поверх\s*([0-9a-zA-Zа-яА-ЯіїєґІЇЄҐ/-]+)/i);
     const codeMatch = cleanStr.match(/\(?(?:код|домофон):?\s*([^\)]+)\)?/i);
+    const houseMatch = cleanStr.match(/буд\.?\s*([0-9a-zA-Zа-яА-ЯіїєґІЇЄҐ/-]+)/i);
 
     // If it has structured keywords, extract street part before them
-    if (aptMatch || entMatch || floorMatch || isPrivate) {
-      const streetPart = cleanStr
-        .split(/,\s*(?:кв\.?|під(?:'|’)?їзд|поверх|\(?код)/i)[0]
+    if (aptMatch || entMatch || floorMatch || isPrivate || houseMatch) {
+      let streetPart = cleanStr
+        .split(/,\s*(?:буд\.?|кв\.?|під(?:'|’)?їзд|поверх|\(?код)/i)[0]
         .trim();
+
+      let housePart = houseMatch ? houseMatch[1] : "";
+
+      if (!housePart) {
+        const commaNum = streetPart.match(/,\s*([0-9]+[a-zA-Zа-яА-ЯіїєґІЇЄҐ/-]*)$/);
+        if (commaNum) {
+          housePart = commaNum[1];
+          streetPart = streetPart.replace(/,\s*[0-9]+[a-zA-Zа-яА-ЯіїєґІЇЄҐ/-]*$/, "").trim();
+        }
+      }
 
       return {
         street: streetPart || cleanStr,
+        house: housePart,
         apartment: aptMatch ? aptMatch[1] : "",
         entrance: entMatch ? entMatch[1] : "",
         floor: floorMatch ? floorMatch[1] : "",
@@ -52,9 +77,25 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
       };
     }
 
-    // Default to street field directly
+    // Default: check if addrStr has comma-separated number
+    const commaNum = addrStr.match(/^(.*?),\s*([0-9]+[a-zA-Zа-яА-ЯіїєґІЇЄҐ/-]*)$/);
+    if (commaNum) {
+      return {
+        street: commaNum[1].trim(),
+        house: commaNum[2].trim(),
+        apartment: "",
+        entrance: "",
+        floor: "",
+        intercom: "",
+        isPrivateHouse: false,
+        isManualMode: false,
+        manualAddress: "",
+      };
+    }
+
     return {
       street: addrStr,
+      house: "",
       apartment: "",
       entrance: "",
       floor: "",
@@ -68,6 +109,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
   const [initialState] = useState(() => parseInitialValue(value));
 
   const [street, setStreet] = useState(initialState.street);
+  const [house, setHouse] = useState(initialState.house);
   const [apartment, setApartment] = useState(initialState.apartment);
   const [entrance, setEntrance] = useState(initialState.entrance);
   const [floor, setFloor] = useState(initialState.floor);
@@ -76,6 +118,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
   const [isManualMode, setIsManualMode] = useState(initialState.isManualMode);
   const [manualAddress, setManualAddress] = useState(initialState.manualAddress || value);
 
+  const houseInputRef = useRef<HTMLInputElement | null>(null);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [suggestions, setSuggestions] = useState<AddressSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -91,6 +134,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
       lastSyncedRef.current = value;
       const parsed = parseInitialValue(value);
       setStreet(parsed.street);
+      setHouse(parsed.house);
       setApartment(parsed.apartment);
       setEntrance(parsed.entrance);
       setFloor(parsed.floor);
@@ -115,6 +159,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
   // Concatenate whenever structured fields change
   const buildConcatenated = (
     st: string,
+    hs: string,
     apt: string,
     ent: string,
     fl: string,
@@ -128,13 +173,16 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
     }
 
     const trimmedStreet = st.trim();
+    const trimmedHouse = hs.trim();
     if (!trimmedStreet) return "";
 
+    const housePart = trimmedHouse ? `, буд. ${trimmedHouse}` : "";
+
     if (privateHouse) {
-      return `${trimmedStreet} (приватний будинок)`;
+      return `${trimmedStreet}${housePart} (приватний будинок)`;
     }
 
-    const parts: string[] = [trimmedStreet];
+    const parts: string[] = [`${trimmedStreet}${housePart}`];
     if (apt.trim()) parts.push(`кв. ${apt.trim()}`);
     if (ent.trim()) parts.push(`під'їзд ${ent.trim()}`);
     if (fl.trim()) parts.push(`поверх ${fl.trim()}`);
@@ -143,18 +191,30 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
     return parts.join(", ");
   };
 
-  const triggerChange = (
-    nextStreet = street,
-    nextApt = apartment,
-    nextEnt = entrance,
-    nextFloor = floor,
-    nextIntercom = intercom,
-    nextPrivate = isPrivateHouse,
-    nextManual = isManualMode,
-    nextManualText = manualAddress
-  ) => {
+  const triggerChange = (overrides?: {
+    street?: string;
+    house?: string;
+    apartment?: string;
+    entrance?: string;
+    floor?: string;
+    intercom?: string;
+    isPrivateHouse?: boolean;
+    isManualMode?: boolean;
+    manualAddress?: string;
+  }) => {
+    const nextStreet = overrides?.street !== undefined ? overrides.street : street;
+    const nextHouse = overrides?.house !== undefined ? overrides.house : house;
+    const nextApt = overrides?.apartment !== undefined ? overrides.apartment : apartment;
+    const nextEnt = overrides?.entrance !== undefined ? overrides.entrance : entrance;
+    const nextFloor = overrides?.floor !== undefined ? overrides.floor : floor;
+    const nextIntercom = overrides?.intercom !== undefined ? overrides.intercom : intercom;
+    const nextPrivate = overrides?.isPrivateHouse !== undefined ? overrides.isPrivateHouse : isPrivateHouse;
+    const nextManual = overrides?.isManualMode !== undefined ? overrides.isManualMode : isManualMode;
+    const nextManualText = overrides?.manualAddress !== undefined ? overrides.manualAddress : manualAddress;
+
     const result = buildConcatenated(
       nextStreet,
+      nextHouse,
       nextApt,
       nextEnt,
       nextFloor,
@@ -170,7 +230,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
   // Search autocomplete on street typing
   const handleStreetChange = (text: string) => {
     setStreet(text);
-    triggerChange(text);
+    triggerChange({ street: text });
 
     if (searchDebounceRef.current) {
       clearTimeout(searchDebounceRef.current);
@@ -202,14 +262,30 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
   const handleSelectSuggestion = (s: AddressSearchResult) => {
     setStreet(s.name);
     setShowDropdown(false);
-    triggerChange(s.name);
+    const chosenHouse = s.houseNumber || house || "";
+    if (s.houseNumber) {
+      setHouse(s.houseNumber);
+    }
+    triggerChange({ street: s.name, house: chosenHouse });
+    if (!s.houseNumber) {
+      setTimeout(() => {
+        houseInputRef.current?.focus();
+      }, 50);
+    }
   };
 
   const handleMapSelect = (res: { road: string; houseNumber: string; fullStreet: string }) => {
-    const chosen = res.fullStreet || (res.houseNumber ? `${res.road}, ${res.houseNumber}` : res.road);
-    setStreet(chosen);
+    const chosenRoad = res.road || res.fullStreet || "";
+    const chosenHouse = res.houseNumber || "";
+    setStreet(chosenRoad);
+    setHouse(chosenHouse);
     setShowDropdown(false);
-    triggerChange(chosen);
+    triggerChange({ street: chosenRoad, house: chosenHouse });
+    if (!chosenHouse) {
+      setTimeout(() => {
+        houseInputRef.current?.focus();
+      }, 50);
+    }
   };
 
   return (
@@ -239,11 +315,11 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
               const nextManual = !isManualMode;
               setIsManualMode(nextManual);
               if (nextManual && !manualAddress) {
-                const currentFull = buildConcatenated(street, apartment, entrance, floor, intercom, isPrivateHouse, false, "");
+                const currentFull = buildConcatenated(street, house, apartment, entrance, floor, intercom, isPrivateHouse, false, "");
                 setManualAddress(currentFull);
-                triggerChange(street, apartment, entrance, floor, intercom, isPrivateHouse, true, currentFull);
+                triggerChange({ isManualMode: true, manualAddress: currentFull });
               } else {
-                triggerChange(street, apartment, entrance, floor, intercom, isPrivateHouse, nextManual, manualAddress);
+                triggerChange({ isManualMode: nextManual });
               }
             }}
             className="text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition underline underline-offset-2"
@@ -263,7 +339,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
             onChange={(e) => {
               const val = e.target.value;
               setManualAddress(val);
-              triggerChange(street, apartment, entrance, floor, intercom, isPrivateHouse, true, val);
+              triggerChange({ isManualMode: true, manualAddress: val });
             }}
             placeholder="Введіть повну адресу в довільній формі (наприклад: вул. Перемоги 24, під'їзд 1, орієнтир аптека)"
             rows={3}
@@ -280,53 +356,93 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
       ) : (
         /* Structured Mode matching reference image */
         <div className="space-y-3 animate-in fade-in duration-200">
-          {/* Street & House Input with Autocomplete Dropdown */}
-          <div className="relative">
-            <div className="relative flex items-center">
-              <input
-                id="address"
-                name="address"
-                type="text"
-                value={street}
-                onChange={(e) => handleStreetChange(e.target.value)}
-                onFocus={() => {
-                  if (suggestions.length > 0) setShowDropdown(true);
-                }}
-                placeholder="вулиця та номер будинку (наприклад: вул. Ціолковського 20)"
-                className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-3 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 pr-10 ${
-                  error && !street.trim()
-                    ? "border-red-300 focus:border-red-500 focus:ring-red-100"
-                    : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
-                }`}
-              />
-              {isSearching && (
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
-                  <span className="h-4 w-4 block animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+          {/* Street & House Input Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* Street Autocomplete */}
+            <div className="sm:col-span-2 relative">
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Вулиця <span className="text-emerald-600 font-bold">*</span>
+                </span>
+                <div className="relative flex items-center">
+                  <input
+                    id="address-street"
+                    type="text"
+                    value={street}
+                    onChange={(e) => handleStreetChange(e.target.value)}
+                    onFocus={() => {
+                      if (suggestions.length > 0) setShowDropdown(true);
+                    }}
+                    placeholder="Почніть вводити вулицю..."
+                    className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 pr-10 ${
+                      error && !street.trim()
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-100"
+                        : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
+                    }`}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                      <span className="h-4 w-4 block animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+                    </div>
+                  )}
                 </div>
+              </label>
+
+              {/* Suggestions Dropdown */}
+              {showDropdown && suggestions.length > 0 && (
+                <ul className="absolute top-full left-0 right-0 z-40 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150">
+                  {suggestions.map((s) => (
+                    <li key={s.id}>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSuggestion(s)}
+                        className="w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition flex items-center justify-between gap-2"
+                      >
+                        <div className="truncate">
+                          <span className="font-bold text-slate-900 dark:text-slate-100">{s.name}</span>
+                          {s.houseNumber && <span className="ml-1 text-emerald-600 font-bold">№ {s.houseNumber}</span>}
+                        </div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">Запоріжжя</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
-            {/* Suggestions Dropdown */}
-            {showDropdown && suggestions.length > 0 && (
-              <ul className="absolute top-full left-0 right-0 z-40 mt-1.5 max-h-56 overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-1.5 shadow-xl animate-in fade-in slide-in-from-top-2 duration-150">
-                {suggestions.map((s) => (
-                  <li key={s.id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectSuggestion(s)}
-                      className="w-full text-left px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-300 transition flex items-center justify-between gap-2"
-                    >
-                      <div className="truncate">
-                        <span className="font-bold text-slate-900 dark:text-slate-100">{s.name}</span>
-                        {s.houseNumber && <span className="ml-1 text-emerald-600 font-bold">№ {s.houseNumber}</span>}
-                      </div>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">Запоріжжя</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/* House Number (Mandatory) */}
+            <div className="sm:col-span-1">
+              <label className="block">
+                <span className="mb-1 block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Будинок <span className="text-emerald-600 font-bold">*</span>
+                </span>
+                <input
+                  ref={houseInputRef}
+                  id="address-house"
+                  type="text"
+                  value={house}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setHouse(val);
+                    triggerChange({ house: val });
+                  }}
+                  placeholder="14 або 28-Б"
+                  className={`w-full rounded-2xl border bg-white dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:ring-4 ${
+                    error && street.trim() && !house?.trim()
+                      ? "border-red-400 focus:border-red-500 focus:ring-red-100 ring-2 ring-red-100"
+                      : "border-slate-200 dark:border-slate-700 focus:border-emerald-500 dark:border-emerald-400 focus:ring-emerald-100"
+                  }`}
+                />
+              </label>
+            </div>
           </div>
+
+          {/* Validation tip if street is chosen but house is empty */}
+          {street.trim() && !house?.trim() && (
+            <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+              💡 Не забудьте вказати номер будинку для кур&apos;єра.
+            </p>
+          )}
 
           {/* Conditional Multi-apartment Fields */}
           {!isPrivateHouse && (
@@ -343,7 +459,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                     onChange={(e) => {
                       const val = e.target.value;
                       setApartment(val);
-                      triggerChange(street, val, entrance, floor, intercom, isPrivateHouse, false, "");
+                      triggerChange({ apartment: val });
                     }}
                     placeholder="Напр. 45"
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
@@ -363,7 +479,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                     onChange={(e) => {
                       const val = e.target.value;
                       setEntrance(val);
-                      triggerChange(street, apartment, val, floor, intercom, isPrivateHouse, false, "");
+                      triggerChange({ entrance: val });
                     }}
                     placeholder="Напр. 2"
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
@@ -383,7 +499,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                     onChange={(e) => {
                       const val = e.target.value;
                       setFloor(val);
-                      triggerChange(street, apartment, entrance, val, intercom, isPrivateHouse, false, "");
+                      triggerChange({ floor: val });
                     }}
                     placeholder="Напр. 5"
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
@@ -403,7 +519,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                     onChange={(e) => {
                       const val = e.target.value;
                       setIntercom(val);
-                      triggerChange(street, apartment, entrance, floor, val, isPrivateHouse, false, "");
+                      triggerChange({ intercom: val });
                     }}
                     placeholder="Напр. 1234 або К45"
                     className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none transition focus:border-emerald-500 dark:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
@@ -435,7 +551,7 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
               onClick={() => {
                 const nextPrivate = !isPrivateHouse;
                 setIsPrivateHouse(nextPrivate);
-                triggerChange(street, apartment, entrance, floor, intercom, nextPrivate, false, "");
+                triggerChange({ isPrivateHouse: nextPrivate });
               }}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                 isPrivateHouse ? "bg-emerald-600" : "bg-slate-300 dark:bg-slate-700"
