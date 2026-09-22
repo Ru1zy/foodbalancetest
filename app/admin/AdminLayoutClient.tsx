@@ -68,21 +68,21 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
             <LogoutButton />
           </div>
         </div>
-        <nav className="flex overflow-x-auto border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+        <nav className="flex items-center gap-1.5 overflow-x-auto px-3 py-2 border-t border-gray-200 dark:border-slate-800 bg-white dark:bg-slate-900 no-scrollbar touch-pan-x">
           {navLinks.map((link) => {
             const isActive = pathname === link.href || (link.href !== "/admin/settings" && pathname.startsWith(link.href + "/"));
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex-shrink-0 flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-semibold transition-all ${
+                className={`flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
-                    ? "border-blue-600 text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400"
-                    : "border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
                 }`}
               >
                 <span>{link.icon}</span>
-                <span className="hidden sm:inline">{link.label}</span>
+                <span>{link.label}</span>
               </Link>
             );
           })}
@@ -90,7 +90,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 min-w-0 pt-[120px] lg:pt-0">
+      <main className="flex-1 min-w-0 pt-[112px] lg:pt-0">
         {children}
       </main>
     </div>

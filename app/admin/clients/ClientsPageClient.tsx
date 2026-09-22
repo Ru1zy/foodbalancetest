@@ -132,128 +132,228 @@ export default function ClientsPageClient({ clients }: Props) {
             </p>
           </div>
         ) : (
-          <SyncedHorizontalScroll>
-            <table className="min-w-full border-collapse">
-              <thead className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-800/80 text-left text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                <tr>
-                  <th className="px-4 py-4 sm:px-6">ПІБ</th>
-                  <th className="px-4 py-4 sm:px-6">Телефон</th>
-                  <th className="px-4 py-4 sm:px-6">Telegram</th>
-                  <th className="px-4 py-4 sm:px-6">Адреса</th>
-                  <th className="px-4 py-4 sm:px-6">Тариф</th>
-                  <th className="px-4 py-4 sm:px-6">Замовлень</th>
-                  <th className="px-4 py-4 sm:px-6">Нотатки</th>
-                  <th className="px-4 py-4 sm:px-6">Дії</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredClients.map((client) => {
-                  const effectiveChatId = getEffectiveChatId(client);
-                  const isPlaceholderPhone = client.phone.startsWith("telegram-user:") || 
-                    client.phone.startsWith("tg_") || 
-                    client.phone.startsWith("google_");
+          <>
+            {/* Mobile View: Cards */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredClients.map((client) => {
+                const effectiveChatId = getEffectiveChatId(client);
+                const isPlaceholderPhone = client.phone.startsWith("telegram-user:") || 
+                  client.phone.startsWith("tg_") || 
+                  client.phone.startsWith("google_");
 
-                  return (
-                    <tr key={client.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-150">
-                      <td className="px-4 py-5 sm:px-6">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
-                            {client.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-slate-900 dark:text-slate-100">{client.name}</div>
-                            {client.balances.filter(b => b.totalDays - b.usedDays > 0).length > 0 && (
-                              <div className="mt-1 flex flex-wrap gap-1">
-                                {client.balances
-                                  .filter(b => b.totalDays - b.usedDays > 0)
-                                  .map(b => (
-                                    <span key={b.packageId} className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
-                                      {b.packageId}: {b.totalDays - b.usedDays}д
-                                    </span>
-                                  ))}
-                              </div>
-                            )}
-                          </div>
+                return (
+                  <div key={client.id} className="p-4 space-y-3 bg-white dark:bg-slate-900">
+                    {/* Header: Name, Balances, Edit button */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
+                          {client.name.charAt(0).toUpperCase()}
                         </div>
-                      </td>
-                      <td className="px-4 py-5 sm:px-6">
+                        <div>
+                          <div className="font-bold text-sm text-slate-900 dark:text-slate-100">{client.name}</div>
+                          {client.balances.filter(b => b.totalDays - b.usedDays > 0).length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {client.balances
+                                .filter(b => b.totalDays - b.usedDays > 0)
+                                .map(b => (
+                                  <span key={b.packageId} className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                    {b.packageId}: {b.totalDays - b.usedDays}д
+                                  </span>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setEditingClient(client)}
+                        className="shrink-0 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:from-blue-700 hover:to-indigo-700 transition cursor-pointer"
+                      >
+                        Редагувати
+                      </button>
+                    </div>
+
+                    {/* Phone & Telegram */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div>
                         {isPlaceholderPhone ? (
-                          <span className="inline-flex items-center rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs text-slate-500 dark:text-slate-400 italic">
+                          <span className="inline-flex items-center rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[11px] text-slate-500 dark:text-slate-400 italic">
                             {client.phone.startsWith("google_") ? "Google (без тел.)" : "Telegram (без тел.)"}
                           </span>
                         ) : (
                           <a
                             href={`tel:${client.phone}`}
-                            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                            className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                           >
-                            {client.phone}
+                            📞 {client.phone}
                           </a>
                         )}
-                      </td>
-                      <td className="px-4 py-5 sm:px-6">
+                      </div>
+
+                      <div>
                         {effectiveChatId ? (
-                          <div className="flex flex-col gap-1 items-start">
-                            <div className="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-emerald-950/60 px-2.5 py-1 text-xs font-bold text-green-700 dark:text-emerald-300">
-                              <span>✓</span>
-                              <span>Підключено</span>
-                            </div>
-                            <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 select-all" title="Telegram ChatID">
-                              ID: {effectiveChatId}
-                            </span>
-                          </div>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-100 dark:bg-emerald-950/60 text-green-700 dark:text-emerald-300 text-[10px] font-bold">
+                            TG ✓ ({effectiveChatId})
+                          </span>
                         ) : (
-                          <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-bold text-gray-500 dark:text-slate-400">
-                            <span>—</span>
-                            <span>Немає</span>
-                          </div>
-                        )}
-                      </td>
-                    <td className="px-4 py-5 sm:px-6">
-                      <div className="max-w-xs text-sm text-slate-700 dark:text-slate-300">
-                        {client.address || (
-                          <span className="text-slate-400 italic">Не вказано</span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px]">
+                            Без TG
+                          </span>
                         )}
                       </div>
-                    </td>
-                    <td className="px-4 py-5 sm:px-6">
-                      {client.defaultPackage ? (
-                        <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1.5">
-                          <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{client.defaultPackage}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400 italic">—</span>
+                    </div>
+
+                    {/* Address */}
+                    <div className="flex items-start gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                      <span className="shrink-0 mt-0.5">📍</span>
+                      <span>{client.address || "Адреса не вказана"}</span>
+                    </div>
+
+                    {/* Default Package & Order count */}
+                    <div className="flex items-center gap-3 text-xs pt-1 border-t border-slate-100 dark:border-slate-800 text-slate-500">
+                      {client.defaultPackage && (
+                        <span>Тариф: <b className="text-slate-700 dark:text-slate-300">{client.defaultPackage}</b></span>
                       )}
-                    </td>
-                    <td className="px-4 py-5 sm:px-6">
-                      <div className="inline-flex items-center gap-2 rounded-lg bg-blue-100 dark:bg-blue-950/60 px-3 py-1.5">
-                        <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{client._count.orders}</span>
+                      <span>Замовлень: <b className="text-blue-600 dark:text-blue-400">{client._count.orders}</b></span>
+                    </div>
+
+                    {client.notes && (
+                      <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-2.5 py-1.5 text-xs text-amber-900 dark:text-amber-200">
+                        💬 {client.notes}
                       </div>
-                    </td>
-                    <td className="px-4 py-5 sm:px-6">
-                      <div className="max-w-xs">
-                        {client.notes ? (
-                          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
-                            {client.notes}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">—</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-5 sm:px-6">
-                      <button
-                        onClick={() => setEditingClient(client)}
-                        className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:shadow-lg hover:scale-105"
-                      >
-                        Редагувати
-                      </button>
-                    </td>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop View: Table */}
+            <div className="hidden md:block">
+              <SyncedHorizontalScroll>
+                <table className="min-w-full border-collapse">
+                  <thead className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-800/80 text-left text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    <tr>
+                      <th className="px-4 py-4 sm:px-6">ПІБ</th>
+                      <th className="px-4 py-4 sm:px-6">Телефон</th>
+                      <th className="px-4 py-4 sm:px-6">Telegram</th>
+                      <th className="px-4 py-4 sm:px-6">Адреса</th>
+                      <th className="px-4 py-4 sm:px-6">Тариф</th>
+                      <th className="px-4 py-4 sm:px-6">Замовлень</th>
+                      <th className="px-4 py-4 sm:px-6">Нотатки</th>
+                      <th className="px-4 py-4 sm:px-6">Дії</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </SyncedHorizontalScroll>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {filteredClients.map((client) => {
+                      const effectiveChatId = getEffectiveChatId(client);
+                      const isPlaceholderPhone = client.phone.startsWith("telegram-user:") || 
+                        client.phone.startsWith("tg_") || 
+                        client.phone.startsWith("google_");
+
+                      return (
+                        <tr key={client.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-150">
+                          <td className="px-4 py-5 sm:px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
+                                {client.name.charAt(0).toUpperCase()}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-slate-900 dark:text-slate-100">{client.name}</div>
+                                {client.balances.filter(b => b.totalDays - b.usedDays > 0).length > 0 && (
+                                  <div className="mt-1 flex flex-wrap gap-1">
+                                    {client.balances
+                                      .filter(b => b.totalDays - b.usedDays > 0)
+                                      .map(b => (
+                                        <span key={b.packageId} className="inline-flex items-center rounded bg-emerald-100 dark:bg-emerald-950/60 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                                          {b.packageId}: {b.totalDays - b.usedDays}д
+                                        </span>
+                                      ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            {isPlaceholderPhone ? (
+                              <span className="inline-flex items-center rounded bg-slate-100 dark:bg-slate-800 px-2 py-1 text-xs text-slate-500 dark:text-slate-400 italic">
+                                {client.phone.startsWith("google_") ? "Google (без тел.)" : "Telegram (без тел.)"}
+                              </span>
+                            ) : (
+                              <a
+                                href={`tel:${client.phone}`}
+                                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                              >
+                                {client.phone}
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            {effectiveChatId ? (
+                              <div className="flex flex-col gap-1 items-start">
+                                <div className="inline-flex items-center gap-1.5 rounded-full bg-green-100 dark:bg-emerald-950/60 px-2.5 py-1 text-xs font-bold text-green-700 dark:text-emerald-300">
+                                  <span>✓</span>
+                                  <span>Підключено</span>
+                                </div>
+                                <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400 select-all" title="Telegram ChatID">
+                                  ID: {effectiveChatId}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-bold text-gray-500 dark:text-slate-400">
+                                <span>—</span>
+                                <span>Немає</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            <div className="max-w-xs text-sm text-slate-700 dark:text-slate-300">
+                              {client.address || (
+                                <span className="text-slate-400 italic">Не вказано</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            {client.defaultPackage ? (
+                              <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1.5">
+                                <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{client.defaultPackage}</span>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-slate-400 italic">—</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            <div className="inline-flex items-center gap-2 rounded-lg bg-blue-100 dark:bg-blue-950/60 px-3 py-1.5">
+                              <span className="text-sm font-bold text-blue-700 dark:text-blue-300">{client._count.orders}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            <div className="max-w-xs">
+                              {client.notes ? (
+                                <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+                                  {client.notes}
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">—</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-5 sm:px-6">
+                            <button
+                              onClick={() => setEditingClient(client)}
+                              className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md transition-all hover:shadow-lg hover:scale-105 cursor-pointer"
+                            >
+                              Редагувати
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </SyncedHorizontalScroll>
+            </div>
+          </>
         )}
       </div>
 

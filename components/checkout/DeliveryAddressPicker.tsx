@@ -291,14 +291,14 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
   return (
     <div ref={containerRef} className="space-y-4">
       {/* Header with Map Button and Manual Switch */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center whitespace-nowrap shrink-0">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center whitespace-nowrap shrink-0 pt-0.5">
           <span className="text-sm font-bold text-slate-900 dark:text-slate-100">
             Адреса доставки<span className="text-emerald-500 font-bold ml-1">*</span>
           </span>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="flex flex-col items-end gap-1 shrink-0">
           {!isManualMode && (
             <button
               type="button"
@@ -323,9 +323,9 @@ export default function DeliveryAddressPicker({ value, onChange, error }: Props)
                 triggerChange({ isManualMode: nextManual });
               }
             }}
-            className="text-xs font-semibold text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition underline underline-offset-2 whitespace-nowrap cursor-pointer"
+            className="text-xs font-medium text-slate-500 hover:text-emerald-600 dark:text-slate-400 dark:hover:text-emerald-400 transition underline underline-offset-2 whitespace-nowrap cursor-pointer py-0.5"
           >
-            {isManualMode ? "Структурована адреса" : "Ввести вручну"}
+            {isManualMode ? "← Структурована адреса" : "Ввести вручну"}
           </button>
         </div>
       </div>

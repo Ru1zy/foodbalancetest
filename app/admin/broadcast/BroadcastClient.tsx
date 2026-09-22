@@ -1136,6 +1136,7 @@ export default function BroadcastClient({ clients, initialBroadcasts }: Props) {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Broadcast History & Recall Section */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
@@ -1476,7 +1477,6 @@ export default function BroadcastClient({ clients, initialBroadcasts }: Props) {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }

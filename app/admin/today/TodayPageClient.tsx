@@ -28,6 +28,33 @@ type Order = {
   };
 };
 
+const DELIVERY_TIME_GROUPS = [
+  {
+    label: "Вечір",
+    slots: [
+      "17:00-17:30", "17:30-18:00", "18:00-18:30", "18:30-19:00",
+      "19:00-19:30", "19:30-20:00", "20:00-20:30", "20:30-21:00",
+      "21:00-21:30", "21:30-22:00", "22:00-22:30", "22:30-23:00"
+    ]
+  },
+  {
+    label: "Ранок",
+    slots: [
+      "06:00-06:30", "06:30-07:00", "07:00-07:30", "07:30-08:00",
+      "08:00-08:30", "08:30-09:00", "09:00-09:30", "09:30-10:00",
+      "10:00-10:30", "10:30-11:00", "11:00-11:30", "11:30-12:00"
+    ]
+  },
+  {
+    label: "День",
+    slots: [
+      "12:00-12:30", "12:30-13:00", "13:00-13:30", "13:30-14:00",
+      "14:00-14:30", "14:30-15:00", "15:00-15:30", "15:30-16:00",
+      "16:00-16:30", "16:30-17:00"
+    ]
+  }
+];
+
 type Props = {
   initialOrders: Order[];
   initialDate: string;
@@ -182,6 +209,37 @@ const handleExportToKitchen = () => {
     }
   };
 
+  const handleCancelOrderDay = async (order: Order) => {
+    if (!order.orderDayId) return;
+
+    const isPaidWithMoney = Boolean(
+      order.isPaid &&
+      (order.price ?? 0) > 0 &&
+      !(order.balanceDaysUsed && order.balanceDaysUsed > 0)
+    );
+
+    const confirmMsg = isPaidWithMoney
+      ? `⚠️ УВАГА: За це замовлення клієнт сплатив ${order.price} ₴ (${order.paymentMethod || "картка/IBAN"})!\n\nПісля скасування воно автоматично потрапить у вкладку «Оплати → 💸 До повернення», де ви повинні:\n1) Або нарахувати клієнту день на баланс (+1д компенсація)\n2) Або повернути гроші на картку вручну.\n\nВи дійсно хочете скасувати цю доставку?`
+      : `Ви впевнені, що хочете скасувати це замовлення? 1 день буде автоматично повернуто клієнту на баланс абонемента, а рядок в Google Sheets стане червоним.`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const { adminCancelOrderDay } = await import("@/app/actions/order-cancel");
+      await adminCancelOrderDay(order.orderDayId);
+      setOrders((prev) => prev.filter((o) => o.orderDayId !== order.orderDayId));
+
+      if (isPaidWithMoney) {
+        alert(
+          `✅ Доставку скасовано!\n\n🚨 НАГАДУВАННЯ: Замовлення очікує вашого рішення у вкладці «Оплати → 💸 До повернення». Будь ласка, перейдіть туди, щоб нарахувати клієнту день або повернути кошти.`
+        );
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Помилка при скасуванні";
+      alert(message);
+    }
+  };
+
   return (
     <div className="min-h-[100dvh] bg-gray-50 dark:bg-slate-950 p-6">
       <div className="mx-auto max-w-7xl">
@@ -285,206 +343,277 @@ const handleExportToKitchen = () => {
           )}
         </div>
 
-        {/* Orders Table */}
+        {/* Orders List / Table */}
         {orders.length === 0 ? (
-          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-12 shadow-sm">
+          <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-12 shadow-sm text-center">
             <p className="text-lg text-gray-600 dark:text-slate-400">Немає замовлень на цю дату</p>
           </div>
         ) : (
           <div className="rounded-2xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
-            <SyncedHorizontalScroll>
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-slate-950">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      ПІБ
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Телефон
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Адреса
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Пакет
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Прибори
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Коментар клієнта
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Час доставки
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Нотатка адміна
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Ціна
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Telegram
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      Дії
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                  {orders.map((order) => (
-                    <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition">
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
-                        {order.user.name}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.user.phone}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.deliveryAddress || order.user.address || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.packageType}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.cutlery}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
-                        {order.notes ? (
-                          <div className="max-w-xs text-xs italic text-slate-500">
-                            {order.notes}
-                          </div>
-                        ) : (
-                          "—"
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
+            {/* Mobile View: Cards */}
+            <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {orders.map((order) => {
+                const rowId = order.orderDayId ?? order.id;
+
+                return (
+                  <div key={rowId} className="p-4 space-y-3.5 bg-white dark:bg-slate-900">
+                    {/* Header: Customer info & clickable phone */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          {order.user.name}
+                        </div>
+                        <a
+                          href={`tel:${order.user.phone}`}
+                          className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                        >
+                          {order.user.phone}
+                        </a>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                          {order.price ? `${order.price} ₴` : "0 ₴"}
+                        </span>
+                        <div className="text-[11px] text-slate-500">
+                          {order.packageType}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Address & cutlery */}
+                    <div className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                      <span className="text-slate-400 shrink-0 mt-0.5">📍</span>
+                      <span className="font-medium leading-relaxed">
+                        {order.deliveryAddress || order.user.address || "Адреса не вказана"}
+                      </span>
+                    </div>
+
+                    {order.cutlery > 0 && (
+                      <div className="text-xs text-slate-500">
+                        🍴 Прибори: <b>{order.cutlery} шт</b>
+                      </div>
+                    )}
+
+                    {order.notes && (
+                      <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-200">
+                        💬 <b>Клієнт:</b> {order.notes}
+                      </div>
+                    )}
+
+                    {/* Delivery Time & Admin Note inputs */}
+                    <div className="space-y-2 pt-1 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                          ⏰ Час доставки:
+                        </label>
                         <select
                           value={order.deliveryTime || ""}
                           onChange={(e) =>
                             handleFieldUpdate(order.id, order.orderDayId, "deliveryTime", e.target.value)
                           }
-                          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                          className="w-full rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-semibold text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none"
                         >
                           <option value="">Не обрано</option>
-                          <optgroup label="Вечір">
-                            <option value="17:00-17:30">17:00-17:30</option>
-                            <option value="17:30-18:00">17:30-18:00</option>
-                            <option value="18:00-18:30">18:00-18:30</option>
-                            <option value="18:30-19:00">18:30-19:00</option>
-                            <option value="19:00-19:30">19:00-19:30</option>
-                            <option value="19:30-20:00">19:30-20:00</option>
-                            <option value="20:00-20:30">20:00-20:30</option>
-                            <option value="20:30-21:00">20:30-21:00</option>
-                            <option value="21:00-21:30">21:00-21:30</option>
-                            <option value="21:30-22:00">21:30-22:00</option>
-                            <option value="22:00-22:30">22:00-22:30</option>
-                            <option value="22:30-23:00">22:30-23:00</option>
-                          </optgroup>
-                          <optgroup label="Ранок">
-                            <option value="06:00-06:30">06:00-06:30</option>
-                            <option value="06:30-07:00">06:30-07:00</option>
-                            <option value="07:00-07:30">07:00-07:30</option>
-                            <option value="07:30-08:00">07:30-08:00</option>
-                            <option value="08:00-08:30">08:00-08:30</option>
-                            <option value="08:30-09:00">08:30-09:00</option>
-                            <option value="09:00-09:30">09:00-09:30</option>
-                            <option value="09:30-10:00">09:30-10:00</option>
-                            <option value="10:00-10:30">10:00-10:30</option>
-                            <option value="10:30-11:00">10:30-11:00</option>
-                            <option value="11:00-11:30">11:00-11:30</option>
-                            <option value="11:30-12:00">11:30-12:00</option>
-                          </optgroup>
-                          <optgroup label="День">
-                            <option value="12:00-12:30">12:00-12:30</option>
-                            <option value="12:30-13:00">12:30-13:00</option>
-                            <option value="13:00-13:30">13:00-13:30</option>
-                            <option value="13:30-14:00">13:30-14:00</option>
-                            <option value="14:00-14:30">14:00-14:30</option>
-                            <option value="14:30-15:00">14:30-15:00</option>
-                            <option value="15:00-15:30">15:00-15:30</option>
-                            <option value="15:30-16:00">15:30-16:00</option>
-                            <option value="16:00-16:30">16:00-16:30</option>
-                            <option value="16:30-17:00">16:30-17:00</option>
-                          </optgroup>
+                          {DELIVERY_TIME_GROUPS.map((group) => (
+                            <optgroup key={group.label} label={group.label}>
+                              {group.slots.map((slot) => (
+                                <option key={slot} value={slot}>
+                                  {slot}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
                         </select>
-                      </td>
-                      <td className="px-4 py-3">
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                          📝 Нотатка для клієнта:
+                        </label>
                         <input
                           type="text"
                           value={order.deliveryNote || ""}
                           onChange={(e) =>
                             handleFieldUpdate(order.id, order.orderDayId, "deliveryNote", e.target.value)
                           }
-                          placeholder="Нотатка для клієнта..."
-                          className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                          placeholder="Нотатка для клієнта (кур'єр, під'їзд...)"
+                          className="w-full rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-xs text-gray-900 dark:text-slate-100 placeholder-gray-400 focus:border-blue-500 focus:outline-none"
                         />
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {order.price ? `${order.price} ₴` : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {order.user.chatId ? (
-                          <div className="flex flex-col items-center gap-1.5">
-                            <span className="text-green-600 font-bold text-base leading-none" title="Telegram підключено">✓</span>
-                            <button
-                              type="button"
-                              onClick={() => handleNotifySingle(order)}
-                              disabled={isSendingId === (order.orderDayId ?? order.id)}
-                              className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition active:scale-95 disabled:opacity-50"
-                              title="Надіслати сповіщення (час та/або нотатку) тільки цьому клієнту"
-                            >
-                              <span>{isSendingId === (order.orderDayId ?? order.id) ? "⏳" : "📢"}</span>
-                              <span>Надіслати</span>
-                            </button>
-                          </div>
-                        ) : (
-                          <span className="text-red-500 font-bold text-base" title="Немає Telegram ChatID">✗</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {order.orderDayId && (
-                          <button
-                            onClick={async () => {
-                              const isPaidWithMoney = Boolean(
-                                order.isPaid &&
-                                (order.price ?? 0) > 0 &&
-                                !(order.balanceDaysUsed && order.balanceDaysUsed > 0)
-                              );
+                      </div>
+                    </div>
 
-                              const confirmMsg = isPaidWithMoney
-                                ? `⚠️ УВАГА: За це замовлення клієнт сплатив ${order.price} ₴ (${order.paymentMethod || "картка/IBAN"})!\n\nПісля скасування воно автоматично потрапить у вкладку «Оплати → 💸 До повернення», де ви повинні:\n1) Або нарахувати клієнту день на баланс (+1д компенсація)\n2) Або повернути гроші на картку вручну.\n\nВи дійсно хочете скасувати цю доставку?`
-                                : `Ви впевнені, що хочете скасувати це замовлення? 1 день буде автоматично повернуто клієнту на баланс абонемента, а рядок в Google Sheets стане червоним.`;
+                    {/* Actions */}
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+                      {order.user.chatId ? (
+                        <button
+                          type="button"
+                          onClick={() => handleNotifySingle(order)}
+                          disabled={isSendingId === rowId}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                        >
+                          <span>{isSendingId === rowId ? "⏳" : "📢"}</span>
+                          <span>Надіслати в Telegram</span>
+                        </button>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">
+                          Без Telegram
+                        </span>
+                      )}
 
-                              if (!confirm(confirmMsg)) return;
+                      {order.orderDayId && (
+                        <button
+                          type="button"
+                          onClick={() => handleCancelOrderDay(order)}
+                          className="inline-flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition cursor-pointer"
+                        >
+                          Скасувати
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-                              try {
-                                const { adminCancelOrderDay } = await import('@/app/actions/order-cancel');
-                                await adminCancelOrderDay(order.orderDayId!);
-                                setOrders(prev => prev.filter(o => o.orderDayId !== order.orderDayId));
-
-                                if (isPaidWithMoney) {
-                                  alert(
-                                    `✅ Доставку скасовано!\n\n🚨 НАГАДУВАННЯ: Замовлення очікує вашого рішення у вкладці «Оплати → 💸 До повернення». Будь ласка, перейдіть туди, щоб нарахувати клієнту день або повернути кошти.`
-                                  );
-                                }
-                              } catch (err: unknown) {
-                                const message = err instanceof Error ? err.message : "Помилка при скасуванні";
-                                alert(message);
-                              }
-                            }}
-                            className="inline-flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-                            title="Скасувати день"
-                          >
-                            ❌ Скасувати
-                          </button>
-                        )}
-                      </td>
+            {/* Desktop View: Synced Table */}
+            <div className="hidden md:block">
+              <SyncedHorizontalScroll>
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-slate-950">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        ПІБ
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Телефон
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Адреса
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Пакет
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Прибори
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Коментар клієнта
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Час доставки
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Нотатка адміна
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Ціна
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Telegram
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Дії
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </SyncedHorizontalScroll>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                    {orders.map((order) => (
+                      <tr key={order.orderDayId ?? order.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition">
+                        <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-100">
+                          {order.user.name}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                          {order.user.phone}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                          {order.deliveryAddress || order.user.address || "—"}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                          {order.packageType}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                          {order.cutlery}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                          {order.notes ? (
+                            <div className="max-w-xs text-xs italic text-slate-500">
+                              {order.notes}
+                            </div>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <select
+                            value={order.deliveryTime || ""}
+                            onChange={(e) =>
+                              handleFieldUpdate(order.id, order.orderDayId, "deliveryTime", e.target.value)
+                            }
+                            className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                          >
+                            <option value="">Не обрано</option>
+                            {DELIVERY_TIME_GROUPS.map((group) => (
+                              <optgroup key={group.label} label={group.label}>
+                                {group.slots.map((slot) => (
+                                  <option key={slot} value={slot}>
+                                    {slot}
+                                  </option>
+                                ))}
+                              </optgroup>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="text"
+                            value={order.deliveryNote || ""}
+                            onChange={(e) =>
+                              handleFieldUpdate(order.id, order.orderDayId, "deliveryNote", e.target.value)
+                            }
+                            placeholder="Нотатка для клієнта..."
+                            className="w-full rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-1.5 text-sm text-gray-900 dark:text-slate-100 placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {order.price ? `${order.price} ₴` : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {order.user.chatId ? (
+                            <div className="flex flex-col items-center gap-1.5">
+                              <span className="text-green-600 font-bold text-base leading-none" title="Telegram підключено">✓</span>
+                              <button
+                                type="button"
+                                onClick={() => handleNotifySingle(order)}
+                                disabled={isSendingId === (order.orderDayId ?? order.id)}
+                                className="inline-flex items-center gap-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900 transition active:scale-95 disabled:opacity-50"
+                                title="Надіслати сповіщення (час та/або нотатку) тільки цьому клієнту"
+                              >
+                                <span>{isSendingId === (order.orderDayId ?? order.id) ? "⏳" : "📢"}</span>
+                                <span>Надіслати</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-red-500 font-bold text-base" title="Немає Telegram ChatID">✗</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {order.orderDayId && (
+                            <button
+                              onClick={() => handleCancelOrderDay(order)}
+                              className="inline-flex items-center justify-center rounded-lg bg-red-50 dark:bg-red-900/20 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors cursor-pointer"
+                              title="Скасувати день"
+                            >
+                              ❌ Скасувати
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </SyncedHorizontalScroll>
+            </div>
           </div>
         )}
       </div>

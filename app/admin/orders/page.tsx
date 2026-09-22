@@ -463,168 +463,329 @@ export default async function AdminOrdersPage(props: {
               </p>
             </div>
           ) : (
-            <SyncedHorizontalScroll>
-              <table className="min-w-full border-collapse">
-                <thead className="bg-gray-50 dark:bg-slate-950 text-left text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-slate-400">
-                  <tr>
-                    <th className="px-4 py-4 sm:px-6 w-32">ID / Дата</th>
-                    <th className="px-4 py-4 sm:px-6 w-40">Клієнт</th>
-                    <th className="px-4 py-4 sm:px-6 w-56">Таблиця</th>
-                    <th className="px-4 py-4 sm:px-6 w-48">Адреса</th>
-                    <th className="px-4 py-4 sm:px-6 min-w-[300px]">Пакет</th>
-                    <th className="px-4 py-4 sm:px-6 w-32">Оплата</th>
-                    <th className="px-4 py-4 sm:px-6 w-40">Статус</th>
-                    <th className="px-4 py-4 sm:px-6 w-48">Коментар</th>
-                    <th className="sticky right-0 bg-gradient-to-r from-slate-50 to-blue-50 px-4 py-4 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10 w-32">Дії</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {ordersWithMenuDetails.map((order) => {
-                    const daysCount = getOrderDaysCount(order.items);
+            <>
+              {/* Mobile View: Clean, touch-friendly cards (Zero horizontal scroll needed) */}
+              <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                {ordersWithMenuDetails.map((order) => {
+                  const daysCount = getOrderDaysCount(order.items);
 
-                    return (
-                      <tr key={order.id} className="hover:bg-blue-50/50 dark:bg-blue-900/20 transition-colors duration-150 align-top">
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5">
-                            <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{order.id.slice(0, 8)}</span>
+                  return (
+                    <div key={order.id} className="p-4 space-y-3.5 bg-white dark:bg-slate-900 transition-colors">
+                      {/* Top Header: ID, Date, Paid Badge */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                            #{order.id.slice(0, 8)}
+                          </span>
+                          <span className="text-[11px] text-slate-500">
+                            {formatDateTime(order.createdAt)}
+                          </span>
+                        </div>
+
+                        <div
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold shadow-xs ${
+                            order.isPaid
+                              ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white"
+                              : "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+                          }`}
+                        >
+                          <span>{order.isPaid ? "✓" : "⏳"}</span>
+                          <span>{order.isPaid ? "Оплачено" : "Очікує"}</span>
+                        </div>
+                      </div>
+
+                      {/* Customer Row with Call Button */}
+                      <div className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-xs">
+                            {order.user.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="mt-2 text-xs text-slate-500">{formatDateTime(order.createdAt)}</div>
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
-                              {order.user.name.charAt(0).toUpperCase()}
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {order.user.name}
                             </div>
-                            <div>
-                              <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{order.user.name}</div>
-                              <div className="text-xs text-slate-500">{order.user.phone}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          {order.sheetConfigMissing ? (
-                            <div className="max-w-56 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
-                              ТАБЛИЦЯ НЕ ЗНАЙДЕНА — ВНЕСТИ ВРУЧНУ
-                            </div>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          <div className="flex items-start gap-2">
-                            <span className="text-slate-400 mt-0.5">📍</span>
-                            <div className="text-sm text-slate-700 dark:text-slate-300 max-w-xs">{getOrderAddressLabel(order)}</div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top min-w-[300px]">
-                          <div className="space-y-2">
-                            <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 px-3 py-1.5">
-                              <span className="text-sm font-bold text-indigo-700">{order.packageType}</span>
-                            </div>
-                            <div className="text-xs text-slate-600 dark:text-slate-400">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
-                            <div className="text-xs text-slate-600 dark:text-slate-400">🍴 Прибори: {order.cutlery}</div>
-                            {order.packageType && (
-                              <div className="flex flex-wrap items-center gap-2">
-                                <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 px-2.5 py-1 text-sm font-bold text-green-700">
-                                  <span>💰</span>
-                                  <span>
-                                    {order.price !== null && order.price > 0 
-                                      ? `${order.price} ₴` 
-                                      : order.packageType.toLowerCase().includes("ind") 
-                                        ? "Індивідуально" 
-                                        : "0 ₴"}
-                                  </span>
-                                </div>
-                                <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                                  {order.paymentMethod === 'cash' && "💵 Готівка"}
-                                  {order.paymentMethod === 'bank_transfer' && "🏦 Переказ (IBAN)"}
-                                  {order.paymentMethod === 'plata' && "💳 Plata by mono"}
-                                </div>
-                                {order.receiptUrl ? (
-                                  <a
-                                    href={order.receiptUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/80 px-2.5 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800 transition shadow-xs"
-                                    title="Переглянути прикріплену квитанцію"
-                                  >
-                                    <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "📄" : "🧾"}</span>
-                                    <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "PDF Чек" : "Квитанція"}</span>
-                                    <span className="text-[10px]">↗</span>
-                                  </a>
-                                ) : order.paymentMethod === 'bank_transfer' && !order.isPaid ? (
-                                  <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 px-2 py-0.5 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
-                                    Без чека
-                                  </span>
-                                ) : null}
-                              </div>
-                            )}
-                            {order.menuDetails && (
-                              <details className="mt-3 group">
-                                <summary className="cursor-pointer text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                                  <span className="group-open:rotate-90 transition-transform">▶</span>
-                                  Деталі раціону
-                                </summary>
-                                <div className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-700">
-                                  <pre className="whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-400 font-mono leading-relaxed">
-                                    {order.menuDetails}
-                                  </pre>
-                                </div>
-                              </details>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          <div
-                            className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm ${
-                              order.isPaid
-                                ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white"
-                                : "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
-                            }`}
-                          >
-                            <span>{order.isPaid ? "✓" : "⏳"}</span>
-                            <span>{order.isPaid ? "Оплачено" : "Очікує"}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          <div className="space-y-3">
-                            <div
-                              className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm ${getOrderStatusClasses(order.status)}`}
+                            <a
+                              href={`tel:${order.user.phone}`}
+                              className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline"
                             >
-                              {getOrderStatusLabel(order.status)}
-                            </div>
-                            <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
+                              {order.user.phone}
+                            </a>
                           </div>
-                        </td>
-                        <td className="px-4 py-5 sm:px-6 align-top">
-                          <div className="max-w-xs">
-                            {order.notes ? (
-                              <div className="rounded-lg bg-amber-50 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-900">
-                                <div className="flex items-start gap-2">
-                                  <span className="text-amber-500 mt-0.5">💬</span>
-                                  <span>{order.notes}</span>
+                        </div>
+
+                        {order.user.chatId ? (
+                          <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+                            Telegram ✓
+                          </span>
+                        ) : (
+                          <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 text-[10px] font-medium">
+                            Без TG
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Address */}
+                      <div className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
+                        <span className="text-slate-400 shrink-0 mt-0.5">📍</span>
+                        <span className="font-medium leading-relaxed">{getOrderAddressLabel(order)}</span>
+                      </div>
+
+                      {/* Package details, sum, payment method */}
+                      <div className="space-y-2 pt-0.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold border border-indigo-100 dark:border-indigo-900/40">
+                            📦 {order.packageType}
+                          </span>
+                          <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+                            📅 {formatDaysLabel(daysCount, order.deliveryDate)}
+                          </span>
+                          <span className="text-xs text-slate-600 dark:text-slate-400">
+                            🍴 {order.cutlery} шт
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 text-xs font-bold border border-emerald-200 dark:border-emerald-800">
+                            💰 {order.price !== null && order.price > 0 ? `${order.price} ₴` : order.packageType.toLowerCase().includes("ind") ? "Індивідуально" : "0 ₴"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            {order.paymentMethod === 'cash' && "💵 Готівка"}
+                            {order.paymentMethod === 'bank_transfer' && "🏦 Переказ (IBAN)"}
+                            {order.paymentMethod === 'plata' && "💳 Plata Mono"}
+                          </span>
+
+                          {order.receiptUrl ? (
+                            <a
+                              href={order.receiptUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 px-2.5 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800 transition"
+                            >
+                              <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "📄 PDF Чек" : "🧾 Квитанція"}</span>
+                              <span className="text-[10px]">↗</span>
+                            </a>
+                          ) : order.paymentMethod === 'bank_transfer' && !order.isPaid ? (
+                            <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 px-2 py-0.5 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
+                              Без чека
+                            </span>
+                          ) : null}
+                        </div>
+
+                        {order.sheetConfigMissing && (
+                          <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-3 py-1.5 text-xs font-bold text-red-700 dark:text-red-300">
+                            ⚠️ ТАБЛИЦЯ НЕ ЗНАЙДЕНА — ВНЕСТИ ВРУЧНУ
+                          </div>
+                        )}
+
+                        {order.notes && (
+                          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-3 py-1.5 text-xs text-amber-900 dark:text-amber-200">
+                            💬 <b>Коментар:</b> {order.notes}
+                          </div>
+                        )}
+
+                        {order.menuDetails && (
+                          <details className="group pt-1">
+                            <summary className="cursor-pointer text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1">
+                              <span className="group-open:rotate-90 transition-transform">▶</span>
+                              Деталі раціону
+                            </summary>
+                            <div className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-950 p-2.5 border border-slate-200 dark:border-slate-800">
+                              <pre className="whitespace-pre-wrap text-[11px] text-slate-600 dark:text-slate-400 font-mono leading-relaxed">
+                                {order.menuDetails}
+                              </pre>
+                            </div>
+                          </details>
+                        )}
+                      </div>
+
+                      {/* Status Selector & Actions */}
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-slate-500 font-medium">Статус:</span>
+                          <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
+                        </div>
+
+                        <OrderActionButtons
+                          orderId={order.id}
+                          isPaid={order.isPaid}
+                          hasChatId={!!order.user.chatId}
+                          orderPrice={order.price}
+                          packageType={order.packageType}
+                          customerName={order.user.name}
+                          customerPhone={order.user.phone}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block">
+                <SyncedHorizontalScroll>
+                  <table className="min-w-full border-collapse">
+                    <thead className="bg-gray-50 dark:bg-slate-950 text-left text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-slate-400">
+                      <tr>
+                        <th className="px-4 py-4 sm:px-6 w-32">ID / Дата</th>
+                        <th className="px-4 py-4 sm:px-6 w-40">Клієнт</th>
+                        <th className="px-4 py-4 sm:px-6 w-56">Таблиця</th>
+                        <th className="px-4 py-4 sm:px-6 w-48">Адреса</th>
+                        <th className="px-4 py-4 sm:px-6 min-w-[300px]">Пакет</th>
+                        <th className="px-4 py-4 sm:px-6 w-32">Оплата</th>
+                        <th className="px-4 py-4 sm:px-6 w-40">Статус</th>
+                        <th className="px-4 py-4 sm:px-6 w-48">Коментар</th>
+                        <th className="sticky right-0 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 px-4 py-4 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10 w-32">Дії</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {ordersWithMenuDetails.map((order) => {
+                        const daysCount = getOrderDaysCount(order.items);
+
+                        return (
+                          <tr key={order.id} className="hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-colors duration-150 align-top">
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              <div className="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5">
+                                <span className="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">{order.id.slice(0, 8)}</span>
+                              </div>
+                              <div className="mt-2 text-xs text-slate-500">{formatDateTime(order.createdAt)}</div>
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              <div className="flex items-center gap-2">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 text-white font-bold text-sm">
+                                  {order.user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-bold text-slate-900 dark:text-slate-100">{order.user.name}</div>
+                                  <div className="text-xs text-slate-500">{order.user.phone}</div>
                                 </div>
                               </div>
-                            ) : (
-                              <span className="text-xs text-slate-400 italic">Немає коментаря</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="sticky right-0 bg-white dark:bg-slate-900 px-4 py-5 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">
-                          <OrderActionButtons
-                            orderId={order.id}
-                            isPaid={order.isPaid}
-                            hasChatId={!!order.user.chatId}
-                            orderPrice={order.price}
-                            packageType={order.packageType}
-                            customerName={order.user.name}
-                            customerPhone={order.user.phone}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </SyncedHorizontalScroll>
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              {order.sheetConfigMissing ? (
+                                <div className="max-w-56 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 px-3 py-2 text-xs font-bold text-red-700 dark:text-red-300">
+                                  ТАБЛИЦЯ НЕ ЗНАЙДЕНА — ВНЕСТИ ВРУЧНУ
+                                </div>
+                              ) : null}
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              <div className="flex items-start gap-2">
+                                <span className="text-slate-400 mt-0.5">📍</span>
+                                <div className="text-sm text-slate-700 dark:text-slate-300 max-w-xs">{getOrderAddressLabel(order)}</div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top min-w-[300px]">
+                              <div className="space-y-2">
+                                <div className="inline-flex items-center gap-2 rounded-lg bg-indigo-100 dark:bg-indigo-950/60 px-3 py-1.5">
+                                  <span className="text-sm font-bold text-indigo-700 dark:text-indigo-300">{order.packageType}</span>
+                                </div>
+                                <div className="text-xs text-slate-600 dark:text-slate-400">📅 {formatDaysLabel(daysCount, order.deliveryDate)}</div>
+                                <div className="text-xs text-slate-600 dark:text-slate-400">🍴 Прибори: {order.cutlery}</div>
+                                {order.packageType && (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <div className="inline-flex items-center gap-1 rounded-lg bg-green-100 dark:bg-green-950/60 px-2.5 py-1 text-sm font-bold text-green-700 dark:text-green-300">
+                                      <span>💰</span>
+                                      <span>
+                                        {order.price !== null && order.price > 0 
+                                          ? `${order.price} ₴` 
+                                          : order.packageType.toLowerCase().includes("ind") 
+                                            ? "Індивідуально" 
+                                            : "0 ₴"}
+                                      </span>
+                                    </div>
+                                    <div className="inline-flex items-center gap-1 rounded-lg bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                                      {order.paymentMethod === 'cash' && "💵 Готівка"}
+                                      {order.paymentMethod === 'bank_transfer' && "🏦 Переказ (IBAN)"}
+                                      {order.paymentMethod === 'plata' && "💳 Plata by mono"}
+                                    </div>
+                                    {order.receiptUrl ? (
+                                      <a
+                                        href={order.receiptUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/80 px-2.5 py-1 text-xs font-bold border border-blue-200 dark:border-blue-800 transition shadow-xs"
+                                        title="Переглянути прикріплену квитанцію"
+                                      >
+                                        <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "📄" : "🧾"}</span>
+                                        <span>{order.receiptUrl.toLowerCase().includes(".pdf") ? "PDF Чек" : "Квитанція"}</span>
+                                        <span className="text-[10px]">↗</span>
+                                      </a>
+                                    ) : order.paymentMethod === 'bank_transfer' && !order.isPaid ? (
+                                      <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 px-2 py-0.5 text-[11px] font-medium border border-amber-200 dark:border-amber-800">
+                                        Без чека
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                )}
+                                {order.menuDetails && (
+                                  <details className="mt-3 group">
+                                    <summary className="cursor-pointer text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1">
+                                      <span className="group-open:rotate-90 transition-transform">▶</span>
+                                      Деталі раціону
+                                    </summary>
+                                    <div className="mt-2 rounded-lg bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-700">
+                                      <pre className="whitespace-pre-wrap text-xs text-slate-600 dark:text-slate-400 font-mono leading-relaxed">
+                                        {order.menuDetails}
+                                      </pre>
+                                    </div>
+                                  </details>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              <div
+                                className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm ${
+                                  order.isPaid
+                                    ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white"
+                                    : "bg-gradient-to-r from-amber-400 to-orange-500 text-white"
+                                }`}
+                              >
+                                <span>{order.isPaid ? "✓" : "⏳"}</span>
+                                <span>{order.isPaid ? "Оплачено" : "Очікує"}</span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              <div className="space-y-3">
+                                <div
+                                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-sm ${getOrderStatusClasses(order.status)}`}
+                                >
+                                  {getOrderStatusLabel(order.status)}
+                                </div>
+                                <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
+                              </div>
+                            </td>
+                            <td className="px-4 py-5 sm:px-6 align-top">
+                              <div className="max-w-xs">
+                                {order.notes ? (
+                                  <div className="rounded-lg bg-amber-50 border border-amber-200 dark:border-amber-800 px-3 py-2 text-xs text-amber-900">
+                                    <div className="flex items-start gap-2">
+                                      <span className="text-amber-500 mt-0.5">💬</span>
+                                      <span>{order.notes}</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-slate-400 italic">Немає коментаря</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="sticky right-0 bg-white dark:bg-slate-900 px-4 py-5 shadow-[-8px_0_20px_-5px_rgba(0,0,0,0.1)] sm:px-6 z-10">
+                              <OrderActionButtons
+                                orderId={order.id}
+                                isPaid={order.isPaid}
+                                hasChatId={!!order.user.chatId}
+                                orderPrice={order.price}
+                                packageType={order.packageType}
+                                customerName={order.user.name}
+                                customerPhone={order.user.phone}
+                              />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </SyncedHorizontalScroll>
+              </div>
+            </>
           )}
         </div>
       </section>
