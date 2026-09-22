@@ -561,9 +561,20 @@ export default function CheckoutPageImpl({
    * persisted in the store and is intentionally NOT cleared.
    */
   const handleAddAnotherPackage = () => {
-    const draft = buildDraftCartItem();
-    if (draft) {
+    if (currentDraftValid) {
+      const draft = buildDraftCartItem();
+      if (!draft) {
+        toast.error("Не вдалося додати поточний раціон. Перевірте вибір днів та страв.", {
+          icon: '⚠️',
+        });
+        return;
+      }
       addCartItem(draft);
+    } else if (cartItems.length === 0) {
+      toast.error("Спочатку сформуйте раціон.", {
+        icon: '⚠️',
+      });
+      return;
     }
     setDraftQuantity(1);
     clearSelections();

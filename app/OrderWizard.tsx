@@ -49,10 +49,34 @@ export default function OrderWizard({
   const selectedDates = useOrderStore((s) => s.selectedDates);
   const selections = useOrderStore((s) => s.selections);
   const resetWizard = useOrderStore((s) => s.resetWizard);
+  const clearSelections = useOrderStore((s) => s.clearSelections);
   const setStep = useOrderStore((s) => s.setStep);
   const [isSushkaView, setIsSushkaView] = useState(false);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  useEffect(() => {
+    const unsubHydrate = useOrderStore.persist.onHydrate(() => setHasHydrated(false));
+    const unsubFinish = useOrderStore.persist.onFinishHydration(() => setHasHydrated(true));
+    setHasHydrated(useOrderStore.persist.hasHydrated());
+    return () => {
+      unsubHydrate();
+      unsubFinish();
+    };
+  }, []);
 
   const { draftDays, draftComplete, canCheckout, totalDaysCount, totalPackagesCount, hasCartContent, cartLabel } = useMemo(() => {
+    if (!hasHydrated) {
+      return {
+        draftDays: 0,
+        draftComplete: false,
+        canCheckout: false,
+        totalDaysCount: 0,
+        totalPackagesCount: 0,
+        hasCartContent: false,
+        cartLabel: "",
+      };
+    }
+
     const pkg = parsePackageType(selectedPackageRaw);
     let draft = 0;
 
@@ -78,8 +102,8 @@ export default function OrderWizard({
 
     // Draft is complete only when ALL selected days have been fully assembled
     const isDraftComplete = selectedDates.length > 0 && draft === selectedDates.length;
-    // Can checkout: either the draft is complete, or there are only previously-added cart items (no active draft)
-    const canProceed = (draft > 0 ? isDraftComplete : true) && (totalDays > 0 || totalPackages > 0);
+    // Can checkout: either the draft is complete, or there are already added packages in cart
+    const canProceed = (addedCartPackages > 0 || isDraftComplete) && (totalDays > 0 || totalPackages > 0);
 
     let label = "";
     if (addedCartPackages > 0 && draft > 0) {
@@ -99,7 +123,7 @@ export default function OrderWizard({
       hasCartContent: totalDays > 0 || totalPackages > 0,
       cartLabel: label,
     };
-  }, [cartItems, selectedPackageRaw, selectedDates, selections]);
+  }, [hasHydrated, cartItems, selectedPackageRaw, selectedDates, selections]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -156,8 +180,19 @@ export default function OrderWizard({
         <div className="flex items-center justify-between p-1 sm:p-1.5 rounded-2xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800 shadow-sm backdrop-blur-md gap-1 sm:gap-1.5">
           {stepsList.map((s) => {
             const isActive = step === s.num;
-            const isCompleted = step > s.num;
-            const canNavigate = s.num === 1 || (s.num === 2 && Boolean(selectedPackageRaw)) || (s.num === 3 && selectedDates.length > 0);
+            const isConfigured =
+              s.num === 1
+                ? Boolean(selectedPackageRaw)
+                : s.num === 2
+                ? selectedDates.length > 0
+                : Boolean(draftDays > 0 && draftDays === selectedDates.length);
+
+            const canNavigate =
+              s.num === 1
+                ? true
+                : s.num === 2
+                ? Boolean(selectedPackageRaw)
+                : Boolean(selectedPackageRaw && selectedDates.length > 0);
 
             return (
               <button
@@ -171,13 +206,17 @@ export default function OrderWizard({
                 }}
                 className={`min-w-0 flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 px-1.5 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 ${
                   isActive
-                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/20"
-                    : isCompleted
-                    ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer"
-                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-60"
+                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-600/20 cursor-default"
+                    : canNavigate
+                    ? isConfigured
+                      ? "text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 cursor-pointer"
+                      : "text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer"
+                    : "text-slate-400 dark:text-slate-600 cursor-not-allowed opacity-40 select-none"
                 }`}
               >
-                <span className="text-xs sm:text-base flex-shrink-0">{isCompleted ? "✓" : s.icon}</span>
+                <span className="text-xs sm:text-base flex-shrink-0">
+                  {isConfigured && !isActive ? "✓" : s.icon}
+                </span>
                 <span className="sm:hidden text-xs font-bold truncate">{s.shortLabel}</span>
                 <span className="hidden sm:inline truncate">{s.label}</span>
               </button>
@@ -191,6 +230,13 @@ export default function OrderWizard({
   const renderFloatingCart = () => {
     if (!hasCartContent) return null;
     const remaining = selectedDates.length - draftDays;
+    const subtitle =
+      draftDays > 0 && !draftComplete
+        ? `Залишилось зібрати: ${remaining} ${remaining === 1 ? "день" : remaining >= 5 ? "днів" : "дні"}`
+        : canCheckout
+        ? "Збережено у вашому кошику"
+        : `Залишилось зібрати: ${remaining} ${remaining === 1 ? "день" : remaining >= 5 ? "днів" : "дні"}`;
+
     return (
       <div className="fixed bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 w-[calc(100%-1.5rem)] max-w-md animate-in fade-in slide-in-from-bottom-5 duration-300">
         <div className="rounded-2xl border border-emerald-400/40 dark:border-emerald-500/30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-2.5 sm:p-4 shadow-2xl shadow-emerald-950/20 flex items-center justify-between gap-2.5 sm:gap-3">
@@ -202,11 +248,12 @@ export default function OrderWizard({
               <div className="text-slate-900 dark:text-slate-100 text-xs sm:text-sm font-bold truncate">
                 {cartLabel}
               </div>
-              <div className={`text-[10px] font-semibold truncate ${canCheckout ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-                {canCheckout
-                  ? "Збережено у вашому кошику"
-                  : `Залишилось зібрати: ${remaining} ${remaining === 1 ? "день" : remaining >= 5 ? "днів" : "дні"}`
-                }
+              <div
+                className={`text-[10px] font-semibold truncate ${
+                  canCheckout ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+                }`}
+              >
+                {subtitle}
               </div>
             </div>
           </div>
@@ -297,7 +344,11 @@ export default function OrderWizard({
                 <span className="text-3xl sm:text-4xl select-none">🛒</span>
                 <div>
                   <div className="font-bold text-emerald-950 dark:text-emerald-100 text-base sm:text-lg">
-                    {draftDays > 0 && selectedPackageRaw ? (
+                    {cartItems.length > 0 && draftDays > 0 ? (
+                      <>
+                        У вашому кошику: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{totalPackagesCount} раціони</span> ({totalDaysCount} дн.)
+                      </>
+                    ) : draftDays > 0 && selectedPackageRaw ? (
                       <>
                         У вас є збережене замовлення: <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{selectedPackageRaw}</span> ({draftDays} {draftDays === 1 ? "день" : draftDays >= 5 ? "днів" : "дні"})
                       </>
@@ -315,7 +366,10 @@ export default function OrderWizard({
               <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <button
                   type="button"
-                  onClick={() => resetWizard()}
+                  onClick={() => {
+                    clearSelections();
+                    resetWizard();
+                  }}
                   className="text-xs text-slate-500 hover:text-red-500 underline px-2 py-1 transition-colors mr-auto sm:mr-0"
                 >
                   Очистити
@@ -367,6 +421,7 @@ export default function OrderWizard({
         <div className="w-full max-w-6xl mx-auto flex flex-col items-center text-center gap-6 px-4 sm:px-6 md:px-8">
           {renderStepper()}
           <MenuGridClient menuItems={menuItems} orderingMode={orderingMode} />
+          {renderFloatingCart()}
         </div>
       );
     default:
