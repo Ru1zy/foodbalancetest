@@ -258,7 +258,7 @@ export async function notifyDeliveryTime(orderId: string, timeWindow: string): P
   }
 }
 
-export async function broadcastMessage(htmlContent: string): Promise<{ ok: boolean; sent: number; message?: string }> {
+export async function broadcastMessage(htmlContent: string): Promise<{ ok: boolean; sent: number; message?: string; broadcastId?: string }> {
   const adminUser = await getAuthenticatedAdminUser();
 
   if (!adminUser) {
@@ -269,11 +269,21 @@ export async function broadcastMessage(htmlContent: string): Promise<{ ok: boole
     };
   }
 
-  if (!(htmlContent || "").trim()) {
+  const trimmed = (htmlContent || "").trim();
+  if (!trimmed) {
     return {
       ok: false,
       sent: 0,
       message: "Повідомлення порожнє.",
+    };
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    return {
+      ok: false,
+      sent: 0,
+      message: "TELEGRAM_BOT_TOKEN не налаштовано на сервері.",
     };
   }
 
@@ -286,39 +296,85 @@ export async function broadcastMessage(htmlContent: string): Promise<{ ok: boole
       },
       select: {
         chatId: true,
+        name: true,
       },
     });
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (users.length === 0) {
+      return {
+        ok: false,
+        sent: 0,
+        message: "Не знайдено жодного клієнта з підключеним Telegram.",
+      };
+    }
+
+    // Create Broadcast record in DB for auditing & recall
+    const broadcast = await prisma.broadcastMessage.create({
+      data: {
+        content: trimmed,
+        mode: "all",
+        status: "SENT",
+      },
+    });
+
     let sentCount = 0;
+    const recipientsData: {
+      broadcastId: string;
+      chatId: string;
+      userName: string;
+      telegramMessageId: number;
+    }[] = [];
 
     for (const user of users) {
       if (!user.chatId) continue;
 
       try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        const payload: Record<string, unknown> = {
+          chat_id: user.chatId,
+          text: trimmed,
+          parse_mode: "HTML",
+        };
+
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: user.chatId,
-            text: htmlContent,
-            parse_mode: "HTML",
-          }),
+          body: JSON.stringify(payload),
         });
 
-        sentCount++;
+        const data = await res.json().catch(() => ({}));
 
-        // Rate limit: 30 messages/second = ~33ms between messages
-        // Use 50ms to be safe
-        await new Promise(resolve => setTimeout(resolve, 50));
+        if (data.ok && data.result?.message_id) {
+          sentCount++;
+          recipientsData.push({
+            broadcastId: broadcast.id,
+            chatId: user.chatId,
+            userName: user.name || "Клієнт",
+            telegramMessageId: data.result.message_id,
+          });
+        }
+
+        // Rate limit: 50ms between messages (~20 msgs/sec, safe for Telegram API)
+        await new Promise((resolve) => setTimeout(resolve, 50));
       } catch (error) {
         console.error(`Failed to send to ${user.chatId}:`, error);
       }
     }
 
+    if (recipientsData.length > 0) {
+      await prisma.broadcastRecipient.createMany({
+        data: recipientsData,
+      });
+    }
+
+    await prisma.broadcastMessage.update({
+      where: { id: broadcast.id },
+      data: { sentCount },
+    });
+
     return {
       ok: true,
       sent: sentCount,
+      broadcastId: broadcast.id,
     };
   } catch (error) {
     console.error("broadcastMessage failed", error);
@@ -333,8 +389,9 @@ export async function broadcastMessage(htmlContent: string): Promise<{ ok: boole
 
 export async function sendDirectTelegramMessage(
   chatId: string,
-  htmlContent: string
-): Promise<{ ok: boolean; message?: string }> {
+  htmlContent: string,
+  targetName?: string
+): Promise<{ ok: boolean; message?: string; broadcastId?: string }> {
   const adminUser = await getAuthenticatedAdminUser();
 
   if (!adminUser) {
@@ -344,14 +401,16 @@ export async function sendDirectTelegramMessage(
     };
   }
 
-  if (!(chatId || "").trim()) {
+  const cleanChatId = (chatId || "").trim();
+  if (!cleanChatId) {
     return {
       ok: false,
       message: "Не вказано Telegram Chat ID клієнта.",
     };
   }
 
-  if (!(htmlContent || "").trim()) {
+  const cleanContent = (htmlContent || "").trim();
+  if (!cleanContent) {
     return {
       ok: false,
       message: "Повідомлення порожнє.",
@@ -371,24 +430,48 @@ export async function sendDirectTelegramMessage(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        chat_id: chatId.trim(),
-        text: htmlContent.trim(),
+        chat_id: cleanChatId,
+        text: cleanContent,
         parse_mode: "HTML",
       }),
     });
 
-    if (!response.ok) {
-      const errData = (await response.json().catch(() => ({}))) as { description?: string };
-      const desc = errData?.description || `код ${response.status}`;
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || !data.ok) {
+      const desc = data?.description || `код ${response.status}`;
       return {
         ok: false,
         message: `Telegram API: ${desc}`,
       };
     }
 
+    const messageId = data.result?.message_id;
+
+    // Create BroadcastMessage record for direct message recall
+    const broadcast = await prisma.broadcastMessage.create({
+      data: {
+        content: cleanContent,
+        mode: "single",
+        targetName: targetName || cleanChatId,
+        sentCount: 1,
+        status: "SENT",
+        recipients: messageId
+          ? {
+              create: {
+                chatId: cleanChatId,
+                userName: targetName || "Клієнт",
+                telegramMessageId: messageId,
+              },
+            }
+          : undefined,
+      },
+    });
+
     return {
       ok: true,
       message: "Повідомлення успішно надіслано!",
+      broadcastId: broadcast.id,
     };
   } catch (error) {
     console.error("sendDirectTelegramMessage failed", error);
@@ -397,6 +480,226 @@ export async function sendDirectTelegramMessage(
       ok: false,
       message: "Помилка мережі при відправці повідомлення в Telegram.",
     };
+  }
+}
+
+export async function getRecentBroadcasts(): Promise<
+  Array<{
+    id: string;
+    content: string;
+    mode: string;
+    targetName: string | null;
+    sentCount: number;
+    recalledCount: number;
+    status: string;
+    createdAt: string;
+    canRecall: boolean;
+  }>
+> {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) return [];
+
+  try {
+    const broadcasts = await prisma.broadcastMessage.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 15,
+      include: {
+        _count: {
+          select: {
+            recipients: {
+              where: { isDeleted: false },
+            },
+          },
+        },
+      },
+    });
+
+    const now = Date.now();
+    const fortyEightHoursMs = 48 * 60 * 60 * 1000;
+
+    return broadcasts.map((b) => {
+      const age = now - new Date(b.createdAt).getTime();
+      const within48Hours = age < fortyEightHoursMs;
+      const hasActiveMessages = b._count.recipients > 0;
+
+      return {
+        id: b.id,
+        content: b.content,
+        mode: b.mode,
+        targetName: b.targetName,
+        sentCount: b.sentCount,
+        recalledCount: b.recalledCount,
+        status: b.status,
+        createdAt: b.createdAt.toISOString(),
+        canRecall: within48Hours && hasActiveMessages && b.status !== "RECALLED",
+      };
+    });
+  } catch (error) {
+    console.error("getRecentBroadcasts failed", error);
+    return [];
+  }
+}
+
+export async function recallBroadcast(broadcastId: string): Promise<{
+  ok: boolean;
+  message: string;
+  recalledCount?: number;
+}> {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Недостатньо прав адміністратора." };
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    return { ok: false, message: "TELEGRAM_BOT_TOKEN не налаштовано на сервері." };
+  }
+
+  try {
+    const broadcast = await prisma.broadcastMessage.findUnique({
+      where: { id: broadcastId },
+      include: {
+        recipients: {
+          where: { isDeleted: false },
+        },
+      },
+    });
+
+    if (!broadcast) {
+      return { ok: false, message: "Розсилку не знайдено." };
+    }
+
+    let deletedCount = 0;
+    const deletedRecipientIds: string[] = [];
+
+    for (const item of broadcast.recipients) {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/deleteMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: item.chatId,
+            message_id: item.telegramMessageId,
+          }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (data.ok || data.description?.includes("message to delete not found")) {
+          deletedCount++;
+          deletedRecipientIds.push(item.id);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      } catch (err) {
+        console.error(`Failed to delete message for ${item.chatId}:`, err);
+      }
+    }
+
+    if (deletedRecipientIds.length > 0) {
+      await prisma.broadcastRecipient.updateMany({
+        where: { id: { in: deletedRecipientIds } },
+        data: { isDeleted: true },
+      });
+    }
+
+    await prisma.broadcastMessage.update({
+      where: { id: broadcastId },
+      data: {
+        status: "RECALLED",
+        recalledCount: { increment: deletedCount },
+      },
+    });
+
+    return {
+      ok: true,
+      message: `Успішно відкликано та видалено ${deletedCount} повідомлень у Telegram!`,
+      recalledCount: deletedCount,
+    };
+  } catch (error) {
+    console.error("recallBroadcast failed", error);
+    return { ok: false, message: "Помилка при спробі відкликати повідомлення." };
+  }
+}
+
+export async function editBroadcastMessage(
+  broadcastId: string,
+  newHtmlContent: string
+): Promise<{
+  ok: boolean;
+  message: string;
+  editedCount?: number;
+}> {
+  const adminUser = await getAuthenticatedAdminUser();
+  if (!adminUser) {
+    return { ok: false, message: "Недостатньо прав адміністратора." };
+  }
+
+  const trimmed = (newHtmlContent || "").trim();
+  if (!trimmed) {
+    return { ok: false, message: "Новий текст не може бути порожнім." };
+  }
+
+  const botToken = process.env.TELEGRAM_BOT_TOKEN;
+  if (!botToken) {
+    return { ok: false, message: "TELEGRAM_BOT_TOKEN не налаштовано." };
+  }
+
+  try {
+    const broadcast = await prisma.broadcastMessage.findUnique({
+      where: { id: broadcastId },
+      include: {
+        recipients: {
+          where: { isDeleted: false },
+        },
+      },
+    });
+
+    if (!broadcast) {
+      return { ok: false, message: "Розсилку не знайдено." };
+    }
+
+    let editedCount = 0;
+
+    for (const item of broadcast.recipients) {
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/editMessageText`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: item.chatId,
+            message_id: item.telegramMessageId,
+            text: trimmed,
+            parse_mode: "HTML",
+          }),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (data.ok) {
+          editedCount++;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      } catch (err) {
+        console.error(`Failed to edit message for ${item.chatId}:`, err);
+      }
+    }
+
+    await prisma.broadcastMessage.update({
+      where: { id: broadcastId },
+      data: {
+        content: trimmed,
+        status: "EDITED",
+      },
+    });
+
+    return {
+      ok: true,
+      message: `Текст успішно оновлено у ${editedCount} чатах клієнтів!`,
+      editedCount,
+    };
+  } catch (error) {
+    console.error("editBroadcastMessage failed", error);
+    return { ok: false, message: "Помилка при оновленні повідомлень." };
   }
 }
 

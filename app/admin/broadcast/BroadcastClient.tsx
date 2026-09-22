@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useRef, useMemo, useEffect } from "react";
-import { broadcastMessage, sendDirectTelegramMessage } from "@/app/actions/admin";
+import { 
+  broadcastMessage, 
+  sendDirectTelegramMessage,
+  getRecentBroadcasts,
+  recallBroadcast,
+  editBroadcastMessage
+} from "@/app/actions/admin";
 import { 
   Send, 
   Bold, 
@@ -25,7 +31,14 @@ import {
   ChevronDown,
   HelpCircle,
   BookOpen,
-  Check
+  Check,
+  Trash2,
+  RotateCcw,
+  Edit3,
+  Clock,
+  ShieldAlert,
+  History,
+  RefreshCw
 } from "lucide-react";
 
 export type BroadcastUser = {
@@ -39,8 +52,21 @@ export type BroadcastUser = {
   };
 };
 
+export type BroadcastHistoryItem = {
+  id: string;
+  content: string;
+  mode: string;
+  targetName: string | null;
+  sentCount: number;
+  recalledCount: number;
+  status: string;
+  createdAt: string;
+  canRecall: boolean;
+};
+
 interface Props {
   clients: BroadcastUser[];
+  initialBroadcasts?: BroadcastHistoryItem[];
 }
 
 const QUICK_EMOJIS = ["🚚", "🥗", "⏰", "🔥", "⭐", "🎁", "💬", "⚡"];
@@ -204,7 +230,7 @@ export const TELEGRAM_TEMPLATES = [
   },
 ];
 
-export default function BroadcastClient({ clients }: Props) {
+export default function BroadcastClient({ clients, initialBroadcasts }: Props) {
   const [mode, setMode] = useState<"all" | "single">("all");
   const [selectedClient, setSelectedClient] = useState<BroadcastUser | null>(null);
   const [clientSearch, setClientSearch] = useState("");
@@ -214,6 +240,14 @@ export default function BroadcastClient({ clients }: Props) {
   const [isSending, setIsSending] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   
+  // Broadcast history & recall state
+  const [broadcasts, setBroadcasts] = useState<BroadcastHistoryItem[]>(initialBroadcasts || []);
+  const [recallingId, setRecallingId] = useState<string | null>(null);
+  const [editingBroadcast, setEditingBroadcast] = useState<BroadcastHistoryItem | null>(null);
+  const [editingText, setEditingText] = useState("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isRefreshingHistory, setIsRefreshingHistory] = useState(false);
+
   // Emoji picker & constructs dropdown & guide modal states
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isConstructsOpen, setIsConstructsOpen] = useState(false);
@@ -224,6 +258,64 @@ export default function BroadcastClient({ clients }: Props) {
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const constructsRef = useRef<HTMLDivElement>(null);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  const refreshHistory = async () => {
+    setIsRefreshingHistory(true);
+    try {
+      const updated = await getRecentBroadcasts();
+      setBroadcasts(updated);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsRefreshingHistory(false);
+    }
+  };
+
+  const handleRecall = async (b: BroadcastHistoryItem) => {
+    const isSingle = b.mode === "single";
+    const confirmPrompt = isSingle
+      ? `🚨 ВІДКЛИКАННЯ ПОВІДОМЛЕННЯ!\n\nВидалити це повідомлення з особистого чату клієнта ${b.targetName || ""}? Воно безслідно зникне з його переписки в Telegram.`
+      : `🚨 УВАГА! ВІДКЛИКАННЯ МАСОВОЇ РОЗСИЛКИ!\n\nВидалити це повідомлення у ВСІХ ${b.sentCount} клієнтів?\nВоно буде безслідно стерто з їхніх чатів у Telegram.`;
+
+    if (!confirm(confirmPrompt)) return;
+
+    setRecallingId(b.id);
+    try {
+      const res = await recallBroadcast(b.id);
+      alert(res.message);
+      await refreshHistory();
+    } catch (err) {
+      alert("Помилка при спробі відкликати повідомлення.");
+    } finally {
+      setRecallingId(null);
+    }
+  };
+
+  const startEditBroadcast = (b: BroadcastHistoryItem) => {
+    setEditingBroadcast(b);
+    setEditingText(b.content);
+  };
+
+  const submitEditBroadcast = async () => {
+    if (!editingBroadcast) return;
+    const trimmed = editingText.trim();
+    if (!trimmed) {
+      alert("Текст повідомлення не може бути порожнім.");
+      return;
+    }
+
+    setIsSavingEdit(true);
+    try {
+      const res = await editBroadcastMessage(editingBroadcast.id, trimmed);
+      alert(res.message);
+      setEditingBroadcast(null);
+      await refreshHistory();
+    } catch (err) {
+      alert("Помилка при оновленні тексту повідомлень.");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   // Close emoji picker and search dropdown on outside click
   useEffect(() => {
@@ -390,7 +482,7 @@ export default function BroadcastClient({ clients }: Props) {
       setResult(null);
 
       try {
-        const res = await sendDirectTelegramMessage(selectedClient.chatId, trimmed);
+        const res = await sendDirectTelegramMessage(selectedClient.chatId, trimmed, selectedClient.name);
         setResult({
           ok: res.ok,
           message: res.ok
@@ -400,6 +492,7 @@ export default function BroadcastClient({ clients }: Props) {
 
         if (res.ok) {
           setContent("");
+          await refreshHistory();
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Помилка при виконанні";
@@ -435,6 +528,7 @@ export default function BroadcastClient({ clients }: Props) {
 
       if (res.ok) {
         setContent("");
+        await refreshHistory();
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Помилка при виконанні розсилки";
@@ -456,7 +550,8 @@ export default function BroadcastClient({ clients }: Props) {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Editor Column */}
       <div className="lg:col-span-7 space-y-6">
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-7 shadow-sm">
@@ -1042,6 +1137,190 @@ export default function BroadcastClient({ clients }: Props) {
         </div>
       </div>
 
+      {/* Broadcast History & Recall Section */}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <div className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
+              <History className="w-5 h-5 text-indigo-500" />
+              <span>Історія повідомлень та відкликання (Recall)</span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Ви можете <b>безслідно видалити</b> або <b>відредагувати</b> будь-яке надіслане ботом повідомлення у Telegram протягом 48 годин.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={refreshHistory}
+            disabled={isRefreshingHistory}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshingHistory ? "animate-spin text-blue-500" : ""}`} />
+            <span>Оновити список</span>
+          </button>
+        </div>
+
+        {broadcasts.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 text-xs">
+            <Clock className="w-8 h-8 mx-auto mb-2 opacity-40 text-slate-400" />
+            <p>Ще не було надіслано жодної розсилки з моменту запуску системи.</p>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Усі нові повідомлення автоматично з&apos;являтимуться тут із можливістю швидкого відкликання або редагування.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-4 divide-y divide-slate-100 dark:divide-slate-800">
+            {broadcasts.map((b) => (
+              <div
+                key={b.id}
+                className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 transition hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 rounded-xl"
+              >
+                {/* Left: Info & Content preview */}
+                <div className="space-y-1.5 min-w-0 max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    {/* Mode Badge */}
+                    {b.mode === "all" ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-300 text-[11px] font-bold">
+                        <Users className="w-3 h-3" />
+                        <span>Всім клієнтам ({b.sentCount})</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 text-[11px] font-bold">
+                        <User className="w-3 h-3" />
+                        <span>{b.targetName || "Клієнту"}</span>
+                      </span>
+                    )}
+
+                    {/* Status Badge */}
+                    {b.status === "RECALLED" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/80 text-red-700 dark:text-red-300 text-[10.5px] font-bold">
+                        <Trash2 className="w-3 h-3" />
+                        <span>Відкликано (видалено у {b.recalledCount})</span>
+                      </span>
+                    ) : b.status === "EDITED" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 text-[10.5px] font-bold">
+                        <Edit3 className="w-3 h-3" />
+                        <span>Відредаговано</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10.5px] font-bold">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Доставлено ({b.sentCount})</span>
+                      </span>
+                    )}
+
+                    {/* Date/Time */}
+                    <span className="text-slate-400 text-[11px] flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      <span>{new Date(b.createdAt).toLocaleString("uk-UA")}</span>
+                    </span>
+                  </div>
+
+                  {/* Message content snippet */}
+                  <div className="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 font-sans bg-slate-50 dark:bg-slate-950/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                    <span
+                      dangerouslySetInnerHTML={{
+                        __html: formatTelegramPreview(b.content),
+                      }}
+                      className="telegram-html-preview"
+                    />
+                  </div>
+                </div>
+
+                {/* Right: Actions */}
+                <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                  {b.status !== "RECALLED" ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => startEditBroadcast(b)}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer"
+                        title="Змінити текст цього повідомлення прямо в чатах клієнтів"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-blue-500" />
+                        <span>Редагувати</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRecall(b)}
+                        disabled={recallingId === b.id}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-red-200 dark:border-red-900/60 bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/60 transition disabled:opacity-50 cursor-pointer"
+                        title="Безслідно видалити це повідомлення з Telegram у всіх отримувачів"
+                      >
+                        <Trash2 className={`w-3.5 h-3.5 ${recallingId === b.id ? "animate-spin" : ""}`} />
+                        <span>{recallingId === b.id ? "Видалення..." : "🚨 Відкликати у всіх"}</span>
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-[11px] text-slate-400 italic px-2">
+                      Повідомлення видалено з чатів
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Edit Sent Message Modal */}
+      {editingBroadcast && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-blue-500" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                  Редагування надісланого повідомлення
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingBroadcast(null)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-3">
+              Текст повідомлення зміниться прямо в чатах усіх отримувачів у Telegram (без повторного звукового сповіщення).
+            </p>
+
+            <div className="mt-3">
+              <textarea
+                rows={6}
+                value={editingText}
+                onChange={(e) => setEditingText(e.target.value)}
+                disabled={isSavingEdit}
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditingBroadcast(null)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              >
+                Скасувати
+              </button>
+              <button
+                type="button"
+                onClick={submitEditBroadcast}
+                disabled={isSavingEdit || !editingText.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+              >
+                <Check className="w-4 h-4" />
+                <span>{isSavingEdit ? "Оновлення..." : "Зберегти та змінити в Telegram"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Telegram HTML Guide Modal */}
       {isGuideOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -1197,6 +1476,7 @@ export default function BroadcastClient({ clients }: Props) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -264,3 +264,35 @@ model Review {
   @@index([status, createdAt])
   @@index([userId])
 }
+
+/// Stores broadcast logs and messages sent via Telegram bot for auditing,
+/// message editing, and full recall/deletion within 48 hours.
+model BroadcastMessage {
+  id            String   @id @default(uuid())
+  content       String   // Message HTML text
+  mode          String   // "all" | "single"
+  targetName    String?  // If single, user name/chatId
+  sentCount     Int      @default(0)
+  recalledCount Int      @default(0)
+  status        String   @default("SENT") // "SENT" | "RECALLED" | "EDITED"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  recipients    BroadcastRecipient[]
+
+  @@index([createdAt])
+}
+
+model BroadcastRecipient {
+  id                String   @id @default(uuid())
+  broadcastId       String
+  broadcast         BroadcastMessage @relation(fields: [broadcastId], references: [id], onDelete: Cascade)
+  chatId            String
+  userName          String?
+  telegramMessageId Int
+  isDeleted         Boolean  @default(false)
+  error             String?
+  createdAt         DateTime @default(now())
+
+  @@index([broadcastId])
+  @@index([chatId])
+}

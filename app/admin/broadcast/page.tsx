@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import BroadcastClient from "./BroadcastClient";
 import AdminHelpBanner from "@/components/admin/AdminHelpBanner";
+import { getRecentBroadcasts } from "@/app/actions/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,9 @@ export default async function AdminBroadcastPage() {
   if (!adminUser) {
     redirect("/admin/login");
   }
+
+  // Fetch recent broadcast history (for recall and edits)
+  const recentBroadcasts = await getRecentBroadcasts();
 
   // Query clients with valid Telegram ChatID
   const clientsWithTelegram = await prisma.user.findMany({
@@ -93,7 +97,7 @@ export default async function AdminBroadcastPage() {
           ]}
         />
 
-        <BroadcastClient clients={clientsWithTelegram} />
+        <BroadcastClient clients={clientsWithTelegram} initialBroadcasts={recentBroadcasts} />
       </div>
     </main>
   );
