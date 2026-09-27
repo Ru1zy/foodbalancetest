@@ -1,10 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, X, Send, Phone, CheckCircle2 } from "lucide-react";
+import { MessageSquare, X, Send, Phone, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { FaTelegram } from "react-icons/fa";
 import { createSupportTicketAction } from "@/app/actions/feedback";
 import { SITE_CONFIG } from "@/lib/site-config";
+import toast from "react-hot-toast";
+
+const STORAGE_KEY = "fb_support_widget_hidden";
 
 export default function SupportWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,11 +18,58 @@ export default function SupportWidget() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Preference: whether the floating circle button is hidden
+  const [isFloatingHidden, setIsFloatingHidden] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === "true") {
+        setIsFloatingHidden(true);
+      }
+    } catch {}
+
     const handleOpen = () => setIsOpen(true);
+    const handleToggleFloating = (e: CustomEvent<{ hidden?: boolean }>) => {
+      if (e.detail?.hidden !== undefined) {
+        setIsFloatingHidden(e.detail.hidden);
+      } else {
+        setIsFloatingHidden((prev) => !prev);
+      }
+    };
+
     window.addEventListener("open-support-widget", handleOpen);
-    return () => window.removeEventListener("open-support-widget", handleOpen);
+    window.addEventListener("toggle-support-floating" as any, handleToggleFloating);
+    return () => {
+      window.removeEventListener("open-support-widget", handleOpen);
+      window.removeEventListener("toggle-support-floating" as any, handleToggleFloating);
+    };
   }, []);
+
+  const handleDismissFloating = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsFloatingHidden(true);
+    try {
+      localStorage.setItem(STORAGE_KEY, "true");
+    } catch {}
+    toast("Кнопку підтримки приховано. Ви завжди можете написати нам через шапку або футер сайту.", {
+      icon: "💬",
+      duration: 4500,
+    });
+  };
+
+  const handleRestoreFloating = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsFloatingHidden(false);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+    toast.success("Плаваючу кнопку підтримки повернено на екран!", {
+      duration: 3000,
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +98,6 @@ export default function SupportWidget() {
 
   const handleClose = () => {
     setIsOpen(false);
-    // Reset success state after short delay
     setTimeout(() => {
       setIsSuccess(false);
       setError(null);
@@ -58,26 +107,44 @@ export default function SupportWidget() {
   return (
     <>
       {/* Floating Toggle Button */}
-      <div className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40">
-        <button
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-hidden focus:ring-4 focus:ring-emerald-500/30 cursor-pointer"
-          aria-label="Підтримка та зворотний зв'язок"
-        >
-          {isOpen ? (
-            <X className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200" />
-          ) : (
-            <>
-              <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 transition-transform duration-200 group-hover:rotate-6" />
-              {/* Subtle pulsing indicator */}
-              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
-              </span>
-            </>
+      {mounted && !isFloatingHidden && (
+        <div className="fixed bottom-20 sm:bottom-6 right-3 sm:right-6 z-40 group/widget select-none animate-in fade-in zoom-in-95 duration-200">
+          {/* Dismiss 'x' badge on hover or tap */}
+          {!isOpen && (
+            <button
+              type="button"
+              onClick={handleDismissFloating}
+              title="Сховати плаваючий віджет з екрану"
+              aria-label="Сховати кнопку підтримки"
+              className="absolute -top-1.5 -left-1.5 z-50 flex h-5 w-5 sm:h-5.5 sm:w-5.5 items-center justify-center rounded-full bg-slate-900/90 dark:bg-slate-800 text-slate-300 hover:text-white hover:bg-rose-600 dark:hover:bg-rose-600 border border-slate-700/80 shadow-md transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer opacity-90 sm:opacity-0 sm:group-hover/widget:opacity-100"
+            >
+              <X className="h-3 w-3 stroke-[2.5]" />
+            </button>
           )}
-        </button>
-      </div>
+
+          {/* Main Round Floating Button */}
+          <button
+            type="button"
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="group relative flex h-11 w-11 sm:h-13 sm:w-13 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 hover:bg-emerald-500 hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-hidden focus:ring-4 focus:ring-emerald-500/30 cursor-pointer"
+            aria-label="Підтримка та зворотний зв'язок"
+            title="Підтримка та зворотний зв'язок"
+          >
+            {isOpen ? (
+              <X className="h-5 w-5 sm:h-5.5 sm:w-5.5 transition-transform duration-200" />
+            ) : (
+              <>
+                <MessageSquare className="h-5 w-5 sm:h-5.5 sm:w-5.5 transition-transform duration-200 group-hover:rotate-6" />
+                {/* Subtle pulsing indicator */}
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white dark:border-slate-900"></span>
+                </span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Slide-in Modal / Drawer */}
       {isOpen && (
@@ -88,19 +155,42 @@ export default function SupportWidget() {
           >
             {/* Modal Header */}
             <div className="relative p-6 bg-gradient-to-r from-emerald-600 to-teal-700 text-white">
-              <button
-                onClick={handleClose}
-                className="absolute top-4 right-4 p-2 rounded-full hover:bg-white/20 transition cursor-pointer"
-                aria-label="Закрити"
-              >
-                <X className="h-5 w-5" />
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md">
+              <div className="absolute top-4 right-4 flex items-center gap-1.5">
+                {/* Quick toggle for floating button */}
+                <button
+                  type="button"
+                  onClick={isFloatingHidden ? handleRestoreFloating : handleDismissFloating}
+                  className="px-2.5 py-1 rounded-lg bg-black/20 hover:bg-black/30 text-white/90 hover:text-white text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 border border-white/10"
+                  title={isFloatingHidden ? "Повернути плаваючий кружок на екран" : "Сховати плаваючий кружок (підтримка залишиться у шапці та футері)"}
+                >
+                  {isFloatingHidden ? (
+                    <>
+                      <Eye className="h-3 w-3" />
+                      <span>Показати кнопку</span>
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="h-3 w-3" />
+                      <span>Сховати значок</span>
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="p-1.5 rounded-full hover:bg-white/20 transition cursor-pointer"
+                  aria-label="Закрити"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3 pr-24 sm:pr-28">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shrink-0">
                   <MessageSquare className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg leading-tight">Зв'язатися з нами</h3>
+                  <h3 className="font-bold text-lg leading-tight">Зв&apos;язатися з нами</h3>
                   <p className="text-xs text-emerald-100 mt-0.5">Відповідаємо щодня з 09:00 до 21:00</p>
                 </div>
               </div>
@@ -108,10 +198,24 @@ export default function SupportWidget() {
 
             {/* Modal Body */}
             <div className="p-6 overflow-y-auto space-y-5">
+              {/* Notice when floating button is hidden */}
+              {isFloatingHidden && (
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-300">
+                  <span>Плаваючу кнопку на екрані приховано.</span>
+                  <button
+                    type="button"
+                    onClick={handleRestoreFloating}
+                    className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer shrink-0"
+                  >
+                    Повернути на екран
+                  </button>
+                </div>
+              )}
+
               {/* Quick links */}
               <div>
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2.5">
-                  Швидкий зв'язок
+                  Швидкий зв&apos;язок
                 </p>
                 <div className="grid grid-cols-2 gap-2.5">
                   <a
@@ -156,7 +260,7 @@ export default function SupportWidget() {
                   </div>
                   <h4 className="font-bold text-slate-900 dark:text-white text-base">Звернення надіслано!</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                    Адміністратор уже отримав сповіщення в Telegram і зв'яжеться з вами найближчим часом.
+                    Адміністратор уже отримав сповіщення в Telegram і зв&apos;яжеться з вами найближчим часом.
                   </p>
                   <button
                     type="button"
@@ -179,7 +283,7 @@ export default function SupportWidget() {
 
                   <div>
                     <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Ваше ім'я
+                      Ваше ім&apos;я
                     </label>
                     <input
                       type="text"

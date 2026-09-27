@@ -7,6 +7,7 @@ import prisma from "@/lib/prisma";
 import { verifyAuthToken } from "@/lib/auth-token";
 import { ThemeToggle } from "./ThemeToggle";
 import HeaderCartButton from "./HeaderCartButton";
+import HeaderSupportButton from "./HeaderSupportButton";
 import { Phone } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/site-config";
 
@@ -56,6 +57,7 @@ export default async function Header() {
               <span>{SITE_CONFIG.phoneDisplay || "+380 93 015 05 07"}</span>
             </a>
             <HeaderCartButton />
+            <HeaderSupportButton />
             <ThemeToggle />
             {isAuthenticated ? (
               <>

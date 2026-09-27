@@ -1,6 +1,7 @@
 import { Phone, Code2 } from "lucide-react";
 import { FaInstagram, FaTiktok, FaTelegram } from "react-icons/fa";
 import { getPublicSettings } from "@/app/actions/settings";
+import FooterSupportButton from "./FooterSupportButton";
 
 export default async function Footer() {
   const settings = await getPublicSettings();
@@ -34,6 +35,7 @@ export default async function Footer() {
         <div>
           <h3 className="text-lg font-bold text-white mb-4">Контакти</h3>
           <div className="flex flex-col space-y-3 text-sm text-slate-300 dark:text-slate-400">
+            <FooterSupportButton />
             {settings.contactPhone && (
               <a 
                 href={`tel:${settings.contactPhone.replace(/[^\d+]/g, "")}`} 
