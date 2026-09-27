@@ -323,7 +323,10 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
         onClick={() => setLightboxImage(null)}
       >
         {lightboxTitle && (
-          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 text-white font-bold text-xs sm:text-base bg-black/60 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 max-w-[65%] sm:max-w-[80%] truncate shadow-lg">
+          <div
+            title={lightboxTitle}
+            className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 text-white font-bold text-xs sm:text-sm md:text-base bg-black/75 backdrop-blur-md px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl border border-white/15 max-w-[calc(100%-4.5rem)] sm:max-w-[calc(100%-6rem)] shadow-xl leading-snug break-words"
+          >
             {lightboxTitle}
           </div>
         )}
@@ -633,7 +636,10 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                    <div className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[10px] sm:text-xs font-bold text-emerald-300 shadow-sm max-w-[55%] truncate">
+                    <div
+                      title="3 прийоми їжі"
+                      className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[10px] sm:text-xs font-bold text-emerald-300 shadow-sm max-w-[65%] truncate"
+                    >
                       3 прийоми їжі
                     </div>
                     <div className="absolute top-3 right-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm shrink-0 whitespace-nowrap">
@@ -726,7 +732,10 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                    <div className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[10px] sm:text-xs font-bold text-blue-300 shadow-sm max-w-[55%] truncate">
+                    <div
+                      title="4 прийоми їжі"
+                      className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[10px] sm:text-xs font-bold text-blue-300 shadow-sm max-w-[65%] truncate"
+                    >
                       4 прийоми їжі
                     </div>
                     <div className="absolute top-3 right-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm shrink-0 whitespace-nowrap">
@@ -865,7 +874,10 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[10px] sm:text-xs font-black text-amber-300 shadow-sm flex items-center gap-1 max-w-[55%] truncate">
+                  <div
+                    title="Експрес-програма"
+                    className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-[10px] sm:text-xs font-black text-amber-300 shadow-sm flex items-center gap-1 max-w-[65%] truncate"
+                  >
                     <span>🔥</span>
                     <span className="truncate">Експрес-програма</span>
                   </div>
@@ -974,7 +986,10 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-purple-400/20 text-[10px] sm:text-xs font-black text-purple-300 shadow-sm flex items-center gap-1 max-w-[55%] truncate">
+                  <div
+                    title="Конструктор"
+                    className="absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-purple-400/20 text-[10px] sm:text-xs font-black text-purple-300 shadow-sm flex items-center gap-1 max-w-[65%] truncate"
+                  >
                     <span>✨</span>
                     <span className="truncate">Конструктор</span>
                   </div>
@@ -1067,7 +1082,10 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/35 pointer-events-none z-10" />
 
-                  <div className={`absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border ${badgeInfo.color} text-[10px] sm:text-xs font-bold shadow-sm max-w-[55%] truncate`}>
+                  <div
+                    title={badgeInfo.text}
+                    className={`absolute top-3 left-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border ${badgeInfo.color} text-[10px] sm:text-xs font-bold shadow-sm max-w-[65%] truncate`}
+                  >
                     {badgeInfo.text}
                   </div>
                   <div className="absolute top-3 right-3 z-20 px-2.5 py-1 sm:px-3 rounded-full bg-slate-900/85 backdrop-blur-md border border-white/10 text-right shadow-sm shrink-0 whitespace-nowrap">

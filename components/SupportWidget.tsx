@@ -154,45 +154,26 @@ export default function SupportWidget() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="relative p-6 bg-gradient-to-r from-emerald-600 to-teal-700 text-white">
-              <div className="absolute top-4 right-4 flex items-center gap-1.5">
-                {/* Quick toggle for floating button */}
-                <button
-                  type="button"
-                  onClick={isFloatingHidden ? handleRestoreFloating : handleDismissFloating}
-                  className="px-2.5 py-1 rounded-lg bg-black/20 hover:bg-black/30 text-white/90 hover:text-white text-[11px] font-semibold transition cursor-pointer flex items-center gap-1 border border-white/10"
-                  title={isFloatingHidden ? "Повернути плаваючий кружок на екран" : "Сховати плаваючий кружок (підтримка залишиться у шапці та футері)"}
-                >
-                  {isFloatingHidden ? (
-                    <>
-                      <Eye className="h-3 w-3" />
-                      <span>Показати кнопку</span>
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="h-3 w-3" />
-                      <span>Сховати значок</span>
-                    </>
-                  )}
-                </button>
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-emerald-600 to-teal-700 text-white">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shrink-0">
+                    <MessageSquare className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base sm:text-lg leading-tight">Зв&apos;язатися з нами</h3>
+                    <p className="text-xs text-emerald-100 mt-0.5">Відповідаємо щодня з 09:00 до 21:00</p>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="p-1.5 rounded-full hover:bg-white/20 transition cursor-pointer"
+                  className="p-2 rounded-full hover:bg-white/20 transition cursor-pointer shrink-0"
                   aria-label="Закрити"
                 >
                   <X className="h-5 w-5" />
                 </button>
-              </div>
-
-              <div className="flex items-center gap-3 pr-24 sm:pr-28">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md shrink-0">
-                  <MessageSquare className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg leading-tight">Зв&apos;язатися з нами</h3>
-                  <p className="text-xs text-emerald-100 mt-0.5">Відповідаємо щодня з 09:00 до 21:00</p>
-                </div>
               </div>
             </div>
 
@@ -200,7 +181,7 @@ export default function SupportWidget() {
             <div className="p-6 overflow-y-auto space-y-5">
               {/* Notice when floating button is hidden */}
               {isFloatingHidden && (
-                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-[11px] text-slate-600 dark:text-slate-300">
+                <div className="flex items-center justify-between gap-2 p-3 rounded-2xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700/60 text-xs text-slate-700 dark:text-slate-300">
                   <span>Плаваючу кнопку на екрані приховано.</span>
                   <button
                     type="button"
@@ -340,6 +321,20 @@ export default function SupportWidget() {
                     )}
                   </button>
                 </form>
+              )}
+
+              {!isFloatingHidden && (
+                <div className="pt-1 text-center border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={handleDismissFloating}
+                    className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition cursor-pointer"
+                    title="Сховати круглу кнопку з кутка екрану"
+                  >
+                    <EyeOff className="h-3.5 w-3.5" />
+                    <span>Сховати плаваючий значок з екрану</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>

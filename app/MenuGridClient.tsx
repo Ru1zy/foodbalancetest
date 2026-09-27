@@ -752,7 +752,10 @@ export default function MenuGridClient({ menuItems, orderingMode = "AUTO" }: Pro
           }}
         >
           {/* Top Title/Hint */}
-          <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 text-white font-bold text-xs sm:text-base bg-black/60 backdrop-blur-md px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 max-w-[65%] sm:max-w-[80%] truncate shadow-lg">
+          <div
+            title={currentDayItem ? `Меню ${dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`}` : "Меню"}
+            className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 text-white font-bold text-xs sm:text-sm md:text-base bg-black/75 backdrop-blur-md px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl border border-white/15 max-w-[calc(100%-4.5rem)] sm:max-w-[calc(100%-6rem)] shadow-xl leading-snug break-words"
+          >
             Меню {currentDayItem ? (dayNames[currentDayItem.dayOfWeek] || `День ${currentDayItem.dayOfWeek}`) : ""}
           </div>
 
