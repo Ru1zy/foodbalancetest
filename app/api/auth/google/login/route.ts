@@ -26,6 +26,9 @@ export async function GET(request: Request) {
   googleAuthUrl.searchParams.set("prompt", "select_account");
   googleAuthUrl.searchParams.set("state", state);
 
+  const { searchParams } = new URL(request.url);
+  const returnTo = searchParams.get("returnTo");
+
   const response = NextResponse.redirect(googleAuthUrl.toString());
   response.cookies.set("google_oauth_state", state, {
     httpOnly: true,
@@ -34,6 +37,16 @@ export async function GET(request: Request) {
     maxAge: 10 * 60, // 10 minutes
     path: "/",
   });
+
+  if (returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+    response.cookies.set("google_oauth_return_to", returnTo, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 10 * 60, // 10 minutes
+      path: "/",
+    });
+  }
 
   return response;
 }

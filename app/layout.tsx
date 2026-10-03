@@ -9,6 +9,7 @@ import ConditionalWrapper from "@/components/ConditionalWrapper";
 import SupportWidget from "@/components/SupportWidget";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "react-hot-toast";
+import GlobalAuthModal from "@/components/GlobalAuthModal";
 import "./globals.css";
 
 const comfortaa = Comfortaa({
@@ -144,6 +145,7 @@ export default function RootLayout({
               duration: 4000,
             }}
           />
+          <GlobalAuthModal />
         </ThemeProvider>
       </body>
     </html>

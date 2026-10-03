@@ -195,20 +195,27 @@ export default async function ProfilePage(
 
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
+  const tabParam = searchParams?.tab as string | undefined;
+  const pkgParam = searchParams?.pkg as string | undefined;
+  const isSubscriptionReq = tabParam === "subscription" || tabParam === "abonoment" || Boolean(pkgParam);
+  const subscriptionReturnUrl = `/profile?tab=subscription${pkgParam ? `&pkg=${encodeURIComponent(pkgParam)}` : ""}#purchase-subscription`;
+  const unauthRedirect = isSubscriptionReq
+    ? `/?auth=subscription&returnTo=${encodeURIComponent(subscriptionReturnUrl)}`
+    : "/?auth=required";
 
   if (!token) {
-    redirect("/");
+    redirect(unauthRedirect);
   }
 
   let userId: string;
   try {
     const payload = await verifyAuthToken(token);
     if (!payload) {
-      redirect("/");
+      redirect(unauthRedirect);
     }
     userId = payload;
   } catch {
-    redirect("/");
+    redirect(unauthRedirect);
   }
 
   const dbUser = await prisma.user.findUnique({
@@ -216,7 +223,7 @@ export default async function ProfilePage(
   });
 
   if (!dbUser) {
-    redirect("/");
+    redirect(unauthRedirect);
   }
 
   // Prevent onboarding bypass: redirect if phone is placeholder

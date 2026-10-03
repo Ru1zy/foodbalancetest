@@ -10,9 +10,21 @@ const SESSION_STORAGE_KEY = "fb_telegram_auth_token";
 
 type Props = {
   onSuccess?: () => void;
+  returnTo?: string;
+  title?: string;
+  subtitle?: string;
+  badge?: string;
+  promoNotice?: string;
 };
 
-export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
+export default function TelegramDeepLinkAuth({
+  onSuccess,
+  returnTo,
+  title,
+  subtitle,
+  badge,
+  promoNotice,
+}: Props) {
   const router = useRouter();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -100,6 +112,9 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
           });
 
           router.refresh();
+          if (returnTo) {
+            router.push(returnTo);
+          }
           if (onSuccess) onSuccess();
         } else if (data.status === "expired") {
           handleReset();
@@ -115,7 +130,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
         isFetchingRef.current = false;
       }
     },
-    [handleReset, onSuccess, router, setCustomerProfile]
+    [handleReset, onSuccess, returnTo, router, setCustomerProfile]
   );
 
   useEffect(() => {
@@ -216,11 +231,24 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">Вхід до FoodBalance</h2>
+        {badge && (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-xs font-bold text-emerald-800 dark:text-emerald-300 mb-2.5">
+            {badge}
+          </div>
+        )}
+        <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100">
+          {title || "Вхід до FoodBalance"}
+        </h2>
         <p className="mt-1 text-sm text-gray-500 dark:text-slate-400">
-          Оберіть зручний спосіб авторизації
+          {subtitle || "Оберіть зручний спосіб авторизації"}
         </p>
       </div>
+
+      {promoNotice && (
+        <div className="rounded-xl border border-emerald-200/80 dark:border-emerald-800/60 bg-emerald-50/70 dark:bg-emerald-950/40 p-3.5 text-xs text-emerald-900 dark:text-emerald-200 leading-relaxed font-medium">
+          {promoNotice}
+        </div>
+      )}
 
       {isPolling && authToken ? (
         <div className="space-y-4">
@@ -259,7 +287,7 @@ export default function TelegramDeepLinkAuth({ onSuccess }: Props) {
         <div className="space-y-3">
           {/* Google Auth Button */}
           <a
-            href="/api/auth/google/login"
+            href={returnTo ? `/api/auth/google/login?returnTo=${encodeURIComponent(returnTo)}` : "/api/auth/google/login"}
             className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-white dark:bg-slate-900 border-2 border-gray-200 dark:border-slate-700 rounded-xl hover:border-gray-300 dark:border-slate-600 hover:shadow-md transition-all duration-200 group"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">

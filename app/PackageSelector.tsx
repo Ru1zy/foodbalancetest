@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
 import type { PackageType } from "@/lib/order-logic";
 import { useOrderStore } from "@/lib/orderStore";
+import { useAuthModal } from "@/lib/authModalStore";
 
 type Tariff = {
   id: string;
@@ -149,6 +150,22 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
   const selectWizardPackage = useOrderStore((s) => s.selectWizardPackage);
   const showSushkaOptions = useOrderStore((s) => s.showSushkaOptions);
   const setShowSushkaOptions = useOrderStore((s) => s.setShowSushkaOptions);
+  const isAuthenticated = useOrderStore((s) => s.customerProfile.isAuthenticated);
+  const openAuthModal = useAuthModal((s) => s.openAuthModal);
+
+  const handleSubscriptionClick = (e: React.MouseEvent, pkgName: string) => {
+    const targetUrl = `/profile?tab=subscription&pkg=${encodeURIComponent(pkgName)}#purchase-subscription`;
+    if (!isAuthenticated) {
+      e.preventDefault();
+      openAuthModal({
+        badge: "🎟️ Персональна знижка до -15%",
+        title: "Оформлення абонемента",
+        subtitle: `Щоб отримати знижку на абонемент «${pkgName}» та обрати дні харчування, будь ласка, увійдіть або зареєструйтесь.`,
+        promoNotice: "Увійдіть через Telegram або Google. Після швидкої авторизації ви відразу перейдете до вибору тарифу зі знижкою.",
+        returnTo: targetUrl,
+      });
+    }
+  };
 
   useEffect(() => {
     onSushkaViewChange?.(showSushkaOptions);
@@ -678,6 +695,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
 
                     <Link
                       href="/profile?tab=subscription&pkg=Sushka+XS#purchase-subscription"
+                      onClick={(e) => handleSubscriptionClick(e, xsOption.title)}
                       className="flex flex-wrap items-center justify-between gap-1 px-3 py-2 sm:px-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-[11px] sm:text-xs text-emerald-900 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition group"
                     >
                       <span className="flex items-center gap-1.5 font-semibold">
@@ -774,6 +792,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
 
                     <Link
                       href="/profile?tab=subscription&pkg=Sushka+S#purchase-subscription"
+                      onClick={(e) => handleSubscriptionClick(e, sOption.title)}
                       className="flex flex-wrap items-center justify-between gap-1 px-3 py-2 sm:px-3.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800/40 text-[11px] sm:text-xs text-blue-900 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition group"
                     >
                       <span className="flex items-center gap-1.5 font-semibold">
@@ -1140,6 +1159,7 @@ export default function PackageSelector({ tariffs, onSushkaViewChange, promoMate
                 <div className="flex flex-col gap-2">
                   <Link
                     href={`/profile?tab=subscription&pkg=${encodeURIComponent(pkg.name)}#purchase-subscription`}
+                    onClick={(e) => handleSubscriptionClick(e, pkg.name)}
                     className="flex flex-wrap items-center justify-between gap-1 px-3 py-2 sm:px-3.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 text-[11px] sm:text-xs text-emerald-900 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition group"
                   >
                     <span className="flex items-center gap-1.5 font-semibold">

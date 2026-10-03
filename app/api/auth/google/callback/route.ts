@@ -92,8 +92,15 @@ export async function GET(request: Request) {
       secure: process.env.NODE_ENV === "production",
     });
 
+    // Check for saved returnTo path
+    const savedReturnTo = cookieStore.get("google_oauth_return_to")?.value;
+    cookieStore.delete("google_oauth_return_to");
+    const safeReturn = savedReturnTo && savedReturnTo.startsWith("/") && !savedReturnTo.startsWith("//")
+      ? savedReturnTo
+      : "/profile";
+
     // Redirect based on phone status
-    const redirectPath = user.phone.startsWith("google_") ? "/onboarding" : "/profile";
+    const redirectPath = user.phone.startsWith("google_") ? "/onboarding" : safeReturn;
     const redirectUrl = redirectTo(redirectPath);
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
