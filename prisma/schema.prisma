@@ -190,7 +190,6 @@ model AuthToken {
   createdAt DateTime @default(now())
   expiresAt DateTime
 
-  @@index([token])
   @@index([expiresAt])
 }
 
@@ -203,7 +202,6 @@ model MergeToken {
   expiresAt    DateTime
   createdAt    DateTime @default(now())
 
-  @@index([phone])
   @@index([expiresAt])
 }
 

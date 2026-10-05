@@ -29,11 +29,13 @@ export async function getAuthenticatedAdminUser() {
 
   const adminIds = adminChatId.split(",").map((id) => id.trim());
 
-  // TEMP LOCALHOST BYPASS:
-  // Leave this block enabled only while you are testing `/admin` on localhost
-  // without Telegram auth. For the regular production behavior, comment this
-  // block back out so the original token verification below is used again.
-  if (process.env.NODE_ENV === "development") {
+  // LOCAL DEV BYPASS:
+  // Requires both NODE_ENV === "development" and explicit ENABLE_LOCAL_DEV_ADMIN === "true".
+  // Never enable this in production or staging.
+  if (
+    process.env.NODE_ENV === "development" &&
+    process.env.ENABLE_LOCAL_DEV_ADMIN === "true"
+  ) {
     return buildLocalDevAdmin(adminIds[0]);
   }
 

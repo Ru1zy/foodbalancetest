@@ -37,17 +37,32 @@ if (publicBase) {
   }
 }
 
+const allowedOrigins = [
+  "foodbalance.com.ua",
+  "www.foodbalance.com.ua",
+  "foodbalancetest-production-5092.up.railway.app",
+  "foodbalance.zp.ua",
+  "localhost:3000",
+];
+
+const appBaseUrl = process.env.APP_BASE_URL;
+if (appBaseUrl) {
+  try {
+    const { host } = new URL(appBaseUrl);
+    if (host && !allowedOrigins.includes(host)) {
+      allowedOrigins.push(host);
+    }
+  } catch {
+    // Ignore invalid APP_BASE_URL
+  }
+}
+
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   experimental: {
     serverActions: {
       bodySizeLimit: "10mb",
-      allowedOrigins: [
-        "foodbalance.com.ua",
-        "www.foodbalance.com.ua",
-        "foodbalancetest-production-5092.up.railway.app",
-        "foodbalance.zp.ua",
-        "localhost:3000",
-      ],
+      allowedOrigins,
     },
   },
   images: {
@@ -69,6 +84,10 @@ const nextConfig: NextConfig = {
           {
             key: "Strict-Transport-Security",
             value: "max-age=31536000; includeSubDomains",
+          },
+          {
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
           },
           {
             key: "Content-Security-Policy",

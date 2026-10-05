@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedAdminUser } from "@/lib/admin-auth";
 import { getStorageEnv, uploadPublicObject } from "@/lib/storage";
+import { detectImageMimeType, ALLOWED_IMAGE_MIMES } from "@/lib/file-validation";
 
 // Only admins may upload, and only images up to MAX_UPLOAD_BYTES.
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_MIME_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/gif",
-  "image/avif",
-]);
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,13 +34,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!ALLOWED_MIME_TYPES.has(file.type)) {
-      return NextResponse.json(
-        { error: "Підтримуються лише JPG, PNG, WebP, GIF та AVIF." },
-        { status: 415 }
-      );
-    }
-
     if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
         { error: "Файл завеликий. Максимальний розмір — 5 МБ." },
@@ -54,8 +41,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Inspect binary magic bytes to verify genuine image content, never trusting client Content-Type headers alone.
+    const arrayBuffer = await file.arrayBuffer();
+    const headerBytes = new Uint8Array(arrayBuffer.slice(0, 32));
+    const detectedMime = detectImageMimeType(headerBytes);
+
+    if (!detectedMime || !ALLOWED_IMAGE_MIMES.has(detectedMime)) {
+      return NextResponse.json(
+        {
+          error:
+            "Непідтримуваний або небезпечний формат файлу. Дозволені лише дійсні формати зображень: JPG, PNG, WebP, GIF та AVIF.",
+        },
+        { status: 415 }
+      );
+    }
+
+    // Guarantee the uploaded S3 object receives the cryptographically verified MIME type
+    const sanitizedFile = new File([arrayBuffer], file.name, {
+      type: detectedMime,
+      lastModified: file.lastModified,
+    });
+
     // Upload to the configured S3-compatible bucket (Supabase/R2/B2/MinIO).
-    const uploaded = await uploadPublicObject(file, { prefix: "uploads" });
+    const uploaded = await uploadPublicObject(sanitizedFile, { prefix: "uploads" });
 
     return NextResponse.json({
       url: uploaded.url,

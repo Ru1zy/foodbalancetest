@@ -4,22 +4,10 @@ import { uploadPublicObject } from "@/lib/storage";
 import { headers, cookies } from "next/headers";
 import { receiptUploadLimiter } from "@/lib/rate-limit";
 import { verifyAuthToken } from "@/lib/auth-token";
+import { detectReceiptMimeType } from "@/lib/file-validation";
 
 const MAX_RECEIPT_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-
 const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".pdf"];
-
-function hasValidMagicBytes(header: Uint8Array): boolean {
-  // JPEG: FF D8 FF
-  if (header[0] === 0xff && header[1] === 0xd8 && header[2] === 0xff) return true;
-  // PNG: 89 50 4E 47
-  if (header[0] === 0x89 && header[1] === 0x50 && header[2] === 0x4e && header[3] === 0x47) return true;
-  // PDF: 25 50 44 46 (%PDF)
-  if (header[0] === 0x25 && header[1] === 0x50 && header[2] === 0x44 && header[3] === 0x46) return true;
-  // WEBP: RIFF....WEBP (52 49 46 46)
-  if (header[0] === 0x52 && header[1] === 0x49 && header[2] === 0x46 && header[3] === 0x46) return true;
-  return false;
-}
 
 export async function uploadReceiptAction(formData: FormData) {
   // Rate limit uploads per user/IP
@@ -61,15 +49,21 @@ export async function uploadReceiptAction(formData: FormData) {
   try {
     // Validate magic bytes
     const buffer = await file.arrayBuffer();
-    const headerBytes = new Uint8Array(buffer.slice(0, 8));
-    if (!hasValidMagicBytes(headerBytes)) {
+    const headerBytes = new Uint8Array(buffer.slice(0, 32));
+    const detectedMime = detectReceiptMimeType(headerBytes);
+    if (!detectedMime) {
       return {
         ok: false,
         error: "Вміст файлу не відповідає дозволеним типам зображень або PDF.",
       };
     }
 
-    const result = await uploadPublicObject(file, { prefix: "receipts" });
+    const sanitizedFile = new File([buffer], file.name, {
+      type: detectedMime,
+      lastModified: file.lastModified,
+    });
+
+    const result = await uploadPublicObject(sanitizedFile, { prefix: "receipts" });
     return { ok: true, url: result.url };
   } catch (error: unknown) {
     console.error("Failed to upload receipt:", error);
@@ -77,4 +71,3 @@ export async function uploadReceiptAction(formData: FormData) {
     return { ok: false, error: message };
   }
 }
-

@@ -3,15 +3,18 @@ import {
   buildTelegramPlaceholderPhone,
   isTelegramPlaceholderPhone,
   TELEGRAM_PLACEHOLDER_PHONE_PREFIX,
-} from "@/lib/telegram-phone";
+} from "./telegram-phone.ts";
 
 export const AUTH_TOKEN_MAX_AGE = 60 * 60 * 24 * 30;
 
 function getJwtSecret() {
-  const secret = process.env.AUTH_SECRET ?? process.env.TELEGRAM_BOT_TOKEN;
+  const secret = process.env.AUTH_SECRET;
 
   if (!secret) {
-    throw new Error("JWT secret is not configured.");
+    throw new Error(
+      "AUTH_SECRET environment variable is not configured. " +
+      "Generate a strong random secret and add it to your environment variables."
+    );
   }
 
   return new TextEncoder().encode(secret);

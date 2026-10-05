@@ -4,6 +4,29 @@ import { verifyMonobankWebhook, calculateAmountWithFee } from "@/lib/monobank";
 import { enqueueOutboxJob, processAllOutboxJobs } from "@/lib/outbox";
 import { syncOrderStatusInSheet } from "@/lib/googleSheets";
 import { revalidatePath } from "next/cache";
+import { sendAdminAlert } from "@/lib/telegram";
+
+function formatUnderpaymentAlert(params: {
+  type: string;
+  reference: string;
+  expectedPennies: number;
+  actualPennies: number;
+}) {
+  const expectedUah = (params.expectedPennies / 100).toFixed(2);
+  const actualUah = (params.actualPennies / 100).toFixed(2);
+  const diffUah = ((params.expectedPennies - params.actualPennies) / 100).toFixed(2);
+
+  return [
+    "⚠️ <b>Увага! Недоплата в Monobank</b>",
+    `<b>Тип:</b> ${params.type}`,
+    `<b>Reference:</b> <code>${params.reference}</code>`,
+    `<b>Очікувалось:</b> ${expectedUah} ₴`,
+    `<b>Отримано:</b> ${actualUah} ₴`,
+    `<b>Недоплата:</b> ${diffUah} ₴`,
+    "",
+    "🛑 <i>Замовлення / абонемент НЕ підтверджено автоматично. Перевірте виписку в кабінеті Plata або зв'яжіться з клієнтом.</i>",
+  ].join("\n");
+}
 
 export async function POST(request: Request) {
   try {
@@ -59,6 +82,14 @@ export async function POST(request: Request) {
           if (typeof amount === "number" && amount < expectedPennies) {
             console.error(
               `Monobank webhook underpayment for purchase ${reference}: expected ${expectedPennies}, got ${amount}`
+            );
+            await sendAdminAlert(
+              formatUnderpaymentAlert({
+                type: "Абонемент",
+                reference,
+                expectedPennies,
+                actualPennies: amount,
+              })
             );
             return;
           }
@@ -122,6 +153,14 @@ export async function POST(request: Request) {
               console.error(
                 `Monobank webhook underpayment for checkout ${reference}: expected ${expectedPennies}, got ${amount}`
               );
+              await sendAdminAlert(
+                formatUnderpaymentAlert({
+                  type: "Замовлення (корзина)",
+                  reference,
+                  expectedPennies,
+                  actualPennies: amount,
+                })
+              );
               return;
             }
           }
@@ -167,6 +206,24 @@ export async function POST(request: Request) {
           if (singleOrder.isPaid) {
             console.log(`Monobank webhook: Order ${reference} is already paid. Idempotent return.`);
             return;
+          }
+
+          if (singleOrder.price != null && singleOrder.price > 0) {
+            const expectedPennies = Math.round(calculateAmountWithFee(singleOrder.price) * 100);
+            if (typeof amount === "number" && amount < expectedPennies) {
+              console.error(
+                `Monobank webhook underpayment for single order ${reference}: expected ${expectedPennies}, got ${amount}`
+              );
+              await sendAdminAlert(
+                formatUnderpaymentAlert({
+                  type: "Окреме замовлення",
+                  reference,
+                  expectedPennies,
+                  actualPennies: amount,
+                })
+              );
+              return;
+            }
           }
 
           await tx.order.update({

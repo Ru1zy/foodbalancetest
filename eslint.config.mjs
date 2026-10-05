@@ -14,6 +14,12 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "tests/**",
     "scratch/**",
+    "playver/**",
+    "mortality-estimator/**",
+    "portfolio/**",
+    "ecar/**",
+    "game-fantasy-pwa/**",
+    "cinema/**",
   ]),
 ]);
 
