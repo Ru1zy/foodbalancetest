@@ -106,9 +106,15 @@ async function performCancellation(orderDayId: string, isAdmin: boolean, userId?
       });
     }
 
-    const d = orderDay.deliveryDate;
-    const monthKey = `${String(d.getUTCMonth() + 1).padStart(2, "0")}.${d.getUTCFullYear()}`;
-    const tabName = `${String(d.getUTCDate()).padStart(2, "0")}.${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+    const kyivFormatted = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Kyiv",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(orderDay.deliveryDate);
+    const [year, month, day] = kyivFormatted.split("-");
+    const monthKey = `${month}.${year}`;
+    const tabName = `${day}.${month}`;
 
     await enqueueOutboxJob(tx, "CANCEL_ORDER_IN_SHEETS", {
       orderId: order.id,

@@ -210,9 +210,15 @@ export async function rejectOrderPaymentAction(orderId: string, moneyReceived: b
 
         // Cancel in sheets if any day tabs exist
         for (const d of order.days) {
-          const date = d.deliveryDate;
-          const monthKey = `${String(date.getUTCMonth() + 1).padStart(2, "0")}.${date.getUTCFullYear()}`;
-          const tabName = `${String(date.getUTCDate()).padStart(2, "0")}.${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+          const kyivFormatted = new Intl.DateTimeFormat("en-CA", {
+            timeZone: "Europe/Kyiv",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(d.deliveryDate);
+          const [year, month, day] = kyivFormatted.split("-");
+          const monthKey = `${month}.${year}`;
+          const tabName = `${day}.${month}`;
 
           await enqueueOutboxJob(tx, "CANCEL_ORDER_IN_SHEETS", {
             orderId: order.id,
