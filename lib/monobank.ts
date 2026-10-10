@@ -56,6 +56,7 @@ export async function createMonobankInvoice(
       "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!response.ok) {
@@ -88,6 +89,7 @@ export async function getMonobankPublicKey(): Promise<string> {
   const response = await fetch("https://api.monobank.ua/api/merchant/pubkey", {
     headers: { "X-Token": MONOBANK_API_TOKEN },
     next: { revalidate: 3600 },
+    signal: AbortSignal.timeout(10000),
   });
 
   if (!response.ok) {
