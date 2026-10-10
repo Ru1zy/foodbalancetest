@@ -1116,13 +1116,19 @@ export async function submitOrders(
         ? `Оплата замовлень (${results.length} шт.) [TEST]`
         : `Оплата замовлень (${results.length} шт.)`;
 
-      const invoice = await createMonobankInvoice({
-        amount: invoiceAmount,
-        reference: idempotencyKey, // Using the checkout key to identify the batch
-        destination,
-        redirectPath: "/profile",
-      });
-      pageUrl = invoice.pageUrl;
+      try {
+        const invoice = await createMonobankInvoice({
+          amount: invoiceAmount,
+          reference: idempotencyKey, // Using the checkout key to identify the batch
+          destination,
+          redirectPath: "/profile",
+        });
+        pageUrl = invoice.pageUrl;
+      } catch (invoiceErr) {
+        console.error("Monobank invoice creation failed after orders persisted:", invoiceErr);
+        // Orders are committed. Redirect user to profile where orders are visible.
+        pageUrl = "/profile?payment_retry=true";
+      }
     }
 
     return {
