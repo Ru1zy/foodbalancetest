@@ -211,15 +211,25 @@ export async function cancelSubscriptionPurchaseAction(purchaseId: string) {
       // 2. Повернути дні з балансу, якщо вони вже були зараховані
       // (тільки якщо статус був CREDITED_PENDING_CONFIRMATION)
       if (purchase.status === "CREDITED_PENDING_CONFIRMATION") {
-        await tx.userBalance.updateMany({
+        const balance = await tx.userBalance.findUnique({
           where: {
-            userId: purchase.userId,
-            packageId: purchase.packageId,
-          },
-          data: {
-            totalDays: { decrement: purchase.days },
+            userId_packageId: {
+              userId: purchase.userId,
+              packageId: purchase.packageId,
+            },
           },
         });
+        if (balance) {
+          const newTotal = Math.max(0, balance.totalDays - purchase.days);
+          const newUsed = Math.min(newTotal, balance.usedDays);
+          await tx.userBalance.update({
+            where: { id: balance.id },
+            data: {
+              totalDays: newTotal,
+              usedDays: newUsed,
+            },
+          });
+        }
       }
 
       // 3. If there is potential payment (receipt attached or bank transfer), notify admin about cancellation

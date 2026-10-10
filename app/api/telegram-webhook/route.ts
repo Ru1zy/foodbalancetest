@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { recordTelegramAuthConfirmation } from "@/lib/telegram-deeplink-auth";
 import prisma from "@/lib/prisma";
-import { createAuthToken, buildTelegramPlaceholderPhone } from "@/lib/auth-token";
+import { buildTelegramPlaceholderPhone } from "@/lib/auth-token";
 import { SITE_CONFIG, getPublicAppUrl } from "@/lib/site-config";
 
 export const runtime = "nodejs";
@@ -110,8 +111,16 @@ export async function POST(request: Request) {
             phone: buildTelegramPlaceholderPhone(chatId),
           },
         });
-        const sessionToken = await createAuthToken(user.id);
-        returnUrl = `${baseUrl}/api/auth/telegram-deeplink?session=${encodeURIComponent(sessionToken)}`;
+        const oneTimeToken = crypto.randomUUID();
+        await prisma.authToken.create({
+          data: {
+            token: oneTimeToken,
+            chatId,
+            userName,
+            expiresAt: new Date(Date.now() + 2 * 60 * 1000), // 2 minutes TTL
+          },
+        });
+        returnUrl = `${baseUrl}/api/auth/telegram-deeplink?token=${encodeURIComponent(oneTimeToken)}`;
       } catch (userErr) {
         console.error("Failed to generate direct session link for telegram return:", userErr);
       }

@@ -73,15 +73,25 @@ export async function rejectPaymentAction(purchaseId: string, moneyReceived: boo
       });
 
       // 2. Знімаємо дні з балансу, які були нараховані авансом
-      await tx.userBalance.updateMany({
+      const balance = await tx.userBalance.findUnique({
         where: {
-          userId: purchase.userId,
-          packageId: purchase.packageId,
-        },
-        data: {
-          totalDays: { decrement: purchase.days },
+          userId_packageId: {
+            userId: purchase.userId,
+            packageId: purchase.packageId,
+          },
         },
       });
+      if (balance) {
+        const newTotal = Math.max(0, balance.totalDays - purchase.days);
+        const newUsed = Math.min(newTotal, balance.usedDays);
+        await tx.userBalance.update({
+          where: { id: balance.id },
+          data: {
+            totalDays: newTotal,
+            usedDays: newUsed,
+          },
+        });
+      }
 
       // 3. Notify user
       await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION_SUBSCRIPTION_RESULT", { purchaseId, approved: false });
