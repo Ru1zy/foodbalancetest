@@ -29,14 +29,21 @@ export async function enqueueOutboxJob(
  * Processes a single outbox job.
  */
 export async function processOutboxJob(jobId: string) {
-  const job = await prisma.outboxJob.findUnique({ where: { id: jobId } });
-  if (!job || (job.status !== "PENDING" && job.status !== "FAILED")) return;
-
-  // Mark as processing
-  await prisma.outboxJob.update({
-    where: { id: jobId },
+  // Atomic claim: only one concurrent worker can transition PENDING/FAILED -> PROCESSING
+  const claimResult = await prisma.outboxJob.updateMany({
+    where: {
+      id: jobId,
+      status: { in: ["PENDING", "FAILED"] },
+    },
     data: { status: "PROCESSING" },
   });
+
+  if (claimResult.count === 0) {
+    return;
+  }
+
+  const job = await prisma.outboxJob.findUnique({ where: { id: jobId } });
+  if (!job) return;
 
   try {
     if (job.type === "SYNC_CRM_ORDER") {
@@ -216,11 +223,12 @@ export async function processOutboxJob(jobId: string) {
  */
 export async function processAllOutboxJobs() {
   const maxRetries = 5;
+  const minFailedAge = new Date(Date.now() - 15 * 1000); // 15s backoff minimum
   const jobs = await prisma.outboxJob.findMany({
     where: {
       OR: [
         { status: "PENDING" },
-        { status: "FAILED", retries: { lt: maxRetries } }
+        { status: "FAILED", retries: { lt: maxRetries }, updatedAt: { lt: minFailedAge } }
       ]
     },
     orderBy: { createdAt: "asc" },
