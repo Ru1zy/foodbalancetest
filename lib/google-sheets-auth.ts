@@ -12,6 +12,9 @@ const GOOGLE_SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
  * differently. Customer Google sign-in and the administrator Drive OAuth use
  * different credentials and are intentionally not handled by this helper.
  */
+let cachedSheetsClient: sheets_v4.Sheets | null = null;
+let cachedKey = "";
+
 export function createGoogleSheetsClient(): sheets_v4.Sheets | null {
   const clientEmail = process.env.GOOGLE_CLIENT_EMAIL?.trim();
   const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -21,10 +24,17 @@ export function createGoogleSheetsClient(): sheets_v4.Sheets | null {
     return null;
   }
 
+  const key = `${clientEmail}|${privateKey.slice(0, 30)}`;
+  if (cachedSheetsClient && cachedKey === key) {
+    return cachedSheetsClient;
+  }
+
   const auth = new google.auth.GoogleAuth({
     credentials: { client_email: clientEmail, private_key: privateKey },
     scopes: [GOOGLE_SHEETS_SCOPE],
   });
 
-  return google.sheets({ version: "v4", auth });
+  cachedSheetsClient = google.sheets({ version: "v4", auth, timeout: 15000 });
+  cachedKey = key;
+  return cachedSheetsClient;
 }
