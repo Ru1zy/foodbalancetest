@@ -179,6 +179,24 @@ export async function POST(request: Request) {
         data: { userId: oldUser.id },
       });
 
+      // Transfer subscription purchases from current user to old user
+      await tx.subscriptionPurchase.updateMany({
+        where: { userId: currentUser.id },
+        data: { userId: oldUser.id },
+      });
+
+      // Transfer reviews from current user to old user
+      await tx.review.updateMany({
+        where: { userId: currentUser.id },
+        data: { userId: oldUser.id },
+      });
+
+      // Transfer support tickets from current user to old user
+      await tx.supportTicket.updateMany({
+        where: { userId: currentUser.id },
+        data: { userId: oldUser.id },
+      });
+
       // Transfer balances from current user to old user (if any)
       const currentBalances = await tx.userBalance.findMany({
         where: { userId: currentUser.id },
