@@ -42,8 +42,8 @@ export async function GET(request: Request) {
     // Exchange code for user info
     const googleUser = await getGoogleUserFromCode(code, redirectUri);
 
-    if (!googleUser.email || !googleUser.sub) {
-      return NextResponse.redirect(redirectTo("/?error=invalid_google_user"));
+    if (!googleUser.email || !googleUser.sub || !googleUser.email_verified) {
+      return NextResponse.redirect(redirectTo("/?error=unverified_google_email"));
     }
 
     // Upsert user: find by googleId OR email
