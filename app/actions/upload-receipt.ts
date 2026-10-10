@@ -15,8 +15,15 @@ export async function uploadReceiptAction(formData: FormData) {
   const cookieStore = await cookies();
   const authToken = cookieStore.get("auth_token")?.value;
   const userId = authToken ? await verifyAuthToken(authToken) : null;
-  const ip = headerList.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  const rateLimitKey = userId ? `user:${userId}` : `ip:${ip}`;
+  
+  if (!userId) {
+    return {
+      ok: false,
+      error: "Будь ласка, увійдіть в акаунт для завантаження квитанції.",
+    };
+  }
+
+  const rateLimitKey = `user:${userId}`;
 
   if (!receiptUploadLimiter.check(rateLimitKey)) {
     return {
