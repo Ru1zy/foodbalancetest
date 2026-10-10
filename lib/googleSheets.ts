@@ -425,34 +425,41 @@ export async function syncOrderStatusInSheet(
     });
 
     const values = resp.data.values || [];
-    let targetRowNumber = -1;
+    const targetRowNumbers: number[] = [];
     for (let i = 0; i < values.length; i++) {
       if (values[i][0] === orderId) {
-        targetRowNumber = i + 1; // 1-indexed row number
-        break;
+        targetRowNumbers.push(i + 1); // 1-indexed row number
       }
     }
 
-    if (targetRowNumber === -1) return;
+    if (targetRowNumbers.length === 0) return;
 
     if (isPaid !== undefined) {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `Orders!J${targetRowNumber}:K${targetRowNumber}`,
-        valueInputOption: "USER_ENTERED",
-        requestBody: {
-          values: [[status, isPaid ? "TRUE" : "FALSE"]],
-        },
-      });
+      await Promise.all(
+        targetRowNumbers.map((rowNum) =>
+          sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Orders!J${rowNum}:K${rowNum}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+              values: [[status, isPaid ? "TRUE" : "FALSE"]],
+            },
+          })
+        )
+      );
     } else {
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `Orders!J${targetRowNumber}`,
-        valueInputOption: "USER_ENTERED",
-        requestBody: {
-          values: [[status]],
-        },
-      });
+      await Promise.all(
+        targetRowNumbers.map((rowNum) =>
+          sheets.spreadsheets.values.update({
+            spreadsheetId,
+            range: `Orders!J${rowNum}`,
+            valueInputOption: "USER_ENTERED",
+            requestBody: {
+              values: [[status]],
+            },
+          })
+        )
+      );
     }
   } catch (error) {
     console.error(`syncOrderStatusInSheet failed for ${orderId}:`, error);
