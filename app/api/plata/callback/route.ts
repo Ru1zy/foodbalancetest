@@ -64,6 +64,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ received: true });
     }
 
+    const ordersToSyncSheets: string[] = [];
+
     // Process the payment in a transaction for idempotency
     await prisma.$transaction(async (tx) => {
       // Check if reference is a SubscriptionPurchase
@@ -176,12 +178,8 @@ export async function POST(request: Request) {
             data: { isPaid: true, paymentMethod: "plata" },
           });
 
-          // Sync paid status to Google Sheets Orders tab
-          for (const o of existingOrders) {
-            syncOrderStatusInSheet(o.id, "Оплачено", true).catch((err) =>
-              console.error("syncOrderStatusInSheet failed in plata callback:", err)
-            );
-          }
+          // Queue order IDs for post-commit Google Sheets sync
+          ordersToSyncSheets.push(...existingOrders.map((o) => o.id));
 
           // Enqueue telegram notification for admin
           await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION", {
@@ -231,9 +229,7 @@ export async function POST(request: Request) {
             data: { isPaid: true, paymentMethod: "plata" },
           });
 
-          syncOrderStatusInSheet(singleOrder.id, "Оплачено", true).catch((err) =>
-            console.error("syncOrderStatusInSheet failed in plata callback:", err)
-          );
+          ordersToSyncSheets.push(singleOrder.id);
 
           await enqueueOutboxJob(tx, "TELEGRAM_NOTIFICATION", {
             orderIds: [singleOrder.id],
@@ -244,6 +240,13 @@ export async function POST(request: Request) {
         return;
       }
     });
+
+    // Execute Google Sheets sync outside the database transaction
+    for (const orderId of ordersToSyncSheets) {
+      syncOrderStatusInSheet(orderId, "Оплачено", true).catch((err) =>
+        console.error("syncOrderStatusInSheet failed in plata callback:", err)
+      );
+    }
 
     // Fire outbox processing in background
     processAllOutboxJobs().catch((err) => {
