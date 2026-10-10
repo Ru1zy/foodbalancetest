@@ -6,6 +6,7 @@ import { verifyAuthToken } from "@/lib/auth-token";
 import { sendAdminAlert } from "@/lib/telegram";
 import { uploadPublicObject } from "@/lib/storage";
 import { sanitizeTelegramPhone } from "@/lib/telegram-phone";
+import { detectImageMimeType } from "@/lib/file-validation";
 
 function escapeHtml(text: string): string {
   return text
@@ -137,7 +138,19 @@ export async function createReviewAction(formData: FormData) {
     }
 
     try {
-      const uploadRes = await uploadPublicObject(photoFile, { prefix: "reviews" });
+      const buffer = await photoFile.arrayBuffer();
+      const headerBytes = new Uint8Array(buffer.slice(0, 32));
+      const detectedMime = detectImageMimeType(headerBytes);
+      if (!detectedMime) {
+        return { ok: false, error: "Вміст файлу не відповідає дійсному формату зображення." };
+      }
+
+      const sanitizedFile = new File([buffer], photoFile.name, {
+        type: detectedMime,
+        lastModified: photoFile.lastModified,
+      });
+
+      const uploadRes = await uploadPublicObject(sanitizedFile, { prefix: "reviews" });
       photoUrl = uploadRes.url;
     } catch (err) {
       console.error("Failed to upload review photo:", err);
