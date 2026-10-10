@@ -11,6 +11,17 @@ export class RateLimiter {
 
   public check(identifier: string): boolean {
     const now = Date.now();
+    if (this.cache.size > 1000) {
+      this.cleanup();
+      if (this.cache.size > 2000) {
+        const iter = this.cache.keys();
+        for (let i = 0; i < 200; i++) {
+          const next = iter.next();
+          if (next.done) break;
+          this.cache.delete(next.value);
+        }
+      }
+    }
     const record = this.cache.get(identifier);
 
     if (!record) {
