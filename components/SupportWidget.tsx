@@ -9,11 +9,11 @@ import toast from "react-hot-toast";
 
 const STORAGE_KEY = "fb_support_widget_hidden";
 
-export default function SupportWidget() {
+export default function SupportWidget({ initialMessage = "" }: { initialMessage?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(initialMessage);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +47,12 @@ export default function SupportWidget() {
       window.removeEventListener("toggle-support-floating" as any, handleToggleFloating);
     };
   }, []);
+
+  useEffect(() => {
+    if (initialMessage) {
+      setMessage((current) => current || initialMessage);
+    }
+  }, [initialMessage]);
 
   const handleDismissFloating = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

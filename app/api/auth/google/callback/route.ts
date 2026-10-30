@@ -25,17 +25,17 @@ export async function GET(request: Request) {
   cookieStore.delete("google_oauth_state");
 
   if (!returnedState || !savedState || returnedState !== savedState) {
-    return NextResponse.redirect(redirectTo("/?error=csrf_state_mismatch"));
+    return NextResponse.redirect(redirectTo("/auth/error?error=csrf_state_mismatch"));
   }
 
   if (error) {
-    const errorUrl = redirectTo("/");
+    const errorUrl = redirectTo("/auth/error");
     errorUrl.searchParams.set("error", `google_oauth_${error}`);
     return NextResponse.redirect(errorUrl);
   }
 
   if (!code) {
-    return NextResponse.redirect(redirectTo("/?error=missing_code"));
+    return NextResponse.redirect(redirectTo("/auth/error?error=missing_code"));
   }
 
   try {
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
     const googleUser = await getGoogleUserFromCode(code, redirectUri);
 
     if (!googleUser.email || !googleUser.sub || !googleUser.email_verified) {
-      return NextResponse.redirect(redirectTo("/?error=unverified_google_email"));
+      return NextResponse.redirect(redirectTo("/auth/error?error=unverified_google_email"));
     }
 
     // Upsert user: find by googleId OR email
@@ -105,6 +105,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(redirectUrl);
   } catch (error) {
     console.error("Google OAuth callback failed:", error);
-    return NextResponse.redirect(redirectTo("/?error=google_auth_failed"));
+    return NextResponse.redirect(redirectTo("/auth/error?error=google_auth_failed"));
   }
 }

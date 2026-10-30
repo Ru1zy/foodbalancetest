@@ -9,8 +9,9 @@ export default function ConditionalWrapper({
 }) {
   const pathname = usePathname();
   const isAdminPage = pathname?.startsWith("/admin");
+  const isAuthErrorPage = pathname === "/auth/error";
 
-  if (isAdminPage) {
+  if (isAdminPage || isAuthErrorPage) {
     return null;
   }
 
