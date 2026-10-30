@@ -137,13 +137,13 @@ npm run dev            # http://localhost:3000
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection URL |
 | `AUTH_SECRET` | Secret key used to sign and verify customer JWT sessions |
-| `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | Public production base URL (e.g. `https://your-domain.railway.app`) |
+| `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | Public production base URL, normally `https://foodbalance.com.ua` |
 | `MONOBANK_API_TOKEN` | Merchant token from Monobank Plata dashboard |
 | `PLATA_FEE_PERCENT` | Gateway acquiring fee percentage (default: `0.013` = 1.3%) |
 | `TELEGRAM_BOT_TOKEN` | Token for the Telegram Bot |
 | `TELEGRAM_ADMIN_CHAT_ID` | Comma-separated list of Telegram chat IDs for order notifications |
 | `TELEGRAM_WEBHOOK_SECRET` | Secret token to authenticate Telegram webhook calls |
-| `NEXT_PUBLIC_BOT_USERNAME` | Telegram Bot username (without `@`) for Mini App links |
+| `NEXT_PUBLIC_BOT_USERNAME` | Telegram Bot username (without `@`) for Mini App links. Production: `fooddevtestbot`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth 2.0 credentials for customer sign-in |
 | `GOOGLE_REDIRECT_URI` | Google OAuth callback URL (`/api/auth/google/callback`) |
 | `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Service Account credentials for Google Sheets operations |
@@ -173,7 +173,7 @@ The application is deployed on **Railway**:
 6. **Configure Webhooks**:
    - **Telegram**: Call `https://api.telegram.org/bot<TOKEN>/setWebhook?url=<YOUR_DOMAIN>/api/telegram-webhook&secret_token=<SECRET>`
    - **Monobank**: Monobank automatically registers the callback URL provided with each invoice (`/api/plata/callback`).
-   - **Google OAuth**: Add `<YOUR_DOMAIN>/api/auth/google/callback` to authorized redirect URIs in Google Cloud Console.
+   - **Google OAuth**: Add `https://foodbalance.com.ua/api/auth/google/callback` to authorized redirect URIs in Google Cloud Console.
 7. **Automated Scheduled Jobs (Cron)**:
    - Configured via GitHub Actions in `.github/workflows/cron.yml`.
    - Set repository secrets in GitHub: `APP_BASE_URL` and `CRON_SECRET`.
@@ -294,13 +294,13 @@ npm run dev            # http://localhost:3000
 | --- | --- |
 | `DATABASE_URL` | Рядок підключення до PostgreSQL |
 | `AUTH_SECRET` | Секретний ключ для підпису JWT-сесій клієнтів |
-| `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | Публічний URL сайту (наприклад, `https://foodbalance.up.railway.app`) |
+| `APP_BASE_URL` / `NEXT_PUBLIC_APP_URL` | Публічний URL сайту, зазвичай `https://foodbalance.com.ua` |
 | `MONOBANK_API_TOKEN` | Токен мерчанта з кабінету еквайрингу Monobank Plata |
 | `PLATA_FEE_PERCENT` | Комісія еквайрингу (за замовчуванням `0.013` = 1.3%) |
 | `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота |
 | `TELEGRAM_ADMIN_CHAT_ID` | ID чатів адмінів/кухні для сповіщень (через кому) |
 | `TELEGRAM_WEBHOOK_SECRET` | Секретний токен перевірки вебхуків Telegram |
-| `NEXT_PUBLIC_BOT_USERNAME` | Юзернейм бота без `@` для посилань Mini App |
+| `NEXT_PUBLIC_BOT_USERNAME` | Юзернейм Telegram-бота без `@` для Mini App. Для production: `fooddevtestbot`. |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Ключі Google OAuth 2.0 для входу клієнтів |
 | `GOOGLE_REDIRECT_URI` | Callback-адреса Google OAuth (`/api/auth/google/callback`) |
 | `GOOGLE_CLIENT_EMAIL` / `GOOGLE_PRIVATE_KEY` | Сервісний акаунт для роботи з Google Таблицями |
@@ -330,7 +330,7 @@ npm run dev            # http://localhost:3000
 6. **Налаштування вебхуків**:
    - **Telegram**: `https://api.telegram.org/bot<TOKEN>/setWebhook?url=<URL>/api/telegram-webhook&secret_token=<SECRET>`
    - **Monobank**: URL зворотного виклику передається автоматично при створенні рахунку (`/api/plata/callback`).
-   - **Google OAuth**: Вкажіть `<URL>/api/auth/google/callback` у дозволених redirect URI в Google Cloud Console.
+   - **Google OAuth**: Вкажіть `https://foodbalance.com.ua/api/auth/google/callback` у дозволених redirect URI в Google Cloud Console.
 7. **Автоматичні задачі (Cron)**:
    - Задачі виконуються через GitHub Actions (`.github/workflows/cron.yml`).
    - Додайте секрети `APP_BASE_URL` та `CRON_SECRET` у налаштуваннях GitHub репозиторію.
