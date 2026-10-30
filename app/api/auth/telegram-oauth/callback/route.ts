@@ -75,11 +75,11 @@ export async function GET(request: Request) {
   };
 
   if (!oauthData.id || !oauthData.hash) {
-    return NextResponse.redirect(createPublicRedirectUrl("/?error=invalid_oauth_data", request));
+    return NextResponse.redirect(createPublicRedirectUrl("/auth/error?error=invalid_oauth_data", request));
   }
 
   if (!verifyTelegramOAuth(oauthData, botToken)) {
-    return NextResponse.redirect(createPublicRedirectUrl("/?error=invalid_oauth_signature", request));
+    return NextResponse.redirect(createPublicRedirectUrl("/auth/error?error=invalid_oauth_signature", request));
   }
 
   const chatId = oauthData.id;
@@ -115,6 +115,6 @@ export async function GET(request: Request) {
     return NextResponse.redirect(createPublicRedirectUrl("/", request));
   } catch (error) {
     console.error("Telegram OAuth auth failed", error);
-    return NextResponse.redirect(createPublicRedirectUrl("/?error=auth_failed", request));
+    return NextResponse.redirect(createPublicRedirectUrl("/auth/error?error=auth_failed", request));
   }
 }
